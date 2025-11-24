@@ -103,7 +103,21 @@ function PlaygroundContent() {
     if (brand.marketingAngles?.length && !brief) {
       const firstConcept = brand.marketingAngles[0]?.concept || '';
       if (firstConcept) {
-        setBrief(firstConcept);
+        // Only keep the concept description, remove "Concept: " prefix if present
+        // And ensure we don't start with a full generated prompt, just the idea
+        setBrief(firstConcept.replace(/^(Concept \d+:|Title:|Concept:)\s*/i, ''));
+        
+        // Trigger initial generation if we have images
+        if (selection.length > 0) {
+             // Use a small timeout to let state settle
+             setTimeout(() => {
+                 // Only auto-generate if we are on the bento step or just finished analyzing
+                 // But we need to be careful not to trigger it if the user is just browsing
+                 // For now, let's just set the brief.
+                 // If we want auto-generation, we should call handleGenerate here.
+                 // handleGenerate(firstConcept, false, brand, selection); // Uncomment to auto-generate
+             }, 1000);
+        }
       }
     }
   };
@@ -216,6 +230,12 @@ function PlaygroundContent() {
     }
     setStep('playground');
     setActiveTab('create');
+    
+    // Auto-generate initial image if brief is ready
+    if (brief && uploadedImages.length > 0 && generatedImages.length === 0) {
+        handleGenerate(brief, false, brandData, uploadedImages);
+    }
+    
     showToast('Identité validée', 'success');
   };
 
