@@ -31,7 +31,7 @@ export default function Navigation() {
               <div className="w-7 h-7 bg-gray-900 rounded-full flex items-center justify-center">
                 <span className="text-white text-[9px] font-semibold">B</span>
               </div>
-              <span className="text-gray-900 font-medium text-sm">BriefBox</span>
+              <span className="text-gray-900 font-medium text-sm">Flowww</span>
             </Link>
 
             {/* Desktop menu */}

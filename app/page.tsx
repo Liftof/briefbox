@@ -73,7 +73,7 @@ export default function Home() {
               <div className="bg-gray-900 text-white p-10 h-full">
                 <div className="flex items-center gap-3 mb-8">
                   <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
-                  <span className="text-xs font-mono uppercase tracking-widest text-emerald-400">Avec BriefBox</span>
+                  <span className="text-xs font-mono uppercase tracking-widest text-emerald-400">Avec Flowww</span>
                 </div>
                 
                 <div className="space-y-8">
@@ -359,7 +359,7 @@ export default function Home() {
                 <div className="w-6 h-6 bg-gray-900 rounded-full flex items-center justify-center">
                   <span className="text-white text-[10px] font-bold">B</span>
                 </div>
-                <span className="text-sm font-medium text-gray-900">BriefBox</span>
+                <span className="text-sm font-medium text-gray-900">Flowww</span>
               </div>
               <p className="text-xs text-gray-400 leading-relaxed">
                 La première plateforme d'IA générative dédiée aux marques.
@@ -389,7 +389,7 @@ export default function Home() {
             </div>
           </div>
           <div className="pt-8 border-t border-gray-200 flex flex-col md:flex-row justify-between items-center gap-4">
-            <span className="text-xs text-gray-400">© 2025 BriefBox. Tous droits réservés.</span>
+            <span className="text-xs text-gray-400">© 2025 Flowww. Tous droits réservés.</span>
             <div className="flex items-center gap-4 text-xs text-gray-400">
               <span className="flex items-center gap-2">
                 <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full" />
