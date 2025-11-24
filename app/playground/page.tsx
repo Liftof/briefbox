@@ -502,6 +502,7 @@ ${enhancement}`);
     try {
       // STEP 1: Call Creative Director API to transform brief into structured concept
       let finalGenerationPrompt: string;
+      let negativePrompt: string = 'blurry, low quality, watermark, amateur, generic stock photo, clipart';
       
       try {
         const cdResponse = await fetch('/api/creative-director', {
@@ -518,7 +519,9 @@ ${enhancement}`);
         
         if (cdResponse.ok && cdData.success && cdData.concept?.finalPrompt) {
           finalGenerationPrompt = cdData.concept.finalPrompt;
-          console.log('🎬 Creative Director concept:', cdData.metadata);
+          negativePrompt = cdData.concept.negativePrompt || negativePrompt;
+          console.log('🎬 Creative Director prompt:', finalGenerationPrompt.substring(0, 100) + '...');
+          console.log('🚫 Negative prompt:', negativePrompt.substring(0, 50) + '...');
           setProgress(30);
           setStatusMessage('✨ Concept créatif validé, génération en cours...');
         } else {
@@ -539,6 +542,7 @@ ${enhancement}`);
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           prompt: finalGenerationPrompt,
+          negativePrompt: negativePrompt,
           imageUrls: references,
           numImages: 4,
           aspectRatio: '1:1'

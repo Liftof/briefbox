@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { prompt, imageUrls = [], numImages = 1, aspectRatio = "1:1", resolution = "1K", useAsync = false } = body;
+    const { prompt, negativePrompt = "", imageUrls = [], numImages = 1, aspectRatio = "1:1", resolution = "1K", useAsync = false } = body;
 
     // Basic Validation
     if (!prompt || typeof prompt !== 'string') {
@@ -127,7 +127,7 @@ export async function POST(request: NextRequest) {
 
     // Prepare Input for Nano Banana Pro
     // Note: If this model is not available, consider using 'fal-ai/flux-pro/v1.1' or similar.
-    const input = {
+    const input: Record<string, any> = {
       prompt: prompt,
       num_images: numImages,
       aspect_ratio: aspectRatio === "1:1" ? "1:1" : "4:5", 
@@ -136,7 +136,15 @@ export async function POST(request: NextRequest) {
       resolution: resolution 
     };
 
-    console.log('🍌 Generating with Nano Banana Pro:', JSON.stringify({ ...input, image_urls: `[${input.image_urls.length} images]` }, null, 2));
+    // Add negative prompt if provided (model-dependent support)
+    if (negativePrompt && negativePrompt.trim()) {
+      input.negative_prompt = negativePrompt.trim();
+    }
+
+    console.log('🍌 Generating with Nano Banana Pro:');
+    console.log('   📝 Prompt:', prompt.substring(0, 100) + '...');
+    console.log('   🚫 Negative:', negativePrompt?.substring(0, 50) || 'none');
+    console.log('   🖼️ Images:', input.image_urls.length);
 
     try {
         let result: any;
