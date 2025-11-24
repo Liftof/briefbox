@@ -1,17 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server';
+import {
+  TemplateId,
+  detectTemplate,
+  buildTemplatePrompt,
+  extractMetric,
+  getAllTemplates,
+  TemplateParams
+} from '@/lib/templates';
 
 // ============================================================================
-// CREATIVE DIRECTOR - STATIC SOCIAL MEDIA GRAPHICS
+// CREATIVE DIRECTOR V2 - Template-Based System
 // ============================================================================
-// Output: LinkedIn/Instagram STATIC POSTS (graphic design, not photos)
-// Think: Bold typography, brand colors, clean layouts, text overlays
-// NOT: Cinematic scenes, photographs, 3D renders
+// No more GPT creativity - just templates filled with brand data
+// Predictable, fast, consistent results
 // ============================================================================
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { brief, brand, archetype = '' } = body;
+    const { brief, brand, templateId: requestedTemplateId } = body;
 
     if (!brief || !brand) {
       return NextResponse.json(
@@ -23,26 +30,78 @@ export async function POST(request: NextRequest) {
     // Extract brand essentials
     const brandName = brand.name || 'Brand';
     const colors = Array.isArray(brand.colors) ? brand.colors : ['#000000'];
-    const primaryColor = colors[0];
+    const primaryColor = colors[0] || '#000000';
     const secondaryColor = colors[1] || '#ffffff';
-    const aesthetic = Array.isArray(brand.aesthetic) ? brand.aesthetic.join(', ') : (brand.aesthetic || '');
 
-    // Generate creative prompt
-    const prompt = await generateCreativePrompt({
-      brief,
+    // Determine which template to use
+    let templateId: TemplateId;
+    
+    if (requestedTemplateId && ['stat', 'announcement', 'event', 'quote', 'expert', 'product'].includes(requestedTemplateId)) {
+      templateId = requestedTemplateId as TemplateId;
+      console.log(`📋 Using requested template: ${templateId}`);
+    } else {
+      // Auto-detect from brief
+      const detected = detectTemplate(brief);
+      templateId = detected.id;
+      console.log(`🔍 Auto-detected template: ${templateId} for brief: "${brief.slice(0, 50)}..."`);
+    }
+
+    // Build template params
+    const params: TemplateParams = {
       brandName,
       primaryColor,
       secondaryColor,
-      aesthetic,
-      archetype
-    });
+      headline: brief.slice(0, 60), // Use brief as headline (truncated)
+      subheadline: brand.tagline || '',
+    };
+
+    // Special handling for stat template - extract metric
+    if (templateId === 'stat') {
+      const extracted = extractMetric(brief);
+      if (extracted) {
+        params.metric = extracted.metric;
+        params.metricLabel = extracted.label;
+        console.log(`📊 Extracted metric: ${extracted.metric} (${extracted.label})`);
+      } else {
+        // Default metric if none found
+        params.metric = '100%';
+        params.metricLabel = 'satisfaction';
+      }
+    }
+
+    // Special handling for quote template
+    if (templateId === 'quote') {
+      params.quote = brief;
+      params.personName = 'Client';
+      params.personTitle = brand.industry || 'Partner';
+    }
+
+    // Special handling for event template
+    if (templateId === 'event') {
+      params.eventDate = 'À venir';
+      params.eventTime = '';
+    }
+
+    // Special handling for expert template
+    if (templateId === 'expert') {
+      params.personName = 'Expert';
+      params.personTitle = brand.industry || 'Specialist';
+    }
+
+    // Build the final prompt
+    const result = buildTemplatePrompt(templateId, params);
+
+    console.log('🎨 Template prompt built:');
+    console.log('   Template:', result.templateUsed);
+    console.log('   Prompt:', result.prompt.slice(0, 100) + '...');
 
     return NextResponse.json({
       success: true,
       concept: {
-        finalPrompt: prompt,
-        negativePrompt: 'photograph, photo, realistic scene, 3D render, cinematic, people, office, desk, hands, blurry, low quality, stock photo',
-        style: archetype || 'creative'
+        finalPrompt: result.prompt,
+        negativePrompt: result.negativePrompt,
+        templateUsed: result.templateUsed,
+        params: params // Return params so frontend can edit them
       }
     });
 
@@ -55,93 +114,21 @@ export async function POST(request: NextRequest) {
   }
 }
 
-async function generateCreativePrompt(params: {
-  brief: string;
-  brandName: string;
-  primaryColor: string;
-  secondaryColor: string;
-  aesthetic: string;
-  archetype: string;
-}): Promise<string> {
-  const { brief, brandName, primaryColor, secondaryColor, aesthetic, archetype } = params;
-
-  const systemPrompt = `Tu es un graphic designer créant des POSTS STATIQUES pour LinkedIn/Instagram.
-
-⚠️ IMPORTANT: Tu crées du GRAPHIC DESIGN, PAS des photos ou des scènes.
-
-FORMAT DE SORTIE: Une description de design graphique avec:
-- Le fond (gradient, couleur unie, texture)
-- La typographie (headline, style, placement)
-- Les éléments graphiques (formes, lignes, icônes)
-- Le logo et son placement
-- Les couleurs utilisées
-
-EXEMPLES DE BONS OUTPUTS:
-
-1. "Fond gradient du ${primaryColor} vers noir. Grande typo bold blanche centrée: 'VOTRE HEADLINE ICI'. Ligne horizontale fine en accent. Logo ${brandName} petit en bas à droite. Style épuré, moderne."
-
-2. "Fond ${primaryColor} uni avec texture grain subtile. Gros chiffre '47%' en blanc qui prend 60% de l'espace. Sous-titre en petit: 'de croissance'. Logo en haut à gauche. Minimaliste, impactant."
-
-3. "Split design: moitié gauche ${primaryColor}, moitié droite blanc. Citation client en typo serif élégante qui chevauche les deux côtés. Guillemets géants en accent. Logo centré en bas."
-
-4. "Fond noir mat. Formes géométriques abstraites en ${primaryColor} dans les coins. Headline en typo condensed blanche: 'LE MESSAGE CLÉ'. Baseline plus petite en dessous. Logo discret."
-
-CE QUE TU NE FAIS JAMAIS:
-- Décrire des photos (pas de "bureau", "personne", "écran", "main")
-- Décrire des scènes cinématiques
-- Utiliser "lumière naturelle", "ombres", "profondeur de champ"
-- Créer des rendus 3D ou des illustrations complexes
-
-TON OUTPUT = Instructions pour un GRAPHISTE, pas pour un PHOTOGRAPHE.`;
-
-  const userPrompt = `MARQUE: ${brandName}
-COULEURS: ${primaryColor} (principale), ${secondaryColor} (secondaire)
-ESTHÉTIQUE: ${aesthetic || 'moderne et clean'}
-${archetype ? `STYLE: ${archetype}` : ''}
-
-BRIEF: "${brief}"
-
-Crée un design de post social media statique. Décris le layout graphique, pas une photo.`;
-
-  try {
-    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${process.env.OPENROUTER_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "openai/gpt-4o",
-        messages: [
-          { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt }
-        ],
-        temperature: 0.9,
-        max_tokens: 200
-      })
-    });
-
-    if (!response.ok) {
-      throw new Error('GPT failed');
-    }
-
-    const data = await response.json();
-    const generatedPrompt = data.choices[0].message.content.trim();
-    
-    console.log('🎨 Creative Director output:', generatedPrompt);
-    
-    return generatedPrompt;
-
-  } catch (error) {
-    console.warn('Creative Director failed, using fallback');
-    // Fallback: simple graphic design prompt
-    return `Social media post design. Background: gradient from ${primaryColor} to dark. Large bold white headline text centered. ${brandName} logo small in corner. Clean, modern, minimal graphic design style.`;
-  }
-}
-
+// GET endpoint to list available templates
 export async function GET() {
+  const templates = getAllTemplates().map(t => ({
+    id: t.id,
+    name: t.name,
+    nameFr: t.nameFr,
+    description: t.description,
+    descriptionFr: t.descriptionFr,
+    icon: t.icon,
+    structure: t.structure,
+    fields: t.fields
+  }));
+
   return NextResponse.json({
-    styles: ['editorial', 'bold', 'minimal', 'corporate', 'raw'],
-    format: 'static social media graphic design'
+    success: true,
+    templates
   });
 }

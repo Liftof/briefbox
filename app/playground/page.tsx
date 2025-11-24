@@ -6,8 +6,19 @@ import Sidebar from './components/Sidebar';
 import BentoGrid from './components/BentoGrid';
 import CalendarView from './components/CalendarView';
 import ProjectsView from './components/ProjectsView';
+import { TemplateId } from '@/lib/templates';
 
 type Step = 'url' | 'analyzing' | 'bento' | 'playground';
+
+// Template definitions for the UI
+const TEMPLATES = [
+  { id: 'stat' as TemplateId, icon: '📊', name: 'Stat', desc: 'Chiffre clé impactant', placeholder: '+47% de croissance en 2024' },
+  { id: 'announcement' as TemplateId, icon: '📢', name: 'Annonce', desc: 'Lancement, news', placeholder: 'Nouveau: notre Dashboard V2 est disponible' },
+  { id: 'quote' as TemplateId, icon: '💬', name: 'Citation', desc: 'Témoignage client', placeholder: 'Grâce à [Brand], on a doublé notre ROI' },
+  { id: 'event' as TemplateId, icon: '🎤', name: 'Event', desc: 'Webinar, conférence', placeholder: 'Webinar: Les tendances 2025' },
+  { id: 'expert' as TemplateId, icon: '👤', name: 'Expert', desc: 'Thought leadership', placeholder: 'Interview de notre CEO sur l\'innovation' },
+  { id: 'product' as TemplateId, icon: '✨', name: 'Produit', desc: 'Feature, showcase', placeholder: 'Découvrez notre nouvelle fonctionnalité' },
+];
 type ToastType = 'success' | 'error' | 'info';
 
 type Toast = {
@@ -113,7 +124,7 @@ function PlaygroundContent() {
     };
   }, []);
 
-  // Listen for "use-angle" events from BentoGrid
+  // Listen for "use-angle" events from BentoGrid (legacy)
   useEffect(() => {
     const handleUseAngle = (e: CustomEvent) => {
       if (e.detail) {
@@ -125,6 +136,29 @@ function PlaygroundContent() {
     };
     window.addEventListener('use-angle', handleUseAngle as EventListener);
     return () => window.removeEventListener('use-angle', handleUseAngle as EventListener);
+  }, [showToast]);
+
+  // Listen for "use-template" events from BentoGrid (new template system)
+  useEffect(() => {
+    const handleUseTemplate = (e: CustomEvent) => {
+      if (e.detail) {
+        const { templateId, headline, metric, metricLabel } = e.detail;
+        setSelectedTemplate(templateId as TemplateId);
+        
+        // Build the brief based on template type
+        let briefText = headline || '';
+        if (templateId === 'stat' && metric) {
+          briefText = `${metric} ${metricLabel || ''}`.trim();
+        }
+        setBrief(briefText);
+        
+        setStep('playground');
+        setActiveTab('create');
+        showToast(`Template "${templateId}" sélectionné`, 'success');
+      }
+    };
+    window.addEventListener('use-template', handleUseTemplate as EventListener);
+    return () => window.removeEventListener('use-template', handleUseTemplate as EventListener);
   }, [showToast]);
 
   const generateBackgroundsForBrand = useCallback(
@@ -180,24 +214,21 @@ function PlaygroundContent() {
     const selection = Array.from(new Set([...prioritized, ...fallback].filter(Boolean)));
     setUploadedImages(selection.slice(0, 6));
 
-    if (brand.marketingAngles?.length && !brief) {
-      const firstConcept = brand.marketingAngles[0]?.concept || '';
-      if (firstConcept) {
-        // Only keep the concept description, remove "Concept: " prefix if present
-        // And ensure we don't start with a full generated prompt, just the idea
-        setBrief(firstConcept.replace(/^(Concept \d+:|Title:|Concept:)\s*/i, ''));
-        
-        // Trigger initial generation if we have images
-        if (selection.length > 0) {
-             // Use a small timeout to let state settle
-             setTimeout(() => {
-                 // Only auto-generate if we are on the bento step or just finished analyzing
-                 // But we need to be careful not to trigger it if the user is just browsing
-                 // For now, let's just set the brief.
-                 // If we want auto-generation, we should call handleGenerate here.
-                 // handleGenerate(firstConcept, false, brand, selection); // Uncomment to auto-generate
-             }, 1000);
-        }
+    // New: Use suggestedPosts (template-based) if available
+    if (brand.suggestedPosts?.length && !brief) {
+      const firstPost = brand.suggestedPosts[0];
+      if (firstPost) {
+        // Set template and brief
+        setSelectedTemplate(firstPost.templateId as TemplateId);
+        const briefText = firstPost.headline || (firstPost.metric ? `${firstPost.metric} ${firstPost.metricLabel || ''}` : '');
+        if (briefText) setBrief(briefText);
+      }
+    } 
+    // Fallback to old marketingAngles format
+    else if (brand.marketingAngles?.length && !brief) {
+      const firstAngle = brand.marketingAngles[0];
+      if (firstAngle?.concept || firstAngle?.title) {
+        setBrief((firstAngle.concept || firstAngle.title).replace(/^(Concept \d+:|Title:|Concept:)\s*/i, ''));
       }
     }
 
@@ -334,16 +365,34 @@ function PlaygroundContent() {
       setUploadedImages(autoImages);
     }
     
-    // Create default brief from first marketing angle or brand info
+    // Create default brief from suggested posts (new) or marketing angles (legacy)
     let defaultBrief = brief;
+    let defaultTemplate = selectedTemplate;
+    
     if (!defaultBrief) {
-      const angles = Array.isArray(brandData.marketingAngles) ? brandData.marketingAngles : [];
-      if (angles.length > 0 && angles[0].title) {
-        defaultBrief = `Post annonce: ${angles[0].title} - ${brandData.name}`;
-      } else {
-        defaultBrief = `Post de présentation de ${brandData.name}: ${brandData.tagline || 'notre expertise'}`;
+      // Try new suggestedPosts format first
+      const posts = Array.isArray(brandData.suggestedPosts) ? brandData.suggestedPosts : [];
+      if (posts.length > 0) {
+        const firstPost = posts[0];
+        defaultTemplate = firstPost.templateId as TemplateId;
+        defaultBrief = firstPost.headline || (firstPost.metric ? `${firstPost.metric} ${firstPost.metricLabel || ''}` : '');
       }
+      // Fallback to old marketingAngles format
+      else {
+        const angles = Array.isArray(brandData.marketingAngles) ? brandData.marketingAngles : [];
+        if (angles.length > 0 && (angles[0].title || angles[0].concept)) {
+          defaultBrief = angles[0].concept || angles[0].title;
+        }
+      }
+      
+      // Final fallback
+      if (!defaultBrief) {
+        defaultBrief = `Découvrez ${brandData.name}`;
+        defaultTemplate = 'announcement';
+      }
+      
       setBrief(defaultBrief);
+      if (defaultTemplate) setSelectedTemplate(defaultTemplate);
     }
     
     setStep('playground');
@@ -502,7 +551,7 @@ ${enhancement}`);
     showToast('Prompt enrichi', 'success');
   };
 
-  const [selectedArchetype, setSelectedArchetype] = useState<string>('');
+  const [selectedTemplate, setSelectedTemplate] = useState<TemplateId | null>(null);
 
   const handleGenerate = async (
     customPrompt?: string,
@@ -544,7 +593,7 @@ ${enhancement}`);
           body: JSON.stringify({
             brief: finalPrompt,
             brand: targetBrand,
-            archetype: selectedArchetype || undefined
+            templateId: selectedTemplate || undefined
           })
         });
         
@@ -748,8 +797,8 @@ ${enhancement}`);
                   </p>
                   
                 <button
-                  onClick={handleAnalyzeBrand}
-                  disabled={!websiteUrl}
+                onClick={handleAnalyzeBrand}
+                disabled={!websiteUrl}
                   className="group bg-gray-900 text-white px-8 py-4 font-medium text-sm disabled:opacity-30 disabled:cursor-not-allowed transition-all hover:bg-emerald-600"
                 >
                   <span className="flex items-center gap-3">
@@ -928,49 +977,60 @@ ${enhancement}`);
           </p>
         </div>
 
-        {/* Visual Archetype Selector */}
+        {/* Template Selector - The Core Feature */}
         <div className="mb-8">
-          <div className="text-[10px] font-mono uppercase tracking-widest text-gray-400 mb-4">Style visuel</div>
-          <div className="flex gap-2 flex-wrap">
-            {[
-              { id: '', label: 'Auto', desc: 'Adapté à votre marque' },
-              { id: 'editorial', label: 'Editorial', desc: 'Magazine haut de gamme' },
-              { id: 'lifestyle', label: 'Lifestyle', desc: 'Authentique, chaleureux' },
-              { id: 'bold', label: 'Bold', desc: 'Impactant, graphique' },
-              { id: 'minimal', label: 'Minimal', desc: 'Épuré, luxury' },
-              { id: 'corporate', label: 'Corporate', desc: 'Pro, trustworthy' },
-              { id: 'raw', label: 'Raw', desc: 'Authentique, lo-fi' },
-            ].map((style) => (
+          <div className="text-[10px] font-mono uppercase tracking-widest text-gray-400 mb-4">
+            Choisir un format
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+            {TEMPLATES.map((template) => (
               <button
-                key={style.id}
-                onClick={() => setSelectedArchetype(style.id)}
-                className={`px-4 py-2 text-sm font-medium transition-all border ${
-                  selectedArchetype === style.id
+                key={template.id}
+                onClick={() => {
+                  setSelectedTemplate(template.id);
+                  setBrief(template.placeholder);
+                }}
+                className={`p-4 text-left transition-all border group ${
+                  selectedTemplate === template.id
                     ? 'bg-gray-900 text-white border-gray-900'
-                    : 'bg-white text-gray-600 border-gray-200 hover:border-gray-400'
+                    : 'bg-white text-gray-600 border-gray-200 hover:border-gray-400 hover:bg-gray-50'
                 }`}
-                title={style.desc}
               >
-                {style.label}
+                <div className="text-2xl mb-2">{template.icon}</div>
+                <div className={`font-semibold text-sm mb-1 ${selectedTemplate === template.id ? 'text-white' : 'text-gray-900'}`}>
+                  {template.name}
+                </div>
+                <div className={`text-xs ${selectedTemplate === template.id ? 'text-gray-300' : 'text-gray-400'}`}>
+                  {template.desc}
+                </div>
               </button>
             ))}
           </div>
         </div>
 
-        {/* Visual Ideas from Brand Analysis */}
-        {visualIdeas.length > 0 && (
+        {/* Suggested Posts from Brand Analysis */}
+        {brandData?.suggestedPosts?.length > 0 && (
           <div className="mb-8">
-            <div className="text-[10px] font-mono uppercase tracking-widest text-gray-400 mb-3">Suggestions</div>
+            <div className="text-[10px] font-mono uppercase tracking-widest text-gray-400 mb-3">
+              Suggestions pour {brandData.name}
+            </div>
             <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
-            {visualIdeas.map((idea, i) => (
-              <button
-                key={i}
-                onClick={() => setBrief(idea)}
-                  className="whitespace-nowrap px-4 py-2 bg-white border border-gray-200 text-sm text-gray-600 hover:border-gray-400 hover:text-gray-900 transition-colors flex items-center gap-2"
-              >
-                  <span className="text-emerald-500">→</span> {idea.substring(0, 40)}...
-              </button>
-            ))}
+              {brandData.suggestedPosts.map((post: any, i: number) => {
+                const template = TEMPLATES.find(t => t.id === post.templateId);
+                return (
+                  <button
+                    key={i}
+                    onClick={() => {
+                      setSelectedTemplate(post.templateId as TemplateId);
+                      setBrief(post.headline || post.metric ? `${post.metric} ${post.metricLabel || ''}` : '');
+                    }}
+                    className="whitespace-nowrap px-4 py-3 bg-white border border-gray-200 text-sm text-gray-600 hover:border-gray-400 hover:text-gray-900 transition-colors flex items-center gap-3"
+                  >
+                    <span className="text-lg">{template?.icon || '📝'}</span>
+                    <span className="font-medium">{post.headline || `${post.metric} ${post.metricLabel || ''}`}</span>
+                  </button>
+                );
+              })}
             </div>
           </div>
         )}
@@ -1023,31 +1083,31 @@ ${enhancement}`);
                   </span>
                 </button>
               ) : (
-                <div className="flex gap-3 overflow-x-auto pb-2 no-scrollbar">
-                  {uploadedImages.map((img, i) => (
+              <div className="flex gap-3 overflow-x-auto pb-2 no-scrollbar">
+                {uploadedImages.map((img, i) => (
                     <div key={i} className="relative w-14 h-14 flex-shrink-0 group">
                       <img src={img} className="w-full h-full object-cover border border-gray-200" />
-                      <button
-                        onClick={() => handleRemoveImage(i)}
+                    <button
+                      onClick={() => handleRemoveImage(i)}
                         className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-gray-900 text-white flex items-center justify-center text-[10px] opacity-0 group-hover:opacity-100 transition-opacity"
-                      >
-                        ×
-                      </button>
-                    </div>
-                  ))}
-                  <button
-                    onClick={() => setShowSourceManager(true)}
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+                <button
+                  onClick={() => setShowSourceManager(true)}
                     className="w-14 h-14 flex-shrink-0 border border-dashed border-gray-300 flex items-center justify-center text-gray-400 hover:border-emerald-500 hover:text-emerald-500 hover:bg-emerald-50/30 transition-all"
-                  >
+                >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
                       <path d="M12 4v16m8-8H4" />
                     </svg>
-                  </button>
+                </button>
                 </div>
               )}
-              <input ref={fileInputRef} type="file" multiple accept="image/*" className="hidden" onChange={handleImageUpload} />
+                <input ref={fileInputRef} type="file" multiple accept="image/*" className="hidden" onChange={handleImageUpload} />
+              </div>
             </div>
-          </div>
 
           {/* Actions footer */}
           <div className="flex items-center justify-between px-6 py-4 border-t border-gray-100 bg-gray-50/50">

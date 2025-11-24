@@ -249,13 +249,13 @@ export async function POST(request: Request) {
         "logo": "URL to the MAIN brand logo (prioritize clear, high-res, distinct from client logos)",
         "industry": "Specific industry (e.g. 'SaaS Fintech', 'Organic Skincare', 'Industrial Manufacturing')",
         "visualMotifs": ["Motif 1 (e.g. 'Data charts')", "Motif 2 (e.g. 'Abstract networks')", "Motif 3"],
-        "marketingAngles": [
+        "suggestedPosts": [
            {
-             "title": "Titre court et accrocheur (ex: 'La stat qui tue')",
-             "hook": "Le message clé en 5-10 mots (ex: '+47% de productivité en 3 mois')",
-             "concept": "Brief GRAPHIC DESIGN (max 20 mots): type de post + layout + éléments visuels (ex: 'Post stat: gros chiffre blanc centré sur fond gradient bleu, logo petit en bas')",
-             "emotionalTension": "L'émotion visée (ex: 'Confiance', 'FOMO', 'Curiosité')",
-             "platform": "instagram ou linkedin"
+             "templateId": "stat | announcement | event | quote | expert | product",
+             "headline": "Le texte principal du post (ex: '+47% de productivité')",
+             "subheadline": "Texte secondaire optionnel",
+             "metric": "Pour stat: le chiffre clé (ex: '87%', '10K+')",
+             "metricLabel": "Pour stat: le contexte du chiffre (ex: 'de croissance')"
            }
         ],
         "analyzedImages": [
@@ -264,12 +264,6 @@ export async function POST(request: Request) {
              "category": "main_logo" | "client_logo" | "product" | "app_ui" | "person" | "icon" | "texture" | "other",
              "description": "Short visual description (e.g. 'Dashboard on laptop', 'Man holding coffee cup')"
            }
-        ],
-        "visualConcepts": [
-           "Post stat: [Chiffre clé] en grand sur fond [couleur marque]",
-           "Post citation client avec témoignage impactant",
-           "Post annonce: [Nouvelle feature/produit] avec headline bold",
-           "Post éducatif: Tips ou how-to en format liste"
         ],
         "backgroundPrompts": [
            "Smooth gradient from [couleur primaire] to black, subtle grain texture, minimal",
@@ -292,28 +286,26 @@ export async function POST(request: Request) {
          
          ⚠️ CRITICAL: A microphone is ALWAYS 'product', NEVER 'person'. An object with a round top and a stand is NOT a person. Apply strict visual criteria.
       4. **MAPPING:** 'analyzedImages' must map the URLs from the 'DETECTED IMAGES' list provided above.
-      5. **ANGLES (CRITICAL):** Generate 4-5 briefs pour des POSTS SOCIAL MEDIA STATIQUES (LinkedIn/Instagram).
+      5. **SUGGESTED POSTS (CRITICAL):** Generate 4-5 ready-to-use social media post suggestions.
          
-         ⚠️ CE SONT DES DESIGNS GRAPHIQUES, PAS DES PHOTOS OU DES SCÈNES CINÉMATIQUES.
+         AVAILABLE TEMPLATE IDS:
+         - "stat": Big metric post (+47%, 10K+, 3x). REQUIRES: metric + metricLabel
+         - "announcement": News/launch post. REQUIRES: headline + subheadline
+         - "quote": Testimonial post. REQUIRES: headline (the quote text)
+         - "event": Webinar/event post. REQUIRES: headline (event name)
+         - "expert": Feature a speaker/expert. REQUIRES: headline + subheadline
+         - "product": Product showcase. REQUIRES: headline + subheadline
          
-         TYPES DE POSTS À PROPOSER:
-         - Post STAT: Un gros chiffre/métrique en hero ("+47%", "3x", "10K+")
-         - Post CITATION: Témoignage client avec guillemets décoratifs
-         - Post ANNONCE: Nouvelle feature/produit avec headline bold
-         - Post ÉDUCATIF: Tips ou how-to avec liste ou icônes
-         - Post QUESTION: Question engageante qui génère des commentaires
+         EXAMPLES:
+         - { "templateId": "stat", "headline": "", "metric": "+47%", "metricLabel": "de productivité" }
+         - { "templateId": "announcement", "headline": "Nouveau: Dashboard V2", "subheadline": "Plus rapide, plus intuitif" }
+         - { "templateId": "quote", "headline": "Grâce à [Brand], on a doublé notre ROI", "subheadline": "— Marie, CEO @Startup" }
          
-         FORMAT DU CONCEPT (max 20 mots):
-         - BON: "Post stat: chiffre '89%' en blanc géant sur fond gradient bleu foncé, logo en bas"
-         - BON: "Post citation: témoignage sur fond noir, guillemets dorés, photo avatar ronde"
-         - MAUVAIS: "A modern office with people looking at screens..." (c'est une photo!)
-         - MAUVAIS: "Morning light filtering through windows..." (c'est cinématique!)
+         RULES:
+         - Use REAL data from the brand (real metrics, real features, real testimonials if found)
+         - If no real data, INVENT plausible but specific content (not generic "growth" but "+47% in Q3")
+         - Each suggestion should be immediately usable without editing
       6. **BACKGROUNDS:** 'backgroundPrompts' should generate high-quality, versatile backgrounds that match the brand aesthetic, suitable for overlays.
-      7. **VISUAL CONCEPTS (CRITICAL):** Generate 4 SHORT briefs for STATIC SOCIAL MEDIA POSTS (graphic design, NOT photos). Format: "Type de post: Description courte du design" (max 15 mots chacun).
-         BONS: "Post stat: +47% de croissance sur fond noir, typo bold blanche"
-         BONS: "Post citation: Témoignage client avec guillemets géants en accent"
-         MAUVAIS: "A cluttered desk with papers..." (c'est une photo, pas un design)
-         MAUVAIS: "Morning light filtering through..." (c'est cinématique, pas du graphisme)
       
       If content is empty, INFER reasonable defaults based on the URL and domain name.
     `;

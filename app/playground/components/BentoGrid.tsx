@@ -196,15 +196,62 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
             )}
           </div>
 
-          {/* Marketing Angles */}
-          {localData.marketingAngles && localData.marketingAngles.length > 0 && (
+          {/* Suggested Post Templates */}
+          {localData.suggestedPosts && localData.suggestedPosts.length > 0 && (
+            <div className="relative bg-gray-900 p-6 border border-gray-800">
+              <div className="absolute -bottom-2 -right-2 w-4 h-4 border-r-2 border-b-2 border-emerald-500" />
+              
+              <div className="flex items-center gap-2 mb-5">
+                <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full" />
+                <span className="text-[10px] font-mono uppercase tracking-widest text-emerald-400">Posts suggérés</span>
+                <span className="ml-auto text-[10px] text-gray-500">Cliquez pour générer</span>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-3">
+                {localData.suggestedPosts.slice(0, 4).map((post: any, i: number) => {
+                  const templateIcons: Record<string, string> = {
+                    stat: '📊',
+                    announcement: '📢',
+                    quote: '💬',
+                    event: '🎤',
+                    expert: '👤',
+                    product: '✨'
+                  };
+                  const icon = templateIcons[post.templateId] || '📝';
+                  const displayText = post.headline || (post.metric ? `${post.metric} ${post.metricLabel || ''}` : 'Post');
+                  
+                  return (
+                    <button 
+                      key={i} 
+                      onClick={() => {
+                        window.dispatchEvent(new CustomEvent('use-template', { 
+                          detail: { templateId: post.templateId, ...post } 
+                        }));
+                      }}
+                      className="group p-4 bg-white/5 hover:bg-emerald-500/20 transition-all text-left border border-transparent hover:border-emerald-500/50"
+                    >
+                      <div className="text-2xl mb-2">{icon}</div>
+                      <div className="text-xs uppercase text-gray-500 mb-1 font-mono tracking-wider">
+                        {post.templateId}
+                      </div>
+                      <div className="text-white text-sm font-medium line-clamp-2">
+                        {displayText}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+          
+          {/* Fallback: Old Marketing Angles (backwards compatibility) */}
+          {!localData.suggestedPosts?.length && localData.marketingAngles?.length > 0 && (
             <div className="relative bg-gray-900 p-6 border border-gray-800">
               <div className="absolute -bottom-2 -right-2 w-4 h-4 border-r-2 border-b-2 border-emerald-500" />
               
               <div className="flex items-center gap-2 mb-5">
                 <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full" />
                 <span className="text-[10px] font-mono uppercase tracking-widest text-emerald-400">Creative Angles</span>
-                <span className="ml-auto text-[10px] text-gray-500">Ready to generate</span>
               </div>
               
               <div className="space-y-3 max-h-[200px] overflow-y-auto no-scrollbar">
@@ -212,24 +259,13 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
                   <div key={i} className="group p-3 bg-white/5 hover:bg-white/10 transition-all cursor-pointer">
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="font-medium text-white text-sm truncate">{angle.title}</span>
-                          {angle.platform && (
-                            <span className="text-[8px] uppercase px-1.5 py-0.5 bg-gray-800 text-gray-400 flex-shrink-0">
-                              {angle.platform}
-                            </span>
-                          )}
-                        </div>
-                        {angle.hook && (
-                          <p className="text-emerald-400 text-xs italic mb-1 truncate">"{angle.hook}"</p>
-                        )}
-                        <p className="text-gray-400 text-[11px] line-clamp-2">{angle.concept}</p>
+                        <span className="font-medium text-white text-sm truncate block">{angle.title || angle.hook || 'Angle'}</span>
+                        <p className="text-gray-400 text-[11px] line-clamp-2 mt-1">{angle.concept || angle.hook || ''}</p>
                       </div>
                       <button 
                         className="opacity-0 group-hover:opacity-100 transition-opacity px-2 py-1 bg-emerald-500 text-white text-[9px] font-medium flex-shrink-0"
                         onClick={() => {
-                          const brief = angle.concept || angle.title;
-                          window.dispatchEvent(new CustomEvent('use-angle', { detail: brief }));
+                          window.dispatchEvent(new CustomEvent('use-angle', { detail: angle.concept || angle.title }));
                         }}
                       >
                         USE →
