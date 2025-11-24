@@ -54,6 +54,8 @@ function PlaygroundContent() {
 
   const [uploadedImages, setUploadedImages] = useState<string[]>([]);
   const [sourceUrl, setSourceUrl] = useState('');
+  const [socialLinks, setSocialLinks] = useState<string[]>(['', '']);
+  const [otherLinks, setOtherLinks] = useState<string>('');
   const [isAddingSource, setIsAddingSource] = useState(false);
 
   const [editingImage, setEditingImage] = useState<string | null>(null);
@@ -235,7 +237,11 @@ function PlaygroundContent() {
       const response = await fetch('/api/brand/analyze', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url })
+        body: JSON.stringify({ 
+            url,
+            socialLinks: socialLinks.filter(Boolean),
+            otherLinks: otherLinks.split(',').map(l => l.trim()).filter(Boolean)
+        })
       });
       const data = await response.json();
       if (!response.ok || !data.success) {
@@ -513,23 +519,78 @@ ${enhancement}`);
           <p className="text-xl text-gray-500 mb-12">
             Entrez l'URL de votre site web. Notre IA va scanner votre marque, récupérer votre logo, vos couleurs et votre style en quelques secondes.
           </p>
-          <div className="flex gap-2 p-2 bg-white border border-gray-200 rounded-2xl shadow-lg focus-within:ring-4 ring-black/5 transition-all transform hover:scale-105 duration-300">
-            <input
-              type="text"
-              placeholder="www.mon-super-site.com"
-              className="flex-1 outline-none px-6 text-lg"
-              value={websiteUrl}
-              onChange={(e) => setWebsiteUrl(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleAnalyzeBrand()}
-            />
-            <button
-              onClick={handleAnalyzeBrand}
-              disabled={!websiteUrl}
-              className="bg-black text-white px-8 py-4 rounded-xl font-bold text-lg hover:bg-gray-800 disabled:opacity-50 transition-colors"
-            >
-              C'est parti →
-            </button>
+          <div className="flex flex-col gap-4 w-full max-w-3xl bg-white p-8 rounded-3xl shadow-2xl border border-gray-100">
+            {/* Website Input */}
+            <div className="flex gap-3 p-2 bg-gray-50 border border-gray-200 rounded-2xl focus-within:ring-4 ring-black/5 transition-all">
+                <div className="flex items-center pl-4 text-2xl">🌐</div>
+                <input
+                type="text"
+                placeholder="www.mon-super-site.com (Site principal)"
+                className="flex-1 outline-none px-4 text-lg bg-transparent"
+                value={websiteUrl}
+                onChange={(e) => setWebsiteUrl(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleAnalyzeBrand()}
+                />
+            </div>
+
+            {/* Social Media Inputs */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="flex gap-2 p-2 bg-white border border-gray-200 rounded-xl focus-within:border-black transition-colors">
+                    <div className="flex items-center pl-2 text-xl opacity-50">🔗</div>
+                    <input
+                        type="text"
+                        placeholder="LinkedIn / Instagram (Optionnel)"
+                        className="flex-1 outline-none px-2 text-sm"
+                        value={socialLinks[0]}
+                        onChange={(e) => {
+                            const newLinks = [...socialLinks];
+                            newLinks[0] = e.target.value;
+                            setSocialLinks(newLinks);
+                        }}
+                    />
+                </div>
+                <div className="flex gap-2 p-2 bg-white border border-gray-200 rounded-xl focus-within:border-black transition-colors">
+                    <div className="flex items-center pl-2 text-xl opacity-50">🔗</div>
+                    <input
+                        type="text"
+                        placeholder="Autre réseau (Optionnel)"
+                        className="flex-1 outline-none px-2 text-sm"
+                        value={socialLinks[1]}
+                        onChange={(e) => {
+                            const newLinks = [...socialLinks];
+                            newLinks[1] = e.target.value;
+                            setSocialLinks(newLinks);
+                        }}
+                    />
+                </div>
+            </div>
+
+            {/* Other Links */}
+            <div className="flex gap-2 p-3 bg-white border border-gray-200 rounded-xl focus-within:border-black transition-colors">
+                <div className="flex items-center pl-2 text-xl opacity-50">➕</div>
+                <input
+                    type="text"
+                    placeholder="Autres liens contextuels (Presse, Notion, Drive...) - Séparés par des virgules"
+                    className="flex-1 outline-none px-2 text-sm"
+                    value={otherLinks}
+                    onChange={(e) => setOtherLinks(e.target.value)}
+                />
+            </div>
+
+            <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-100">
+                <p className="text-xs text-gray-400 italic max-w-md">
+                    ℹ️ Il vous sera possible de modifier et ajouter des éléments par la suite dans votre espace "Sources".
+                </p>
+                <button
+                onClick={handleAnalyzeBrand}
+                disabled={!websiteUrl}
+                className="bg-black text-white px-8 py-4 rounded-2xl font-bold text-lg hover:bg-gray-800 hover:scale-105 disabled:opacity-50 disabled:scale-100 transition-all shadow-lg shadow-black/20"
+                >
+                Analyser ma marque →
+                </button>
+            </div>
           </div>
+          
           <p className="mt-8 text-sm text-gray-400">
             Ou{' '}
             <button onClick={() => setStep('playground')} className="underline hover:text-black">
@@ -988,11 +1049,11 @@ ${enhancement}`);
         <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} brandData={brandData} onEditBrand={() => setStep('bento')} />
       )}
 
-      <div className={`flex-1 ${step !== 'url' && step !== 'analyzing' && step !== 'bento' ? 'ml-64' : 'w-full'}`}>
+      <div className={`flex-1 transition-all duration-300 ${step !== 'url' && step !== 'analyzing' && step !== 'bento' ? 'ml-24 md:ml-32 lg:ml-64' : 'w-full'}`}>
         <main className={`mx-auto min-h-screen flex flex-col justify-center transition-all duration-500 ${
             step === 'bento' 
                 ? 'w-full px-4 md:px-12 py-8 max-w-[1920px]' 
-                : 'max-w-6xl p-8'
+                : 'max-w-7xl p-4 md:p-8'
         }`}>
           {renderContent()}
         </main>

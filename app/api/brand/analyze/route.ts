@@ -4,6 +4,8 @@ export async function POST(request: Request) {
   try {
     const reqBody = await request.json();
     let url = reqBody.url;
+    const socialLinks = reqBody.socialLinks || [];
+    const otherLinks = reqBody.otherLinks || [];
 
     if (!url) {
       return NextResponse.json({ error: 'URL is required' }, { status: 400 });
@@ -13,12 +15,16 @@ export async function POST(request: Request) {
       url = 'https://' + url;
     }
 
+    // Gather all URLs to scrape (Website + Socials + Other)
+    const urlsToScrape = [url, ...socialLinks, ...otherLinks].filter(
+        (u) => u && typeof u === 'string' && u.startsWith('http')
+    );
+
     // 1. Scrape with Firecrawl & Parallel Web Systems
-    console.log('🔥 Scraping:', url);
+    console.log('🔥 Scraping:', urlsToScrape);
     let firecrawlMarkdown = '';
     let firecrawlMetadata: any = {};
     let parallelContent = '';
-    let parallelImages: string[] = [];
     
     const PARALLEL_API_KEY = process.env.PARALLEL_API_KEY;
     const parallelHeaders: Record<string, string> = {
@@ -29,30 +35,33 @@ export async function POST(request: Request) {
     }
 
     try {
-        const [firecrawlRes, parallelRes] = await Promise.allSettled([
-            fetch('https://api.firecrawl.dev/v1/scrape', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${process.env.FIRECRAWL_API_KEY}`
-                },
-                body: JSON.stringify({
-                    url,
-                    formats: ["markdown", "html", "screenshot"], // Request HTML and Screenshot
-                    onlyMainContent: false // Try to get everything including headers/footers for logos
-                })
-            }),
-            fetch('https://api.parallel.ai/v1beta/extract', {
-                method: 'POST',
-                headers: parallelHeaders,
-                body: JSON.stringify({
-                    urls: [url],
-                    objective: "Extract the brand identity, logo URL, color palette, fonts, brand values, and main product images.",
-                    excerpts: true,
-                    full_content: false // We use excerpts for focused info, Firecrawl for structure
-                })
+        // Firecrawl mainly for the primary website to get structure
+        const firecrawlPromise = fetch('https://api.firecrawl.dev/v1/scrape', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${process.env.FIRECRAWL_API_KEY}`
+            },
+            body: JSON.stringify({
+                url, // Primary URL only for detailed structure
+                formats: ["markdown", "html", "screenshot"],
+                onlyMainContent: false
             })
-        ]);
+        });
+
+        // Parallel AI for extracting data from ALL links (website + socials)
+        const parallelPromise = fetch('https://api.parallel.ai/v1beta/extract', {
+            method: 'POST',
+            headers: parallelHeaders,
+            body: JSON.stringify({
+                urls: urlsToScrape, // Send all URLs
+                objective: "Extract the brand identity, logo URL, color palette, fonts, brand values, main product images, and analyze social media vibes.",
+                excerpts: true,
+                full_content: false
+            })
+        });
+
+        const [firecrawlRes, parallelRes] = await Promise.allSettled([firecrawlPromise, parallelPromise]);
 
         // Process Firecrawl
         if (firecrawlRes.status === 'fulfilled' && firecrawlRes.value.ok) {
@@ -75,15 +84,13 @@ export async function POST(request: Request) {
         if (parallelRes.status === 'fulfilled' && parallelRes.value.ok) {
             const parallelData = await parallelRes.value.json();
             if (parallelData.results && parallelData.results.length > 0) {
-                const result = parallelData.results[0];
-                // Extract excerpts
-                if (result.excerpts) {
-                    parallelContent = result.excerpts.join('\n\n');
-                }
+                // Concatenate excerpts from all sources
+                parallelContent = parallelData.results
+                    .map((res: any) => `SOURCE (${res.url}):\n` + (res.excerpts || []).join('\n\n'))
+                    .join('\n\n---\n\n');
                 console.log('✅ Parallel AI success');
             }
         } else {
-             // Log the error body if possible
              if (parallelRes.status === 'fulfilled') {
                  console.warn('Parallel API failed:', await parallelRes.value.text());
              } else {
