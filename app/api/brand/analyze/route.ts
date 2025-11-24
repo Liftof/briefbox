@@ -21,6 +21,12 @@ export async function POST(request: Request) {
     let parallelImages: string[] = [];
     
     const PARALLEL_API_KEY = process.env.PARALLEL_API_KEY;
+    const parallelHeaders: Record<string, string> = {
+        'Content-Type': 'application/json',
+    };
+    if (PARALLEL_API_KEY) {
+        parallelHeaders['x-api-key'] = PARALLEL_API_KEY;
+    }
 
     try {
         const [firecrawlRes, parallelRes] = await Promise.allSettled([
@@ -38,10 +44,7 @@ export async function POST(request: Request) {
             }),
             fetch('https://api.parallel.ai/v1beta/extract', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-api-key': PARALLEL_API_KEY
-                },
+                headers: parallelHeaders,
                 body: JSON.stringify({
                     urls: [url],
                     objective: "Extract the brand identity, logo URL, color palette, fonts, brand values, and main product images.",
@@ -57,9 +60,9 @@ export async function POST(request: Request) {
             if (scrapeData.success) {
                 firecrawlMarkdown = scrapeData.data?.markdown || '';
                 firecrawlMetadata = { 
-                    ...scrapeData.data?.metadata, 
+                    ...(scrapeData.data?.metadata || {}), 
                     screenshot: scrapeData.data?.screenshot 
-                } || {};
+                };
                 console.log('✅ Firecrawl success');
             } else {
                 console.warn('Firecrawl returned success:false', scrapeData);

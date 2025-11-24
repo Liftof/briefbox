@@ -60,7 +60,7 @@ export async function POST(request: Request) {
     const result = await db.insert(posts).values({
       userId,
       brandId: parseInt(brandId),
-      campaignId: campaignId ? parseInt(campaignId) : null,
+      campaignId: campaignId ? parseInt(campaignId) : undefined,
       content,
       mediaUrl,
       platform: platform || 'instagram',
