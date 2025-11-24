@@ -600,90 +600,177 @@ ${enhancement}`);
   const renderContent = () => {
     if (step === 'url') {
       return (
-        <div className="max-w-2xl mx-auto py-20 text-center animate-fade-in">
-          <h1 className="text-5xl font-black mb-6 tracking-tight">On commence par votre site.</h1>
-          <p className="text-xl text-gray-500 mb-12">
-            Entrez l'URL de votre site web. Notre IA va scanner votre marque, récupérer votre logo, vos couleurs et votre style en quelques secondes.
-          </p>
-          <div className="flex flex-col gap-4 w-full max-w-3xl bg-white p-8 rounded-3xl shadow-2xl border border-gray-100">
-            {/* Website Input */}
-            <div className="flex gap-3 p-2 bg-gray-50 border border-gray-200 rounded-2xl focus-within:ring-4 ring-black/5 transition-all">
-                <div className="flex items-center pl-4 text-2xl">🌐</div>
-                <input
-                type="text"
-                placeholder="www.mon-super-site.com (Site principal)"
-                className="flex-1 outline-none px-4 text-lg bg-transparent"
-                value={websiteUrl}
-                onChange={(e) => setWebsiteUrl(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleAnalyzeBrand()}
-                />
+        <div className="min-h-[85vh] flex items-center justify-center animate-fade-in relative">
+          {/* Subtle grid background */}
+          <div className="absolute inset-0 opacity-[0.03]" style={{
+            backgroundImage: `linear-gradient(#000 1px, transparent 1px), linear-gradient(90deg, #000 1px, transparent 1px)`,
+            backgroundSize: '60px 60px'
+          }} />
+          
+          {/* Floating accent */}
+          <div className="absolute top-20 right-20 w-64 h-64 bg-gradient-to-br from-amber-200/20 to-orange-300/10 rounded-full blur-3xl" />
+          <div className="absolute bottom-32 left-16 w-48 h-48 bg-gradient-to-tr from-emerald-200/15 to-teal-300/10 rounded-full blur-3xl" />
+
+          <div className="relative z-10 w-full max-w-2xl mx-auto px-6">
+            {/* Header */}
+            <div className="mb-16">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+                <span className="text-xs font-mono uppercase tracking-[0.2em] text-gray-400">Brand Scanner</span>
+              </div>
+              
+              <h1 className="text-4xl md:text-5xl font-light text-gray-900 leading-[1.1] mb-4" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+                Commençons par<br />
+                <span className="font-semibold">votre identité.</span>
+              </h1>
+              
+              <p className="text-gray-400 text-lg max-w-md leading-relaxed">
+                Notre IA analyse votre site en quelques secondes — logo, couleurs, ton, positionnement.
+              </p>
             </div>
 
-            {/* Social Media Inputs */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="flex gap-2 p-2 bg-white border border-gray-200 rounded-xl focus-within:border-black transition-colors">
-                    <div className="flex items-center pl-2 text-xl opacity-50">🔗</div>
+            {/* Main Input Card */}
+            <div className="relative">
+              {/* Decorative corner */}
+              <div className="absolute -top-3 -left-3 w-6 h-6 border-l-2 border-t-2 border-gray-200" />
+              <div className="absolute -bottom-3 -right-3 w-6 h-6 border-r-2 border-b-2 border-gray-200" />
+              
+              <div className="bg-white border border-gray-200 p-8 space-y-6">
+                {/* Primary URL Input */}
+                <div className="group">
+                  <label className="block text-[10px] font-mono uppercase tracking-widest text-gray-400 mb-2">
+                    Site principal *
+                  </label>
+                  <div className="relative">
                     <input
-                        type="text"
-                        placeholder="LinkedIn / Instagram (Optionnel)"
-                        className="flex-1 outline-none px-2 text-sm"
-                        value={socialLinks[0]}
-                        onChange={(e) => {
+                      type="text"
+                      placeholder="votresite.com"
+                      className="w-full bg-transparent border-b-2 border-gray-200 py-4 text-xl font-light outline-none transition-all placeholder:text-gray-300 focus:border-black"
+                      value={websiteUrl}
+                      onChange={(e) => setWebsiteUrl(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && handleAnalyzeBrand()}
+                    />
+                    <div className="absolute right-0 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-black transition-colors">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                        <circle cx="12" cy="12" r="10" />
+                        <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Expandable Additional Sources */}
+                <details className="group">
+                  <summary className="flex items-center gap-2 cursor-pointer text-sm text-gray-400 hover:text-gray-600 transition-colors list-none">
+                    <svg className="w-4 h-4 transition-transform group-open:rotate-90" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                      <path d="M9 5l7 7-7 7" />
+                    </svg>
+                    <span className="font-mono text-xs uppercase tracking-wider">Sources additionnelles</span>
+                    <span className="text-[10px] text-gray-300">(optionnel)</span>
+                  </summary>
+                  
+                  <div className="mt-6 pt-6 border-t border-gray-100 space-y-4 animate-fade-in">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-[10px] font-mono uppercase tracking-widest text-gray-300 mb-2">
+                          Réseau social 1
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="linkedin.com/company/..."
+                          className="w-full bg-gray-50 border-0 py-3 px-4 text-sm outline-none focus:bg-gray-100 transition-colors"
+                          value={socialLinks[0]}
+                          onChange={(e) => {
                             const newLinks = [...socialLinks];
                             newLinks[0] = e.target.value;
                             setSocialLinks(newLinks);
-                        }}
-                    />
-                </div>
-                <div className="flex gap-2 p-2 bg-white border border-gray-200 rounded-xl focus-within:border-black transition-colors">
-                    <div className="flex items-center pl-2 text-xl opacity-50">🔗</div>
-                    <input
-                        type="text"
-                        placeholder="Autre réseau (Optionnel)"
-                        className="flex-1 outline-none px-2 text-sm"
-                        value={socialLinks[1]}
-                        onChange={(e) => {
+                          }}
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-[10px] font-mono uppercase tracking-widest text-gray-300 mb-2">
+                          Réseau social 2
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="instagram.com/..."
+                          className="w-full bg-gray-50 border-0 py-3 px-4 text-sm outline-none focus:bg-gray-100 transition-colors"
+                          value={socialLinks[1]}
+                          onChange={(e) => {
                             const newLinks = [...socialLinks];
                             newLinks[1] = e.target.value;
                             setSocialLinks(newLinks);
-                        }}
-                    />
+                          }}
+                        />
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <label className="block text-[10px] font-mono uppercase tracking-widest text-gray-300 mb-2">
+                        Autres liens (presse, notion, drive...)
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="Séparés par des virgules"
+                        className="w-full bg-gray-50 border-0 py-3 px-4 text-sm outline-none focus:bg-gray-100 transition-colors"
+                        value={otherLinks}
+                        onChange={(e) => setOtherLinks(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                </details>
+
+                {/* Action */}
+                <div className="pt-6 flex items-end justify-between">
+                  <p className="text-[11px] text-gray-300 max-w-[200px] leading-relaxed">
+                    Vous pourrez enrichir ces sources après l'analyse.
+                  </p>
+                  
+                  <button
+                    onClick={handleAnalyzeBrand}
+                    disabled={!websiteUrl}
+                    className="group relative bg-gray-900 text-white pl-8 pr-6 py-4 font-medium text-sm disabled:opacity-30 disabled:cursor-not-allowed transition-all hover:bg-black"
+                  >
+                    <span className="relative z-10 flex items-center gap-3">
+                      Scanner la marque
+                      <svg className="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                        <path d="M5 12h14M12 5l7 7-7 7" />
+                      </svg>
+                    </span>
+                    {/* Hover effect */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-emerald-600 to-teal-600 opacity-0 group-hover:opacity-100 transition-opacity group-disabled:opacity-0" />
+                    <span className="absolute inset-0 flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity group-disabled:opacity-0">
+                      <span className="flex items-center gap-3">
+                        Scanner la marque
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                          <path d="M5 12h14M12 5l7 7-7 7" />
+                        </svg>
+                      </span>
+                    </span>
+                  </button>
                 </div>
+              </div>
             </div>
 
-            {/* Other Links */}
-            <div className="flex gap-2 p-3 bg-white border border-gray-200 rounded-xl focus-within:border-black transition-colors">
-                <div className="flex items-center pl-2 text-xl opacity-50">➕</div>
-                <input
-                    type="text"
-                    placeholder="Autres liens contextuels (Presse, Notion, Drive...) - Séparés par des virgules"
-                    className="flex-1 outline-none px-2 text-sm"
-                    value={otherLinks}
-                    onChange={(e) => setOtherLinks(e.target.value)}
-                />
-            </div>
-
-            <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-100">
-                <p className="text-xs text-gray-400 italic max-w-md">
-                    ℹ️ Il vous sera possible de modifier et ajouter des éléments par la suite dans votre espace "Sources".
-                </p>
-                <button
-                onClick={handleAnalyzeBrand}
-                disabled={!websiteUrl}
-                className="bg-black text-white px-8 py-4 rounded-2xl font-bold text-lg hover:bg-gray-800 hover:scale-105 disabled:opacity-50 disabled:scale-100 transition-all shadow-lg shadow-black/20"
-                >
-                Analyser ma marque →
-                </button>
+            {/* Footer note */}
+            <div className="mt-8 flex items-center justify-center gap-6 text-xs text-gray-300">
+              <span className="flex items-center gap-2">
+                <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+                Données sécurisées
+              </span>
+              <span className="w-1 h-1 bg-gray-200 rounded-full" />
+              <span>~60 secondes</span>
+              <span className="w-1 h-1 bg-gray-200 rounded-full" />
+              <button 
+                onClick={() => setStep('playground')} 
+                className="hover:text-gray-500 transition-colors underline underline-offset-2"
+              >
+                Passer cette étape
+              </button>
             </div>
           </div>
-          
-          <p className="mt-8 text-sm text-gray-400">
-            Ou{' '}
-            <button onClick={() => setStep('playground')} className="underline hover:text-black">
-              passer cette étape
-            </button>{' '}
-            (déconseillé)
-          </p>
         </div>
       );
     }
