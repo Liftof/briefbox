@@ -41,7 +41,7 @@ function PlaygroundContent() {
 
   const [brandData, setBrandData] = useState<any | null>(null);
   const [backgrounds, setBackgrounds] = useState<string[]>([]);
-  const [isGeneratingBackgrounds] = useState(false);
+  const [isGeneratingBackgrounds, setIsGeneratingBackgrounds] = useState(false);
 
   const [toasts, setToasts] = useState<Toast[]>([]);
   const toastTimeouts = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
@@ -82,14 +82,49 @@ function PlaygroundContent() {
     };
   }, []);
 
+  const generateBackgroundsForBrand = useCallback(
+    async (brand: any) => {
+      if (!brand) return;
+      if (isGeneratingBackgrounds) return;
+      const alreadyHasBackgrounds = Array.isArray(brand.backgrounds) && brand.backgrounds.length > 0;
+      const availablePrompts = Array.isArray(brand.backgroundPrompts) ? brand.backgroundPrompts.filter(Boolean) : [];
+      if (alreadyHasBackgrounds || availablePrompts.length === 0) return;
+
+      try {
+        setIsGeneratingBackgrounds(true);
+        const response = await fetch('/api/backgrounds/generate', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            brand: {
+              name: brand.name,
+              colors: brand.colors,
+              aesthetic: brand.aesthetic,
+              toneVoice: brand.toneVoice,
+              visualMotifs: brand.visualMotifs,
+              backgroundPrompts: availablePrompts.slice(0, 3)
+            }
+          })
+        });
+
+        const data = await response.json();
+        if (response.ok && data.success && Array.isArray(data.backgrounds) && data.backgrounds.length > 0) {
+          setBackgrounds(data.backgrounds);
+          setBrandData((prev: any) => (prev ? { ...prev, backgrounds: data.backgrounds } : prev));
+        }
+      } catch (error) {
+        console.error('Background generation error', error);
+      } finally {
+        setIsGeneratingBackgrounds(false);
+      }
+    },
+    [isGeneratingBackgrounds]
+  );
+
   const hydrateBrand = (brand: any) => {
     if (!brand) return;
     setBrandData(brand);
-    setBackgrounds(
-      Array.isArray(brand.backgrounds) && brand.backgrounds.length > 0
-        ? brand.backgrounds
-        : brand.backgroundPrompts || []
-    );
+    setBackgrounds(Array.isArray(brand.backgrounds) ? brand.backgrounds : []);
     setVisualIdeas(Array.isArray(brand.visualConcepts) ? brand.visualConcepts : []);
 
     const labeled = Array.isArray(brand.labeledImages) ? brand.labeledImages : [];
@@ -119,6 +154,10 @@ function PlaygroundContent() {
              }, 1000);
         }
       }
+    }
+
+    if ((!brand.backgrounds || brand.backgrounds.length === 0) && brand.backgroundPrompts?.length) {
+      generateBackgroundsForBrand(brand);
     }
   };
 
@@ -416,7 +455,7 @@ ${enhancement}`);
     const primaryColor = Array.isArray(targetBrand.colors) && targetBrand.colors.length > 0 ? targetBrand.colors[0] : '#000000';
     const brandName = targetBrand.name || 'Brand';
 
-    const sophisticatedPrompt = `ROLE: Expert Social Media Designer. TASK: Create a high-converting static social media post (Instagram/LinkedIn style) based on the following brief. BRIEF: ${finalPrompt}. Style: ${aesthetic}. Vibe: ${tone}. High quality, trending on Behance. BRAND IDENTITY (STRICTLY FOLLOW): Brand: ${brandName} Aesthetic: ${aesthetic} Tone: ${tone} Colors: ${colors} Fonts: ${fonts} DESIGN GUIDELINES: - COMPOSITION: Modern, balanced, and professional social media post layout. Use adequate whitespace. - STYLE: Matches the brand aesthetic defined above. - ASSETS: Use the provided image as the HERO element. Integrate it naturally into a scene or layout. Do NOT just crop the image. - COLOR: Use the brand palette for backgrounds, shapes, or accents. Specifically use ${primaryColor} as a primary accent. - LOGO: If a logo is provided in the input, ensure it is visible and respectable. - QUALITY: 8k resolution, sharp details, photorealistic or premium illustration style. NEGATIVE PROMPT: messy, cluttered, ugly text, distorted logo, low resolution, blurry, weird cropping, amateur, wrong colors.`;
+    const sophisticatedPrompt = `ROLE: Expert Social Media Designer. TASK: Create a high-converting static social media post (Instagram/LinkedIn style) based on the following brief. BRIEF: ${finalPrompt}. Style: ${aesthetic}. Vibe: ${tone}. High quality, trending on Behance. BRAND IDENTITY (STRICTLY FOLLOW): Brand: ${brandName} Aesthetic: ${aesthetic} Tone: ${tone} Colors: ${colors} Fonts: ${fonts} DESIGN GUIDELINES: - COMPOSITION: Modern, balanced, and professional social media post layout. Use adequate whitespace. - STYLE: Matches the brand aesthetic defined above. - ASSETS: Use the provided image as the HERO element. Integrate it naturally into a scene or layout. Do NOT just crop the image. - COLOR: Use the brand palette for backgrounds, shapes, or accents. Specifically use ${primaryColor} as a primary accent. - LOGO: If a logo is provided in the input, ensure it is visible and respectable. - QUALITY: 8k resolution, sharp details, photorealistic or premium illustration style. - FLAVOR: Add subtle, tasteful noise, paper texture or premium editorial lighting to avoid "AI smooth plastic" look. NEGATIVE PROMPT: messy, cluttered, ugly text, distorted logo, low resolution, blurry, weird cropping, amateur, wrong colors, plastic look, neon glow, over-saturated, deformed hands, extra fingers.`;
 
     try {
       const response = await fetch('/api/generate', {

@@ -28,6 +28,7 @@ export async function POST(request: NextRequest) {
     // Filter & Convert URLs
     // 1. Filter valid HTTP/HTTPS or data URI
     // 2. Convert unsupported formats (SVG, etc.) to PNG Data URI using sharp
+    // 3. Filter out small or low-quality images if possible (optional, simplified here)
     const processedImageUrls: string[] = [];
 
     for (const url of imageUrls) {
@@ -35,6 +36,9 @@ export async function POST(request: NextRequest) {
         
         const trimmedUrl = url.trim();
         if (!trimmedUrl.startsWith('http') && !trimmedUrl.startsWith('data:image')) continue;
+
+        // Skip placeholder images or known bad assets
+        if (trimmedUrl.includes('placehold.co') || trimmedUrl.includes('placeholder')) continue;
 
         // Check for SVG or potentially problematic extensions in URL (simple check)
         // Note: Some URLs might not have extension, so we ideally fetch and check content-type, 

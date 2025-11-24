@@ -102,7 +102,9 @@ export async function POST(request: Request) {
         let match;
         while ((match = regex.exec(md)) !== null) {
             if (match[1] && match[1].startsWith('http')) {
-                matches.push(match[1]);
+                // Clean up URL if needed (remove trailing parenthesis if regex caught it)
+                let cleanUrl = match[1].split(' ')[0].replace(/\)$/, '');
+                matches.push(cleanUrl);
             }
         }
         return matches;
