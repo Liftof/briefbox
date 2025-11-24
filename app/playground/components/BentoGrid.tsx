@@ -17,6 +17,18 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
 
   const logoBgColor = localData.colors?.[0] || '#F5F0EA';
 
+  // Helper to prevent black-on-black if the scraped color is very dark
+  const isDark = (color: string) => {
+    if (!color || !color.startsWith('#')) return false;
+    const hex = color.replace('#', '');
+    const r = parseInt(hex.substring(0, 2), 16);
+    const g = parseInt(hex.substring(2, 4), 16);
+    const b = parseInt(hex.substring(4, 6), 16);
+    return ((r * 299) + (g * 587) + (b * 114)) / 1000 < 50; // very dark threshold
+  };
+
+  const effectiveLogoBg = isDark(logoBgColor) ? '#FFFFFF' : logoBgColor;
+
   return (
     <div className="animate-fade-in text-[#ECECEC] w-full">
       <header className="flex items-center justify-between mb-6">
@@ -48,8 +60,8 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
         <div className="lg:col-span-3 flex flex-col gap-4">
             {/* Logo */}
             <div 
-                className="aspect-square rounded-[24px] p-8 border border-gray-800/10 relative group flex items-center justify-center overflow-hidden shadow-sm hover:shadow-md transition-all"
-                style={{ backgroundColor: logoBgColor }}
+                className="aspect-square rounded-[24px] p-6 border border-gray-800/10 relative group flex items-center justify-center overflow-hidden shadow-sm hover:shadow-md transition-all"
+                style={{ backgroundColor: effectiveLogoBg }}
             >
                 <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity z-10">
                     <span className="text-[10px] font-bold bg-black/10 text-black px-2 py-1 rounded-full backdrop-blur-sm cursor-pointer">Change</span>

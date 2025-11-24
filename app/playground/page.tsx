@@ -441,15 +441,40 @@ ${enhancement}`);
 
     if (step === 'analyzing') {
       return (
-        <div className="flex flex-col items-center justify-center h-[60vh] animate-fade-in">
-          <div className="w-24 h-24 bg-black rounded-full flex items-center justify-center mb-8 animate-bounce">
-            <span className="text-4xl">✨</span>
+        <div className="flex flex-col items-center justify-center h-[80vh] animate-fade-in relative overflow-hidden">
+          {/* Floating Shapes Background */}
+          <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-10">
+              <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-black rounded-full mix-blend-multiply filter blur-3xl animate-float-1"></div>
+              <div className="absolute top-1/3 right-1/4 w-[500px] h-[500px] bg-gray-400 rounded-full mix-blend-multiply filter blur-3xl animate-float-2"></div>
+              <div className="absolute bottom-1/4 left-1/3 w-80 h-80 bg-gray-300 rounded-full mix-blend-multiply filter blur-3xl animate-float-3"></div>
           </div>
-          <h2 className="text-3xl font-bold mb-4">{statusMessage}</h2>
-          <div className="w-64 h-2 bg-gray-100 rounded-full overflow-hidden">
-            <div className="h-full bg-black transition-all duration-300" style={{ width: `${progress}%` }}></div>
+
+          <div className="relative z-10 flex flex-col items-center max-w-md w-full text-center">
+            <div className="w-20 h-20 mb-8 relative">
+               <div className="absolute inset-0 border-4 border-gray-100 rounded-full"></div>
+               <div className="absolute inset-0 border-4 border-black rounded-full border-t-transparent animate-spin"></div>
+            </div>
+
+            <h2 className="text-4xl font-black mb-6 tracking-tight">{statusMessage}</h2>
+            
+            <div className="w-full bg-gray-100 rounded-full h-4 mb-4 overflow-hidden relative shadow-inner">
+              <div 
+                  className="h-full bg-black transition-all duration-1000 ease-out relative overflow-hidden" 
+                  style={{ width: `${progress}%` }}
+              >
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent w-[200%] animate-[shimmer_1.5s_infinite]"></div>
+              </div>
+            </div>
+            
+            <div className="flex justify-between w-full text-sm font-bold text-gray-400 mb-8">
+                <span>Analyse de l'identité...</span>
+                <span>{Math.round(progress)}%</span>
+            </div>
+
+            <p className="text-gray-500 text-sm bg-white/80 backdrop-blur-xl px-6 py-3 rounded-full border border-gray-200 shadow-sm animate-pulse">
+                Cela prend environ <span className="font-black text-black">60 à 90 secondes</span>.
+            </p>
           </div>
-          <p className="mt-4 text-gray-500 animate-pulse">Nous analysons votre identité visuelle...</p>
         </div>
       );
     }
@@ -862,7 +887,11 @@ ${enhancement}`);
       )}
 
       <div className={`flex-1 ${step !== 'url' && step !== 'analyzing' && step !== 'bento' ? 'ml-64' : 'w-full'}`}>
-        <main className={`p-8 mx-auto min-h-screen flex flex-col justify-center ${step === 'bento' ? 'max-w-[1600px]' : 'max-w-6xl'}`}>
+        <main className={`mx-auto min-h-screen flex flex-col justify-center transition-all duration-500 ${
+            step === 'bento' 
+                ? 'w-full px-4 md:px-12 py-8 max-w-[1920px]' 
+                : 'max-w-6xl p-8'
+        }`}>
           {renderContent()}
         </main>
       </div>

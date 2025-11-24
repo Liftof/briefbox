@@ -7,6 +7,11 @@ fal.config({
 });
 
 export async function POST(request: NextRequest) {
+  if (!process.env.FAL_KEY) {
+    console.error("❌ Error: FAL_KEY is missing in environment variables.");
+    return NextResponse.json({ success: false, error: 'Server configuration error: Missing API Key (FAL_KEY)' }, { status: 500 });
+  }
+
   try {
     const body = await request.json();
     const { prompt, imageUrls = [], numImages = 1, aspectRatio = "1:1", resolution = "1K" } = body;
@@ -70,6 +75,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Prepare Input for Nano Banana Pro
+    // Note: If this model is not available, consider using 'fal-ai/flux-pro/v1.1' or similar.
     const input = {
       prompt: prompt,
       num_images: numImages,
@@ -82,6 +88,8 @@ export async function POST(request: NextRequest) {
     console.log('🍌 Generating with Nano Banana Pro:', JSON.stringify({ ...input, image_urls: `[${input.image_urls.length} images]` }, null, 2));
 
     try {
+        // Ensure the model endpoint is correct. If "Nano Banana Pro" was a custom endpoint that is now offline,
+        // this will fail.
         const result: any = await fal.subscribe("fal-ai/nano-banana-pro/edit", {
           input,
           logs: true,
