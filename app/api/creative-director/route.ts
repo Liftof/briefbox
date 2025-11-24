@@ -416,65 +416,71 @@ async function generateCreativeConcept(params: {
   const keyPoints = Array.isArray(brand.keyPoints) ? brand.keyPoints.slice(0, 3).join('. ') : '';
   const visualMotifs = Array.isArray(brand.visualMotifs) ? brand.visualMotifs.join(', ') : '';
 
-  const systemPrompt = `You are an expert Social Media Designer specializing in static posts for Instagram and LinkedIn.
+  const systemPrompt = `You are a senior Social Media Designer creating LinkedIn/Instagram static posts.
 
-CRITICAL CONTEXT: You are writing prompts for an AI image model (Nano Banana Pro) that takes EXISTING reference images and transforms them into social media posts. The model CANNOT create 3D scenes, cinematic renders, or elaborate environments from scratch.
+YOUR DESIGN SYSTEM (follow this EXACT structure):
 
-Your prompts must:
-1. FOCUS ON THE LAYOUT - How to arrange the reference image within a social media post format
-2. BE SIMPLE AND DIRECT - No cinematic language, no camera movements, no elaborate scene descriptions
-3. DESCRIBE A FLAT 2D COMPOSITION - Think graphic design poster, not 3D render
-4. USE THE REFERENCE IMAGE AS THE HERO - Tell the model how to feature the provided image
+ZONE 1 - TOP (10-15% height):
+- Optional: Glassmorphism pill badge with context label ("New feature", "We're hiring", "Case study")
+- Or: Small logo top-right corner
 
-You MUST NOT:
-- Describe 3D scenes with desks, rooms, or physical environments
-- Use cinematic language like "the camera pans", "in the foreground", "the scene unfolds"
-- Request complex lighting setups or photorealistic renders
-- Describe textures of objects that aren't in the reference images
+ZONE 2 - CENTER (60-70% height):
+- The HERO content: either large typography OR the reference image
+- If text-focused: Bold headline + supporting text with clear hierarchy
+- If image-focused: Reference image at 50-70% scale, cleanly integrated
 
-You MUST:
-- Describe a flat, graphic social media post layout
-- Specify background colors, shapes, and typography zones
-- Tell how to position the reference image (centered, left-aligned, with overlay, etc.)
-- Keep descriptions under 150 words
-- Focus on what a graphic designer would create in Figma, not a 3D artist in Blender`;
+ZONE 3 - BOTTOM (15-20% height):
+- Brand footer: URL + tagline in small, elegant text
+- Consistent across all posts in a series
+
+BACKGROUND STYLE:
+- Rich gradient (dark to darker, using brand colors)
+- OR subtle texture (brushed metal, fabric, noise)
+- NEVER plain white, NEVER busy patterns
+
+DESIGN PRINCIPLES:
+- Typography IS the visual (don't need complex imagery for text posts)
+- Glassmorphism for badges and UI elements
+- Generous whitespace, clear breathing room
+- Premium, editorial feel - like a high-end consultancy
+- Logo must be SHARP and RESPECTED (never distorted)
+
+OUTPUT: Describe a FLAT 2D graphic design layout. NO 3D scenes, NO cinematic language.`;
 
   const userPrompt = `
-BRIEF FROM CLIENT: "${brief}"
+CLIENT BRIEF: "${brief}"
 
-BRAND CONTEXT:
-- Name: ${brandName}
-- Industry: ${industry}
-- Aesthetic: ${aesthetic}
-- Tone: ${tone}
-- Primary Color: ${primaryColor}
-- Secondary Color: ${secondaryColor}
+BRAND: ${brandName}
+INDUSTRY: ${industry}
+PRIMARY COLOR: ${primaryColor}
+SECONDARY COLOR: ${secondaryColor}
 
-ARCHETYPE STYLE: ${archetype.name}
+CREATE a premium LinkedIn/Instagram static post following this EXACT structure:
 
-YOUR TASK:
-Create a SIMPLE, FLAT social media post layout description. Think like a graphic designer, NOT a 3D artist.
+BACKGROUND: Rich gradient from ${primaryColor} (top) to darker shade (bottom). Subtle noise texture for depth. Premium, not flat.
 
-The AI model will receive reference images (logo, product photos) and your description tells it HOW TO ARRANGE THEM into a social media post.
+TOP ZONE: Glassmorphism pill badge with frosted glass effect, containing a contextual label relevant to the brief.
 
-Return a JSON object with EXACTLY these fields:
+CENTER ZONE: The main content - either:
+- Large, bold typography as the hero (for announcements, quotes, stats)
+- OR the reference image/logo displayed prominently at 60% scale
+
+BOTTOM ZONE: Elegant footer with "www.[brand].com" and a short tagline. Small, refined typography.
+
+OVERALL: Clean, premium, editorial. Like a top-tier consultancy's LinkedIn post. High contrast, readable, scroll-stopping.
+
+Return JSON:
 {
-  "layoutDescription": "Simple 2D layout: 'Reference image centered on solid ${primaryColor} background with 20% padding. White geometric accent shapes in corners.' - MAX 80 WORDS, describe like a Figma layout",
-  "backgroundStyle": "Solid color, gradient, or simple pattern - e.g. 'Solid ${primaryColor} with subtle noise texture'",
-  "imagePosition": "Where the reference image goes: centered, left-third, full-bleed, etc.",
-  "accentElements": "Simple shapes or overlays: 'Thin white border frame', 'Diagonal ${secondaryColor} stripe', 'Rounded corner badge'",
-  "textZone": "Where text could go: 'Bottom 20% reserved for caption area' or 'Right side vertical text zone'",
-  "overallVibe": "3 words max: 'Clean, bold, professional'",
-  "colorUsage": "How to use ${primaryColor} and ${secondaryColor}"
+  "postType": "announcement" | "showcase" | "hiring" | "testimonial" | "educational",
+  "topBadge": "Text for the glassmorphism pill badge (e.g., 'New brand identity', 'We're hiring')",
+  "centerContent": "What goes in the center - describe the main visual/text hierarchy",
+  "backgroundGradient": "From [color] to [darker color] with [texture]",
+  "logoPlacement": "top-right corner small" | "center large" | "bottom footer",
+  "footerText": "URL and tagline for bottom zone",
+  "keyMessage": "The ONE thing this post communicates"
 }
 
-GOOD EXAMPLE:
-"Reference image of product displayed at 60% scale, centered. Solid white background. Thin ${primaryColor} border around entire post. Small logo watermark bottom-right corner. Top 15% has subtle gradient fade from ${secondaryColor}."
-
-BAD EXAMPLE (DO NOT DO THIS):
-"A luxurious walnut desk with the product resting on it, camera slowly panning across as morning light streams through venetian blinds..."
-
-Keep it SIMPLE. This is a 2D social media graphic, not a movie scene.`;
+STYLE REFERENCE: Premium B2B LinkedIn posts. Think McKinsey, Bain, Goldman Sachs announcements. Clean, authoritative, beautiful gradients, perfect typography hierarchy.`;
 
   try {
     const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
@@ -549,26 +555,28 @@ function assembleFinalPrompt(params: {
   primaryColor: string;
   secondaryColor: string;
 }): string {
-  const { concept, brand, archetype, primaryColor, secondaryColor } = params;
+  const { concept, brand, primaryColor, secondaryColor } = params;
+  const brandName = brand.name || 'Brand';
 
-  // Simple, direct prompt optimized for Nano Banana Pro image-to-image
-  return `Professional social media post design for ${brand.name || 'brand'}.
+  // Optimized prompt for premium LinkedIn/Instagram static posts
+  return `Premium LinkedIn static post for ${brandName}.
 
-LAYOUT: ${concept.layoutDescription || 'Reference image centered with brand colors'}
+DESIGN STRUCTURE:
+- TOP: Glassmorphism frosted pill badge with text "${concept.topBadge || 'New update'}". Soft blur, subtle border, floating elegantly.
+- CENTER: ${concept.centerContent || `${brandName} logo displayed large and crisp, perfectly centered`}
+- BOTTOM: Elegant footer zone with website URL and tagline in refined white typography.
 
-BACKGROUND: ${concept.backgroundStyle || `Solid ${primaryColor} background`}
+BACKGROUND: ${concept.backgroundGradient || `Rich gradient from ${primaryColor} to deep navy/black`}. Add subtle noise grain texture for premium editorial depth. NOT flat, NOT plain.
 
-IMAGE PLACEMENT: ${concept.imagePosition || 'Hero image centered, 70% of frame'}
+LOGO: ${concept.logoPlacement === 'center large' ? `${brandName} logo LARGE and CENTERED, sharp and perfectly readable` : `Small ${brandName} logo in ${concept.logoPlacement || 'top-right corner'}, crisp and clear`}
 
-ACCENTS: ${concept.accentElements || 'Minimal geometric shapes in brand colors'}
+STYLE: Ultra-premium B2B aesthetic. Like McKinsey or Goldman Sachs LinkedIn posts. Clean lines, perfect contrast, authoritative yet elegant. High-end consultancy vibes.
 
-COLORS: Primary ${primaryColor}, Secondary ${secondaryColor}. ${concept.colorUsage || 'Use primary for background, secondary for accents.'}
+COLORS: Primary ${primaryColor}, accents in white and ${secondaryColor}. Rich, sophisticated color harmony.
 
-STYLE: ${archetype.name} aesthetic - ${concept.overallVibe || archetype.mood}. Clean, high-quality, ready for Instagram/LinkedIn.
+MUST HAVE: Glassmorphism effects, subtle shadows, premium grain texture, sharp typography zones, professional polish.
 
-Add subtle grain texture for premium editorial feel. Sharp details, professional graphic design quality.
-
-NEGATIVE: ${archetype.negativePrompt}, 3D render, photorealistic scene, complex environment, cinematic, movie still, blurry, amateur, distorted text, wrong colors`;
+AVOID: Flat/boring backgrounds, distorted logos, cluttered layout, amateur design, 3D renders, photorealistic scenes, cinematic shots, complex environments.`;
 }
 
 function createFallbackConcept(params: {
@@ -580,6 +588,7 @@ function createFallbackConcept(params: {
   secondaryColor: string;
 }): CreativeConcept {
   const { brief, brand, archetype, angle, primaryColor, secondaryColor } = params;
+  const brandName = brand.name || 'Brand';
 
   const fallback: CreativeConcept = {
     visualHook: angle.hook,
@@ -587,22 +596,22 @@ function createFallbackConcept(params: {
     emotionalTone: angle.emotionalTension,
     narrativeTension: angle.emotionalTension,
     archetype: archetype.name.toLowerCase() as ArchetypeKey,
-    lighting: 'Soft, even lighting',
-    composition: 'Centered layout with balanced whitespace',
-    colorMood: `${primaryColor} background with ${secondaryColor} accents`,
-    texture: 'Subtle grain for premium feel',
-    productPlacement: 'Reference image centered at 70% scale',
-    logoPlacement: 'Small logo bottom-right corner',
-    colorUsage: `${primaryColor} for background, ${secondaryColor} for accent elements`,
+    lighting: 'Soft ambient',
+    composition: 'Structured zones: top badge, center hero, bottom footer',
+    colorMood: `Rich gradient from ${primaryColor} to darker`,
+    texture: 'Premium noise grain',
+    productPlacement: 'Logo/image centered prominently',
+    logoPlacement: 'center large',
+    colorUsage: `${primaryColor} gradient background, white and ${secondaryColor} accents`,
     negativePrompt: archetype.negativePrompt,
-    qualityModifiers: 'Sharp, clean, professional graphic design',
-    // New simple fields for the updated format
-    layoutDescription: `Reference image centered on ${primaryColor} background. Clean margins. Professional social media post layout.`,
-    backgroundStyle: `Solid ${primaryColor} with subtle noise texture`,
-    imagePosition: 'Centered, 70% of frame',
-    accentElements: `Thin ${secondaryColor} accent lines or shapes`,
-    textZone: 'Bottom 15% reserved for caption',
-    overallVibe: archetype.mood,
+    qualityModifiers: 'Premium, editorial, LinkedIn-ready',
+    // New structured fields
+    postType: 'announcement',
+    topBadge: 'New update',
+    centerContent: `${brandName} logo displayed large and centered, sharp and professional`,
+    backgroundGradient: `Rich gradient from ${primaryColor} to deep navy with subtle noise texture`,
+    footerText: `www.${brandName.toLowerCase().replace(/\s+/g, '')}.com`,
+    keyMessage: brief.substring(0, 50),
     finalPrompt: ''
   } as CreativeConcept & Record<string, any>;
 

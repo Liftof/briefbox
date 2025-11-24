@@ -30,24 +30,29 @@ const createId = () => `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
 
 // Fallback prompt builder when Creative Director API fails
 const buildFallbackPrompt = (brief: string, brand: any): string => {
-  const primaryColor = Array.isArray(brand.colors) && brand.colors.length > 0 ? brand.colors[0] : '#000000';
+  const primaryColor = Array.isArray(brand.colors) && brand.colors.length > 0 ? brand.colors[0] : '#1a365d';
   const secondaryColor = Array.isArray(brand.colors) && brand.colors.length > 1 ? brand.colors[1] : '#ffffff';
   const brandName = brand.name || 'Brand';
 
-  // Simple, direct prompt for Nano Banana Pro
-  return `Professional social media post for ${brandName}.
+  // Premium LinkedIn-style static post prompt
+  return `Premium LinkedIn static post for ${brandName}.
 
 BRIEF: ${brief}
 
-LAYOUT: Reference image as hero element, centered. Clean ${primaryColor} background with adequate whitespace. Modern, balanced composition.
+DESIGN STRUCTURE:
+- TOP: Glassmorphism frosted pill badge floating elegantly with contextual label
+- CENTER: ${brandName} logo or key message displayed large, crisp, perfectly centered
+- BOTTOM: Elegant footer with website URL in refined white typography
 
-COLORS: Use ${primaryColor} as primary background or accent. Use ${secondaryColor} for secondary elements. Keep the brand palette consistent.
+BACKGROUND: Rich gradient from ${primaryColor} to deep navy/black. Subtle noise grain texture for premium editorial depth. NOT flat.
 
-STYLE: High-quality static social media post for Instagram/LinkedIn. Clean graphic design aesthetic, not a 3D render.
+STYLE: Ultra-premium B2B aesthetic. Like McKinsey or Goldman Sachs LinkedIn posts. Clean lines, perfect contrast, authoritative yet elegant.
 
-Add subtle grain texture for premium editorial feel. Sharp details, professional quality.
+COLORS: Primary ${primaryColor}, accents in white and ${secondaryColor}. Sophisticated color harmony.
 
-NEGATIVE: 3D render, photorealistic scene, complex environment, cinematic, blurry, amateur, distorted, wrong colors, plastic look, cluttered, stock photo`;
+MUST HAVE: Glassmorphism effects, subtle shadows, premium grain, sharp typography zones, professional polish.
+
+AVOID: Flat backgrounds, distorted logos, cluttered layout, amateur design, 3D renders, cinematic shots, photorealistic scenes, complex environments, stock photo vibes.`;
 };
 
 function PlaygroundContent() {
