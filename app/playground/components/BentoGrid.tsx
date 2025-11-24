@@ -245,12 +245,7 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
                     <h3 className="font-medium text-gray-300 text-xs uppercase tracking-widest">Textures & Backgrounds</h3>
                 </div>
                 <div className="flex-1 overflow-y-auto no-scrollbar p-4">
-                    {isGeneratingBackgrounds ? (
-                        <div className="h-full flex flex-col items-center justify-center text-gray-500 gap-3">
-                            <div className="w-6 h-6 border-2 border-gray-600 border-t-white rounded-full animate-spin"></div>
-                            <p className="text-[10px] uppercase tracking-widest animate-pulse">Création des textures...</p>
-                        </div>
-                    ) : backgrounds && backgrounds.length > 0 ? (
+                    {backgrounds && backgrounds.length > 0 ? (
                         <div className="grid grid-cols-2 gap-3">
                             {backgrounds.map((bg, i) => (
                                 <div key={i} className="aspect-square rounded-xl overflow-hidden border border-gray-800 group relative">
@@ -260,11 +255,26 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
                                     </div>
                                 </div>
                             ))}
+                             {isGeneratingBackgrounds && (
+                                <div className="aspect-square rounded-xl overflow-hidden border border-gray-800 flex flex-col items-center justify-center bg-white/5 animate-pulse">
+                                    <div className="w-4 h-4 border-2 border-gray-500 border-t-white rounded-full animate-spin mb-2"></div>
+                                    <span className="text-[8px] text-gray-500 uppercase">Génération...</span>
+                                </div>
+                            )}
                         </div>
                     ) : (
-                        <div className="h-full flex flex-col items-center justify-center text-gray-600 text-center p-4">
-                            <span className="text-2xl mb-2">🎨</span>
-                            <p className="text-xs">Aucune texture générée.</p>
+                         <div className="h-full flex flex-col items-center justify-center text-gray-600 text-center p-4">
+                             {isGeneratingBackgrounds ? (
+                                <>
+                                    <div className="w-6 h-6 border-2 border-gray-600 border-t-white rounded-full animate-spin mb-3"></div>
+                                    <p className="text-[10px] uppercase tracking-widest animate-pulse">Création des textures...</p>
+                                </>
+                             ) : (
+                                <>
+                                    <span className="text-2xl mb-2">🎨</span>
+                                    <p className="text-xs">Aucune texture générée.</p>
+                                </>
+                             )}
                         </div>
                     )}
                 </div>

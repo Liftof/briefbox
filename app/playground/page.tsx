@@ -115,7 +115,16 @@ function PlaygroundContent() {
     const fetchBrand = async () => {
       setStep('analyzing');
       setStatusMessage('Chargement de la marque...');
-      setProgress(25);
+      
+      // Simulate initial progress
+      setProgress(5);
+      const timer = setInterval(() => {
+        setProgress((prev) => {
+          if (prev >= 90) return prev;
+          return prev + Math.random() * 15;
+        });
+      }, 500);
+
       try {
         const response = await fetch(`/api/brand/${brandId}`);
         const data = await response.json();
@@ -123,12 +132,20 @@ function PlaygroundContent() {
           throw new Error(data.error || 'Impossible de charger la marque');
         }
         if (cancelled) return;
-        hydrateBrand(data.brand);
-        setStep('bento');
-        setActiveTab('create');
+        
+        clearInterval(timer);
         setProgress(100);
+        hydrateBrand(data.brand);
+        
+        // Small delay to show 100% before switching
+        setTimeout(() => {
+            setStep('bento');
+            setActiveTab('create');
+        }, 500);
+        
       } catch (error: any) {
         if (!cancelled) {
+          clearInterval(timer);
           console.error('Brand load error', error);
           showToast(error.message || 'Erreur pendant le chargement', 'error');
           setStep('url');
@@ -149,7 +166,17 @@ function PlaygroundContent() {
     setStep('analyzing');
     setStatus('preparing');
     setStatusMessage('Nous scannons votre site...');
-    setProgress(10);
+    
+    // Simulate progress for analysis
+    setProgress(5);
+    const timer = setInterval(() => {
+      setProgress((prev) => {
+        // Slow down as we get closer to 90%
+        if (prev >= 90) return prev;
+        const increment = prev < 50 ? Math.random() * 5 : Math.random() * 2;
+        return prev + increment;
+      });
+    }, 800);
 
     try {
       const response = await fetch('/api/brand/analyze', {
@@ -162,13 +189,19 @@ function PlaygroundContent() {
         throw new Error(data.error || 'Analyse impossible');
       }
 
+      clearInterval(timer);
+      setProgress(100);
       hydrateBrand(data.brand);
       setStatus('idle');
-      setProgress(100);
-      setStep('bento');
-      setActiveTab('create');
-      showToast('Marque analysée', 'success');
+      
+      setTimeout(() => {
+          setStep('bento');
+          setActiveTab('create');
+          showToast('Marque analysée', 'success');
+      }, 500);
+
     } catch (error: any) {
+      clearInterval(timer);
       console.error('Analyze error', error);
       setStatus('error');
       setStep('url');
@@ -363,7 +396,7 @@ ${enhancement}`);
     const primaryColor = Array.isArray(targetBrand.colors) && targetBrand.colors.length > 0 ? targetBrand.colors[0] : '#000000';
     const brandName = targetBrand.name || 'Brand';
 
-    const sophisticatedPrompt = `ROLE: Expert Social Media Designer. TASK: Create a high-converting social media visual based on the following brief. BRIEF: ${finalPrompt}. Style: ${aesthetic}. Vibe: ${tone}. High quality, trending on Behance. BRAND IDENTITY (STRICTLY FOLLOW): Brand: ${brandName} Aesthetic: ${aesthetic} Tone: ${tone} Colors: ${colors} Fonts: ${fonts} DESIGN GUIDELINES: - COMPOSITION: Modern, balanced, and professional. Use adequate whitespace. - STYLE: Matches the brand aesthetic defined above. - ASSETS: Use the provided image as the HERO element. Integrate it naturally into a scene or layout. Do NOT just crop the image. - COLOR: Use the brand palette for backgrounds, shapes, or accents. Specifically use ${primaryColor} as a primary accent. - LOGO: If a logo is provided in the input, ensure it is visible and respectable. - QUALITY: 8k resolution, sharp details, photorealistic or premium illustration style. NEGATIVE PROMPT: messy, cluttered, ugly text, distorted logo, low resolution, blurry, weird cropping, amateur, wrong colors.`;
+    const sophisticatedPrompt = `ROLE: Expert Social Media Designer. TASK: Create a high-converting static social media post (Instagram/LinkedIn style) based on the following brief. BRIEF: ${finalPrompt}. Style: ${aesthetic}. Vibe: ${tone}. High quality, trending on Behance. BRAND IDENTITY (STRICTLY FOLLOW): Brand: ${brandName} Aesthetic: ${aesthetic} Tone: ${tone} Colors: ${colors} Fonts: ${fonts} DESIGN GUIDELINES: - COMPOSITION: Modern, balanced, and professional social media post layout. Use adequate whitespace. - STYLE: Matches the brand aesthetic defined above. - ASSETS: Use the provided image as the HERO element. Integrate it naturally into a scene or layout. Do NOT just crop the image. - COLOR: Use the brand palette for backgrounds, shapes, or accents. Specifically use ${primaryColor} as a primary accent. - LOGO: If a logo is provided in the input, ensure it is visible and respectable. - QUALITY: 8k resolution, sharp details, photorealistic or premium illustration style. NEGATIVE PROMPT: messy, cluttered, ugly text, distorted logo, low resolution, blurry, weird cropping, amateur, wrong colors.`;
 
     try {
       const response = await fetch('/api/generate', {
