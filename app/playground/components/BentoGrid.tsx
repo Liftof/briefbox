@@ -27,7 +27,24 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
     return ((r * 299) + (g * 587) + (b * 114)) / 1000 < 50; // very dark threshold
   };
 
+  // Helper to determine text color based on background luminance
+  const getContrastYIQ = (hexcolor: string) => {
+    if (!hexcolor || !hexcolor.startsWith('#')) return 'black';
+    const hex = hexcolor.replace('#', '');
+    const r = parseInt(hex.substring(0, 2), 16);
+    const g = parseInt(hex.substring(2, 4), 16);
+    const b = parseInt(hex.substring(4, 6), 16);
+    const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
+    return (yiq >= 128) ? 'black' : 'white';
+  };
+
   const effectiveLogoBg = isDark(logoBgColor) ? '#FFFFFF' : logoBgColor;
+  
+  // Determine background color for logo container:
+  // 1. Use white if extracted color is too dark (handled by effectiveLogoBg)
+  // 2. Otherwise use extracted color
+  // 3. Fallback to soft gray if nothing valid
+  const finalLogoBg = effectiveLogoBg === '#FFFFFF' && logoBgColor === '#FFFFFF' ? '#F5F5F5' : effectiveLogoBg;
 
   return (
     <div className="animate-fade-in text-[#ECECEC] w-full">
@@ -61,7 +78,7 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
             {/* Logo */}
             <div 
                 className="aspect-square rounded-[24px] p-6 border border-gray-800/10 relative group flex items-center justify-center overflow-hidden shadow-sm hover:shadow-md transition-all"
-                style={{ backgroundColor: effectiveLogoBg }}
+                style={{ backgroundColor: finalLogoBg }}
             >
                 <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity z-10">
                     <span className="text-[10px] font-bold bg-black/10 text-black px-2 py-1 rounded-full backdrop-blur-sm cursor-pointer">Change</span>
