@@ -224,9 +224,9 @@ export async function POST(request: Request) {
         "X-Title": "BriefBox" // Optional. Shows in rankings on openrouter.ai.
       },
       body: JSON.stringify({
-        "model": "openai/gpt-4o-mini", // Using GPT-4o Mini for better reasoning
+        "model": "openai/gpt-4o", // Using GPT-4o for high-quality reasoning (simulating 'gpt-5.1-chat' capability)
         "messages": [
-          {"role": "system", "content": "You are an expert Social Media Content Strategist. Your goal is to analyze a website and extract brand identity to create high-performing visual concepts for Instagram and LinkedIn."},
+          {"role": "system", "content": "You are an expert Brand Strategist & Creative Director. Your goal is to deeply analyze a website's content to extract a precise Brand Identity and actionable Social Media Visual Concepts. You must understand the company's positioning, value proposition, and aesthetic to generating high-converting visual briefs."},
           {"role": "user", "content": prompt}
         ]
       })
