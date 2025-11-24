@@ -266,10 +266,10 @@ export async function POST(request: Request) {
            }
         ],
         "visualConcepts": [
-           "Concept 1: ...",
-           "Concept 2: ...",
-           "Concept 3: ...",
-           "Concept 4: ..."
+           "Post stat: [Chiffre clé] en grand sur fond [couleur marque]",
+           "Post citation client avec témoignage impactant",
+           "Post annonce: [Nouvelle feature/produit] avec headline bold",
+           "Post éducatif: Tips ou how-to en format liste"
         ],
         "backgroundPrompts": [
            "Background 1: Description of a textured background (e.g. 'Subtle grain with soft gradient of brand colors')",
@@ -310,6 +310,11 @@ export async function POST(request: Request) {
          BAD: "Showcase authority" or "Professional image"
          GOOD: "Close-up of weathered hands holding the product against morning window light. Soft bokeh background with green plant visible. Product label slightly angled toward camera. Warm color grade, subtle film grain. Conveys authenticity and craft."
       6. **BACKGROUNDS:** 'backgroundPrompts' should generate high-quality, versatile backgrounds that match the brand aesthetic, suitable for overlays.
+      7. **VISUAL CONCEPTS (CRITICAL):** Generate 4 SHORT briefs for STATIC SOCIAL MEDIA POSTS (graphic design, NOT photos). Format: "Type de post: Description courte du design" (max 15 mots chacun).
+         BONS: "Post stat: +47% de croissance sur fond noir, typo bold blanche"
+         BONS: "Post citation: Témoignage client avec guillemets géants en accent"
+         MAUVAIS: "A cluttered desk with papers..." (c'est une photo, pas un design)
+         MAUVAIS: "Morning light filtering through..." (c'est cinématique, pas du graphisme)
       
       If content is empty, INFER reasonable defaults based on the URL and domain name.
     `;

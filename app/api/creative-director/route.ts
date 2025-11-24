@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 // ============================================================================
-// CREATIVE DIRECTOR - SIMPLE & CREATIVE
+// CREATIVE DIRECTOR - STATIC SOCIAL MEDIA GRAPHICS
 // ============================================================================
-// Less structure, more creativity. Let GPT be an actual creative director,
-// not a template filler.
+// Output: LinkedIn/Instagram STATIC POSTS (graphic design, not photos)
+// Think: Bold typography, brand colors, clean layouts, text overlays
+// NOT: Cinematic scenes, photographs, 3D renders
 // ============================================================================
 
 export async function POST(request: NextRequest) {
@@ -23,16 +24,16 @@ export async function POST(request: NextRequest) {
     const brandName = brand.name || 'Brand';
     const colors = Array.isArray(brand.colors) ? brand.colors : ['#000000'];
     const primaryColor = colors[0];
+    const secondaryColor = colors[1] || '#ffffff';
     const aesthetic = Array.isArray(brand.aesthetic) ? brand.aesthetic.join(', ') : (brand.aesthetic || '');
-    const industry = brand.industry || '';
 
     // Generate creative prompt
     const prompt = await generateCreativePrompt({
       brief,
       brandName,
       primaryColor,
+      secondaryColor,
       aesthetic,
-      industry,
       archetype
     });
 
@@ -40,7 +41,7 @@ export async function POST(request: NextRequest) {
       success: true,
       concept: {
         finalPrompt: prompt,
-        negativePrompt: 'blurry, low quality, amateur, ugly, distorted, watermark, stock photo, generic, boring, corporate cliché, cringe',
+        negativePrompt: 'photograph, photo, realistic scene, 3D render, cinematic, people, office, desk, hands, blurry, low quality, stock photo',
         style: archetype || 'creative'
       }
     });
@@ -58,41 +59,49 @@ async function generateCreativePrompt(params: {
   brief: string;
   brandName: string;
   primaryColor: string;
+  secondaryColor: string;
   aesthetic: string;
-  industry: string;
   archetype: string;
 }): Promise<string> {
-  const { brief, brandName, primaryColor, aesthetic, industry, archetype } = params;
+  const { brief, brandName, primaryColor, secondaryColor, aesthetic, archetype } = params;
 
-  const systemPrompt = `Tu es un directeur artistique créatif pour des visuels social media.
+  const systemPrompt = `Tu es un graphic designer créant des POSTS STATIQUES pour LinkedIn/Instagram.
 
-TON JOB: Transformer un brief en une description visuelle UNIQUE et CRÉATIVE.
+⚠️ IMPORTANT: Tu crées du GRAPHIC DESIGN, PAS des photos ou des scènes.
 
-RÈGLES:
-- Sois CRÉATIF, pas générique. Chaque marque mérite un visuel unique.
-- Décris une SCÈNE ou une COMPOSITION concrète, pas des concepts abstraits
-- Utilise des références visuelles précises (artistes, magazines, films, époques)
-- Intègre les couleurs de marque de façon organique
-- JAMAIS de clichés corporate (poignées de main, gens en costume devant des graphiques)
-- JAMAIS de "premium", "professional", "high-quality" - ces mots sont vides
-- Pense INSTAGRAM/LINKEDIN qui arrête le scroll
-
-FORMAT: Un paragraphe de 2-3 phrases maximum. Direct, visuel, évocateur.
+FORMAT DE SORTIE: Une description de design graphique avec:
+- Le fond (gradient, couleur unie, texture)
+- La typographie (headline, style, placement)
+- Les éléments graphiques (formes, lignes, icônes)
+- Le logo et son placement
+- Les couleurs utilisées
 
 EXEMPLES DE BONS OUTPUTS:
-- "Gros plan sur une main tenant un smartphone, l'écran reflète des données qui semblent flotter. Ambiance néon bleu et violet, style Blade Runner. Le logo apparaît comme un hologramme subtil."
-- "Flat lay minimaliste sur marbre blanc: le produit au centre, entouré de feuilles d'eucalyptus et de gouttes d'eau. Lumière naturelle douce, ombres longues. Vibe Kinfolk magazine."
-- "Typography bold qui prend tout l'espace: le chiffre '47%' en rouge sang sur fond noir mat. Petite baseline en bas. Brutaliste, Massimo Vignelli."`;
+
+1. "Fond gradient du ${primaryColor} vers noir. Grande typo bold blanche centrée: 'VOTRE HEADLINE ICI'. Ligne horizontale fine en accent. Logo ${brandName} petit en bas à droite. Style épuré, moderne."
+
+2. "Fond ${primaryColor} uni avec texture grain subtile. Gros chiffre '47%' en blanc qui prend 60% de l'espace. Sous-titre en petit: 'de croissance'. Logo en haut à gauche. Minimaliste, impactant."
+
+3. "Split design: moitié gauche ${primaryColor}, moitié droite blanc. Citation client en typo serif élégante qui chevauche les deux côtés. Guillemets géants en accent. Logo centré en bas."
+
+4. "Fond noir mat. Formes géométriques abstraites en ${primaryColor} dans les coins. Headline en typo condensed blanche: 'LE MESSAGE CLÉ'. Baseline plus petite en dessous. Logo discret."
+
+CE QUE TU NE FAIS JAMAIS:
+- Décrire des photos (pas de "bureau", "personne", "écran", "main")
+- Décrire des scènes cinématiques
+- Utiliser "lumière naturelle", "ombres", "profondeur de champ"
+- Créer des rendus 3D ou des illustrations complexes
+
+TON OUTPUT = Instructions pour un GRAPHISTE, pas pour un PHOTOGRAPHE.`;
 
   const userPrompt = `MARQUE: ${brandName}
-INDUSTRIE: ${industry || 'N/A'}
-COULEUR PRINCIPALE: ${primaryColor}
-ESTHÉTIQUE: ${aesthetic || 'À définir'}
-${archetype ? `STYLE SOUHAITÉ: ${archetype}` : ''}
+COULEURS: ${primaryColor} (principale), ${secondaryColor} (secondaire)
+ESTHÉTIQUE: ${aesthetic || 'moderne et clean'}
+${archetype ? `STYLE: ${archetype}` : ''}
 
-BRIEF CLIENT: "${brief}"
+BRIEF: "${brief}"
 
-Crée une description visuelle unique pour ce brief. Sois créatif, pas corporate.`;
+Crée un design de post social media statique. Décris le layout graphique, pas une photo.`;
 
   try {
     const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
@@ -107,7 +116,7 @@ Crée une description visuelle unique pour ce brief. Sois créatif, pas corporat
           { role: "system", content: systemPrompt },
           { role: "user", content: userPrompt }
         ],
-        temperature: 1.0, // Max creativity
+        temperature: 0.9,
         max_tokens: 200
       })
     });
@@ -124,15 +133,15 @@ Crée une description visuelle unique pour ce brief. Sois créatif, pas corporat
     return generatedPrompt;
 
   } catch (error) {
-    console.warn('Creative Director failed, using brief directly');
-    // Fallback: just use the brief with minimal enhancement
-    return `${brief}. Style: ${aesthetic || 'modern'}. Brand color: ${primaryColor}.`;
+    console.warn('Creative Director failed, using fallback');
+    // Fallback: simple graphic design prompt
+    return `Social media post design. Background: gradient from ${primaryColor} to dark. Large bold white headline text centered. ${brandName} logo small in corner. Clean, modern, minimal graphic design style.`;
   }
 }
 
 export async function GET() {
   return NextResponse.json({
-    styles: ['editorial', 'bold', 'minimal', 'lifestyle', 'raw'],
-    note: 'Styles are suggestions, not rigid templates'
+    styles: ['editorial', 'bold', 'minimal', 'corporate', 'raw'],
+    format: 'static social media graphic design'
   });
 }
