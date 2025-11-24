@@ -748,26 +748,16 @@ ${enhancement}`);
                   </p>
                   
                 <button
-                onClick={handleAnalyzeBrand}
-                disabled={!websiteUrl}
-                    className="group relative bg-gray-900 text-white pl-8 pr-6 py-4 font-medium text-sm disabled:opacity-30 disabled:cursor-not-allowed transition-all hover:bg-black"
-                  >
-                    <span className="relative z-10 flex items-center gap-3">
-                      Scanner la marque
-                      <svg className="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                        <path d="M5 12h14M12 5l7 7-7 7" />
-                      </svg>
-                    </span>
-                    {/* Hover effect */}
-                    <div className="absolute inset-0 bg-gradient-to-r from-emerald-600 to-teal-600 opacity-0 group-hover:opacity-100 transition-opacity group-disabled:opacity-0" />
-                    <span className="absolute inset-0 flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition-opacity group-disabled:opacity-0">
-                      <span className="flex items-center gap-3">
-                        Scanner la marque
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                          <path d="M5 12h14M12 5l7 7-7 7" />
-                        </svg>
-                      </span>
-                    </span>
+                  onClick={handleAnalyzeBrand}
+                  disabled={!websiteUrl}
+                  className="group bg-gray-900 text-white px-8 py-4 font-medium text-sm disabled:opacity-30 disabled:cursor-not-allowed transition-all hover:bg-emerald-600"
+                >
+                  <span className="flex items-center gap-3">
+                    Scanner la marque
+                    <svg className="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                      <path d="M5 12h14M12 5l7 7-7 7" />
+                    </svg>
+                  </span>
                 </button>
                 </div>
             </div>
@@ -875,15 +865,6 @@ ${enhancement}`);
               <p className="text-sm text-gray-500 text-center">
                 Estimation : <span className="font-semibold text-gray-900">60–90 secondes</span>
               </p>
-            </div>
-
-            {/* Tech stack hint */}
-            <div className="mt-6 flex items-center gap-4 text-[10px] font-mono uppercase tracking-widest text-gray-300">
-              <span>Firecrawl</span>
-              <span className="w-1 h-1 bg-gray-200 rounded-full" />
-              <span>GPT-4o</span>
-              <span className="w-1 h-1 bg-gray-200 rounded-full" />
-              <span>Vision</span>
             </div>
           </div>
         </div>

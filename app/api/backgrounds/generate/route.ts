@@ -53,25 +53,36 @@ const createColorSwatch = async (hex: string) => {
 };
 
 const buildPrompt = (brand: BrandContext | undefined, idea: string, index: number) => {
-  const colors = Array.isArray(brand?.colors) ? brand?.colors.slice(0, 2).join(' to ') : brand?.colors;
+  const primaryColor = Array.isArray(brand?.colors) ? brand?.colors[0] : (brand?.colors || '#1a1a2e');
   
-  // Different background types based on index
-  const backgroundTypes = [
-    'Minimal gradient background',
-    'Subtle geometric pattern',
-    'Clean solid with soft shadow'
+  // Different background styles for variety
+  const backgroundStyles = [
+    {
+      type: 'gradient',
+      prompt: `Smooth vertical gradient from ${primaryColor} at top to deep black at bottom. Ultra-clean, no elements, subtle film grain texture. Premium minimal aesthetic.`
+    },
+    {
+      type: 'blur',
+      prompt: `Soft blurred abstract color field. Primary color ${primaryColor} with darker edges. Dreamy, out-of-focus, ethereal quality. Like a defocused light or aurora. Smooth transitions.`
+    },
+    {
+      type: 'grid',
+      prompt: `Very subtle geometric grid pattern. Fine lines in ${primaryColor} on dark charcoal background. Lines barely visible at 10-15% opacity. Clean, technical, modern. Think: blueprint aesthetic but minimal.`
+    }
   ];
-  const bgType = backgroundTypes[index % backgroundTypes.length];
+  
+  const style = backgroundStyles[index % backgroundStyles.length];
 
-  return `${bgType}. Color palette: ${colors || 'dark gray to black'}. 
+  return `${style.prompt}
 
-Style: Ultra-minimal, editorial, Kinfolk magazine aesthetic. 
-Characteristics: Soft gradient transition, very subtle grain texture (barely visible), clean and sophisticated.
-Must be: Perfectly symmetrical, balanced, professional.
-No elements: No shapes, no patterns, no circles, no lines, no objects, no text, no icons.
-Just: A beautiful, clean background suitable for overlaying bold typography.
+Requirements:
+- Perfect for social media post backgrounds
+- Must work with white text overlay
+- No objects, icons, logos, or text
+- Professional quality, 8K resolution
+- Symmetrical and balanced composition
 
-Quality: 8K, sharp, professional design quality. Think: Apple keynote backgrounds, premium brand guidelines.`;
+Style reference: Apple keynote backgrounds, Stripe website gradients, Linear app aesthetics.`;
 };
 
 const extractImageFromResult = (result: any) => {

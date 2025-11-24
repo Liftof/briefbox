@@ -254,9 +254,9 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
               </div>
               <button 
                 onClick={() => onAddSource?.()}
-                className="text-[10px] font-medium text-gray-500 hover:text-gray-900 transition-colors"
+                className="px-3 py-1.5 bg-emerald-500 text-white text-[10px] font-medium uppercase tracking-wider hover:bg-emerald-600 transition-colors flex items-center gap-1"
               >
-                + ADD
+                <span>+</span> Ajouter
               </button>
             </div>
             

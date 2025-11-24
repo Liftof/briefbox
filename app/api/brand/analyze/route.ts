@@ -251,11 +251,11 @@ export async function POST(request: Request) {
         "visualMotifs": ["Motif 1 (e.g. 'Data charts')", "Motif 2 (e.g. 'Abstract networks')", "Motif 3"],
         "marketingAngles": [
            {
-             "title": "Short punchy title for the angle",
-             "hook": "The ONE thing that makes someone stop scrolling",
-             "concept": "DETAILED scene description (100+ words): exact composition, lighting style, specific elements visible, textures, mood. Ready for a senior designer to execute.",
-             "emotionalTension": "The before→after or problem→solution implied (e.g. 'From chaos to control')",
-             "platform": "instagram or linkedin or both"
+             "title": "Titre court et accrocheur (ex: 'La stat qui tue')",
+             "hook": "Le message clé en 5-10 mots (ex: '+47% de productivité en 3 mois')",
+             "concept": "Brief GRAPHIC DESIGN (max 20 mots): type de post + layout + éléments visuels (ex: 'Post stat: gros chiffre blanc centré sur fond gradient bleu, logo petit en bas')",
+             "emotionalTension": "L'émotion visée (ex: 'Confiance', 'FOMO', 'Curiosité')",
+             "platform": "instagram ou linkedin"
            }
         ],
         "analyzedImages": [
@@ -272,9 +272,9 @@ export async function POST(request: Request) {
            "Post éducatif: Tips ou how-to en format liste"
         ],
         "backgroundPrompts": [
-           "Gradient from [couleur primaire] to darker shade, ultra-minimal, no elements",
-           "Solid [couleur primaire] with very subtle noise texture",
-           "Soft gradient from dark to [couleur primaire], clean and professional"
+           "Smooth gradient from [couleur primaire] to black, subtle grain texture, minimal",
+           "Soft blurred color wash in [couleur primaire], dreamy and ethereal",
+           "Fine geometric grid pattern in [couleur primaire] on dark background, very subtle"
         ]
       }
       
@@ -292,23 +292,22 @@ export async function POST(request: Request) {
          
          ⚠️ CRITICAL: A microphone is ALWAYS 'product', NEVER 'person'. An object with a round top and a stand is NOT a person. Apply strict visual criteria.
       4. **MAPPING:** 'analyzedImages' must map the URLs from the 'DETECTED IMAGES' list provided above.
-      5. **ANGLES (CRITICAL):** Generate 4-5 INDUSTRY-SPECIFIC marketing angles. Each must be a CONCRETE VISUAL CONCEPT, not generic marketing speak.
+      5. **ANGLES (CRITICAL):** Generate 4-5 briefs pour des POSTS SOCIAL MEDIA STATIQUES (LinkedIn/Instagram).
          
-         ADAPT TO INDUSTRY:
-         - SaaS/B2B: Dashboard moments, metric callouts, team collaboration scenes, before/after transformations
-         - E-commerce: Unboxing, lifestyle context, detail shots, flat lays
-         - Beauty: Rituals, texture close-ups, subtle before/after, ingredient stories
-         - Food: Hero shots with steam/drips, ingredient spreads, social moments
-         - Tech: Product glory shots, in-use contexts, detail macro shots
-         - Finance: Freedom/control visuals, growth charts, trust signals
+         ⚠️ CE SONT DES DESIGNS GRAPHIQUES, PAS DES PHOTOS OU DES SCÈNES CINÉMATIQUES.
          
-         EACH ANGLE MUST HAVE:
-         - 'hook': What stops the scroll (be specific: "The contrast between messy desk and clean dashboard")
-         - 'concept': 100+ word scene description with lighting, composition, elements, textures
-         - 'emotionalTension': The transformation implied (e.g. "From anxiety to peace of mind")
+         TYPES DE POSTS À PROPOSER:
+         - Post STAT: Un gros chiffre/métrique en hero ("+47%", "3x", "10K+")
+         - Post CITATION: Témoignage client avec guillemets décoratifs
+         - Post ANNONCE: Nouvelle feature/produit avec headline bold
+         - Post ÉDUCATIF: Tips ou how-to avec liste ou icônes
+         - Post QUESTION: Question engageante qui génère des commentaires
          
-         BAD: "Showcase authority" or "Professional image"
-         GOOD: "Close-up of weathered hands holding the product against morning window light. Soft bokeh background with green plant visible. Product label slightly angled toward camera. Warm color grade, subtle film grain. Conveys authenticity and craft."
+         FORMAT DU CONCEPT (max 20 mots):
+         - BON: "Post stat: chiffre '89%' en blanc géant sur fond gradient bleu foncé, logo en bas"
+         - BON: "Post citation: témoignage sur fond noir, guillemets dorés, photo avatar ronde"
+         - MAUVAIS: "A modern office with people looking at screens..." (c'est une photo!)
+         - MAUVAIS: "Morning light filtering through windows..." (c'est cinématique!)
       6. **BACKGROUNDS:** 'backgroundPrompts' should generate high-quality, versatile backgrounds that match the brand aesthetic, suitable for overlays.
       7. **VISUAL CONCEPTS (CRITICAL):** Generate 4 SHORT briefs for STATIC SOCIAL MEDIA POSTS (graphic design, NOT photos). Format: "Type de post: Description courte du design" (max 15 mots chacun).
          BONS: "Post stat: +47% de croissance sur fond noir, typo bold blanche"
