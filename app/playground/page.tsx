@@ -355,12 +355,22 @@ ${enhancement}`);
     setStatus('preparing');
     setProgress(20);
 
+    // Construct the sophisticated prompt based on brand identity
+    const aesthetic = Array.isArray(targetBrand.aesthetic) ? targetBrand.aesthetic.join(', ') : (targetBrand.aesthetic || 'Professional');
+    const tone = Array.isArray(targetBrand.toneVoice) ? targetBrand.toneVoice.join(', ') : (targetBrand.toneVoice || 'Approachable');
+    const colors = Array.isArray(targetBrand.colors) ? targetBrand.colors.join(', ') : (targetBrand.colors || '#000000');
+    const fonts = Array.isArray(targetBrand.fonts) ? targetBrand.fonts.join(', ') : (targetBrand.fonts || 'Sans-serif');
+    const primaryColor = Array.isArray(targetBrand.colors) && targetBrand.colors.length > 0 ? targetBrand.colors[0] : '#000000';
+    const brandName = targetBrand.name || 'Brand';
+
+    const sophisticatedPrompt = `ROLE: Expert Social Media Designer. TASK: Create a high-converting social media visual based on the following brief. BRIEF: ${finalPrompt}. Style: ${aesthetic}. Vibe: ${tone}. High quality, trending on Behance. BRAND IDENTITY (STRICTLY FOLLOW): Brand: ${brandName} Aesthetic: ${aesthetic} Tone: ${tone} Colors: ${colors} Fonts: ${fonts} DESIGN GUIDELINES: - COMPOSITION: Modern, balanced, and professional. Use adequate whitespace. - STYLE: Matches the brand aesthetic defined above. - ASSETS: Use the provided image as the HERO element. Integrate it naturally into a scene or layout. Do NOT just crop the image. - COLOR: Use the brand palette for backgrounds, shapes, or accents. Specifically use ${primaryColor} as a primary accent. - LOGO: If a logo is provided in the input, ensure it is visible and respectable. - QUALITY: 8k resolution, sharp details, photorealistic or premium illustration style. NEGATIVE PROMPT: messy, cluttered, ugly text, distorted logo, low resolution, blurry, weird cropping, amateur, wrong colors.`;
+
     try {
       const response = await fetch('/api/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          prompt: finalPrompt,
+          prompt: sophisticatedPrompt,
           imageUrls: references,
           numImages: 4,
           aspectRatio: '1:1'
