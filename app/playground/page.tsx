@@ -761,39 +761,93 @@ ${enhancement}`);
 
     if (step === 'analyzing') {
       return (
-        <div className="flex flex-col items-center justify-center h-[80vh] animate-fade-in relative overflow-hidden">
-          {/* Floating Shapes Background */}
-          <div className="absolute inset-0 overflow-hidden pointer-events-none opacity-10">
-              <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-black rounded-full mix-blend-multiply filter blur-3xl animate-float-1"></div>
-              <div className="absolute top-1/3 right-1/4 w-[500px] h-[500px] bg-gray-400 rounded-full mix-blend-multiply filter blur-3xl animate-float-2"></div>
-              <div className="absolute bottom-1/4 left-1/3 w-80 h-80 bg-gray-300 rounded-full mix-blend-multiply filter blur-3xl animate-float-3"></div>
-          </div>
+        <div className="min-h-screen flex items-center justify-center relative">
+          {/* Subtle grid background */}
+          <div 
+            className="absolute inset-0 opacity-[0.03]"
+            style={{
+              backgroundImage: `
+                linear-gradient(to right, #000 1px, transparent 1px),
+                linear-gradient(to bottom, #000 1px, transparent 1px)
+              `,
+              backgroundSize: '60px 60px'
+            }}
+          />
 
-          <div className="relative z-10 flex flex-col items-center max-w-md w-full text-center">
-            <div className="w-20 h-20 mb-8 relative">
-               <div className="absolute inset-0 border-4 border-gray-100 rounded-full"></div>
-               <div className="absolute inset-0 border-4 border-black rounded-full border-t-transparent animate-spin"></div>
+          {/* Floating accent */}
+          <div className="absolute top-1/4 right-1/4 w-64 h-64 bg-gradient-to-br from-emerald-200/20 to-emerald-100/10 rounded-full blur-3xl" />
+          <div className="absolute bottom-1/3 left-1/3 w-80 h-80 bg-gradient-to-tr from-amber-100/15 to-transparent rounded-full blur-3xl" />
+
+          {/* Corner frames */}
+          <div className="absolute top-8 left-8 w-16 h-16 border-l border-t border-gray-200" />
+          <div className="absolute bottom-8 right-8 w-16 h-16 border-r border-b border-gray-200" />
+
+          <div className="relative z-10 flex flex-col items-center max-w-lg w-full px-6">
+            {/* Status label */}
+            <div className="flex items-center gap-2 mb-8">
+              <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+              <span className="text-[10px] font-mono uppercase tracking-widest text-gray-400">
+                Analyse en cours
+              </span>
             </div>
 
-            <h2 className="text-4xl font-black mb-6 tracking-tight">{statusMessage}</h2>
-            
-            <div className="w-full bg-gray-100 rounded-full h-4 mb-4 overflow-hidden relative shadow-inner">
-              <div 
-                  className="h-full bg-black transition-all duration-1000 ease-out relative overflow-hidden" 
+            {/* Main heading */}
+            <h2 className="text-3xl md:text-4xl text-center mb-4">
+              <span className="font-light text-gray-400">{statusMessage.split(' ')[0]}</span>
+              <br />
+              <span className="font-semibold text-gray-900">{statusMessage.split(' ').slice(1).join(' ')}</span>
+            </h2>
+
+            {/* Progress section */}
+            <div className="w-full max-w-sm mt-8 mb-6">
+              <div className="flex justify-between text-[10px] font-mono uppercase tracking-widest text-gray-400 mb-3">
+                <span>Progression</span>
+                <span>{Math.round(progress)}%</span>
+              </div>
+              
+              {/* Progress bar - editorial style */}
+              <div className="relative h-px bg-gray-200 w-full">
+                <div 
+                  className="absolute left-0 top-0 h-px bg-gray-900 transition-all duration-1000 ease-out" 
                   style={{ width: `${progress}%` }}
-              >
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent w-[200%] animate-[shimmer_1.5s_infinite]"></div>
+                />
+                {/* Progress indicator dot */}
+                <div 
+                  className="absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-gray-900 rounded-full transition-all duration-1000 ease-out shadow-sm"
+                  style={{ left: `calc(${progress}% - 6px)` }}
+                />
+              </div>
+
+              {/* Progress stages */}
+              <div className="flex justify-between mt-4">
+                {['Scraping', 'Analyse', 'Synthèse'].map((stage, i) => (
+                  <div 
+                    key={stage}
+                    className={`text-[10px] font-mono uppercase tracking-widest transition-colors ${
+                      progress >= (i + 1) * 33 ? 'text-gray-900' : 'text-gray-300'
+                    }`}
+                  >
+                    {stage}
+                  </div>
+                ))}
               </div>
             </div>
-            
-            <div className="flex justify-between w-full text-sm font-bold text-gray-400 mb-8">
-                <span>Analyse de l'identité...</span>
-                <span>{Math.round(progress)}%</span>
+
+            {/* Time estimate */}
+            <div className="mt-8 border border-gray-200 px-6 py-4 bg-white/50">
+              <p className="text-sm text-gray-500 text-center">
+                Estimation : <span className="font-semibold text-gray-900">60–90 secondes</span>
+              </p>
             </div>
 
-            <p className="text-gray-500 text-sm bg-white/80 backdrop-blur-xl px-6 py-3 rounded-full border border-gray-200 shadow-sm animate-pulse">
-                Cela prend environ <span className="font-black text-black">60 à 90 secondes</span>.
-            </p>
+            {/* Tech stack hint */}
+            <div className="mt-6 flex items-center gap-4 text-[10px] font-mono uppercase tracking-widest text-gray-300">
+              <span>Firecrawl</span>
+              <span className="w-1 h-1 bg-gray-200 rounded-full" />
+              <span>GPT-4o</span>
+              <span className="w-1 h-1 bg-gray-200 rounded-full" />
+              <span>Vision</span>
+            </div>
           </div>
         </div>
       );
@@ -822,34 +876,57 @@ ${enhancement}`);
     }
 
     return (
-      <div className="animate-fade-in">
-        <div className="mb-10">
-          <h1 className="text-4xl font-bold mb-2 tracking-tight">Espace Créatif</h1>
-          <p className="text-gray-500">
-            Générez des assets prêts à publier pour <span className="font-bold text-black">{brandData?.name || 'votre marque'}</span>.
+      <div className="animate-fade-in relative">
+        {/* Subtle grid background */}
+        <div 
+          className="fixed inset-0 opacity-[0.02] pointer-events-none"
+          style={{
+            backgroundImage: `
+              linear-gradient(to right, #000 1px, transparent 1px),
+              linear-gradient(to bottom, #000 1px, transparent 1px)
+            `,
+            backgroundSize: '60px 60px'
+          }}
+        />
+
+        {/* Header */}
+        <div className="mb-12">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="w-2 h-2 bg-emerald-500 rounded-full" />
+            <span className="text-[10px] font-mono uppercase tracking-widest text-gray-400">
+              {brandData?.name || 'Marque'}
+            </span>
+          </div>
+          <h1 className="text-3xl md:text-4xl mb-2">
+            <span className="font-light text-gray-400">Espace</span>
+            {' '}
+            <span className="font-semibold text-gray-900">Créatif</span>
+          </h1>
+          <p className="text-sm text-gray-400 max-w-md">
+            Générez des visuels prêts à publier, fidèles à votre identité.
           </p>
         </div>
 
         {/* Visual Archetype Selector */}
-        <div className="mb-6">
-          <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Style visuel</div>
+        <div className="mb-8">
+          <div className="text-[10px] font-mono uppercase tracking-widest text-gray-400 mb-4">Style visuel</div>
           <div className="flex gap-2 flex-wrap">
             {[
-              { id: '', label: '✨ Auto', desc: 'Adapté à votre marque' },
-              { id: 'editorial', label: '📰 Editorial', desc: 'Magazine haut de gamme' },
-              { id: 'lifestyle', label: '🏡 Lifestyle', desc: 'Authentique, chaleureux' },
-              { id: 'bold', label: '⚡ Bold', desc: 'Impactant, graphique' },
-              { id: 'minimal', label: '○ Minimal', desc: 'Épuré, luxury' },
-              { id: 'corporate', label: '🏢 Corporate', desc: 'Pro, trustworthy' },
-              { id: 'raw', label: '📷 Raw', desc: 'Authentique, lo-fi' },
+              { id: '', label: 'Auto', desc: 'Adapté à votre marque' },
+              { id: 'editorial', label: 'Editorial', desc: 'Magazine haut de gamme' },
+              { id: 'lifestyle', label: 'Lifestyle', desc: 'Authentique, chaleureux' },
+              { id: 'bold', label: 'Bold', desc: 'Impactant, graphique' },
+              { id: 'minimal', label: 'Minimal', desc: 'Épuré, luxury' },
+              { id: 'corporate', label: 'Corporate', desc: 'Pro, trustworthy' },
+              { id: 'raw', label: 'Raw', desc: 'Authentique, lo-fi' },
             ].map((style) => (
               <button
                 key={style.id}
                 onClick={() => setSelectedArchetype(style.id)}
-                className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
+                className={`px-4 py-2 text-sm font-medium transition-all border ${
                   selectedArchetype === style.id
-                    ? 'bg-black text-white shadow-lg scale-105'
-                    : 'bg-white border border-gray-200 hover:border-black hover:shadow-md'
+                    ? 'bg-gray-900 text-white border-gray-900'
+                    : 'bg-white text-gray-600 border-gray-200 hover:border-gray-400'
                 }`}
                 title={style.desc}
               >
@@ -861,37 +938,55 @@ ${enhancement}`);
 
         {/* Visual Ideas from Brand Analysis */}
         {visualIdeas.length > 0 && (
-          <div className="mb-8 flex gap-3 overflow-x-auto pb-2 no-scrollbar">
-            {visualIdeas.map((idea, i) => (
-              <button
-                key={i}
-                onClick={() => setBrief(idea)}
-                className="whitespace-nowrap px-4 py-2 bg-white border border-gray-200 rounded-full text-sm font-medium hover:border-black hover:bg-gray-50 transition-colors shadow-sm flex items-center gap-2"
-              >
-                <span>💡</span> {idea.substring(0, 40)}...
-              </button>
-            ))}
+          <div className="mb-8">
+            <div className="text-[10px] font-mono uppercase tracking-widest text-gray-400 mb-3">Suggestions</div>
+            <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
+              {visualIdeas.map((idea, i) => (
+                <button
+                  key={i}
+                  onClick={() => setBrief(idea)}
+                  className="whitespace-nowrap px-4 py-2 bg-white border border-gray-200 text-sm text-gray-600 hover:border-gray-400 hover:text-gray-900 transition-colors flex items-center gap-2"
+                >
+                  <span className="text-emerald-500">→</span> {idea.substring(0, 40)}...
+                </button>
+              ))}
+            </div>
           </div>
         )}
 
-        <div className="bg-white rounded-[24px] border border-[#ECECEC] shadow-xl shadow-gray-200/50 p-3 mb-6 relative z-10">
-          <div className="relative">
+        {/* Main Input Card */}
+        <div className="bg-white border border-gray-200 mb-8 relative">
+          {/* Progress indicator */}
+          {status !== 'idle' && status !== 'complete' && status !== 'error' && (
+            <div className="absolute top-0 left-0 right-0 h-px bg-gray-100">
+              <div
+                className="h-full bg-gray-900 transition-all duration-500 ease-out"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+          )}
+
+          <div className="p-6">
+            {/* Brief textarea */}
             <textarea
               value={brief}
               onChange={(e) => setBrief(e.target.value)}
-              placeholder={`Décrivez le visuel que vous voulez créer...`}
-              className="w-full min-h-[120px] p-6 text-lg resize-none outline-none placeholder:text-gray-300 rounded-[20px] bg-transparent focus:bg-gray-50/50 transition-colors"
+              placeholder="Décrivez le visuel que vous voulez créer..."
+              className="w-full min-h-[100px] text-base resize-none outline-none placeholder:text-gray-300 bg-transparent"
             />
 
-            <div className="px-6 pb-4">
-              <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Sources visuelles (charte, produits...)</div>
+            {/* Sources */}
+            <div className="mt-4 pt-4 border-t border-gray-100">
+              <div className="text-[10px] font-mono uppercase tracking-widest text-gray-400 mb-3">
+                Sources visuelles
+              </div>
               <div className="flex gap-3 overflow-x-auto pb-2 no-scrollbar">
                 {uploadedImages.map((img, i) => (
-                  <div key={i} className="relative w-16 h-16 flex-shrink-0 group">
-                    <img src={img} className="w-full h-full object-cover rounded-lg border border-gray-200" />
+                  <div key={i} className="relative w-14 h-14 flex-shrink-0 group">
+                    <img src={img} className="w-full h-full object-cover border border-gray-200" />
                     <button
                       onClick={() => handleRemoveImage(i)}
-                      className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity shadow-sm"
+                      className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-gray-900 text-white flex items-center justify-center text-[10px] opacity-0 group-hover:opacity-100 transition-opacity"
                     >
                       ×
                     </button>
@@ -899,101 +994,123 @@ ${enhancement}`);
                 ))}
                 <button
                   onClick={() => setShowSourceManager(true)}
-                  className="w-16 h-16 flex-shrink-0 border-2 border-dashed border-gray-200 rounded-lg flex items-center justify-center text-gray-400 hover:border-black hover:text-black transition-colors"
+                  className="w-14 h-14 flex-shrink-0 border border-dashed border-gray-300 flex items-center justify-center text-gray-400 hover:border-gray-900 hover:text-gray-900 transition-colors"
                 >
-                  +
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+                    <path d="M12 4v16m8-8H4" />
+                  </svg>
                 </button>
                 <input ref={fileInputRef} type="file" multiple accept="image/*" className="hidden" onChange={handleImageUpload} />
               </div>
             </div>
-
-            <div className="flex items-center justify-between px-4 pb-2 border-t border-gray-50 pt-2">
-              <div className="flex gap-2">
-                <button
-                  onClick={handleMagicEnhance}
-                  disabled={!brief.trim() || isThinking}
-                  className="p-2 text-gray-400 hover:text-purple-600 transition-colors flex items-center gap-2 text-xs font-bold uppercase tracking-widest disabled:opacity-50"
-                  title="Améliorer avec l'IA"
-                >
-                  ✨ Magic Prompt
-                </button>
-              </div>
-              <button
-                onClick={() => handleGenerate()}
-                disabled={status !== 'idle' || !brief.trim() || uploadedImages.length === 0}
-                className="bg-black text-white px-6 py-2 rounded-xl font-bold hover:bg-gray-800 transition-colors disabled:opacity-50 flex items-center gap-2"
-              >
-                {status === 'preparing' || status === 'running' ? <span className="animate-spin">⏳</span> : 'Générer'}
-              </button>
-            </div>
           </div>
-          {status !== 'idle' && status !== 'complete' && status !== 'error' && (
-            <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-gray-100 overflow-hidden rounded-b-[24px]">
-              <div
-                className="h-full bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-[length:200%_100%] animate-[shimmer_2s_linear_infinite] transition-all duration-500 ease-out"
-                style={{
-                  width: `${progress}%`,
-                  backgroundPosition: '0% 50%'
-                }}
-              ></div>
-            </div>
-          )}
+
+          {/* Actions footer */}
+          <div className="flex items-center justify-between px-6 py-4 border-t border-gray-100 bg-gray-50/50">
+            <button
+              onClick={handleMagicEnhance}
+              disabled={!brief.trim() || isThinking}
+              className="text-[10px] font-mono uppercase tracking-widest text-gray-400 hover:text-gray-900 transition-colors disabled:opacity-30 flex items-center gap-2"
+              title="Améliorer avec l'IA"
+            >
+              <span className="text-emerald-500">✦</span> Magic Prompt
+            </button>
+            
+            <button
+              onClick={() => handleGenerate()}
+              disabled={status !== 'idle' || !brief.trim() || uploadedImages.length === 0}
+              className="group relative bg-gray-900 text-white px-6 py-3 font-medium text-sm disabled:opacity-30 disabled:cursor-not-allowed transition-all hover:bg-black flex items-center gap-2"
+            >
+              {status === 'preparing' || status === 'running' ? (
+                <>
+                  <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
+                  </svg>
+                  Génération...
+                </>
+              ) : (
+                <>
+                  Générer
+                  <svg className="w-4 h-4 transition-transform group-hover:translate-x-0.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <path d="M5 12h14M12 5l7 7-7 7" />
+                  </svg>
+                </>
+              )}
+            </button>
+          </div>
         </div>
 
+        {/* Generated Images */}
         {generatedImages.length > 0 && (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 animate-fade-in">
-            {generatedImages.map((img, i) => (
-              <div
-                key={img.id}
-                className={`bg-gray-100 rounded-2xl overflow-hidden relative group cursor-zoom-in ${
-                  img.aspectRatio === '9:16' ? 'aspect-[9/16]' : 'aspect-square'
-                }`}
-              >
-                <img src={img.url} className="w-full h-full object-cover" />
-                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all flex items-center justify-center gap-3 opacity-0 group-hover:opacity-100">
-                  <button
-                    onClick={() => setLightboxImage(img.url)}
-                    className="w-10 h-10 bg-white text-black rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition-transform"
-                    title="Voir"
-                  >
-                    👁
-                  </button>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setEditingImage(img.url);
-                      setEditPrompt('');
-                    }}
-                    className="w-10 h-10 bg-white text-black rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition-transform"
-                    title="Modifier"
-                  >
-                    ✏️
-                  </button>
-                  <button
-                    onClick={async (e) => {
-                      e.stopPropagation();
-                      try {
-                        const response = await fetch(img.url);
-                        const blob = await response.blob();
-                        const blobUrl = window.URL.createObjectURL(blob);
-                        const link = document.createElement('a');
-                        link.href = blobUrl;
-                        link.download = `briefbox-${Date.now()}.png`;
-                        document.body.appendChild(link);
-                        link.click();
-                        document.body.removeChild(link);
-                      } catch (err) {
-                        window.open(img.url, '_blank');
-                      }
-                    }}
-                    className="w-10 h-10 bg-white text-black rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition-transform"
-                    title="Télécharger"
-                  >
-                    ⬇️
-                  </button>
-                </div>
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <div className="text-[10px] font-mono uppercase tracking-widest text-gray-400">
+                Résultats ({generatedImages.length})
               </div>
-            ))}
+            </div>
+            
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 animate-fade-in">
+              {generatedImages.map((img, i) => (
+                <div
+                  key={img.id}
+                  className={`bg-gray-100 overflow-hidden relative group cursor-pointer border border-gray-200 hover:border-gray-400 transition-colors ${
+                    img.aspectRatio === '9:16' ? 'aspect-[9/16]' : 'aspect-square'
+                  }`}
+                >
+                  <img src={img.url} className="w-full h-full object-cover" />
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/50 transition-all flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
+                    <button
+                      onClick={() => setLightboxImage(img.url)}
+                      className="w-9 h-9 bg-white text-gray-900 flex items-center justify-center hover:bg-gray-100 transition-colors"
+                      title="Voir"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                        <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                        <path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                      </svg>
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setEditingImage(img.url);
+                        setEditPrompt('');
+                      }}
+                      className="w-9 h-9 bg-white text-gray-900 flex items-center justify-center hover:bg-gray-100 transition-colors"
+                      title="Modifier"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                        <path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                      </svg>
+                    </button>
+                    <button
+                      onClick={async (e) => {
+                        e.stopPropagation();
+                        try {
+                          const response = await fetch(img.url);
+                          const blob = await response.blob();
+                          const blobUrl = window.URL.createObjectURL(blob);
+                          const link = document.createElement('a');
+                          link.href = blobUrl;
+                          link.download = `briefbox-${Date.now()}.png`;
+                          document.body.appendChild(link);
+                          link.click();
+                          document.body.removeChild(link);
+                        } catch (err) {
+                          window.open(img.url, '_blank');
+                        }
+                      }}
+                      className="w-9 h-9 bg-white text-gray-900 flex items-center justify-center hover:bg-gray-100 transition-colors"
+                      title="Télécharger"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                        <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         )}
       </div>
@@ -1002,65 +1119,69 @@ ${enhancement}`);
 
   return (
     <div className="min-h-screen bg-[#F9F9F9] text-[#414141] font-sans selection:bg-black selection:text-white flex">
-      <div className="toast-container fixed top-6 right-6 z-50 flex flex-col gap-3 pointer-events-none">
+      <div className="toast-container fixed top-6 right-6 z-50 flex flex-col gap-2 pointer-events-none">
         {toasts.map((toast) => (
           <div
             key={toast.id}
-            className={`pointer-events-auto px-4 py-3 rounded-[16px] shadow-lg border flex items-center gap-3 bg-white animate-slide-in-right ${
-              toast.type === 'error' ? 'border-red-100 text-red-600' : 'border-[#ECECEC] text-[#414141]'
+            className={`pointer-events-auto px-4 py-3 border flex items-center gap-3 bg-white animate-slide-in-right ${
+              toast.type === 'error' ? 'border-red-200 text-red-600' : toast.type === 'success' ? 'border-emerald-200' : 'border-gray-200'
             }`}
           >
-            <span className="text-lg">{toast.type === 'success' ? '✓' : toast.type === 'error' ? '✕' : 'ℹ'}</span>
-            <span className="text-sm font-medium">{toast.message}</span>
+            <div className={`w-2 h-2 rounded-full ${
+              toast.type === 'success' ? 'bg-emerald-500' : toast.type === 'error' ? 'bg-red-500' : 'bg-gray-400'
+            }`} />
+            <span className="text-sm text-gray-900">{toast.message}</span>
           </div>
         ))}
       </div>
 
       {showSourceManager && (
-        <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in">
-          <div className="bg-white rounded-3xl p-6 w-full max-w-3xl h-[80vh] flex flex-col relative shadow-2xl">
-            <button
-              onClick={() => setShowSourceManager(false)}
-              className="absolute top-4 right-4 z-10 w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-gray-500 hover:bg-gray-200 transition-colors"
-            >
-              ✕
-            </button>
-
-            <h3 className="text-2xl font-bold mb-6">Gérer les sources visuelles</h3>
-
-            <div className="flex gap-4 mb-6 border-b border-gray-100">
+        <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in">
+          <div className="bg-white w-full max-w-3xl h-[80vh] flex flex-col relative border border-gray-200">
+            {/* Header */}
+            <div className="flex items-center justify-between p-6 border-b border-gray-100">
+              <div>
+                <div className="text-[10px] font-mono uppercase tracking-widest text-gray-400 mb-1">
+                  Bibliothèque
+                </div>
+                <h3 className="text-xl font-semibold">Sources visuelles</h3>
+              </div>
               <button
-                onClick={() => setSourceTab('library')}
-                className={`pb-3 px-2 text-sm font-medium transition-colors relative ${
-                  sourceTab === 'library' ? 'text-black' : 'text-gray-400 hover:text-gray-600'
-                }`}
+                onClick={() => setShowSourceManager(false)}
+                className="w-8 h-8 border border-gray-200 flex items-center justify-center text-gray-400 hover:text-gray-900 hover:border-gray-400 transition-colors"
               >
-                Bibliothèque de marque
-                {sourceTab === 'library' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-black rounded-t-full"></div>}
-              </button>
-              <button
-                onClick={() => setSourceTab('upload')}
-                className={`pb-3 px-2 text-sm font-medium transition-colors relative ${
-                  sourceTab === 'upload' ? 'text-black' : 'text-gray-400 hover:text-gray-600'
-                }`}
-              >
-                Importer un fichier
-                {sourceTab === 'upload' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-black rounded-t-full"></div>}
-              </button>
-              <button
-                onClick={() => setSourceTab('url')}
-                className={`pb-3 px-2 text-sm font-medium transition-colors relative ${
-                  sourceTab === 'url' ? 'text-black' : 'text-gray-400 hover:text-gray-600'
-                }`}
-              >
-                Depuis une URL
-                {sourceTab === 'url' && <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-black rounded-t-full"></div>}
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path d="M6 18L18 6M6 6l12 12" />
+                </svg>
               </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto min-h-0">
+            {/* Tabs */}
+            <div className="flex gap-6 px-6 border-b border-gray-100">
+              {[
+                { id: 'library', label: 'Bibliothèque' },
+                { id: 'upload', label: 'Importer' },
+                { id: 'url', label: 'URL externe' },
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => setSourceTab(tab.id as 'library' | 'upload' | 'url')}
+                  className={`py-3 text-sm font-medium transition-colors relative ${
+                    sourceTab === tab.id ? 'text-gray-900' : 'text-gray-400 hover:text-gray-600'
+                  }`}
+                >
+                  {tab.label}
+                  {sourceTab === tab.id && (
+                    <div className="absolute bottom-0 left-0 right-0 h-px bg-gray-900" />
+                  )}
+                </button>
+              ))}
+            </div>
+
+            {/* Content */}
+            <div className="flex-1 overflow-y-auto min-h-0 p-6">
               {sourceTab === 'library' ? (
-                <div className="grid grid-cols-3 sm:grid-cols-4 gap-4 p-1">
+                <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
                   {[...(brandData?.images || []), ...(backgrounds || [])].map((img: string, i: number) => {
                     const isSelected = uploadedImages.includes(img);
                     const labelObj = brandData?.labeledImages?.find((li: any) => li.url === img);
@@ -1076,45 +1197,51 @@ ${enhancement}`);
                             setUploadedImages((prev) => [...prev, img]);
                           }
                         }}
-                        className={`aspect-square rounded-xl overflow-hidden relative cursor-pointer group border-2 transition-all ${
-                          isSelected ? 'border-black ring-2 ring-black/10' : 'border-transparent hover:border-gray-200'
+                        className={`aspect-square overflow-hidden relative cursor-pointer group border-2 transition-all ${
+                          isSelected ? 'border-gray-900' : 'border-transparent hover:border-gray-300'
                         }`}
                       >
                         <img src={img} className="w-full h-full object-cover" />
                         <div
-                          className={`absolute inset-0 bg-black/20 transition-opacity flex items-center justify-center ${
+                          className={`absolute inset-0 bg-black/30 transition-opacity flex items-center justify-center ${
                             isSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
                           }`}
                         >
-                          <div className={`w-6 h-6 rounded-full flex items-center justify-center ${isSelected ? 'bg-black text-white' : 'bg-white/80 text-transparent group-hover:text-gray-300'}`}>
-                            ✓
+                          <div className={`w-6 h-6 flex items-center justify-center ${isSelected ? 'bg-gray-900 text-white' : 'bg-white text-gray-400'}`}>
+                            {isSelected ? '✓' : ''}
                           </div>
                         </div>
-                        <span className="absolute bottom-2 left-2 text-[10px] font-bold bg-black/60 text-white px-2 py-0.5 rounded backdrop-blur-sm">
+                        <span className="absolute bottom-2 left-2 text-[9px] font-mono uppercase tracking-wider bg-white/90 text-gray-600 px-2 py-0.5">
                           {label}
                         </span>
                       </div>
                     );
                   })}
                   {[...(brandData?.images || []), ...(backgrounds || [])].length === 0 && (
-                    <div className="col-span-full text-center text-gray-400 py-10">Aucune image dans la bibliothèque.</div>
+                    <div className="col-span-full text-center text-gray-400 py-16 text-sm">
+                      Aucune image dans la bibliothèque.
+                    </div>
                   )}
                 </div>
               ) : sourceTab === 'upload' ? (
                 <div
-                  className="flex flex-col items-center justify-center h-full border-2 border-dashed border-gray-200 rounded-xl bg-gray-50 p-8 transition-colors hover:border-gray-400 hover:bg-gray-100 cursor-pointer"
+                  className="flex flex-col items-center justify-center h-full border border-dashed border-gray-300 bg-gray-50/50 p-8 transition-colors hover:border-gray-400 cursor-pointer"
                   onClick={() => sourceManagerInputRef.current?.click()}
                 >
-                  <div className="w-16 h-16 bg-white rounded-full shadow-sm flex items-center justify-center mb-4 text-2xl">📂</div>
-                  <p className="text-gray-600 font-medium mb-2">Cliquez pour uploader une image</p>
-                  <p className="text-gray-400 text-xs mb-6">JPG, PNG, WEBP acceptés</p>
+                  <div className="w-12 h-12 border border-gray-200 flex items-center justify-center mb-4 text-gray-400">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+                      <path d="M12 4v16m8-8H4" />
+                    </svg>
+                  </div>
+                  <p className="text-sm text-gray-600 mb-1">Cliquez pour uploader</p>
+                  <p className="text-[10px] font-mono uppercase tracking-widest text-gray-400 mb-6">JPG, PNG, WEBP</p>
 
-                  <div className="flex items-center gap-2 bg-white p-2 rounded-lg shadow-sm border border-gray-200" onClick={(e) => e.stopPropagation()}>
-                    <span className="text-xs text-gray-500 pl-2">Catégorie :</span>
+                  <div className="flex items-center gap-3 bg-white p-3 border border-gray-200" onClick={(e) => e.stopPropagation()}>
+                    <span className="text-[10px] font-mono uppercase tracking-widest text-gray-400">Catégorie</span>
                     <select
                       value={newUploadLabel}
                       onChange={(e) => setNewUploadLabel(e.target.value)}
-                      className="text-sm font-bold outline-none bg-transparent cursor-pointer"
+                      className="text-sm font-medium outline-none bg-transparent cursor-pointer text-gray-900"
                     >
                       <option value="product">Produit</option>
                       <option value="logo">Logo</option>
@@ -1133,10 +1260,14 @@ ${enhancement}`);
                 </div>
               ) : (
                 <div className="flex flex-col items-center justify-center h-full p-8">
-                  <div className="w-16 h-16 bg-white rounded-full shadow-sm flex items-center justify-center mb-4 text-2xl">🌐</div>
-                  <h4 className="text-lg font-bold mb-2">Ajouter une source externe</h4>
-                  <p className="text-gray-500 text-center mb-6 max-w-md">
-                    Entrez l'URL d'une page produit, d'un article de blog ou d'un post social pour en extraire les images et les informations clés.
+                  <div className="w-12 h-12 border border-gray-200 flex items-center justify-center mb-4 text-gray-400">
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+                      <path d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+                    </svg>
+                  </div>
+                  <h4 className="text-base font-semibold mb-2">Source externe</h4>
+                  <p className="text-sm text-gray-500 text-center mb-6 max-w-sm">
+                    Entrez l'URL d'une page pour en extraire les images.
                   </p>
 
                   <div className="flex w-full max-w-lg gap-2">
@@ -1145,12 +1276,12 @@ ${enhancement}`);
                       value={sourceUrl}
                       onChange={(e) => setSourceUrl(e.target.value)}
                       placeholder="https://..."
-                      className="flex-1 p-4 border border-gray-200 rounded-xl outline-none focus:ring-2 ring-black/5"
+                      className="flex-1 p-3 border border-gray-200 outline-none focus:border-gray-400 text-sm"
                     />
                     <button
                       onClick={handleAddSourceRequest}
                       disabled={!sourceUrl || isAddingSource}
-                      className="bg-black text-white px-6 rounded-xl font-bold hover:scale-105 transition-transform disabled:opacity-50"
+                      className="bg-gray-900 text-white px-5 font-medium text-sm hover:bg-black transition-colors disabled:opacity-30"
                     >
                       {isAddingSource ? '...' : 'Ajouter'}
                     </button>
@@ -1159,13 +1290,14 @@ ${enhancement}`);
               )}
             </div>
 
-            <div className="mt-6 pt-4 border-t border-gray-100 flex justify-between items-center">
-              <div className="text-sm text-gray-500">
-                <span className="font-bold text-black">{uploadedImages.length}</span> images sélectionnées
+            {/* Footer */}
+            <div className="p-6 border-t border-gray-100 flex justify-between items-center bg-gray-50/50">
+              <div className="text-[10px] font-mono uppercase tracking-widest text-gray-400">
+                <span className="text-gray-900 font-medium">{uploadedImages.length}</span> sélectionnées
               </div>
               <button
                 onClick={() => setShowSourceManager(false)}
-                className="bg-black text-white px-6 py-3 rounded-xl font-bold hover:scale-105 transition-transform"
+                className="bg-gray-900 text-white px-6 py-3 font-medium text-sm hover:bg-black transition-colors"
               >
                 Terminer
               </button>
@@ -1175,30 +1307,38 @@ ${enhancement}`);
       )}
 
       {editingImage && (
-        <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in">
-          <div className="bg-white rounded-3xl p-6 w-full max-w-4xl flex flex-col md:flex-row gap-6 relative shadow-2xl">
+        <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in">
+          <div className="bg-white w-full max-w-4xl flex flex-col md:flex-row relative border border-gray-200">
+            {/* Close button */}
             <button
               onClick={() => setEditingImage(null)}
-              className="absolute top-4 right-4 z-10 w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-gray-500 hover:bg-gray-200 transition-colors"
+              className="absolute top-4 right-4 z-10 w-8 h-8 border border-gray-200 bg-white flex items-center justify-center text-gray-400 hover:text-gray-900 hover:border-gray-400 transition-colors"
             >
-              ✕
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path d="M6 18L18 6M6 6l12 12" />
+              </svg>
             </button>
 
-            <div className="flex-1 bg-gray-50 rounded-2xl overflow-hidden flex items-center justify-center border border-gray-100">
+            {/* Image preview */}
+            <div className="flex-1 bg-gray-50 flex items-center justify-center p-6 border-r border-gray-100">
               <img src={editingImage} className="max-h-[60vh] w-auto object-contain" />
             </div>
 
-            <div className="flex-1 flex flex-col justify-center">
-              <h3 className="text-2xl font-bold mb-2">Modifier le visuel</h3>
-              <p className="text-gray-500 text-sm mb-6">
-                Décrivez les changements souhaités. L'IA va régénérer une variante en se basant sur cette image.
+            {/* Edit form */}
+            <div className="flex-1 flex flex-col justify-center p-8">
+              <div className="text-[10px] font-mono uppercase tracking-widest text-gray-400 mb-2">
+                Modification
+              </div>
+              <h3 className="text-xl font-semibold mb-2">Créer une variante</h3>
+              <p className="text-sm text-gray-500 mb-6">
+                Décrivez les changements. L'IA va régénérer une version modifiée.
               </p>
 
               <textarea
                 value={editPrompt}
                 onChange={(e) => setEditPrompt(e.target.value)}
-                className="w-full h-32 p-4 border border-gray-200 rounded-xl resize-none mb-4 bg-gray-50 focus:bg-white focus:ring-2 ring-black/5 outline-none transition-all text-sm"
-                placeholder="Ex: Change la couleur du fond en bleu nuit, ajoute un reflet sur le produit..."
+                className="w-full h-32 p-4 border border-gray-200 resize-none mb-4 bg-white focus:border-gray-400 outline-none transition-colors text-sm"
+                placeholder="Ex: Change la couleur du fond en bleu nuit..."
               />
 
               <button
@@ -1207,10 +1347,14 @@ ${enhancement}`);
                   handleGenerate(editPrompt, false, brandData, [editingImage]);
                   setEditingImage(null);
                 }}
-                className="bg-black text-white py-4 rounded-xl font-bold hover:bg-gray-800 transition-transform active:scale-95 disabled:opacity-50"
+                className="group bg-gray-900 text-white py-4 font-medium text-sm hover:bg-black transition-colors disabled:opacity-30 flex items-center justify-center gap-2"
                 disabled={!editPrompt.trim()}
               >
-                ✨ Générer la variante
+                <span className="text-emerald-400">✦</span>
+                Générer la variante
+                <svg className="w-4 h-4 transition-transform group-hover:translate-x-0.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path d="M5 12h14M12 5l7 7-7 7" />
+                </svg>
               </button>
             </div>
           </div>
@@ -1222,12 +1366,14 @@ ${enhancement}`);
           className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-sm flex items-center justify-center p-8 animate-fade-in"
           onClick={() => setLightboxImage(null)}
         >
-          <img src={lightboxImage} alt="Full view" className="max-w-full max-h-full object-contain rounded-lg shadow-2xl" onClick={(e) => e.stopPropagation()} />
+          <img src={lightboxImage} alt="Full view" className="max-w-full max-h-full object-contain" onClick={(e) => e.stopPropagation()} />
           <button
-            className="absolute top-6 right-6 text-white/50 hover:text-white text-4xl transition"
+            className="absolute top-6 right-6 w-10 h-10 border border-white/20 flex items-center justify-center text-white/50 hover:text-white hover:border-white/50 transition"
             onClick={() => setLightboxImage(null)}
           >
-            ×
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <path d="M6 18L18 6M6 6l12 12" />
+            </svg>
           </button>
         </div>
       )}
