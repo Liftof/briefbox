@@ -163,16 +163,16 @@ export async function POST(request: Request) {
         "visualMotifs": ["Motif 1 (e.g. 'Data charts')", "Motif 2 (e.g. 'Abstract networks')", "Motif 3"],
         "marketingAngles": [
            {
-             "title": "Market Authority",
-             "concept": "A visual representing leadership in [Industry], showcasing stability and growth. Minimalist and confident."
+             "title": "Social Proof",
+             "concept": "A clean, trustworthy social media graphic featuring a customer testimonial or a key statistic. Minimalist layout with brand colors."
            },
            {
-             "title": "Product Focus",
-             "concept": "A high-end product photography setup with dramatic lighting matching brand colors."
+             "title": "Product Showcase",
+             "concept": "An engaging product-focused visual for Instagram. High-quality mockup or lifestyle shot with soft lighting and clear value proposition text overlay."
            },
            {
-             "title": "Customer Success",
-             "concept": "A lifestyle shot representing the benefit of the service (e.g. relaxed professional, happy family)."
+             "title": "Educational",
+             "concept": "A 'How-to' or 'Did you know?' style infographic for LinkedIn. structured layout with numbered steps or comparison chart using brand fonts."
            }
         ],
         "analyzedImages": [
@@ -207,7 +207,9 @@ export async function POST(request: Request) {
          - 'icon': Small functional icons or illustrations.
          - 'texture': Abstract backgrounds, patterns, gradients, or zoomed-in details suitable for design backgrounds.
       4. **MAPPING:** 'analyzedImages' must map the URLs from the 'DETECTED IMAGES' list provided above.
-      5. **ANGLES:** 'marketingAngles' must be specific. Do NOT use generic phrases. Use the brand's actual value prop.
+      5. **ANGLES (CRITICAL):** 'marketingAngles' MUST be actionable SOCIAL MEDIA VISUAL IDEAS. Do NOT write generic marketing fluff. Write concrete visual descriptions ready for a designer.
+         - Bad: "Showcase authority."
+         - Good: "A minimalist quote card for LinkedIn with a dark blue background, white bold typography, and a subtle logo watermark."
       6. **BACKGROUNDS:** 'backgroundPrompts' should generate high-quality, versatile backgrounds that match the brand aesthetic, suitable for overlays.
       
       If content is empty, INFER reasonable defaults based on the URL and domain name.
@@ -222,8 +224,9 @@ export async function POST(request: Request) {
         "X-Title": "BriefBox" // Optional. Shows in rankings on openrouter.ai.
       },
       body: JSON.stringify({
-        "model": "openai/gpt-5-mini", // Using GPT-5 Mini as requested
+        "model": "openai/gpt-4o-mini", // Using GPT-4o Mini for better reasoning
         "messages": [
+          {"role": "system", "content": "You are an expert Social Media Content Strategist. Your goal is to analyze a website and extract brand identity to create high-performing visual concepts for Instagram and LinkedIn."},
           {"role": "user", "content": prompt}
         ]
       })
