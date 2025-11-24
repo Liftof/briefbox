@@ -959,81 +959,47 @@ ${enhancement}`);
           }}
         />
 
-        {/* Header */}
-        <div className="mb-12">
-          <div className="flex items-center gap-2 mb-3">
+        {/* Header - Compact */}
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center gap-3">
             <div className="w-2 h-2 bg-emerald-500 rounded-full" />
-            <span className="text-[10px] font-mono uppercase tracking-widest text-gray-400">
-              {brandData?.name || 'Marque'}
-            </span>
+            <span className="text-sm font-medium text-gray-900">{brandData?.name || 'Marque'}</span>
+            <span className="text-xs text-gray-400">· Espace créatif</span>
           </div>
-          <h1 className="text-3xl md:text-4xl mb-2">
-            <span className="font-light text-gray-400">Espace</span>
-            {' '}
-            <span className="font-semibold text-gray-900">Créatif</span>
-          </h1>
-          <p className="text-sm text-gray-400 max-w-md">
-            Générez des visuels prêts à publier, fidèles à votre identité.
-          </p>
+          <button
+            onClick={() => setStep('bento')}
+            className="text-xs text-gray-400 hover:text-gray-700 transition-colors flex items-center gap-1"
+          >
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+              <path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+              <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+            Identité
+          </button>
         </div>
 
-        {/* Template Selector - The Core Feature */}
-        <div className="mb-8">
-          <div className="text-[10px] font-mono uppercase tracking-widest text-gray-400 mb-4">
-            Choisir un format
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-            {TEMPLATES.map((template) => (
-              <button
-                key={template.id}
-                onClick={() => {
-                  setSelectedTemplate(template.id);
-                  setBrief(template.placeholder);
-                }}
-                className={`p-4 text-left transition-all border group ${
-                  selectedTemplate === template.id
-                    ? 'bg-gray-900 text-white border-gray-900'
-                    : 'bg-white text-gray-600 border-gray-200 hover:border-gray-400 hover:bg-gray-50'
-                }`}
-              >
-                <div className="text-2xl mb-2">{template.icon}</div>
-                <div className={`font-semibold text-sm mb-1 ${selectedTemplate === template.id ? 'text-white' : 'text-gray-900'}`}>
-                  {template.name}
-                </div>
-                <div className={`text-xs ${selectedTemplate === template.id ? 'text-gray-300' : 'text-gray-400'}`}>
-                  {template.desc}
-                </div>
-              </button>
-            ))}
-          </div>
+        {/* Template Pills - Compact selector */}
+        <div className="flex items-center gap-2 mb-6 overflow-x-auto pb-2 no-scrollbar">
+          <span className="text-[10px] font-mono uppercase tracking-widest text-gray-400 flex-shrink-0 mr-2">Format:</span>
+          {TEMPLATES.map((template) => (
+            <button
+              key={template.id}
+              onClick={() => {
+                setSelectedTemplate(template.id);
+                if (!brief) setBrief(template.placeholder);
+              }}
+              className={`flex-shrink-0 px-4 py-2 text-sm font-medium transition-all border flex items-center gap-2 ${
+                selectedTemplate === template.id
+                  ? 'bg-gray-900 text-white border-gray-900'
+                  : 'bg-white text-gray-600 border-gray-200 hover:border-gray-400'
+              }`}
+              title={template.desc}
+            >
+              <span>{template.icon}</span>
+              <span>{template.name}</span>
+            </button>
+          ))}
         </div>
-
-        {/* Suggested Posts from Brand Analysis */}
-        {brandData?.suggestedPosts?.length > 0 && (
-          <div className="mb-8">
-            <div className="text-[10px] font-mono uppercase tracking-widest text-gray-400 mb-3">
-              Suggestions pour {brandData.name}
-            </div>
-            <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
-              {brandData.suggestedPosts.map((post: any, i: number) => {
-                const template = TEMPLATES.find(t => t.id === post.templateId);
-                return (
-                  <button
-                    key={i}
-                    onClick={() => {
-                      setSelectedTemplate(post.templateId as TemplateId);
-                      setBrief(post.headline || post.metric ? `${post.metric} ${post.metricLabel || ''}` : '');
-                    }}
-                    className="whitespace-nowrap px-4 py-3 bg-white border border-gray-200 text-sm text-gray-600 hover:border-gray-400 hover:text-gray-900 transition-colors flex items-center gap-3"
-                  >
-                    <span className="text-lg">{template?.icon || '📝'}</span>
-                    <span className="font-medium">{post.headline || `${post.metric} ${post.metricLabel || ''}`}</span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        )}
 
         {/* Main Input Card */}
         <div className="bg-white border border-gray-200 mb-8 relative">
@@ -1048,102 +1014,109 @@ ${enhancement}`);
           )}
 
           <div className="p-6">
+            {/* Quick suggestions - only if we have brand data */}
+            {brandData?.suggestedPosts?.length > 0 && (
+              <div className="flex items-center gap-2 mb-4 overflow-x-auto no-scrollbar -mx-1 px-1">
+                <span className="text-[10px] font-mono uppercase tracking-widest text-gray-300 flex-shrink-0">Idées:</span>
+                {brandData.suggestedPosts.slice(0, 3).map((post: any, i: number) => {
+                  const template = TEMPLATES.find(t => t.id === post.templateId);
+                  const label = post.headline?.slice(0, 25) || `${post.metric || ''} ${post.metricLabel || ''}`.slice(0, 25);
+                  return (
+                    <button
+                      key={i}
+                      onClick={() => {
+                        setSelectedTemplate(post.templateId as TemplateId);
+                        setBrief(post.headline || `${post.metric || ''} ${post.metricLabel || ''}`);
+                      }}
+                      className="flex-shrink-0 px-3 py-1.5 text-xs text-gray-500 bg-gray-50 hover:bg-gray-100 hover:text-gray-700 transition-colors flex items-center gap-1.5"
+                    >
+                      <span>{template?.icon}</span>
+                      {label}...
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+
             {/* Brief textarea */}
             <textarea
               value={brief}
               onChange={(e) => setBrief(e.target.value)}
-              placeholder="Décrivez le visuel que vous voulez créer..."
-              className="w-full min-h-[100px] text-base resize-none outline-none placeholder:text-gray-300 bg-transparent"
+              placeholder={selectedTemplate ? TEMPLATES.find(t => t.id === selectedTemplate)?.placeholder : "Décrivez le visuel que vous voulez créer..."}
+              className="w-full min-h-[80px] text-base resize-none outline-none placeholder:text-gray-300 bg-transparent"
             />
 
-            {/* Sources - More prominent */}
-            <div className="mt-4 pt-4 border-t border-gray-100">
-              <div className="flex items-center justify-between mb-3">
-                <div className="text-[10px] font-mono uppercase tracking-widest text-gray-400">
-                  Images de référence
-                </div>
-                <button
-                  onClick={() => setShowSourceManager(true)}
-                  className="text-[10px] font-mono uppercase tracking-widest text-emerald-600 hover:text-emerald-700 transition-colors flex items-center gap-1"
-                >
-                  <span>+</span> Gérer les sources
-                </button>
-              </div>
+            {/* Sources - Compact inline */}
+            <div className="mt-4 pt-4 border-t border-gray-100 flex items-center gap-3">
+              <span className="text-[10px] font-mono uppercase tracking-widest text-gray-400 flex-shrink-0">Sources:</span>
               
-              {uploadedImages.length === 0 ? (
-                <button
-                  onClick={() => setShowSourceManager(true)}
-                  className="w-full py-6 border-2 border-dashed border-gray-200 hover:border-emerald-500 hover:bg-emerald-50/30 transition-all flex flex-col items-center gap-2 group"
-                >
-                  <svg className="w-6 h-6 text-gray-300 group-hover:text-emerald-500 transition-colors" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
-                    <path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
-                  <span className="text-xs text-gray-400 group-hover:text-emerald-600 transition-colors">
-                    Ajouter logo, produits ou visuels de marque
-                  </span>
-                </button>
-              ) : (
-              <div className="flex gap-3 overflow-x-auto pb-2 no-scrollbar">
-                {uploadedImages.map((img, i) => (
-                    <div key={i} className="relative w-14 h-14 flex-shrink-0 group">
-                      <img src={img} className="w-full h-full object-cover border border-gray-200" />
+              <div className="flex gap-2 overflow-x-auto no-scrollbar flex-1">
+                {uploadedImages.slice(0, 5).map((img, i) => (
+                  <div key={i} className="relative w-10 h-10 flex-shrink-0 group">
+                    <img src={img} className="w-full h-full object-cover border border-gray-200" />
                     <button
                       onClick={() => handleRemoveImage(i)}
-                        className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-gray-900 text-white flex items-center justify-center text-[10px] opacity-0 group-hover:opacity-100 transition-opacity"
+                      className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-gray-900 text-white flex items-center justify-center text-[8px] opacity-0 group-hover:opacity-100 transition-opacity"
                     >
                       ×
                     </button>
                   </div>
                 ))}
-                <button
-                  onClick={() => setShowSourceManager(true)}
-                    className="w-14 h-14 flex-shrink-0 border border-dashed border-gray-300 flex items-center justify-center text-gray-400 hover:border-emerald-500 hover:text-emerald-500 hover:bg-emerald-50/30 transition-all"
-                >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
-                      <path d="M12 4v16m8-8H4" />
-                    </svg>
-                </button>
-                </div>
-              )}
-                <input ref={fileInputRef} type="file" multiple accept="image/*" className="hidden" onChange={handleImageUpload} />
+                {uploadedImages.length > 5 && (
+                  <div className="w-10 h-10 flex-shrink-0 bg-gray-100 flex items-center justify-center text-xs text-gray-500">
+                    +{uploadedImages.length - 5}
+                  </div>
+                )}
               </div>
+
+              <button
+                onClick={() => setShowSourceManager(true)}
+                className="flex-shrink-0 px-3 py-1.5 text-xs text-gray-500 border border-gray-200 hover:border-gray-400 hover:text-gray-700 transition-colors flex items-center gap-1.5"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+                  <path d="M12 4v16m8-8H4" />
+                </svg>
+                {uploadedImages.length === 0 ? 'Ajouter' : 'Gérer'}
+              </button>
+              <input ref={fileInputRef} type="file" multiple accept="image/*" className="hidden" onChange={handleImageUpload} />
+            </div>
             </div>
 
-          {/* Actions footer */}
-          <div className="flex items-center justify-between px-6 py-4 border-t border-gray-100 bg-gray-50/50">
-                <button
-                  onClick={handleMagicEnhance}
-                  disabled={!brief.trim() || isThinking}
-              className="text-[10px] font-mono uppercase tracking-widest text-gray-400 hover:text-gray-900 transition-colors disabled:opacity-30 flex items-center gap-2"
-                  title="Améliorer avec l'IA"
-                >
-              <span className="text-emerald-500">✦</span> Magic Prompt
-                </button>
+          {/* Actions footer - Compact */}
+          <div className="flex items-center justify-end gap-3 px-6 py-3 border-t border-gray-100 bg-gray-50/50">
+            <button
+              onClick={handleMagicEnhance}
+              disabled={!brief.trim() || isThinking}
+              className="px-3 py-2 text-xs text-gray-500 hover:text-gray-900 transition-colors disabled:opacity-30 flex items-center gap-1.5"
+              title="Améliorer avec l'IA"
+            >
+              <span className="text-emerald-500">✦</span> Enrichir
+            </button>
             
-              <button
-                onClick={() => handleGenerate()}
-                disabled={status !== 'idle' || !brief.trim() || uploadedImages.length === 0}
-              className="group relative bg-gray-900 text-white px-6 py-3 font-medium text-sm disabled:opacity-30 disabled:cursor-not-allowed transition-all hover:bg-black flex items-center gap-2"
+            <button
+              onClick={() => handleGenerate()}
+              disabled={status !== 'idle' || !brief.trim() || uploadedImages.length === 0}
+              className="group bg-gray-900 text-white px-5 py-2 font-medium text-sm disabled:opacity-30 disabled:cursor-not-allowed transition-all hover:bg-black flex items-center gap-2"
             >
               {status === 'preparing' || status === 'running' ? (
                 <>
                   <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
                   </svg>
-                  Génération...
+                  <span>Génération...</span>
                 </>
               ) : (
                 <>
-                  Générer
+                  Générer 4 visuels
                   <svg className="w-4 h-4 transition-transform group-hover:translate-x-0.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                     <path d="M5 12h14M12 5l7 7-7 7" />
                   </svg>
                 </>
               )}
-              </button>
-            </div>
+            </button>
           </div>
+        </div>
 
         {/* Generation Loading State */}
         {(status === 'preparing' || status === 'running') && (
