@@ -19,75 +19,67 @@ export default function Navigation() {
 
   return (
     <>
-      <nav className={`fixed top-6 left-0 right-0 z-50 transition-all duration-500 pointer-events-none flex justify-center`}>
-        <div className={`bg-white/80 backdrop-blur-md border border-black/5 shadow-[0_8px_30px_rgb(0,0,0,0.04)] rounded-full px-6 py-3 max-w-5xl w-[calc(100%-3rem)] pointer-events-auto transition-all duration-300 ${isScrolled ? 'translate-y-0' : 'translate-y-0'}`}>
-          <div className="flex items-center justify-between">
-            {/* Logo raffiné */}
+      <nav className="fixed top-0 left-0 right-0 z-50">
+        <div className={`mx-auto max-w-7xl px-6 transition-all duration-300 ${isScrolled ? 'py-4' : 'py-6'}`}>
+          <div className={`flex items-center justify-between px-6 py-3 transition-all duration-300 ${
+            isScrolled 
+              ? 'bg-white/80 backdrop-blur-xl border border-gray-200 shadow-sm' 
+              : 'bg-transparent'
+          }`}>
+            {/* Logo */}
             <Link href="/" className="flex items-center gap-2.5 group">
-              <div className="relative">
-                <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center transform group-hover:scale-105 transition-transform duration-300">
-                  <span className="text-white text-[10px] font-semibold tracking-tight">Q</span>
-                </div>
+              <div className="w-7 h-7 bg-gray-900 rounded-full flex items-center justify-center">
+                <span className="text-white text-[9px] font-semibold">B</span>
               </div>
-              <div className="flex flex-col">
-                <span className="text-primary font-semibold text-sm tracking-tight leading-none">QuitteTonAgence</span>
-              </div>
+              <span className="text-gray-900 font-medium text-sm">BriefBox</span>
             </Link>
 
             {/* Desktop menu */}
-            <div className="hidden md:flex items-center gap-4">
-              <div className="flex items-center gap-1 bg-secondary/5 rounded-full p-1 mr-4">
-                  <a
-                    href="#fonctionnement"
-                    className="text-[13px] text-secondary/80 hover:text-primary px-4 py-1.5 rounded-full hover:bg-white transition-all duration-300 font-medium"
-                  >
-                    Fonctionnement
-                  </a>
-                  <a
-                    href="#tarifs"
-                    className="text-[13px] text-secondary/80 hover:text-primary px-4 py-1.5 rounded-full hover:bg-white transition-all duration-300 font-medium"
-                  >
-                    Tarifs
-                  </a>
+            <div className="hidden md:flex items-center gap-8">
+              <a href="#fonctionnement" className="text-sm text-gray-500 hover:text-gray-900 transition-colors">
+                Fonctionnement
+              </a>
+              <a href="#tarifs" className="text-sm text-gray-500 hover:text-gray-900 transition-colors">
+                Tarifs
+              </a>
+              
+              <div className="flex items-center gap-4 pl-4 border-l border-gray-200">
+                {isLoaded && (
+                  <>
+                    {isSignedIn ? (
+                      <UserButton afterSignOutUrl="/" />
+                    ) : (
+                      <SignInButton mode="modal">
+                        <button className="text-sm text-gray-500 hover:text-gray-900 transition-colors">
+                          Connexion
+                        </button>
+                      </SignInButton>
+                    )}
+                  </>
+                )}
+                
+                <Link
+                  href="/playground"
+                  className="group inline-flex items-center gap-2 px-4 py-2 bg-gray-900 text-white text-sm font-medium hover:bg-black transition-colors"
+                >
+                  <span>Playground</span>
+                  <svg className="w-3 h-3 transition-transform group-hover:translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                  </svg>
+                </Link>
               </div>
-
-              {/* CTA élégant */}
-              <Link
-                href="/playground"
-                className="group inline-flex items-center gap-2 px-5 py-2.5 bg-primary text-white text-[13px] font-medium rounded-full hover:opacity-90 transition-all duration-300 shadow-sm hover:shadow-md"
-              >
-                <span>Playground</span>
-                <svg className="w-3 h-3 group-hover:translate-x-0.5 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                </svg>
-              </Link>
-
-              {/* Auth */}
-              {isLoaded && (
-                <div className="pl-4 border-l border-gray-200 flex items-center">
-                  {isSignedIn ? (
-                    <UserButton afterSignOutUrl="/" />
-                  ) : (
-                    <SignInButton mode="modal">
-                      <button className="text-[13px] font-medium text-primary hover:bg-gray-100 px-3 py-2 rounded-full transition-colors">
-                        Connexion
-                      </button>
-                    </SignInButton>
-                  )}
-                </div>
-              )}
             </div>
 
-            {/* Mobile menu button - raffiné */}
+            {/* Mobile menu button */}
             <button
-              className="md:hidden relative w-9 h-9 flex items-center justify-center group"
+              className="md:hidden w-8 h-8 flex items-center justify-center"
               onClick={() => setIsMenuOpen(!isMenuOpen)}
               aria-label="Menu"
             >
-              <div className="flex flex-col gap-[5px]">
-                <span className={`block w-4 h-[1.5px] bg-primary transition-all duration-300 ${isMenuOpen ? 'rotate-45 translate-y-[6.5px]' : ''}`}></span>
-                <span className={`block w-4 h-[1.5px] bg-primary transition-all duration-300 ${isMenuOpen ? 'opacity-0' : ''}`}></span>
-                <span className={`block w-4 h-[1.5px] bg-primary transition-all duration-300 ${isMenuOpen ? '-rotate-45 -translate-y-[6.5px]' : ''}`}></span>
+              <div className="flex flex-col gap-1">
+                <span className={`block w-4 h-[1.5px] bg-gray-900 transition-all duration-300 ${isMenuOpen ? 'rotate-45 translate-y-[5px]' : ''}`} />
+                <span className={`block w-4 h-[1.5px] bg-gray-900 transition-all duration-300 ${isMenuOpen ? 'opacity-0' : ''}`} />
+                <span className={`block w-4 h-[1.5px] bg-gray-900 transition-all duration-300 ${isMenuOpen ? '-rotate-45 -translate-y-[5px]' : ''}`} />
               </div>
             </button>
           </div>
@@ -96,45 +88,44 @@ export default function Navigation() {
 
       {/* Mobile menu overlay */}
       {isMenuOpen && (
-          <div className="fixed inset-0 z-40 bg-white/95 backdrop-blur-xl md:hidden pt-24 px-6 animate-fade-in">
-            <div className="flex flex-col gap-2">
-              <a
-                href="#fonctionnement"
-                className="block text-lg text-primary font-semibold py-4 border-b border-stroke"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Fonctionnement
-              </a>
-              <a
-                href="#tarifs"
-                className="block text-lg text-primary font-semibold py-4 border-b border-stroke"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Tarifs
-              </a>
-              
-              <div className="py-4 flex items-center justify-between border-b border-stroke">
-                 <span className="text-lg font-semibold">Compte</span>
-                 {isSignedIn ? (
-                    <UserButton afterSignOutUrl="/" />
-                 ) : (
-                    <SignInButton mode="modal">
-                        <button className="text-primary font-bold">Connexion</button>
-                    </SignInButton>
-                 )}
-              </div>
-
-              <Link
-                href="/playground"
-                className="block w-full px-4 py-4 mt-8 text-center bg-primary text-white text-base font-medium rounded-full shadow-lg"
-                onClick={() => setIsMenuOpen(false)}
-              >
-                Playground →
-              </Link>
+        <div className="fixed inset-0 z-40 bg-white md:hidden pt-24 px-6 animate-fade-in">
+          <div className="flex flex-col">
+            <a
+              href="#fonctionnement"
+              className="py-4 text-lg text-gray-900 border-b border-gray-100"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              Fonctionnement
+            </a>
+            <a
+              href="#tarifs"
+              className="py-4 text-lg text-gray-900 border-b border-gray-100"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              Tarifs
+            </a>
+            
+            <div className="py-4 flex items-center justify-between border-b border-gray-100">
+              <span className="text-lg text-gray-900">Compte</span>
+              {isSignedIn ? (
+                <UserButton afterSignOutUrl="/" />
+              ) : (
+                <SignInButton mode="modal">
+                  <button className="text-gray-900 font-medium">Connexion</button>
+                </SignInButton>
+              )}
             </div>
+
+            <Link
+              href="/playground"
+              className="mt-8 py-4 text-center bg-gray-900 text-white text-sm font-medium"
+              onClick={() => setIsMenuOpen(false)}
+            >
+              Playground →
+            </Link>
           </div>
-        )}
+        </div>
+      )}
     </>
   );
 }
-

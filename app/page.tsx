@@ -4,88 +4,98 @@ import Link from 'next/link';
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-page font-sans text-secondary">
+    <div className="min-h-screen bg-[#FAFAFA] font-sans text-gray-900">
       <Navigation />
       <Hero />
 
-      {/* Problem/Solution */}
-      <section className="py-24 bg-white relative z-10 rounded-t-[40px] shadow-[0_-20px_40px_-15px_rgba(0,0,0,0.05)]">
-        <div className="max-w-6xl mx-auto px-6">
-          <div className="text-center mb-20">
-            <div className="inline-block bg-page border border-stroke px-4 py-1 rounded-full text-sm font-medium text-secondary mb-6">
-              La réalité du marché
+      {/* Problem/Solution Section */}
+      <section className="py-32 relative">
+        {/* Subtle grid */}
+        <div className="absolute inset-0 opacity-[0.02]" style={{
+          backgroundImage: `linear-gradient(#000 1px, transparent 1px), linear-gradient(90deg, #000 1px, transparent 1px)`,
+          backgroundSize: '60px 60px'
+        }} />
+
+        <div className="max-w-6xl mx-auto px-6 relative z-10">
+          {/* Section header */}
+          <div className="max-w-2xl mb-20">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-2 h-2 bg-red-500 rounded-full" />
+              <span className="text-xs font-mono uppercase tracking-[0.2em] text-gray-400">Le problème</span>
             </div>
-            <h2 className="text-4xl md:text-5xl font-extrabold mb-6 text-primary tracking-tight">
-              Pourquoi payer une agence ?
+            <h2 className="text-4xl font-light text-gray-900 leading-tight mb-4">
+              Pourquoi payer<br />
+              <span className="font-semibold">une agence ?</span>
             </h2>
-            <p className="text-xl text-secondary/70 max-w-2xl mx-auto">
-              Fini le middle man hors de prix. Tout le monde peut être créatif avec les bons outils.
+            <p className="text-gray-400 leading-relaxed">
+              Fini le middle man hors de prix. Tout le monde peut créer des visuels professionnels.
             </p>
           </div>
 
           <div className="grid md:grid-cols-2 gap-8">
             {/* Agency Side */}
-            <div className="p-10 bg-red-50/50 border border-red-100 rounded-epopian hover:border-red-200 transition-colors duration-300">
-              <div className="flex items-center gap-3 mb-8">
-                <div className="w-10 h-10 rounded-full bg-red-100 text-red-600 flex items-center justify-center text-xl">❌</div>
-                <div className="text-lg font-bold text-red-900">Avec une agence</div>
-              </div>
-              
-              <div className="space-y-8">
-                <div className="flex items-start gap-4">
-                  <span className="text-3xl grayscale opacity-70">⏱️</span>
-                  <div>
-                    <div className="font-bold text-gray-900 mb-1">2-3 semaines de délai</div>
-                    <div className="text-sm text-gray-600 leading-relaxed">Brief, devis, allers-retours infinis, validations... un processus lourd et lent.</div>
-                  </div>
+            <div className="relative">
+              <div className="absolute -top-3 -left-3 w-6 h-6 border-l-2 border-t-2 border-red-200" />
+              <div className="bg-white border border-gray-200 p-10">
+                <div className="flex items-center gap-3 mb-8">
+                  <span className="text-xs font-mono uppercase tracking-widest text-red-400">Avec une agence</span>
                 </div>
-                <div className="flex items-start gap-4">
-                  <span className="text-3xl grayscale opacity-70">💸</span>
-                  <div>
-                    <div className="font-bold text-gray-900 mb-1">2000-5000€ par campagne</div>
-                    <div className="text-sm text-gray-600 leading-relaxed">Un budget qui explose avec les "jours/hommes" facturés au prix fort.</div>
+                
+                <div className="space-y-8">
+                  <div className="flex items-start gap-4">
+                    <div className="w-8 h-8 bg-red-50 rounded-full flex items-center justify-center text-red-400 text-sm flex-shrink-0">×</div>
+                    <div>
+                      <div className="font-medium text-gray-900 mb-1">2-3 semaines de délai</div>
+                      <div className="text-sm text-gray-400 leading-relaxed">Brief, devis, allers-retours infinis, validations...</div>
+                    </div>
                   </div>
-                </div>
-                <div className="flex items-start gap-4">
-                  <span className="text-3xl grayscale opacity-70">😤</span>
-                  <div>
-                    <div className="font-bold text-gray-900 mb-1">Résultat décevant</div>
-                    <div className="text-sm text-gray-600 leading-relaxed">Ils ne connaissent pas votre marque aussi bien que vous.</div>
+                  <div className="flex items-start gap-4">
+                    <div className="w-8 h-8 bg-red-50 rounded-full flex items-center justify-center text-red-400 text-sm flex-shrink-0">×</div>
+                    <div>
+                      <div className="font-medium text-gray-900 mb-1">2000-5000€ par campagne</div>
+                      <div className="text-sm text-gray-400 leading-relaxed">Des "jours/hommes" facturés au prix fort.</div>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-4">
+                    <div className="w-8 h-8 bg-red-50 rounded-full flex items-center justify-center text-red-400 text-sm flex-shrink-0">×</div>
+                    <div>
+                      <div className="font-medium text-gray-900 mb-1">Résultat décevant</div>
+                      <div className="text-sm text-gray-400 leading-relaxed">Ils ne connaissent pas votre marque aussi bien que vous.</div>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
 
             {/* Solution Side */}
-            <div className="p-10 bg-primary text-white rounded-epopian relative overflow-hidden group">
-              <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-gray-800 to-black opacity-50 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 group-hover:opacity-70 transition-opacity duration-700"></div>
-              
-              <div className="relative z-10">
+            <div className="relative">
+              <div className="absolute -bottom-3 -right-3 w-6 h-6 border-r-2 border-b-2 border-emerald-300" />
+              <div className="bg-gray-900 text-white p-10 h-full">
                 <div className="flex items-center gap-3 mb-8">
-                  <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-white text-xl border border-white/20">✅</div>
-                  <div className="text-lg font-bold">En solo avec QuitteTonAgence</div>
+                  <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
+                  <span className="text-xs font-mono uppercase tracking-widest text-emerald-400">Avec BriefBox</span>
                 </div>
-
+                
                 <div className="space-y-8">
                   <div className="flex items-start gap-4">
-                    <span className="text-3xl">⚡</span>
+                    <div className="w-8 h-8 bg-emerald-500/20 rounded-full flex items-center justify-center text-emerald-400 text-sm flex-shrink-0">✓</div>
                     <div>
-                      <div className="font-bold text-white mb-1">2 minutes chrono</div>
-                      <div className="text-sm text-white/70 leading-relaxed">Vous décrivez, l'IA génère. C'est aussi simple que ça.</div>
+                      <div className="font-medium text-white mb-1">2 minutes chrono</div>
+                      <div className="text-sm text-gray-400 leading-relaxed">Vous décrivez, l'IA génère. C'est aussi simple que ça.</div>
                     </div>
                   </div>
                   <div className="flex items-start gap-4">
-                    <span className="text-3xl">✨</span>
+                    <div className="w-8 h-8 bg-emerald-500/20 rounded-full flex items-center justify-center text-emerald-400 text-sm flex-shrink-0">✓</div>
                     <div>
-                      <div className="font-bold text-white mb-1">29€/mois illimité</div>
-                      <div className="text-sm text-white/70 leading-relaxed">Plus jamais de factures surprises. Créez autant que vous voulez.</div>
+                      <div className="font-medium text-white mb-1">29€/mois illimité</div>
+                      <div className="text-sm text-gray-400 leading-relaxed">Plus jamais de factures surprises.</div>
                     </div>
                   </div>
                   <div className="flex items-start gap-4">
-                    <span className="text-3xl">🎨</span>
+                    <div className="w-8 h-8 bg-emerald-500/20 rounded-full flex items-center justify-center text-emerald-400 text-sm flex-shrink-0">✓</div>
                     <div>
-                      <div className="font-bold text-white mb-1">100% On-Brand</div>
-                      <div className="text-sm text-white/70 leading-relaxed">L'IA respecte votre charte graphique à la lettre (Logo, typo, couleurs).</div>
+                      <div className="font-medium text-white mb-1">100% On-Brand</div>
+                      <div className="text-sm text-gray-400 leading-relaxed">L'IA respecte votre charte graphique à la lettre.</div>
                     </div>
                   </div>
                 </div>
@@ -96,88 +106,54 @@ export default function Home() {
       </section>
 
       {/* How it Works */}
-      <section id="fonctionnement" className="py-24 bg-page">
+      <section id="fonctionnement" className="py-32 bg-white relative">
         <div className="max-w-6xl mx-auto px-6">
-          <div className="text-center mb-20">
-             <div className="inline-block bg-white border border-stroke px-4 py-1 rounded-full text-sm font-medium text-secondary mb-6 shadow-sm">
-              Processus simplifié
+          {/* Section header */}
+          <div className="max-w-2xl mb-20">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-2 h-2 bg-gray-900 rounded-full" />
+              <span className="text-xs font-mono uppercase tracking-[0.2em] text-gray-400">Processus</span>
             </div>
-            <h2 className="text-4xl md:text-5xl font-extrabold mb-6 text-primary tracking-tight">
-              Simple comme 1, 2, 3
+            <h2 className="text-4xl font-light text-gray-900 leading-tight mb-4">
+              Simple comme<br />
+              <span className="font-semibold">1, 2, 3</span>
             </h2>
-            <p className="text-xl text-secondary/70 max-w-2xl mx-auto">
+            <p className="text-gray-400 leading-relaxed">
               Une interface pensée pour ceux qui n'ont pas le temps.
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-3 gap-12">
             {/* Step 1 */}
-            <div className="card-epopian hover:translate-y-[-5px] group overflow-hidden">
-              <div className="w-14 h-14 bg-primary text-white rounded-2xl flex items-center justify-center text-2xl font-black mb-6 shadow-lg shadow-primary/20 relative z-10">
-                1
-              </div>
-              <h3 className="text-xl font-bold mb-3 text-primary relative z-10">Importez votre marque</h3>
-              <p className="text-secondary/70 leading-relaxed relative z-10 mb-6">
-                Uploadez votre logo, définissez vos couleurs et vos typographies une bonne fois pour toutes.
-              </p>
-              
-              {/* Visual Step 1 */}
-              <div className="h-32 bg-gray-50 rounded-xl border border-stroke p-3 relative group-hover:scale-105 transition-transform duration-500">
-                <div className="w-full h-full border-2 border-dashed border-gray-200 rounded-lg flex flex-col items-center justify-center gap-2">
-                   <div className="w-8 h-8 bg-gray-200 rounded-full flex items-center justify-center text-gray-400">↑</div>
-                   <div className="h-2 w-16 bg-gray-200 rounded-full"></div>
-                </div>
-                {/* Floating assets */}
-                <div className="absolute top-4 left-4 w-8 h-8 bg-[#FF6446] rounded-lg shadow-md transform -rotate-12"></div>
-                <div className="absolute bottom-4 right-4 w-10 h-10 bg-white border border-stroke rounded-full flex items-center justify-center shadow-md transform rotate-12">
-                  <span className="text-[10px] font-bold">Logo</span>
-                </div>
+            <div className="relative">
+              <div className="text-8xl font-light text-gray-100 absolute -top-4 -left-2">1</div>
+              <div className="relative z-10 pt-12">
+                <h3 className="text-xl font-medium text-gray-900 mb-3">Importez votre marque</h3>
+                <p className="text-gray-400 leading-relaxed text-sm">
+                  Uploadez votre logo, définissez vos couleurs et typographies une bonne fois pour toutes.
+                </p>
               </div>
             </div>
 
             {/* Step 2 */}
-            <div className="card-epopian hover:translate-y-[-5px] group overflow-hidden">
-              <div className="w-14 h-14 bg-primary text-white rounded-2xl flex items-center justify-center text-2xl font-black mb-6 shadow-lg shadow-primary/20 relative z-10">
-                2
-              </div>
-              <h3 className="text-xl font-bold mb-3 text-primary relative z-10">Décrivez votre besoin</h3>
-              <p className="text-secondary/70 leading-relaxed relative z-10 mb-6">
-                "Je veux une story Instagram pour le Black Friday". Plus besoin de rédiger un brief complexe.
-              </p>
-
-               {/* Visual Step 2 */}
-              <div className="h-32 bg-gray-50 rounded-xl border border-stroke p-3 relative group-hover:scale-105 transition-transform duration-500 flex flex-col justify-center">
-                 <div className="bg-white border border-stroke p-3 rounded-2xl rounded-tl-none shadow-sm max-w-[90%] mb-2">
-                    <div className="h-2 w-full bg-gray-200 rounded-full mb-1.5"></div>
-                    <div className="h-2 w-2/3 bg-gray-200 rounded-full"></div>
-                 </div>
-                 <div className="flex justify-end">
-                    <div className="bg-primary text-white p-2 rounded-2xl rounded-tr-none shadow-md text-[10px] font-bold px-3">
-                       Génère ça ! ⚡
-                    </div>
-                 </div>
+            <div className="relative">
+              <div className="text-8xl font-light text-gray-100 absolute -top-4 -left-2">2</div>
+              <div className="relative z-10 pt-12">
+                <h3 className="text-xl font-medium text-gray-900 mb-3">Décrivez votre besoin</h3>
+                <p className="text-gray-400 leading-relaxed text-sm">
+                  "Je veux une story Instagram pour le Black Friday". Plus besoin de brief complexe.
+                </p>
               </div>
             </div>
 
             {/* Step 3 */}
-            <div className="card-epopian hover:translate-y-[-5px] group overflow-hidden">
-              <div className="w-14 h-14 bg-primary text-white rounded-2xl flex items-center justify-center text-2xl font-black mb-6 shadow-lg shadow-primary/20 relative z-10">
-                3
-              </div>
-              <h3 className="text-xl font-bold mb-3 text-primary relative z-10">L'IA génère tout</h3>
-              <p className="text-secondary/70 leading-relaxed relative z-10 mb-6">
-                Obtenez instantanément des visuels déclinés dans tous les formats, prêts à être postés.
-              </p>
-
-              {/* Visual Step 3 */}
-              <div className="h-32 bg-gray-50 rounded-xl border border-stroke p-2 relative group-hover:scale-105 transition-transform duration-500 grid grid-cols-2 gap-2 overflow-hidden">
-                 <div className="bg-gray-200 rounded-lg animate-pulse"></div>
-                 <div className="bg-gray-800 rounded-lg"></div>
-                 <div className="bg-gray-300 rounded-lg"></div>
-                 <div className="bg-gray-100 rounded-lg"></div>
-                 <div className="absolute inset-0 bg-gradient-to-t from-white/80 to-transparent flex items-end justify-center pb-2">
-                    <span className="text-xs font-bold text-primary bg-white px-2 py-1 rounded shadow-sm">✨ Fini !</span>
-                 </div>
+            <div className="relative">
+              <div className="text-8xl font-light text-gray-100 absolute -top-4 -left-2">3</div>
+              <div className="relative z-10 pt-12">
+                <h3 className="text-xl font-medium text-gray-900 mb-3">L'IA génère tout</h3>
+                <p className="text-gray-400 leading-relaxed text-sm">
+                  Obtenez instantanément des visuels déclinés dans tous les formats, prêts à poster.
+                </p>
               </div>
             </div>
           </div>
@@ -185,90 +161,108 @@ export default function Home() {
       </section>
 
       {/* Pricing */}
-      <section id="tarifs" className="py-24 bg-white rounded-t-[40px] shadow-[0_-20px_40px_-15px_rgba(0,0,0,0.05)]">
-        <div className="max-w-6xl mx-auto px-6">
+      <section id="tarifs" className="py-32 relative">
+        <div className="absolute inset-0 opacity-[0.02]" style={{
+          backgroundImage: `linear-gradient(#000 1px, transparent 1px), linear-gradient(90deg, #000 1px, transparent 1px)`,
+          backgroundSize: '60px 60px'
+        }} />
+
+        <div className="max-w-5xl mx-auto px-6 relative z-10">
+          {/* Section header */}
           <div className="text-center mb-20">
-            <h2 className="text-4xl md:text-5xl font-extrabold mb-6 text-primary tracking-tight">
-              Tarifs transparents
+            <div className="inline-flex items-center gap-3 mb-6">
+              <div className="w-2 h-2 bg-gray-900 rounded-full" />
+              <span className="text-xs font-mono uppercase tracking-[0.2em] text-gray-400">Tarifs</span>
+            </div>
+            <h2 className="text-4xl font-light text-gray-900 leading-tight mb-4">
+              Transparents et<br />
+              <span className="font-semibold">sans surprise</span>
             </h2>
-            <p className="text-xl text-secondary/70">
-              Commencez gratuit, scalez quand vous voulez
-            </p>
           </div>
 
-          <div className="grid lg:grid-cols-3 gap-8 max-w-5xl mx-auto items-start">
-            <div className="card-epopian border-stroke bg-page">
-              <h3 className="text-2xl font-bold mb-2 text-primary">Free</h3>
-              <div className="text-5xl font-black mb-4 text-primary">0€</div>
-              <p className="text-secondary/60 mb-8 font-medium">Pour tester l'outil</p>
-              <ul className="space-y-4 mb-8">
-                <li className="flex items-center gap-3">
-                  <span className="text-primary font-bold">✓</span>
-                  <span className="text-secondary">10 générations/mois</span>
+          <div className="grid lg:grid-cols-3 gap-6 items-start">
+            {/* Free */}
+            <div className="bg-white border border-gray-200 p-8">
+              <div className="text-xs font-mono uppercase tracking-widest text-gray-400 mb-4">Free</div>
+              <div className="text-4xl font-light text-gray-900 mb-2">0€</div>
+              <p className="text-sm text-gray-400 mb-8">Pour tester l'outil</p>
+              
+              <ul className="space-y-3 mb-8">
+                <li className="flex items-center gap-3 text-sm text-gray-600">
+                  <span className="text-emerald-500">✓</span>
+                  10 générations/mois
                 </li>
-                <li className="flex items-center gap-3">
-                  <span className="text-primary font-bold">✓</span>
-                  <span className="text-secondary">Tous les templates</span>
+                <li className="flex items-center gap-3 text-sm text-gray-600">
+                  <span className="text-emerald-500">✓</span>
+                  Tous les templates
                 </li>
-                <li className="flex items-center gap-3 opacity-40">
-                  <span className="font-bold">✗</span>
-                  <span>Charte graphique</span>
+                <li className="flex items-center gap-3 text-sm text-gray-300">
+                  <span>×</span>
+                  Charte graphique
                 </li>
               </ul>
-              <Link href="/playground" className="btn-secondary w-full block text-center">
+              
+              <Link href="/playground" className="block w-full py-3 text-center text-sm font-medium text-gray-900 border border-gray-200 hover:border-gray-900 transition-colors">
                 Commencer
               </Link>
             </div>
 
-            <div className="card-epopian bg-primary text-white ring-4 ring-offset-4 ring-primary/10 transform lg:-translate-y-4">
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 px-4 py-1 bg-white text-primary rounded-b-xl text-xs font-black uppercase tracking-widest shadow-sm">
+            {/* Pro - Featured */}
+            <div className="relative bg-gray-900 text-white p-8 lg:-mt-4 lg:-mb-4">
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-emerald-500 text-white text-[10px] font-mono uppercase tracking-widest px-3 py-1">
                 Recommandé
               </div>
-              <h3 className="text-2xl font-bold mb-2 mt-2">Pro</h3>
-              <div className="text-5xl font-black mb-1">29€<span className="text-xl font-normal text-white/60">/mois</span></div>
-              <p className="text-white/60 mb-8 font-medium">Pour les freelances</p>
-              <ul className="space-y-4 mb-8">
-                <li className="flex items-center gap-3">
-                  <span className="font-bold text-white">✓</span>
-                  <span>Générations illimitées</span>
+              
+              <div className="text-xs font-mono uppercase tracking-widest text-emerald-400 mb-4">Pro</div>
+              <div className="text-4xl font-light text-white mb-2">29€<span className="text-lg text-gray-500">/mois</span></div>
+              <p className="text-sm text-gray-400 mb-8">Pour les freelances</p>
+              
+              <ul className="space-y-3 mb-8">
+                <li className="flex items-center gap-3 text-sm text-gray-300">
+                  <span className="text-emerald-400">✓</span>
+                  Générations illimitées
                 </li>
-                <li className="flex items-center gap-3">
-                  <span className="font-bold text-white">✓</span>
-                  <span>Tous les templates</span>
+                <li className="flex items-center gap-3 text-sm text-gray-300">
+                  <span className="text-emerald-400">✓</span>
+                  Tous les templates
                 </li>
-                <li className="flex items-center gap-3">
-                  <span className="font-bold text-white">✓</span>
-                  <span>Charte graphique illimitée</span>
+                <li className="flex items-center gap-3 text-sm text-gray-300">
+                  <span className="text-emerald-400">✓</span>
+                  Charte graphique illimitée
                 </li>
-                <li className="flex items-center gap-3">
-                  <span className="font-bold text-white">✓</span>
-                  <span>Exports HD</span>
+                <li className="flex items-center gap-3 text-sm text-gray-300">
+                  <span className="text-emerald-400">✓</span>
+                  Exports HD
                 </li>
               </ul>
-              <button className="w-full py-4 bg-white text-primary rounded-epopian font-bold hover:bg-gray-100 transition-colors shadow-lg">
+              
+              <button className="w-full py-3 text-center text-sm font-medium bg-white text-gray-900 hover:bg-gray-100 transition-colors">
                 Essai gratuit 14j
               </button>
             </div>
 
-            <div className="card-epopian border-stroke bg-page">
-              <h3 className="text-2xl font-bold mb-2 text-primary">Agency</h3>
-              <div className="text-5xl font-black mb-4 text-primary">99€<span className="text-xl font-normal text-secondary/60">/mois</span></div>
-              <p className="text-secondary/60 mb-8 font-medium">Pour les agences</p>
-              <ul className="space-y-4 mb-8">
-                <li className="flex items-center gap-3">
-                  <span className="text-primary font-bold">✓</span>
-                  <span className="text-secondary">Tout du plan Pro</span>
+            {/* Agency */}
+            <div className="bg-white border border-gray-200 p-8">
+              <div className="text-xs font-mono uppercase tracking-widest text-gray-400 mb-4">Agency</div>
+              <div className="text-4xl font-light text-gray-900 mb-2">99€<span className="text-lg text-gray-400">/mois</span></div>
+              <p className="text-sm text-gray-400 mb-8">Pour les équipes</p>
+              
+              <ul className="space-y-3 mb-8">
+                <li className="flex items-center gap-3 text-sm text-gray-600">
+                  <span className="text-emerald-500">✓</span>
+                  Tout du plan Pro
                 </li>
-                <li className="flex items-center gap-3">
-                  <span className="text-primary font-bold">✓</span>
-                  <span className="text-secondary">5 sièges inclus</span>
+                <li className="flex items-center gap-3 text-sm text-gray-600">
+                  <span className="text-emerald-500">✓</span>
+                  5 sièges inclus
                 </li>
-                <li className="flex items-center gap-3">
-                  <span className="text-primary font-bold">✓</span>
-                  <span className="text-secondary">API access</span>
+                <li className="flex items-center gap-3 text-sm text-gray-600">
+                  <span className="text-emerald-500">✓</span>
+                  API access
                 </li>
               </ul>
-              <button className="btn-secondary w-full block text-center">
+              
+              <button className="block w-full py-3 text-center text-sm font-medium text-gray-900 border border-gray-200 hover:border-gray-900 transition-colors">
                 Réserver une démo
               </button>
             </div>
@@ -277,41 +271,52 @@ export default function Home() {
       </section>
 
       {/* FAQ */}
-      <section id="faq" className="py-24 bg-page">
-        <div className="max-w-3xl mx-auto px-6">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-5xl font-extrabold mb-6 text-primary tracking-tight">
-              Questions fréquentes
+      <section id="faq" className="py-32 bg-white">
+        <div className="max-w-2xl mx-auto px-6">
+          <div className="mb-16">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-2 h-2 bg-gray-900 rounded-full" />
+              <span className="text-xs font-mono uppercase tracking-[0.2em] text-gray-400">FAQ</span>
+            </div>
+            <h2 className="text-4xl font-light text-gray-900 leading-tight">
+              Questions<br />
+              <span className="font-semibold">fréquentes</span>
             </h2>
           </div>
 
           <div className="space-y-4">
-            <details className="group card-epopian !p-0 overflow-hidden cursor-pointer">
-              <summary className="flex justify-between items-center p-6 font-bold text-lg text-primary select-none">
-                Comment ça marche sans agence ?
-                <span className="text-2xl text-primary/50 group-open:rotate-45 transition-transform duration-300">+</span>
+            <details className="group border border-gray-200 bg-white">
+              <summary className="flex justify-between items-center p-6 cursor-pointer select-none">
+                <span className="font-medium text-gray-900">Comment ça marche sans agence ?</span>
+                <svg className="w-4 h-4 text-gray-400 transition-transform group-open:rotate-45" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path d="M12 5v14M5 12h14" />
+                </svg>
               </summary>
-              <div className="px-6 pb-6 text-secondary/70 leading-relaxed border-t border-stroke pt-4">
-                L'IA fait le travail d'un directeur artistique. Vous uploadez votre charte graphique (logo, couleurs, typo) et l'IA génère des visuels pro qui respectent votre identité.
+              <div className="px-6 pb-6 text-sm text-gray-500 leading-relaxed border-t border-gray-100 pt-4">
+                L'IA fait le travail d'un directeur artistique. Vous uploadez votre charte graphique et l'IA génère des visuels pro qui respectent votre identité.
               </div>
             </details>
 
-            <details className="group card-epopian !p-0 overflow-hidden cursor-pointer">
-              <summary className="flex justify-between items-center p-6 font-bold text-lg text-primary select-none">
-                Quels formats sont supportés ?
-                <span className="text-2xl text-primary/50 group-open:rotate-45 transition-transform duration-300">+</span>
+            <details className="group border border-gray-200 bg-white">
+              <summary className="flex justify-between items-center p-6 cursor-pointer select-none">
+                <span className="font-medium text-gray-900">Quels formats sont supportés ?</span>
+                <svg className="w-4 h-4 text-gray-400 transition-transform group-open:rotate-45" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path d="M12 5v14M5 12h14" />
+                </svg>
               </summary>
-              <div className="px-6 pb-6 text-secondary/70 leading-relaxed border-t border-stroke pt-4">
-                Instagram (Stories, Posts), LinkedIn, Facebook, Twitter/X, Pinterest. Chaque export est optimisé pour la plateforme choisie.
+              <div className="px-6 pb-6 text-sm text-gray-500 leading-relaxed border-t border-gray-100 pt-4">
+                Instagram (Stories, Posts), LinkedIn, Facebook, Twitter/X, Pinterest. Chaque export est optimisé.
               </div>
             </details>
 
-            <details className="group card-epopian !p-0 overflow-hidden cursor-pointer">
-              <summary className="flex justify-between items-center p-6 font-bold text-lg text-primary select-none">
-                Les visuels sont-ils libres de droits ?
-                <span className="text-2xl text-primary/50 group-open:rotate-45 transition-transform duration-300">+</span>
+            <details className="group border border-gray-200 bg-white">
+              <summary className="flex justify-between items-center p-6 cursor-pointer select-none">
+                <span className="font-medium text-gray-900">Les visuels sont-ils libres de droits ?</span>
+                <svg className="w-4 h-4 text-gray-400 transition-transform group-open:rotate-45" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path d="M12 5v14M5 12h14" />
+                </svg>
               </summary>
-              <div className="px-6 pb-6 text-secondary/70 leading-relaxed border-t border-stroke pt-4">
+              <div className="px-6 pb-6 text-sm text-gray-500 leading-relaxed border-t border-gray-100 pt-4">
                 Oui, absolument. Vous détenez 100% des droits commerciaux sur toutes les images générées.
               </div>
             </details>
@@ -320,63 +325,76 @@ export default function Home() {
       </section>
 
       {/* CTA */}
-      <section className="py-24 bg-primary text-white">
-        <div className="max-w-4xl mx-auto px-6 text-center">
-          <h2 className="text-4xl md:text-6xl font-black mb-8 tracking-tight">
-            Prêt à quitter votre agence&nbsp;?
+      <section className="py-32 bg-gray-900 text-white relative overflow-hidden">
+        {/* Floating accents */}
+        <div className="absolute top-20 left-20 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-20 right-20 w-96 h-96 bg-teal-500/10 rounded-full blur-3xl" />
+        
+        <div className="max-w-3xl mx-auto px-6 text-center relative z-10">
+          <h2 className="text-4xl md:text-5xl font-light mb-6 leading-tight">
+            Prêt à quitter<br />
+            <span className="font-semibold">votre agence ?</span>
           </h2>
-          <p className="text-xl mb-10 opacity-80 max-w-2xl mx-auto font-light">
-            Rejoignez ceux qui créent leurs visuels pro en 2 minutes sans payer une agence.
+          <p className="text-lg text-gray-400 mb-10 max-w-xl mx-auto">
+            Rejoignez ceux qui créent leurs visuels pro en 2 minutes.
           </p>
-          <Link href="/playground" className="inline-block px-12 py-5 bg-white text-primary text-lg font-bold rounded-full hover:bg-gray-100 transition-all transform hover:scale-105 shadow-2xl">
-            Devenir autonome gratuitement →
+          <Link 
+            href="/playground" 
+            className="inline-flex items-center gap-3 bg-white text-gray-900 px-8 py-4 font-medium text-sm hover:bg-gray-100 transition-colors"
+          >
+            <span>Devenir autonome gratuitement</span>
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <path d="M5 12h14M12 5l7 7-7 7" />
+            </svg>
           </Link>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="bg-page border-t border-stroke py-20 text-secondary">
+      <footer className="py-16 bg-[#FAFAFA] border-t border-gray-200">
         <div className="max-w-6xl mx-auto px-6">
           <div className="grid md:grid-cols-4 gap-12 mb-12">
             <div>
-              <div className="flex items-center gap-2 mb-6">
-                <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
-                   <span className="text-white text-xs font-bold">Q</span>
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-6 h-6 bg-gray-900 rounded-full flex items-center justify-center">
+                  <span className="text-white text-[10px] font-bold">B</span>
                 </div>
-                <span className="text-xl font-bold tracking-tight text-primary">QuitteTonAgence</span>
+                <span className="text-sm font-medium text-gray-900">BriefBox</span>
               </div>
-              <p className="text-secondary/60 text-sm leading-relaxed">
-                La première plateforme d'IA générative dédiée aux marques qui veulent reprendre le contrôle de leur image.
+              <p className="text-xs text-gray-400 leading-relaxed">
+                La première plateforme d'IA générative dédiée aux marques.
               </p>
             </div>
             <div>
-              <h4 className="font-bold mb-6 text-primary">Produit</h4>
-              <div className="space-y-3 text-sm text-secondary/60">
-                <a href="#fonctionnement" className="block hover:text-primary transition-colors">Comment ça marche</a>
-                <a href="#tarifs" className="block hover:text-primary transition-colors">Tarifs</a>
-                <a href="/playground" className="block hover:text-primary transition-colors">Playground</a>
+              <div className="text-[10px] font-mono uppercase tracking-widest text-gray-400 mb-4">Produit</div>
+              <div className="space-y-2 text-sm text-gray-500">
+                <a href="#fonctionnement" className="block hover:text-gray-900 transition-colors">Comment ça marche</a>
+                <a href="#tarifs" className="block hover:text-gray-900 transition-colors">Tarifs</a>
+                <a href="/playground" className="block hover:text-gray-900 transition-colors">Playground</a>
               </div>
             </div>
             <div>
-              <h4 className="font-bold mb-6 text-primary">Ressources</h4>
-              <div className="space-y-3 text-sm text-secondary/60">
-                <a href="#" className="block hover:text-primary transition-colors">Documentation</a>
-                <a href="#faq" className="block hover:text-primary transition-colors">FAQ</a>
-                <a href="#" className="block hover:text-primary transition-colors">Blog</a>
+              <div className="text-[10px] font-mono uppercase tracking-widest text-gray-400 mb-4">Ressources</div>
+              <div className="space-y-2 text-sm text-gray-500">
+                <a href="#" className="block hover:text-gray-900 transition-colors">Documentation</a>
+                <a href="#faq" className="block hover:text-gray-900 transition-colors">FAQ</a>
               </div>
             </div>
             <div>
-              <h4 className="font-bold mb-6 text-primary">Légal</h4>
-              <div className="space-y-3 text-sm text-secondary/60">
-                <a href="#" className="block hover:text-primary transition-colors">CGU</a>
-                <a href="#" className="block hover:text-primary transition-colors">Confidentialité</a>
+              <div className="text-[10px] font-mono uppercase tracking-widest text-gray-400 mb-4">Légal</div>
+              <div className="space-y-2 text-sm text-gray-500">
+                <a href="#" className="block hover:text-gray-900 transition-colors">CGU</a>
+                <a href="#" className="block hover:text-gray-900 transition-colors">Confidentialité</a>
               </div>
             </div>
           </div>
-          <div className="border-t border-stroke pt-8 text-center text-sm text-secondary/40 flex flex-col md:flex-row justify-between items-center gap-4">
-            <span>© 2025 QuitteTonAgence. Tous droits réservés.</span>
-            <div className="flex gap-4">
-               {/* Social icons could go here */}
+          <div className="pt-8 border-t border-gray-200 flex flex-col md:flex-row justify-between items-center gap-4">
+            <span className="text-xs text-gray-400">© 2025 BriefBox. Tous droits réservés.</span>
+            <div className="flex items-center gap-4 text-xs text-gray-400">
+              <span className="flex items-center gap-2">
+                <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full" />
+                Tous les systèmes opérationnels
+              </span>
             </div>
           </div>
         </div>
@@ -384,4 +402,3 @@ export default function Home() {
     </div>
   );
 }
-

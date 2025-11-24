@@ -2,159 +2,162 @@ import Link from 'next/link';
 
 export default function Hero() {
   return (
-    <section className="min-h-[90vh] flex items-center bg-page relative overflow-hidden pt-32 pb-20">
-      <div className="max-w-7xl mx-auto px-6 w-full">
-        <div className="grid lg:grid-cols-2 gap-16 items-center">
-          <div className="max-w-2xl relative z-10">
-            {/* Badge minimaliste */}
-            <div className="inline-flex items-center gap-2 mb-8 animate-fade-in bg-white border border-stroke px-4 py-2 rounded-full">
-              <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
-              <span className="text-sm font-medium text-secondary tracking-wide">Décrivez ce que vous souhaitez. Et voilà.</span>
+    <section className="min-h-screen flex items-center relative overflow-hidden">
+      {/* Subtle grid background */}
+      <div className="absolute inset-0 opacity-[0.03]" style={{
+        backgroundImage: `linear-gradient(#000 1px, transparent 1px), linear-gradient(90deg, #000 1px, transparent 1px)`,
+        backgroundSize: '60px 60px'
+      }} />
+      
+      {/* Floating accents */}
+      <div className="absolute top-32 right-32 w-96 h-96 bg-gradient-to-br from-amber-200/20 to-orange-300/10 rounded-full blur-3xl" />
+      <div className="absolute bottom-32 left-16 w-72 h-72 bg-gradient-to-tr from-emerald-200/15 to-teal-300/10 rounded-full blur-3xl" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-gradient-to-br from-gray-100/50 to-transparent rounded-full blur-3xl" />
+
+      <div className="max-w-7xl mx-auto px-6 w-full relative z-10">
+        <div className="grid lg:grid-cols-2 gap-20 items-center">
+          
+          {/* Left: Content */}
+          <div className="max-w-xl">
+            {/* Status indicator */}
+            <div className="flex items-center gap-3 mb-10">
+              <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+              <span className="text-xs font-mono uppercase tracking-[0.2em] text-gray-400">Visual AI Platform</span>
             </div>
 
             {/* Headline */}
-            <h1 className="mb-8 animate-slide-up text-primary">
-              <span className="block text-[clamp(2.5rem,5vw,4.5rem)] font-extrabold leading-[1.1] tracking-tight mb-2">
-                Décrivez. Importez.
+            <h1 className="mb-8" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+              <span className="block text-5xl md:text-6xl font-light text-gray-900 leading-[1.1] mb-2">
+                Décrivez.
               </span>
-              <span className="block text-[clamp(2.5rem,5vw,4.5rem)] font-extrabold leading-[1.1] tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-primary to-gray-500">
+              <span className="block text-5xl md:text-6xl font-light text-gray-900 leading-[1.1] mb-2">
+                Importez.
+              </span>
+              <span className="block text-5xl md:text-6xl font-semibold text-gray-900 leading-[1.1]">
                 L'IA génère.
               </span>
             </h1>
 
             {/* Subheadline */}
-            <p className="text-lg md:text-xl text-secondary/80 leading-relaxed max-w-lg mb-10 animate-slide-up font-light" style={{ animationDelay: '0.1s' }}>
-              Fini les templates génériques. <strong className="font-bold text-primary">Vous décrivez le visuel</strong> que vous voulez, l'IA utilise <strong className="font-bold text-primary">vos assets et votre charte</strong> pour créer un résultat unique et professionnel.
+            <p className="text-lg text-gray-400 leading-relaxed max-w-md mb-12">
+              Vous décrivez le visuel que vous voulez. L'IA utilise <span className="text-gray-900 font-medium">vos assets</span> et <span className="text-gray-900 font-medium">votre charte</span> pour créer un résultat unique.
             </p>
 
             {/* CTAs */}
-            <div className="flex flex-col sm:flex-row gap-4 mb-16 animate-slide-up" style={{ animationDelay: '0.2s' }}>
+            <div className="flex flex-col sm:flex-row gap-4 mb-16">
               <Link
                 href="/playground"
-                className="btn-primary group inline-flex items-center justify-center gap-3 shadow-xl hover:shadow-2xl hover:-translate-y-1 transform transition-all"
+                className="group relative bg-gray-900 text-white px-8 py-4 font-medium text-sm transition-all hover:bg-black inline-flex items-center justify-center gap-3"
               >
-                <span className="font-medium">Lancer un essai</span>
-                <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                <span>Commencer gratuitement</span>
+                <svg className="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path d="M5 12h14M12 5l7 7-7 7" />
                 </svg>
+                {/* Hover gradient */}
+                <div className="absolute inset-0 bg-gradient-to-r from-emerald-600 to-teal-600 opacity-0 group-hover:opacity-100 transition-opacity -z-10" />
               </Link>
 
               <Link
                 href="#fonctionnement"
-                className="btn-secondary inline-flex items-center justify-center gap-3 hover:bg-white hover:shadow-lg hover:-translate-y-0.5 transform transition-all"
+                className="px-8 py-4 font-medium text-sm text-gray-500 hover:text-gray-900 transition-colors inline-flex items-center justify-center gap-2"
               >
-                <span className="font-medium">Comment ça marche</span>
+                <span>Comment ça marche</span>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path d="M19 9l-7 7-7-7" />
+                </svg>
               </Link>
             </div>
 
-            {/* Stats minimalistes */}
-            <div className="flex flex-wrap items-center gap-8 md:gap-12 pt-8 border-t border-stroke animate-fade-in" style={{ animationDelay: '0.3s' }}>
+            {/* Stats */}
+            <div className="flex items-center gap-12 pt-8 border-t border-gray-200">
               <div>
-                <div className="text-3xl font-bold text-primary mb-1">2 min</div>
-                <div className="text-sm text-secondary/60">Pour générer</div>
+                <div className="text-2xl font-semibold text-gray-900 mb-1">2 min</div>
+                <div className="text-xs font-mono uppercase tracking-wider text-gray-400">pour générer</div>
               </div>
-              <div className="w-px h-10 bg-stroke hidden sm:block"></div>
+              <div className="w-px h-10 bg-gray-200" />
               <div>
-                <div className="text-3xl font-bold text-primary mb-1">100%</div>
-                <div className="text-sm text-secondary/60">Respect de la charte</div>
+                <div className="text-2xl font-semibold text-gray-900 mb-1">100%</div>
+                <div className="text-xs font-mono uppercase tracking-wider text-gray-400">on-brand</div>
               </div>
-              <div className="w-px h-10 bg-stroke hidden sm:block"></div>
+              <div className="w-px h-10 bg-gray-200" />
               <div>
-                <div className="text-3xl font-bold text-primary mb-1">0€</div>
-                <div className="text-sm text-secondary/60">Pour démarrer</div>
+                <div className="text-2xl font-semibold text-gray-900 mb-1">0€</div>
+                <div className="text-xs font-mono uppercase tracking-wider text-gray-400">pour démarrer</div>
               </div>
             </div>
           </div>
 
-          {/* Visual Right Side - Composition "Input -> Output" */}
-          <div className="relative hidden lg:block h-[700px] animate-fade-in z-0 perspective-1000" style={{ animationDelay: '0.4s' }}>
-            {/* Background Glow */}
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-br from-purple-100/40 to-blue-100/40 rounded-full blur-3xl animate-pulse-slow"></div>
+          {/* Right: Visual */}
+          <div className="relative hidden lg:block">
+            {/* Main card with corner decorations */}
+            <div className="relative">
+              <div className="absolute -top-4 -left-4 w-8 h-8 border-l-2 border-t-2 border-gray-300" />
+              <div className="absolute -bottom-4 -right-4 w-8 h-8 border-r-2 border-b-2 border-gray-300" />
+              
+              {/* Generated visual mockup */}
+              <div className="bg-white border border-gray-200 p-3 shadow-2xl shadow-gray-200/50">
+                <div className="aspect-[4/5] bg-gradient-to-br from-gray-900 via-gray-800 to-black rounded-sm overflow-hidden relative">
+                  {/* Simulated generated content */}
+                  <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1511556532299-8f662fc26c06?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80')] bg-cover bg-center opacity-60" />
+                  
+                  {/* Brand overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/20" />
+                  
+                  {/* Logo */}
+                  <div className="absolute top-6 left-6 w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-lg">
+                    <span className="font-bold text-gray-900">L</span>
+                  </div>
+                  
+                  {/* Content */}
+                  <div className="absolute bottom-8 left-6 right-6">
+                    <div className="text-3xl font-bold text-white mb-3 leading-tight">
+                      Black<br/>Friday
+                    </div>
+                    <div className="inline-block bg-white text-gray-900 px-4 py-2 text-sm font-semibold">
+                      -50% MAINTENANT
+                    </div>
+                  </div>
 
-            <div className="absolute inset-0 flex items-center justify-center">
-              {/* Card 1: Brand Assets (Left Bottom) - Floating Animation */}
-              <div className="absolute bottom-24 left-10 w-64 bg-white/80 backdrop-blur-md rounded-epopian shadow-xl border border-white/50 p-6 transform -rotate-6 hover:rotate-0 transition-all duration-500 z-10 animate-float-slow ring-1 ring-black/5">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="text-xs font-bold text-secondary/60 uppercase tracking-wider">Vos Assets</div>
-                  <div className="text-xs text-green-500 font-bold bg-green-50 px-2 py-1 rounded-full">Uploadé</div>
-                </div>
-                <div className="flex items-center gap-3 mb-4 p-2 bg-gray-50 rounded-xl border border-dashed border-gray-200">
-                  <div className="w-10 h-10 rounded-full bg-black flex items-center justify-center text-white font-bold text-xs shadow-md">L</div>
-                  <div>
-                    <div className="text-xs font-bold text-primary">logo_white.svg</div>
-                    <div className="text-[10px] text-secondary/50">12kb</div>
+                  {/* Status badge */}
+                  <div className="absolute top-6 right-6 bg-white/10 backdrop-blur-md text-white text-xs font-medium px-3 py-1.5 flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full" />
+                    Généré
                   </div>
                 </div>
-                <div className="grid grid-cols-3 gap-2">
-                  <div className="h-10 rounded-lg bg-black shadow-sm transform hover:scale-105 transition-transform"></div>
-                  <div className="h-10 rounded-lg bg-[#FF6446] shadow-sm transform hover:scale-105 transition-transform"></div>
-                  <div className="h-10 rounded-lg bg-[#ECECEC] shadow-sm transform hover:scale-105 transition-transform"></div>
-                </div>
               </div>
+            </div>
 
-              {/* Card 2: Prompt (Left Top) - Floating Animation */}
-              <div className="absolute top-24 left-4 w-72 bg-white/95 backdrop-blur-xl rounded-epopian shadow-xl border border-white/60 p-6 transform rotate-3 hover:rotate-0 transition-all duration-500 z-20 animate-float-medium ring-1 ring-black/5">
-                <div className="flex items-center gap-2 mb-4">
-                  <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-lg">👤</div>
-                  <div className="text-xs font-bold text-primary">Votre demande</div>
-                </div>
-                <div className="bg-gray-50 p-4 rounded-2xl rounded-tl-none border border-stroke relative">
-                  <p className="text-sm text-secondary font-medium leading-relaxed">
-                    "Je veux une story Instagram pour le Black Friday. Utilise mon logo en haut et une photo lifestyle en fond."
-                  </p>
-                  {/* Typing cursor */}
-                  <span className="inline-block w-1.5 h-4 bg-primary ml-1 animate-pulse align-middle"></span>
-                </div>
+            {/* Floating prompt card */}
+            <div className="absolute -left-20 top-20 w-72 bg-white border border-gray-200 p-5 shadow-xl transform -rotate-2 hover:rotate-0 transition-transform">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-2 h-2 bg-gray-400 rounded-full" />
+                <span className="text-[10px] font-mono uppercase tracking-widest text-gray-400">Votre brief</span>
               </div>
-
-              {/* Card 3: Result (Right Center - Large) */}
-              <div className="absolute top-1/2 right-0 -translate-y-1/2 w-80 h-[480px] bg-white rounded-[32px] shadow-2xl border-[6px] border-white p-2 transform rotate-0 hover:scale-[1.02] transition-transform duration-700 z-30 animate-slide-in-right shadow-primary/10">
-                 <div className="w-full h-full rounded-[24px] bg-gray-900 overflow-hidden relative group">
-                    {/* Generated Image Mockup */}
-                    <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1511556532299-8f662fc26c06?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80')] bg-cover bg-center opacity-90 hover:opacity-100 transition-opacity duration-700"></div>
-                    
-                    {/* Brand Overlay (Logo) */}
-                    <div className="absolute top-6 left-6">
-                      <div className="w-10 h-10 rounded-full bg-black flex items-center justify-center text-white font-bold text-lg shadow-lg">L</div>
-                    </div>
-
-                    {/* Text Overlay */}
-                    <div className="absolute bottom-8 left-6 right-6">
-                      <h3 className="text-3xl font-black text-white mb-2 leading-none uppercase italic">Black<br/>Friday</h3>
-                      <div className="inline-block px-4 py-2 bg-white text-black font-bold rounded-full text-sm transform -rotate-2">
-                        -50% MAINTENANT
-                      </div>
-                    </div>
-
-                    {/* Floating UI Elements */}
-                    <div className="absolute top-4 right-4 bg-white/20 backdrop-blur-md border border-white/20 text-white text-xs font-bold px-3 py-1.5 rounded-full flex items-center gap-2 shadow-lg">
-                      <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
-                      Généré !
-                    </div>
-                 </div>
-                 
-                 {/* Decorative elements around result */}
-                 <div className="absolute -right-12 top-20 bg-white p-3 rounded-xl shadow-lg animate-bounce-slow z-40">
-                    <span className="text-2xl">👍</span>
-                 </div>
-                 <div className="absolute -left-6 bottom-20 bg-white p-3 rounded-xl shadow-lg animate-bounce-slow delay-700 z-40">
-                    <span className="text-2xl">🔥</span>
-                 </div>
+              <p className="text-sm text-gray-600 leading-relaxed">
+                "Story Instagram Black Friday avec mon logo en haut et photo lifestyle en fond"
+              </p>
+              <div className="mt-3 flex items-center gap-2 text-[10px] text-gray-400">
+                <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path d="M5 12h14M12 5l7 7-7 7" />
+                </svg>
+                <span className="font-mono">ENTER</span>
               </div>
-              
-              {/* Connector lines (visual decoration) - Animated SVG */}
-              <svg className="absolute inset-0 pointer-events-none z-0 opacity-30" width="100%" height="100%">
-                <defs>
-                  <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="0%">
-                    <stop offset="0%" style={{stopColor: '#ECECEC', stopOpacity: 1}} />
-                    <stop offset="100%" style={{stopColor: '#000000', stopOpacity: 1}} />
-                  </linearGradient>
-                </defs>
-                <path d="M300 220 C 350 220, 450 300, 500 350" stroke="url(#grad1)" strokeWidth="2" fill="none" strokeDasharray="5,5" className="animate-dash" />
-                <path d="M300 550 C 350 550, 450 450, 500 400" stroke="url(#grad1)" strokeWidth="2" fill="none" strokeDasharray="5,5" className="animate-dash" />
-              </svg>
+            </div>
+
+            {/* Floating assets card */}
+            <div className="absolute -right-8 bottom-20 w-56 bg-white border border-gray-200 p-4 shadow-xl transform rotate-3 hover:rotate-0 transition-transform">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-2 h-2 bg-emerald-500 rounded-full" />
+                <span className="text-[10px] font-mono uppercase tracking-widest text-gray-400">Assets chargés</span>
+              </div>
+              <div className="flex gap-2">
+                <div className="w-10 h-10 bg-gray-900 rounded-lg" />
+                <div className="w-10 h-10 bg-orange-500 rounded-lg" />
+                <div className="w-10 h-10 bg-gray-200 rounded-lg" />
+              </div>
             </div>
           </div>
+
         </div>
       </div>
     </section>
