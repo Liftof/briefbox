@@ -6,6 +6,53 @@ fal.config({
   credentials: process.env.FAL_KEY,
 });
 
+// Helper: Poll for queue completion with timeout
+async function pollForResult(requestId: string, maxWaitMs: number = 120000): Promise<any> {
+  const startTime = Date.now();
+  const pollInterval = 2000; // 2 seconds between polls
+  
+  while (Date.now() - startTime < maxWaitMs) {
+    try {
+      const status = await fal.queue.status("fal-ai/nano-banana-pro/edit", {
+        requestId,
+        logs: true,
+      });
+      
+      console.log(`📊 Queue status: ${status.status}`);
+      
+      // Check if completed - the status type is IN_PROGRESS | IN_QUEUE
+      // When completed, we can get the result directly
+      if (status.status !== "IN_PROGRESS" && status.status !== "IN_QUEUE") {
+        // Any other status means we should try to get the result
+        const result = await fal.queue.result("fal-ai/nano-banana-pro/edit", {
+          requestId,
+        });
+        return result;
+      }
+      
+      // Wait before next poll
+      await new Promise(resolve => setTimeout(resolve, pollInterval));
+    } catch (pollError: any) {
+      // If result fetch succeeds, return it
+      if (pollError.data) {
+        return pollError.data;
+      }
+      // If it's a "not found" error, the request might still be processing
+      if (pollError.status === 404) {
+        await new Promise(resolve => setTimeout(resolve, pollInterval));
+        continue;
+      }
+      // Check if it's a failed generation error
+      if (pollError.message?.includes('failed') || pollError.status === 500) {
+        throw new Error("Generation failed in queue: " + (pollError.message || 'Unknown error'));
+      }
+      throw pollError;
+    }
+  }
+  
+  throw new Error("Generation timed out after " + (maxWaitMs / 1000) + " seconds");
+}
+
 export async function POST(request: NextRequest) {
   if (!process.env.FAL_KEY) {
     console.error("❌ Error: FAL_KEY is missing in environment variables.");
@@ -14,7 +61,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { prompt, imageUrls = [], numImages = 1, aspectRatio = "1:1", resolution = "1K" } = body;
+    const { prompt, imageUrls = [], numImages = 1, aspectRatio = "1:1", resolution = "1K", useAsync = false } = body;
 
     // Basic Validation
     if (!prompt || typeof prompt !== 'string') {
@@ -92,35 +139,78 @@ export async function POST(request: NextRequest) {
     console.log('🍌 Generating with Nano Banana Pro:', JSON.stringify({ ...input, image_urls: `[${input.image_urls.length} images]` }, null, 2));
 
     try {
-        // Ensure the model endpoint is correct. If "Nano Banana Pro" was a custom endpoint that is now offline,
-        // this will fail.
-        const result: any = await fal.subscribe("fal-ai/nano-banana-pro/edit", {
-          input,
-          logs: true,
-          onQueueUpdate: (update) => {
-            if (update.status === "IN_PROGRESS") {
-              update.logs.map((log) => log.message).forEach(console.log);
+        let result: any;
+        
+        // Use queue-based async approach to avoid Vercel timeouts
+        // This submits to queue and polls for result, avoiding long HTTP connections
+        if (useAsync) {
+            console.log('🔄 Using async queue mode...');
+            
+            // Submit to queue
+            const { request_id } = await fal.queue.submit("fal-ai/nano-banana-pro/edit", {
+              input,
+            });
+            
+            console.log('📤 Queued request:', request_id);
+            
+            // Poll for result with 2-minute timeout
+            result = await pollForResult(request_id, 120000);
+        } else {
+            // Standard subscribe with built-in timeout handling
+            // This uses Fal's internal queue but maintains the HTTP connection
+            // Works well for faster generations, falls back gracefully
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 55000); // 55s timeout (under Vercel's 60s limit)
+            
+            try {
+                result = await fal.subscribe("fal-ai/nano-banana-pro/edit", {
+                  input,
+                  logs: true,
+                  onQueueUpdate: (update) => {
+                    if (update.status === "IN_PROGRESS") {
+                      update.logs.map((log) => log.message).forEach(console.log);
+                    }
+                  },
+                });
+            } catch (subscribeError: any) {
+                clearTimeout(timeoutId);
+                
+                // If it timed out or connection dropped, try queue mode as fallback
+                if (subscribeError.name === 'AbortError' || subscribeError.message?.includes('timeout') || subscribeError.message?.includes('connection')) {
+                    console.log('⚠️ Subscribe timed out, retrying with queue mode...');
+                    
+                    const { request_id } = await fal.queue.submit("fal-ai/nano-banana-pro/edit", {
+                      input,
+                    });
+                    
+                    result = await pollForResult(request_id, 120000);
+                } else {
+                    throw subscribeError;
+                }
             }
-          },
-        });
+            
+            clearTimeout(timeoutId);
+        }
 
         console.log('🍌 Fal Result:', JSON.stringify(result, null, 2));
 
         // Normalize images output
         // Fal API might return 'images' (array) or 'image' (object) depending on the model version or inputs
         let finalImages = [];
-        if (result.images && Array.isArray(result.images)) {
+        if (result.data?.images && Array.isArray(result.data.images)) {
+            finalImages = result.data.images;
+        } else if (result.images && Array.isArray(result.images)) {
             finalImages = result.images;
         } else if (result.image) {
             finalImages = [result.image];
-        } else if (result.data && result.data.images) {
-             finalImages = result.data.images;
+        } else if (result.data?.image) {
+            finalImages = [result.data.image];
         }
 
         return NextResponse.json({
           success: true,
           images: finalImages,
-          description: result.description,
+          description: result.description || result.data?.description,
         });
     } catch (falError: any) {
         // Catch Fal specific errors
@@ -129,7 +219,7 @@ export async function POST(request: NextRequest) {
         let errorMessage = falError.message || "Failed to generate images";
         if (falError.body) {
             try {
-                const body = JSON.parse(falError.body);
+                const body = typeof falError.body === 'string' ? JSON.parse(falError.body) : falError.body;
                 errorMessage = body.message || errorMessage;
                 // If detail exists (pydantic validation error), show it
                 if (body.detail && Array.isArray(body.detail)) {

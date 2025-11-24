@@ -1,4 +1,83 @@
 import { NextResponse } from 'next/server';
+import getColors from 'get-image-colors';
+import sharp from 'sharp';
+
+// Helper: Extract dominant colors from an image URL
+async function extractColorsFromImage(imageUrl: string): Promise<string[]> {
+  try {
+    console.log('🎨 Extracting colors from:', imageUrl);
+    
+    // Fetch the image
+    const response = await fetch(imageUrl);
+    if (!response.ok) {
+      console.warn('Failed to fetch image for color extraction');
+      return [];
+    }
+    
+    const arrayBuffer = await response.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+    
+    // Convert to PNG using sharp (handles SVG, WEBP, etc.)
+    const pngBuffer = await sharp(buffer)
+      .png()
+      .resize(200, 200, { fit: 'inside' }) // Resize for faster processing
+      .toBuffer();
+    
+    // Extract colors using get-image-colors
+    const colors = await getColors(pngBuffer, 'image/png');
+    
+    // Convert to hex and filter out near-white/near-black that might be background
+    const hexColors = colors
+      .map((color: any) => color.hex())
+      .filter((hex: string) => {
+        // Filter out very light colors (likely background)
+        const r = parseInt(hex.slice(1, 3), 16);
+        const g = parseInt(hex.slice(3, 5), 16);
+        const b = parseInt(hex.slice(5, 7), 16);
+        const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+        // Keep colors that are not too light (>0.95) or too dark (<0.05)
+        return luminance > 0.05 && luminance < 0.95;
+      });
+    
+    console.log('🎨 Extracted colors:', hexColors);
+    return hexColors.slice(0, 5); // Return top 5 colors
+  } catch (error) {
+    console.error('Color extraction error:', error);
+    return [];
+  }
+}
+
+// Helper: Merge AI colors with extracted colors, prioritizing extracted
+function mergeColorPalettes(aiColors: string[], extractedColors: string[]): string[] {
+  if (extractedColors.length === 0) return aiColors;
+  if (aiColors.length === 0) return extractedColors;
+  
+  // Normalize hex colors to uppercase
+  const normalize = (hex: string) => hex.toUpperCase().replace(/^#/, '');
+  
+  // Start with extracted colors (they are the "truth")
+  const merged = [...extractedColors];
+  
+  // Add AI colors that are significantly different from extracted ones
+  for (const aiColor of aiColors) {
+    const aiNorm = normalize(aiColor);
+    const isDifferent = merged.every(extColor => {
+      const extNorm = normalize(extColor);
+      // Simple color distance check (could be improved with Delta E)
+      const rDiff = Math.abs(parseInt(aiNorm.slice(0, 2), 16) - parseInt(extNorm.slice(0, 2), 16));
+      const gDiff = Math.abs(parseInt(aiNorm.slice(2, 4), 16) - parseInt(extNorm.slice(2, 4), 16));
+      const bDiff = Math.abs(parseInt(aiNorm.slice(4, 6), 16) - parseInt(extNorm.slice(4, 6), 16));
+      const totalDiff = rDiff + gDiff + bDiff;
+      return totalDiff > 60; // Threshold for "different enough"
+    });
+    
+    if (isDifferent && merged.length < 6) {
+      merged.push(aiColor);
+    }
+  }
+  
+  return merged.slice(0, 6);
+}
 
 export async function POST(request: Request) {
   try {
@@ -172,16 +251,11 @@ export async function POST(request: Request) {
         "visualMotifs": ["Motif 1 (e.g. 'Data charts')", "Motif 2 (e.g. 'Abstract networks')", "Motif 3"],
         "marketingAngles": [
            {
-             "title": "Social Proof",
-             "concept": "A clean, trustworthy social media graphic featuring a customer testimonial or a key statistic. Minimalist layout with brand colors."
-           },
-           {
-             "title": "Product Showcase",
-             "concept": "An engaging product-focused visual for Instagram. High-quality mockup or lifestyle shot with soft lighting and clear value proposition text overlay."
-           },
-           {
-             "title": "Educational",
-             "concept": "A 'How-to' or 'Did you know?' style infographic for LinkedIn. structured layout with numbered steps or comparison chart using brand fonts."
+             "title": "Short punchy title for the angle",
+             "hook": "The ONE thing that makes someone stop scrolling",
+             "concept": "DETAILED scene description (100+ words): exact composition, lighting style, specific elements visible, textures, mood. Ready for a senior designer to execute.",
+             "emotionalTension": "The before→after or problem→solution implied (e.g. 'From chaos to control')",
+             "platform": "instagram or linkedin or both"
            }
         ],
         "analyzedImages": [
@@ -207,18 +281,34 @@ export async function POST(request: Request) {
       IMPORTANT ANALYSIS RULES:
       1. **MAIN LOGO:** Identify the brand's OWN logo. Do NOT mistake 'Client' or 'Partner' logos for the main brand logo. Look for the logo usually found in the navbar or footer top.
       2. **INDUSTRY & MOTIFS:** Identify the specific sector. List 3 visual elements typical of this industry (e.g. for Cybersec: 'Locks', 'Shields', 'Code').
-      3. **IMAGE CATEGORIZATION:** 
+      3. **IMAGE CATEGORIZATION (STRICT RULES):** 
          - 'main_logo': The brand's logo.
          - 'client_logo': Logos of customers, partners, or 'featured in' sections.
-         - 'product': Physical items, packaging, or direct representations of what they sell.
+         - 'product': Physical items, packaging, devices, equipment, or direct representations of what they sell. This includes: microphones, headphones, electronics, tools, furniture, food, clothing, etc.
          - 'app_ui': Screenshots of software, dashboards, or mobile app interfaces.
-         - 'person': Photos of people, founders, or lifestyle shots.
+         - 'person': ONLY classify as 'person' if there is a CLEARLY VISIBLE human face, human body, or human hands. Do NOT classify objects that vaguely resemble humans (like microphones, mannequins, or abstract shapes). If in doubt, choose 'product' or 'other'.
          - 'icon': Small functional icons or illustrations.
          - 'texture': Abstract backgrounds, patterns, gradients, or zoomed-in details suitable for design backgrounds.
+         
+         ⚠️ CRITICAL: A microphone is ALWAYS 'product', NEVER 'person'. An object with a round top and a stand is NOT a person. Apply strict visual criteria.
       4. **MAPPING:** 'analyzedImages' must map the URLs from the 'DETECTED IMAGES' list provided above.
-      5. **ANGLES (CRITICAL):** 'marketingAngles' MUST be actionable SOCIAL MEDIA VISUAL IDEAS. Do NOT write generic marketing fluff. Write concrete visual descriptions ready for a designer.
-         - Bad: "Showcase authority."
-         - Good: "A minimalist quote card for LinkedIn with a dark blue background, white bold typography, and a subtle logo watermark."
+      5. **ANGLES (CRITICAL):** Generate 4-5 INDUSTRY-SPECIFIC marketing angles. Each must be a CONCRETE VISUAL CONCEPT, not generic marketing speak.
+         
+         ADAPT TO INDUSTRY:
+         - SaaS/B2B: Dashboard moments, metric callouts, team collaboration scenes, before/after transformations
+         - E-commerce: Unboxing, lifestyle context, detail shots, flat lays
+         - Beauty: Rituals, texture close-ups, subtle before/after, ingredient stories
+         - Food: Hero shots with steam/drips, ingredient spreads, social moments
+         - Tech: Product glory shots, in-use contexts, detail macro shots
+         - Finance: Freedom/control visuals, growth charts, trust signals
+         
+         EACH ANGLE MUST HAVE:
+         - 'hook': What stops the scroll (be specific: "The contrast between messy desk and clean dashboard")
+         - 'concept': 100+ word scene description with lighting, composition, elements, textures
+         - 'emotionalTension': The transformation implied (e.g. "From anxiety to peace of mind")
+         
+         BAD: "Showcase authority" or "Professional image"
+         GOOD: "Close-up of weathered hands holding the product against morning window light. Soft bokeh background with green plant visible. Product label slightly angled toward camera. Warm color grade, subtle film grain. Conveys authenticity and craft."
       6. **BACKGROUNDS:** 'backgroundPrompts' should generate high-quality, versatile backgrounds that match the brand aesthetic, suitable for overlays.
       
       If content is empty, INFER reasonable defaults based on the URL and domain name.
@@ -235,7 +325,7 @@ export async function POST(request: Request) {
       body: JSON.stringify({
         "model": "openai/gpt-4o", // Using GPT-4o for high-quality reasoning (simulating 'gpt-5.1-chat' capability)
         "messages": [
-          {"role": "system", "content": "You are an expert Brand Strategist & Creative Director. Your goal is to deeply analyze a website's content to extract a precise Brand Identity and actionable Social Media Visual Concepts. You must understand the company's positioning, value proposition, and aesthetic to generating high-converting visual briefs."},
+          {"role": "system", "content": "You are an expert Brand Strategist & Creative Director. Your goal is to deeply analyze a website's content to extract a precise Brand Identity and actionable Social Media Visual Concepts. You must understand the company's positioning, value proposition, and aesthetic to generating high-converting visual briefs.\n\nIMAGE CLASSIFICATION RULES:\n- 'person' category is ONLY for images with clearly visible human faces, bodies or hands.\n- Objects like microphones, cameras, headphones, or any equipment are ALWAYS 'product', never 'person'.\n- When in doubt between 'person' and 'product', choose 'product'.\n- Apply strict visual analysis, do not anthropomorphize objects."},
           {"role": "user", "content": prompt}
         ]
       })
@@ -294,9 +384,28 @@ export async function POST(request: Request) {
         };
     }
 
-    // 3. Refine Images
-    // Combine extracted images with AI found logo and metadata
+    // 3. Extract Colors from Logo (if available) - REAL EXTRACTION
+    let extractedColors: string[] = [];
+    const logoUrl = brandData.logo || firecrawlMetadata.ogImage || firecrawlMetadata.icon;
     
+    if (logoUrl && logoUrl.startsWith('http')) {
+        try {
+            console.log('🎨 Extracting REAL colors from logo:', logoUrl);
+            extractedColors = await extractColorsFromImage(logoUrl);
+            
+            if (extractedColors.length > 0) {
+                console.log('✅ Real colors extracted:', extractedColors);
+                // Merge with AI-guessed colors, prioritizing extracted
+                const aiColors = Array.isArray(brandData.colors) ? brandData.colors : [];
+                brandData.colors = mergeColorPalettes(aiColors, extractedColors);
+                console.log('🎨 Final merged palette:', brandData.colors);
+            }
+        } catch (e) {
+            console.error("Color extraction failed:", e);
+            // Keep AI colors if extraction fails
+        }
+    }
+
     // Refine the main logo selection based on AI classification
     const aiIdentifiedLogo = brandData.analyzedImages?.find((img: any) => img.category === 'main_logo')?.url;
     if (aiIdentifiedLogo) {

@@ -180,18 +180,18 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
             </div>
 
              {/* Row 3: Description & Features */}
-            <div className="bg-[#1A1A1A] p-5 rounded-[24px] border border-gray-800 flex-1 flex flex-col">
+            <div className="bg-[#1A1A1A] p-5 rounded-[24px] border border-gray-800 flex flex-col">
                 <h3 className="font-medium text-gray-500 text-[10px] uppercase tracking-widest mb-2">Business Overview</h3>
                 <textarea 
                     value={localData.description || ''}
                     onChange={(e) => handleChange('description', e.target.value)}
-                    className="w-full h-20 bg-transparent outline-none text-sm leading-relaxed text-gray-300 resize-none placeholder:text-gray-700 mb-4"
+                    className="w-full h-16 bg-transparent outline-none text-sm leading-relaxed text-gray-300 resize-none placeholder:text-gray-700 mb-3"
                     placeholder="Description de l'entreprise..."
                 />
                 
                 {/* Key Features / Services */}
                 {(localData.features?.length > 0 || localData.services?.length > 0) && (
-                    <div className="pt-4 border-t border-gray-800/50">
+                    <div className="pt-3 border-t border-gray-800/50">
                         <h3 className="font-medium text-gray-500 text-[10px] uppercase tracking-widest mb-2">Key Features</h3>
                         <div className="flex flex-wrap gap-2">
                             {[...(localData.features || []), ...(localData.services || [])].slice(0, 6).map((feat: string, i: number) => (
@@ -203,6 +203,51 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
                     </div>
                 )}
             </div>
+
+            {/* Row 4: Marketing Angles - NEW ENRICHED */}
+            {localData.marketingAngles && localData.marketingAngles.length > 0 && (
+              <div className="bg-gradient-to-br from-[#1A1A1A] to-[#252525] p-5 rounded-[24px] border border-gray-800 shadow-lg">
+                <h3 className="font-medium text-[#d4f34a] text-[10px] uppercase tracking-widest mb-4 flex items-center gap-2">
+                  🎯 Creative Angles <span className="text-gray-500">Ready to generate</span>
+                </h3>
+                <div className="flex flex-col gap-3 max-h-[200px] overflow-y-auto no-scrollbar">
+                  {localData.marketingAngles.slice(0, 4).map((angle: any, i: number) => (
+                    <div key={i} className="group p-3 rounded-xl bg-white/5 border border-transparent hover:border-[#d4f34a]/30 transition-all cursor-pointer hover:bg-white/10">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="font-bold text-white text-sm">{angle.title}</span>
+                            {angle.platform && (
+                              <span className="text-[8px] uppercase px-1.5 py-0.5 rounded bg-gray-800 text-gray-400">
+                                {angle.platform}
+                              </span>
+                            )}
+                          </div>
+                          {angle.hook && (
+                            <p className="text-[#d4f34a] text-xs italic mb-1">"{angle.hook}"</p>
+                          )}
+                          <p className="text-gray-400 text-[11px] line-clamp-2">{angle.concept}</p>
+                          {angle.emotionalTension && (
+                            <p className="text-gray-500 text-[10px] mt-1">↗ {angle.emotionalTension}</p>
+                          )}
+                        </div>
+                        <button 
+                          className="opacity-0 group-hover:opacity-100 transition-opacity px-2 py-1 rounded bg-[#d4f34a] text-black text-[9px] font-bold whitespace-nowrap"
+                          onClick={() => {
+                            // Pass angle to parent for use in generation
+                            const brief = angle.concept || angle.title;
+                            // Trigger via a callback or custom event
+                            window.dispatchEvent(new CustomEvent('use-angle', { detail: brief }));
+                          }}
+                        >
+                          USE →
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
         </div>
 
         {/* RIGHT COLUMN - ASSETS (Cols 9-12) */}

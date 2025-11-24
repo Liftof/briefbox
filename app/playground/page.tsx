@@ -28,6 +28,49 @@ const mergeUniqueStrings = (base: string[] = [], extra: string[] = []) => {
 
 const createId = () => `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
+// Fallback prompt builder when Creative Director API fails
+const buildFallbackPrompt = (brief: string, brand: any): string => {
+  const aesthetic = Array.isArray(brand.aesthetic) ? brand.aesthetic.join(', ') : (brand.aesthetic || 'Professional');
+  const tone = Array.isArray(brand.toneVoice) ? brand.toneVoice.join(', ') : (brand.toneVoice || 'Approachable');
+  const colors = Array.isArray(brand.colors) ? brand.colors.join(', ') : (brand.colors || '#000000');
+  const primaryColor = Array.isArray(brand.colors) && brand.colors.length > 0 ? brand.colors[0] : '#000000';
+  const brandName = brand.name || 'Brand';
+  const industry = brand.industry || 'Professional services';
+  const visualMotifs = Array.isArray(brand.visualMotifs) ? brand.visualMotifs.join(', ') : '';
+
+  return `[SCENE]
+${brief}
+
+[BRAND CONTEXT]
+Brand: ${brandName}
+Industry: ${industry}
+Aesthetic: ${aesthetic}
+Tone: ${tone}
+Visual motifs: ${visualMotifs}
+
+[COLOR & STYLE]
+Primary color: ${primaryColor}
+Full palette: ${colors}
+Style: Editorial, premium social media visual
+
+[LIGHTING]
+Soft, diffused editorial lighting with subtle shadows
+Natural light feel, warm color temperature
+
+[COMPOSITION]
+Modern asymmetric layout with breathing room
+Rule of thirds, subject slightly off-center
+Negative space for potential text overlay
+
+[TEXTURE & QUALITY]
+Subtle film grain, premium editorial finish
+8K resolution, sharp details
+Avoid smooth plastic AI look
+
+[NEGATIVE]
+messy, cluttered, ugly text, distorted logo, low resolution, blurry, amateur, wrong colors, plastic look, neon glow, over-saturated, stock photo, generic, corporate clip art`;
+};
+
 function PlaygroundContent() {
   const searchParams = useSearchParams();
   const brandId = searchParams.get('brandId');
@@ -85,6 +128,20 @@ function PlaygroundContent() {
       Object.values(toastTimeouts.current).forEach(clearTimeout);
     };
   }, []);
+
+  // Listen for "use-angle" events from BentoGrid
+  useEffect(() => {
+    const handleUseAngle = (e: CustomEvent) => {
+      if (e.detail) {
+        setBrief(e.detail);
+        setStep('playground');
+        setActiveTab('create');
+        showToast('Angle créatif chargé', 'success');
+      }
+    };
+    window.addEventListener('use-angle', handleUseAngle as EventListener);
+    return () => window.removeEventListener('use-angle', handleUseAngle as EventListener);
+  }, [showToast]);
 
   const generateBackgroundsForBrand = useCallback(
     async (brand: any) => {
@@ -428,6 +485,8 @@ ${enhancement}`);
     showToast('Prompt enrichi', 'success');
   };
 
+  const [selectedArchetype, setSelectedArchetype] = useState<string>('');
+
   const handleGenerate = async (
     customPrompt?: string,
     useCurrentBrief = true,
@@ -453,24 +512,49 @@ ${enhancement}`);
     }
 
     setStatus('preparing');
-    setProgress(20);
-
-    // Construct the sophisticated prompt based on brand identity
-    const aesthetic = Array.isArray(targetBrand.aesthetic) ? targetBrand.aesthetic.join(', ') : (targetBrand.aesthetic || 'Professional');
-    const tone = Array.isArray(targetBrand.toneVoice) ? targetBrand.toneVoice.join(', ') : (targetBrand.toneVoice || 'Approachable');
-    const colors = Array.isArray(targetBrand.colors) ? targetBrand.colors.join(', ') : (targetBrand.colors || '#000000');
-    const fonts = Array.isArray(targetBrand.fonts) ? targetBrand.fonts.join(', ') : (targetBrand.fonts || 'Sans-serif');
-    const primaryColor = Array.isArray(targetBrand.colors) && targetBrand.colors.length > 0 ? targetBrand.colors[0] : '#000000';
-    const brandName = targetBrand.name || 'Brand';
-
-    const sophisticatedPrompt = `ROLE: Expert Social Media Designer. TASK: Create a high-converting static social media post (Instagram/LinkedIn style) based on the following brief. BRIEF: ${finalPrompt}. Style: ${aesthetic}. Vibe: ${tone}. High quality, trending on Behance. BRAND IDENTITY (STRICTLY FOLLOW): Brand: ${brandName} Aesthetic: ${aesthetic} Tone: ${tone} Colors: ${colors} Fonts: ${fonts} DESIGN GUIDELINES: - COMPOSITION: Modern, balanced, and professional social media post layout. Use adequate whitespace. - STYLE: Matches the brand aesthetic defined above. - ASSETS: Use the provided image as the HERO element. Integrate it naturally into a scene or layout. Do NOT just crop the image. - COLOR: Use the brand palette for backgrounds, shapes, or accents. Specifically use ${primaryColor} as a primary accent. - LOGO: If a logo is provided in the input, ensure it is visible and respectable. - QUALITY: 8k resolution, sharp details, photorealistic or premium illustration style. - FLAVOR: Add subtle, tasteful noise, paper texture or premium editorial lighting to avoid "AI smooth plastic" look. NEGATIVE PROMPT: messy, cluttered, ugly text, distorted logo, low resolution, blurry, weird cropping, amateur, wrong colors, plastic look, neon glow, over-saturated, deformed hands, extra fingers.`;
+    setStatusMessage('🎨 Le Creative Director analyse votre brief...');
+    setProgress(10);
 
     try {
+      // STEP 1: Call Creative Director API to transform brief into structured concept
+      let finalGenerationPrompt: string;
+      
+      try {
+        const cdResponse = await fetch('/api/creative-director', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            brief: finalPrompt,
+            brand: targetBrand,
+            archetype: selectedArchetype || undefined
+          })
+        });
+        
+        const cdData = await cdResponse.json();
+        
+        if (cdResponse.ok && cdData.success && cdData.concept?.finalPrompt) {
+          finalGenerationPrompt = cdData.concept.finalPrompt;
+          console.log('🎬 Creative Director concept:', cdData.metadata);
+          setProgress(30);
+          setStatusMessage('✨ Concept créatif validé, génération en cours...');
+        } else {
+          // Fallback to basic prompt if Creative Director fails
+          console.warn('Creative Director fallback:', cdData.error);
+          finalGenerationPrompt = buildFallbackPrompt(finalPrompt, targetBrand);
+        }
+      } catch (cdError) {
+        console.warn('Creative Director error, using fallback:', cdError);
+        finalGenerationPrompt = buildFallbackPrompt(finalPrompt, targetBrand);
+      }
+
+      setProgress(40);
+
+      // STEP 2: Generate with Fal using the enriched prompt
       const response = await fetch('/api/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          prompt: sophisticatedPrompt,
+          prompt: finalGenerationPrompt,
           imageUrls: references,
           numImages: 4,
           aspectRatio: '1:1'
@@ -675,6 +759,36 @@ ${enhancement}`);
           </p>
         </div>
 
+        {/* Visual Archetype Selector */}
+        <div className="mb-6">
+          <div className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-3">Style visuel</div>
+          <div className="flex gap-2 flex-wrap">
+            {[
+              { id: '', label: '✨ Auto', desc: 'Adapté à votre marque' },
+              { id: 'editorial', label: '📰 Editorial', desc: 'Magazine haut de gamme' },
+              { id: 'lifestyle', label: '🏡 Lifestyle', desc: 'Authentique, chaleureux' },
+              { id: 'bold', label: '⚡ Bold', desc: 'Impactant, graphique' },
+              { id: 'minimal', label: '○ Minimal', desc: 'Épuré, luxury' },
+              { id: 'corporate', label: '🏢 Corporate', desc: 'Pro, trustworthy' },
+              { id: 'raw', label: '📷 Raw', desc: 'Authentique, lo-fi' },
+            ].map((style) => (
+              <button
+                key={style.id}
+                onClick={() => setSelectedArchetype(style.id)}
+                className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${
+                  selectedArchetype === style.id
+                    ? 'bg-black text-white shadow-lg scale-105'
+                    : 'bg-white border border-gray-200 hover:border-black hover:shadow-md'
+                }`}
+                title={style.desc}
+              >
+                {style.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Visual Ideas from Brand Analysis */}
         {visualIdeas.length > 0 && (
           <div className="mb-8 flex gap-3 overflow-x-auto pb-2 no-scrollbar">
             {visualIdeas.map((idea, i) => (
