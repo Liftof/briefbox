@@ -53,30 +53,25 @@ const createColorSwatch = async (hex: string) => {
 };
 
 const buildPrompt = (brand: BrandContext | undefined, idea: string, index: number) => {
-  const colors = Array.isArray(brand?.colors) ? brand?.colors.join(', ') : brand?.colors;
-  const aesthetic = Array.isArray(brand?.aesthetic) ? brand?.aesthetic.join(', ') : brand?.aesthetic;
-  const tone = Array.isArray(brand?.toneVoice) ? brand?.toneVoice.join(', ') : brand?.toneVoice;
-  const motifs = Array.isArray(brand?.visualMotifs) ? brand?.visualMotifs.join(', ') : '';
+  const colors = Array.isArray(brand?.colors) ? brand?.colors.slice(0, 2).join(' to ') : brand?.colors;
+  
+  // Different background types based on index
+  const backgroundTypes = [
+    'Minimal gradient background',
+    'Subtle geometric pattern',
+    'Clean solid with soft shadow'
+  ];
+  const bgType = backgroundTypes[index % backgroundTypes.length];
 
-  return `
-ROLE: Senior Surface & Editorial Designer.
-TASK: Craft a premium background texture for ${brand?.name || 'the brand'} social media carousels.
+  return `${bgType}. Color palette: ${colors || 'dark gray to black'}. 
 
-BRIEF #${index + 1}: ${idea}
+Style: Ultra-minimal, editorial, Kinfolk magazine aesthetic. 
+Characteristics: Soft gradient transition, very subtle grain texture (barely visible), clean and sophisticated.
+Must be: Perfectly symmetrical, balanced, professional.
+No elements: No shapes, no patterns, no circles, no lines, no objects, no text, no icons.
+Just: A beautiful, clean background suitable for overlaying bold typography.
 
-BRAND REFERENCES:
-- Palette: ${colors || 'Use tasteful deep neutrals'}
-- Aesthetic keywords: ${aesthetic || 'Minimal, editorial, premium'}
-- Tone: ${tone || 'Confident, calm'}
-- Visual motifs to echo: ${motifs || 'Subtle geometric cues'}
-
-GUIDELINES:
-- Create a layered composition mixing soft gradients, tactile grain, paper or fabric textures, and refined geometric or organic motifs.
-- Keep negative space for typography overlays, no text, no UI elements, no logos, no icons, no people.
-- Avoid cliché AI neon swirls, glossy plastic, or obvious diffusion artifacts.
-- Make it feel art-directed, print-ready, with tasteful noise and depth.
-- Format: square background, ready for LinkedIn / Instagram static posts.
-`;
+Quality: 8K, sharp, professional design quality. Think: Apple keynote backgrounds, premium brand guidelines.`;
 };
 
 const extractImageFromResult = (result: any) => {

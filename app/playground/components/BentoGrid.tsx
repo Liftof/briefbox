@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 
-export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBackgrounds = false, onUpdate, onValidate, onAddSource, onSave }: { brandData: any, backgrounds?: string[], isGeneratingBackgrounds?: boolean, onUpdate: (data: any) => void, onValidate: () => void, onAddSource?: () => void, onSave?: () => void }) {
+export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBackgrounds = false, onUpdate, onValidate, onAddSource, onBack }: { brandData: any, backgrounds?: string[], isGeneratingBackgrounds?: boolean, onUpdate: (data: any) => void, onValidate: () => void, onAddSource?: () => void, onBack?: () => void }) {
   const [localData, setLocalData] = useState(brandData);
 
   useEffect(() => {
@@ -33,32 +33,34 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
     <div className="animate-fade-in w-full">
       {/* Header */}
       <header className="flex items-center justify-between mb-8">
-        <div className="flex items-baseline gap-4">
+        <div className="flex items-center gap-4">
+          {onBack && (
+            <button 
+              onClick={onBack}
+              className="w-10 h-10 flex items-center justify-center border border-gray-200 hover:border-gray-900 hover:bg-gray-50 transition-all"
+            >
+              <svg className="w-5 h-5 text-gray-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path d="M19 12H5M12 19l-7-7 7-7" />
+              </svg>
+            </button>
+          )}
           <div className="flex items-center gap-3">
             <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
             <span className="text-xs font-mono uppercase tracking-[0.2em] text-gray-400">Brand Identity</span>
           </div>
         </div>
-        <div className="flex gap-3">
-          <button 
-            onClick={onSave}
-            className="px-5 py-2.5 text-sm font-medium text-gray-600 border border-gray-200 hover:border-gray-900 hover:text-gray-900 transition-all"
-          >
-            Sauvegarder
-          </button>
-          <button 
-            onClick={onValidate}
-            className="group relative px-6 py-2.5 bg-gray-900 text-white text-sm font-medium transition-all hover:bg-black"
-          >
-            <span className="relative z-10 flex items-center gap-2">
-              Valider & Générer
-              <svg className="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                <path d="M5 12h14M12 5l7 7-7 7" />
-              </svg>
-            </span>
-            <div className="absolute inset-0 bg-gradient-to-r from-emerald-600 to-teal-600 opacity-0 group-hover:opacity-100 transition-opacity" />
-          </button>
-        </div>
+        <button 
+          onClick={onValidate}
+          className="group relative px-6 py-2.5 bg-gray-900 text-white text-sm font-medium transition-all hover:bg-black"
+        >
+          <span className="relative z-10 flex items-center gap-2">
+            Valider & Créer
+            <svg className="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <path d="M5 12h14M12 5l7 7-7 7" />
+            </svg>
+          </span>
+          <div className="absolute inset-0 bg-gradient-to-r from-emerald-600 to-teal-600 opacity-0 group-hover:opacity-100 transition-opacity" />
+        </button>
       </header>
 
       {/* Brand name and URL */}

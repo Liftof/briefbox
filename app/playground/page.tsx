@@ -316,15 +316,48 @@ function PlaygroundContent() {
       showToast('Analysez ou chargez une marque avant de continuer', 'error');
       return;
     }
+    
+    // Auto-select relevant images for generation (logo + products + UI)
+    const labeledImages = Array.isArray(brandData.labeledImages) ? brandData.labeledImages : [];
+    const relevantImages = labeledImages
+      .filter((img: any) => ['main_logo', 'product', 'app_ui'].includes(img.category))
+      .map((img: any) => img.url)
+      .slice(0, 4); // Max 4 images
+    
+    // Fallback to logo + first background if no relevant images
+    const autoImages = relevantImages.length > 0 
+      ? relevantImages 
+      : [brandData.logo, ...(backgrounds || [])].filter(Boolean).slice(0, 3);
+    
+    // Set default images
+    if (autoImages.length > 0 && uploadedImages.length === 0) {
+      setUploadedImages(autoImages);
+    }
+    
+    // Create default brief from first marketing angle or brand info
+    let defaultBrief = brief;
+    if (!defaultBrief) {
+      const angles = Array.isArray(brandData.marketingAngles) ? brandData.marketingAngles : [];
+      if (angles.length > 0 && angles[0].title) {
+        defaultBrief = `Post annonce: ${angles[0].title} - ${brandData.name}`;
+      } else {
+        defaultBrief = `Post de présentation de ${brandData.name}: ${brandData.tagline || 'notre expertise'}`;
+      }
+      setBrief(defaultBrief);
+    }
+    
     setStep('playground');
     setActiveTab('create');
     
-    // Auto-generate initial image if brief is ready
-    if (brief && uploadedImages.length > 0 && generatedImages.length === 0) {
-        handleGenerate(brief, false, brandData, uploadedImages);
+    // Auto-generate if we have images and brief
+    const finalImages = uploadedImages.length > 0 ? uploadedImages : autoImages;
+    if (defaultBrief && finalImages.length > 0 && generatedImages.length === 0) {
+      setTimeout(() => {
+        handleGenerate(defaultBrief, false, brandData, finalImages);
+      }, 500); // Small delay to let UI update
     }
     
-    showToast('Identité validée', 'success');
+    showToast('Identité validée - génération en cours', 'success');
   };
 
   const handleSaveBrand = async () => {
@@ -866,7 +899,10 @@ ${enhancement}`);
           onUpdate={setBrandData}
           onValidate={handleValidateBento}
           onAddSource={() => setShowSourceManager(true)}
-          onSave={handleSaveBrand}
+          onBack={() => {
+            setStep('playground');
+            setActiveTab('create');
+          }}
         />
       );
     }
@@ -979,35 +1015,58 @@ ${enhancement}`);
               className="w-full min-h-[100px] text-base resize-none outline-none placeholder:text-gray-300 bg-transparent"
             />
 
-            {/* Sources */}
+            {/* Sources - More prominent */}
             <div className="mt-4 pt-4 border-t border-gray-100">
-              <div className="text-[10px] font-mono uppercase tracking-widest text-gray-400 mb-3">
-                Sources visuelles
-              </div>
-              <div className="flex gap-3 overflow-x-auto pb-2 no-scrollbar">
-                {uploadedImages.map((img, i) => (
-                  <div key={i} className="relative w-14 h-14 flex-shrink-0 group">
-                    <img src={img} className="w-full h-full object-cover border border-gray-200" />
-                    <button
-                      onClick={() => handleRemoveImage(i)}
-                      className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-gray-900 text-white flex items-center justify-center text-[10px] opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      ×
-                    </button>
-                  </div>
-                ))}
+              <div className="flex items-center justify-between mb-3">
+                <div className="text-[10px] font-mono uppercase tracking-widest text-gray-400">
+                  Images de référence
+                </div>
                 <button
                   onClick={() => setShowSourceManager(true)}
-                  className="w-14 h-14 flex-shrink-0 border border-dashed border-gray-300 flex items-center justify-center text-gray-400 hover:border-gray-900 hover:text-gray-900 transition-colors"
+                  className="text-[10px] font-mono uppercase tracking-widest text-emerald-600 hover:text-emerald-700 transition-colors flex items-center gap-1"
                 >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
-                    <path d="M12 4v16m8-8H4" />
-                  </svg>
+                  <span>+</span> Gérer les sources
                 </button>
-                <input ref={fileInputRef} type="file" multiple accept="image/*" className="hidden" onChange={handleImageUpload} />
               </div>
-              </div>
+              
+              {uploadedImages.length === 0 ? (
+                <button
+                  onClick={() => setShowSourceManager(true)}
+                  className="w-full py-6 border-2 border-dashed border-gray-200 hover:border-emerald-500 hover:bg-emerald-50/30 transition-all flex flex-col items-center gap-2 group"
+                >
+                  <svg className="w-6 h-6 text-gray-300 group-hover:text-emerald-500 transition-colors" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+                    <path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  </svg>
+                  <span className="text-xs text-gray-400 group-hover:text-emerald-600 transition-colors">
+                    Ajouter logo, produits ou visuels de marque
+                  </span>
+                </button>
+              ) : (
+                <div className="flex gap-3 overflow-x-auto pb-2 no-scrollbar">
+                  {uploadedImages.map((img, i) => (
+                    <div key={i} className="relative w-14 h-14 flex-shrink-0 group">
+                      <img src={img} className="w-full h-full object-cover border border-gray-200" />
+                      <button
+                        onClick={() => handleRemoveImage(i)}
+                        className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-gray-900 text-white flex items-center justify-center text-[10px] opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        ×
+                      </button>
+                    </div>
+                  ))}
+                  <button
+                    onClick={() => setShowSourceManager(true)}
+                    className="w-14 h-14 flex-shrink-0 border border-dashed border-gray-300 flex items-center justify-center text-gray-400 hover:border-emerald-500 hover:text-emerald-500 hover:bg-emerald-50/30 transition-all"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+                      <path d="M12 4v16m8-8H4" />
+                    </svg>
+                  </button>
+                </div>
+              )}
+              <input ref={fileInputRef} type="file" multiple accept="image/*" className="hidden" onChange={handleImageUpload} />
             </div>
+          </div>
 
           {/* Actions footer */}
           <div className="flex items-center justify-between px-6 py-4 border-t border-gray-100 bg-gray-50/50">

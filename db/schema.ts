@@ -27,7 +27,7 @@ export const brands = pgTable('brands', {
   
   // Intelligence Créative
   visualMotifs: jsonb('visual_motifs').$type<string[]>(),
-  marketingAngles: jsonb('marketing_angles').$type<{title: string, concept: string}[]>(),
+  marketingAngles: jsonb('marketing_angles').$type<{title: string, hook?: string, concept: string, emotionalTension?: string, platform?: string}[]>(),
   backgroundPrompts: jsonb('background_prompts').$type<string[]>(),
   
   // Assets (Images scrapées + Textures générées)

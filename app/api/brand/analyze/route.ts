@@ -272,9 +272,9 @@ export async function POST(request: Request) {
            "Post éducatif: Tips ou how-to en format liste"
         ],
         "backgroundPrompts": [
-           "Background 1: Description of a textured background (e.g. 'Subtle grain with soft gradient of brand colors')",
-           "Background 2: Description of a pattern background (e.g. 'Minimalist geometric shapes in light grey')",
-           "Background 3: Description of an abstract background (e.g. 'Blurred abstract forms in brand primary color')"
+           "Gradient from [couleur primaire] to darker shade, ultra-minimal, no elements",
+           "Solid [couleur primaire] with very subtle noise texture",
+           "Soft gradient from dark to [couleur primaire], clean and professional"
         ]
       }
       
