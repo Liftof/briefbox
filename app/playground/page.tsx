@@ -38,6 +38,8 @@ function PlaygroundContent() {
   const [statusMessage, setStatusMessage] = useState('Nous analysons votre identité...');
   const [progress, setProgress] = useState(0);
   const [status, setStatus] = useState<'idle' | 'preparing' | 'running' | 'complete' | 'error'>('idle');
+  
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   const [brandData, setBrandData] = useState<any | null>(null);
   const [backgrounds, setBackgrounds] = useState<string[]>([]);
@@ -1046,14 +1048,21 @@ ${enhancement}`);
       )}
 
       {step !== 'url' && step !== 'analyzing' && step !== 'bento' && (
-        <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} brandData={brandData} onEditBrand={() => setStep('bento')} />
+        <Sidebar 
+            activeTab={activeTab} 
+            setActiveTab={setActiveTab} 
+            brandData={brandData} 
+            onEditBrand={() => setStep('bento')} 
+            isCollapsed={isSidebarCollapsed}
+            toggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+        />
       )}
 
-      <div className={`flex-1 transition-all duration-300 ${step !== 'url' && step !== 'analyzing' && step !== 'bento' ? 'ml-24 md:ml-32 lg:ml-64' : 'w-full'}`}>
+      <div className={`flex-1 transition-all duration-300 ease-out ${step !== 'url' && step !== 'analyzing' && step !== 'bento' ? (isSidebarCollapsed ? 'ml-[120px]' : 'ml-[320px]') : 'w-full'}`}>
         <main className={`mx-auto min-h-screen flex flex-col justify-center transition-all duration-500 ${
             step === 'bento' 
                 ? 'w-full px-4 md:px-12 py-8 max-w-[1920px]' 
-                : 'max-w-7xl p-4 md:p-8'
+                : 'max-w-[1600px] p-6 md:p-12'
         }`}>
           {renderContent()}
         </main>
