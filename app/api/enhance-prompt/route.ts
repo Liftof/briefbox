@@ -1,0 +1,60 @@
+import { NextResponse } from 'next/server';
+
+export async function POST(request: Request) {
+  try {
+    const { prompt, brandContext } = await request.json();
+
+    if (!prompt) {
+      return NextResponse.json({ error: 'Prompt is required' }, { status: 400 });
+    }
+
+    const systemPrompt = `
+    You are an expert Art Director and Prompt Engineer for AI Image Generation (Midjourney/Flux/Fal).
+    Your goal is to rewrite the user's simple request into a detailed, high-quality visual prompt.
+    
+    BRAND CONTEXT:
+    Name: ${brandContext?.name || 'Unknown'}
+    Aesthetic: ${brandContext?.aesthetic || 'Modern'}
+    Tone: ${brandContext?.toneVoice || 'Professional'}
+    
+    INSTRUCTIONS:
+    1. Keep the core intent of the user's request.
+    2. Enhance it with descriptive details about lighting, composition, texture, and mood.
+    3. Ensure it aligns with the Brand Context provided.
+    4. Output ONLY the enhanced prompt text. No conversational filler.
+    `;
+
+    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${process.env.OPENROUTER_API_KEY}`,
+        "Content-Type": "application/json",
+        "HTTP-Referer": "https://briefbox.vercel.app", 
+        "X-Title": "BriefBox"
+      },
+      body: JSON.stringify({
+        "model": "openai/gpt-4o-mini", // Fast and cheap for this task
+        "messages": [
+          {"role": "system", "content": systemPrompt},
+          {"role": "user", "content": prompt}
+        ]
+      })
+    });
+
+    if (!response.ok) {
+        throw new Error(await response.text());
+    }
+
+    const data = await response.json();
+    const enhancedPrompt = data.choices[0].message.content.trim();
+
+    return NextResponse.json({ success: true, enhancedPrompt });
+
+  } catch (error: any) {
+    console.error('Prompt Enhancement Error:', error);
+    return NextResponse.json(
+      { success: false, error: error.message || 'An error occurred' },
+      { status: 500 }
+    );
+  }
+}
