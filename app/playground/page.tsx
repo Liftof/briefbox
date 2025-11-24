@@ -30,45 +30,24 @@ const createId = () => `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
 
 // Fallback prompt builder when Creative Director API fails
 const buildFallbackPrompt = (brief: string, brand: any): string => {
-  const aesthetic = Array.isArray(brand.aesthetic) ? brand.aesthetic.join(', ') : (brand.aesthetic || 'Professional');
-  const tone = Array.isArray(brand.toneVoice) ? brand.toneVoice.join(', ') : (brand.toneVoice || 'Approachable');
-  const colors = Array.isArray(brand.colors) ? brand.colors.join(', ') : (brand.colors || '#000000');
   const primaryColor = Array.isArray(brand.colors) && brand.colors.length > 0 ? brand.colors[0] : '#000000';
+  const secondaryColor = Array.isArray(brand.colors) && brand.colors.length > 1 ? brand.colors[1] : '#ffffff';
   const brandName = brand.name || 'Brand';
-  const industry = brand.industry || 'Professional services';
-  const visualMotifs = Array.isArray(brand.visualMotifs) ? brand.visualMotifs.join(', ') : '';
 
-  return `[SCENE]
-${brief}
+  // Simple, direct prompt for Nano Banana Pro
+  return `Professional social media post for ${brandName}.
 
-[BRAND CONTEXT]
-Brand: ${brandName}
-Industry: ${industry}
-Aesthetic: ${aesthetic}
-Tone: ${tone}
-Visual motifs: ${visualMotifs}
+BRIEF: ${brief}
 
-[COLOR & STYLE]
-Primary color: ${primaryColor}
-Full palette: ${colors}
-Style: Editorial, premium social media visual
+LAYOUT: Reference image as hero element, centered. Clean ${primaryColor} background with adequate whitespace. Modern, balanced composition.
 
-[LIGHTING]
-Soft, diffused editorial lighting with subtle shadows
-Natural light feel, warm color temperature
+COLORS: Use ${primaryColor} as primary background or accent. Use ${secondaryColor} for secondary elements. Keep the brand palette consistent.
 
-[COMPOSITION]
-Modern asymmetric layout with breathing room
-Rule of thirds, subject slightly off-center
-Negative space for potential text overlay
+STYLE: High-quality static social media post for Instagram/LinkedIn. Clean graphic design aesthetic, not a 3D render.
 
-[TEXTURE & QUALITY]
-Subtle film grain, premium editorial finish
-8K resolution, sharp details
-Avoid smooth plastic AI look
+Add subtle grain texture for premium editorial feel. Sharp details, professional quality.
 
-[NEGATIVE]
-messy, cluttered, ugly text, distorted logo, low resolution, blurry, amateur, wrong colors, plastic look, neon glow, over-saturated, stock photo, generic, corporate clip art`;
+NEGATIVE: 3D render, photorealistic scene, complex environment, cinematic, blurry, amateur, distorted, wrong colors, plastic look, cluttered, stock photo`;
 };
 
 function PlaygroundContent() {

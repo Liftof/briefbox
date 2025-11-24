@@ -416,24 +416,28 @@ async function generateCreativeConcept(params: {
   const keyPoints = Array.isArray(brand.keyPoints) ? brand.keyPoints.slice(0, 3).join('. ') : '';
   const visualMotifs = Array.isArray(brand.visualMotifs) ? brand.visualMotifs.join(', ') : '';
 
-  const systemPrompt = `You are an elite Creative Director at a top agency like Wieden+Kennedy or Droga5. 
-Your specialty: creating scroll-stopping social media visuals that feel premium, never generic.
+  const systemPrompt = `You are an expert Social Media Designer specializing in static posts for Instagram and LinkedIn.
 
-You HATE:
-- Stock photo aesthetics
-- Generic "corporate" vibes
-- AI-slop smooth plastic renders
-- Boring centered compositions
-- Cliché visual metaphors
+CRITICAL CONTEXT: You are writing prompts for an AI image model (Nano Banana Pro) that takes EXISTING reference images and transforms them into social media posts. The model CANNOT create 3D scenes, cinematic renders, or elaborate environments from scratch.
 
-You LOVE:
-- Unexpected visual angles
-- Tactile textures and imperfections
-- Strong point of view
-- Cultural relevance
-- The tension between simplicity and interest
+Your prompts must:
+1. FOCUS ON THE LAYOUT - How to arrange the reference image within a social media post format
+2. BE SIMPLE AND DIRECT - No cinematic language, no camera movements, no elaborate scene descriptions
+3. DESCRIBE A FLAT 2D COMPOSITION - Think graphic design poster, not 3D render
+4. USE THE REFERENCE IMAGE AS THE HERO - Tell the model how to feature the provided image
 
-Your output must be SPECIFIC and OPINIONATED. Never generic.`;
+You MUST NOT:
+- Describe 3D scenes with desks, rooms, or physical environments
+- Use cinematic language like "the camera pans", "in the foreground", "the scene unfolds"
+- Request complex lighting setups or photorealistic renders
+- Describe textures of objects that aren't in the reference images
+
+You MUST:
+- Describe a flat, graphic social media post layout
+- Specify background colors, shapes, and typography zones
+- Tell how to position the reference image (centered, left-aligned, with overlay, etc.)
+- Keep descriptions under 150 words
+- Focus on what a graphic designer would create in Figma, not a 3D artist in Blender`;
 
   const userPrompt = `
 BRIEF FROM CLIENT: "${brief}"
@@ -443,44 +447,34 @@ BRAND CONTEXT:
 - Industry: ${industry}
 - Aesthetic: ${aesthetic}
 - Tone: ${tone}
-- Values: ${values}
-- USPs: ${keyPoints}
-- Visual Motifs: ${visualMotifs}
 - Primary Color: ${primaryColor}
 - Secondary Color: ${secondaryColor}
 
-CREATIVE DIRECTION:
-- Visual Archetype: ${archetype.name} — ${archetype.description}
-- Reference Style: ${archetype.references}
-- Lighting Direction: ${archetype.lighting}
-- Composition Style: ${archetype.composition}
-
-MARKETING ANGLE TO EXPLORE:
-- Title: ${angle.title}
-- Hook: ${angle.hook}
-- Scene Template: ${angle.sceneTemplate}
-- Emotional Arc: ${angle.emotionalTension}
+ARCHETYPE STYLE: ${archetype.name}
 
 YOUR TASK:
-Transform this brief into a HIGHLY SPECIFIC visual concept. Be opinionated. Be concrete.
+Create a SIMPLE, FLAT social media post layout description. Think like a graphic designer, NOT a 3D artist.
+
+The AI model will receive reference images (logo, product photos) and your description tells it HOW TO ARRANGE THEM into a social media post.
 
 Return a JSON object with EXACTLY these fields:
 {
-  "visualHook": "The ONE thing that makes someone stop scrolling (be specific, not generic)",
-  "sceneDescription": "Detailed scene description: what we see, where, how positioned (200 words min)",
-  "emotionalTone": "The feeling this creates in 3-5 specific words",
-  "narrativeTension": "The before/after or problem/solution implied",
-  "lighting": "SPECIFIC lighting setup (not just 'soft light')",
-  "composition": "SPECIFIC composition with positions (not just 'rule of thirds')",
-  "colorMood": "How colors are used specifically in this visual",
-  "texture": "Specific textures visible (grain, fabric, material, etc)",
-  "productPlacement": "Exactly where/how the product/brand appears",
-  "logoPlacement": "Where the logo goes and how visible",
-  "colorUsage": "Specifically how ${primaryColor} and ${secondaryColor} appear",
-  "qualityModifiers": "Technical quality words for the prompt"
+  "layoutDescription": "Simple 2D layout: 'Reference image centered on solid ${primaryColor} background with 20% padding. White geometric accent shapes in corners.' - MAX 80 WORDS, describe like a Figma layout",
+  "backgroundStyle": "Solid color, gradient, or simple pattern - e.g. 'Solid ${primaryColor} with subtle noise texture'",
+  "imagePosition": "Where the reference image goes: centered, left-third, full-bleed, etc.",
+  "accentElements": "Simple shapes or overlays: 'Thin white border frame', 'Diagonal ${secondaryColor} stripe', 'Rounded corner badge'",
+  "textZone": "Where text could go: 'Bottom 20% reserved for caption area' or 'Right side vertical text zone'",
+  "overallVibe": "3 words max: 'Clean, bold, professional'",
+  "colorUsage": "How to use ${primaryColor} and ${secondaryColor}"
 }
 
-Be SPECIFIC. "A person holding a phone" is BAD. "Close-up of weathered hands with silver rings holding iPhone at 45° angle, screen reflecting window light" is GOOD.`;
+GOOD EXAMPLE:
+"Reference image of product displayed at 60% scale, centered. Solid white background. Thin ${primaryColor} border around entire post. Small logo watermark bottom-right corner. Top 15% has subtle gradient fade from ${secondaryColor}."
+
+BAD EXAMPLE (DO NOT DO THIS):
+"A luxurious walnut desk with the product resting on it, camera slowly panning across as morning light streams through venetian blinds..."
+
+Keep it SIMPLE. This is a 2D social media graphic, not a movie scene.`;
 
   try {
     const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
@@ -557,42 +551,24 @@ function assembleFinalPrompt(params: {
 }): string {
   const { concept, brand, archetype, primaryColor, secondaryColor } = params;
 
-  return `[SCENE]
-${concept.sceneDescription}
+  // Simple, direct prompt optimized for Nano Banana Pro image-to-image
+  return `Professional social media post design for ${brand.name || 'brand'}.
 
-[LIGHTING]
-${concept.lighting}
-Style: ${archetype.lighting}
+LAYOUT: ${concept.layoutDescription || 'Reference image centered with brand colors'}
 
-[COMPOSITION]
-${concept.composition}
-Framework: ${archetype.composition}
+BACKGROUND: ${concept.backgroundStyle || `Solid ${primaryColor} background`}
 
-[COLOR & MOOD]
-${concept.colorMood}
-Primary accent: ${primaryColor}
-Secondary: ${secondaryColor}
-Overall mood: ${concept.emotionalTone}
+IMAGE PLACEMENT: ${concept.imagePosition || 'Hero image centered, 70% of frame'}
 
-[TEXTURE & QUALITY]
-${concept.texture}
-${archetype.texture}
-${concept.qualityModifiers}
+ACCENTS: ${concept.accentElements || 'Minimal geometric shapes in brand colors'}
 
-[BRAND ELEMENTS]
-Brand: ${brand.name || 'Brand'}
-Product/Logo: ${concept.productPlacement}
-Logo placement: ${concept.logoPlacement}
+COLORS: Primary ${primaryColor}, Secondary ${secondaryColor}. ${concept.colorUsage || 'Use primary for background, secondary for accents.'}
 
-[STYLE REFERENCE]
-Art direction: ${archetype.name} aesthetic
-References: ${archetype.references}
+STYLE: ${archetype.name} aesthetic - ${concept.overallVibe || archetype.mood}. Clean, high-quality, ready for Instagram/LinkedIn.
 
-[TECHNICAL]
-High resolution, 4K, professional photography, editorial quality, ready for social media
+Add subtle grain texture for premium editorial feel. Sharp details, professional graphic design quality.
 
-[NEGATIVE]
-${archetype.negativePrompt}, amateur, low quality, blurry, distorted, AI artifacts, smooth plastic, over-processed, generic stock photo`;
+NEGATIVE: ${archetype.negativePrompt}, 3D render, photorealistic scene, complex environment, cinematic, movie still, blurry, amateur, distorted text, wrong colors`;
 }
 
 function createFallbackConcept(params: {
@@ -607,21 +583,28 @@ function createFallbackConcept(params: {
 
   const fallback: CreativeConcept = {
     visualHook: angle.hook,
-    sceneDescription: angle.sceneTemplate,
+    sceneDescription: brief,
     emotionalTone: angle.emotionalTension,
     narrativeTension: angle.emotionalTension,
     archetype: archetype.name.toLowerCase() as ArchetypeKey,
-    lighting: archetype.lighting,
-    composition: archetype.composition,
-    colorMood: `Dominant ${primaryColor} with ${secondaryColor} accents`,
-    texture: archetype.texture,
-    productPlacement: 'Hero position, integrated naturally into the scene',
-    logoPlacement: 'Subtle watermark bottom corner or integrated in composition',
-    colorUsage: `${primaryColor} for key elements, ${secondaryColor} for accents`,
+    lighting: 'Soft, even lighting',
+    composition: 'Centered layout with balanced whitespace',
+    colorMood: `${primaryColor} background with ${secondaryColor} accents`,
+    texture: 'Subtle grain for premium feel',
+    productPlacement: 'Reference image centered at 70% scale',
+    logoPlacement: 'Small logo bottom-right corner',
+    colorUsage: `${primaryColor} for background, ${secondaryColor} for accent elements`,
     negativePrompt: archetype.negativePrompt,
-    qualityModifiers: '8K resolution, sharp details, professional photography, editorial lighting',
+    qualityModifiers: 'Sharp, clean, professional graphic design',
+    // New simple fields for the updated format
+    layoutDescription: `Reference image centered on ${primaryColor} background. Clean margins. Professional social media post layout.`,
+    backgroundStyle: `Solid ${primaryColor} with subtle noise texture`,
+    imagePosition: 'Centered, 70% of frame',
+    accentElements: `Thin ${secondaryColor} accent lines or shapes`,
+    textZone: 'Bottom 15% reserved for caption',
+    overallVibe: archetype.mood,
     finalPrompt: ''
-  };
+  } as CreativeConcept & Record<string, any>;
 
   fallback.finalPrompt = assembleFinalPrompt({
     concept: fallback,
