@@ -1164,41 +1164,231 @@ ${enhancement}`);
           </div>
         </div>
 
-        {/* IDÉES RAPIDES - Clickable cards to inspire */}
-        {brandData?.suggestedPosts?.length > 0 && !brief && (
-          <div className="mb-6">
-            <div className="flex items-center gap-2 mb-3">
-              <span className="text-lg">💡</span>
-              <span className="text-sm font-medium text-gray-700">Inspirez-vous</span>
-              <span className="text-xs text-gray-400">— cliquez pour utiliser</span>
+        {/* ═══════════════════════════════════════════════════════════════════════════
+            INSPIRATION PANEL - Shows all available content to create from
+            ═══════════════════════════════════════════════════════════════════════════ */}
+        {!brief && brandData && (
+          <div className="mb-6 bg-gradient-to-br from-gray-50 to-white border border-gray-200 p-5">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <span className="text-xl">💡</span>
+                <div>
+                  <h3 className="text-sm font-semibold text-gray-900">Idées de contenu</h3>
+                  <p className="text-[10px] text-gray-400">Basées sur l'analyse de {brandData.name}</p>
+                </div>
+              </div>
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              {brandData.suggestedPosts.filter((p: any) => p.source === 'real_data' || p.source === 'industry_insight').slice(0, 4).map((post: any, i: number) => {
-                const template = TEMPLATES.find(t => t.id === post.templateId);
-                const headline = post.headline || `${post.metric || ''} ${post.metricLabel || ''}`.trim();
-                const isReal = post.source === 'real_data';
-                
-                return (
-                  <button
-                    key={i}
-                    onClick={() => {
-                      setSelectedTemplate(post.templateId as TemplateId);
-                      setBrief(headline);
-                    }}
-                    className={`p-3 text-left transition-all border-2 hover:shadow-md group ${
-                      isReal 
-                        ? 'bg-emerald-50/50 border-emerald-200 hover:border-emerald-400' 
-                        : 'bg-amber-50/50 border-amber-200 hover:border-amber-400'
-                    }`}
-                  >
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="text-xl">{template?.icon}</span>
-                      <span className={`w-2 h-2 rounded-full ${isReal ? 'bg-emerald-500' : 'bg-amber-500'}`} />
-                    </div>
-                    <p className="text-xs text-gray-700 line-clamp-2 leading-snug group-hover:text-gray-900">{headline}</p>
-                  </button>
-                );
-              })}
+            
+            <div className="space-y-4">
+              {/* ROW 1: Real Stats & Testimonials */}
+              {(brandData.contentNuggets?.realStats?.length > 0 || brandData.contentNuggets?.testimonials?.length > 0) && (
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full" />
+                    <span className="text-[10px] font-medium text-emerald-700 uppercase tracking-wider">Données réelles trouvées</span>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {/* Stats */}
+                    {brandData.contentNuggets?.realStats?.slice(0, 3).map((stat: string, i: number) => (
+                      <button
+                        key={`stat-${i}`}
+                        onClick={() => {
+                          setSelectedTemplate('stat');
+                          setBrief(stat);
+                        }}
+                        className="px-3 py-2 bg-white border border-emerald-200 hover:border-emerald-400 hover:bg-emerald-50 transition-all text-left group"
+                      >
+                        <div className="flex items-center gap-2">
+                          <span className="text-base">📊</span>
+                          <span className="text-xs text-gray-700 group-hover:text-gray-900">{stat.slice(0, 50)}{stat.length > 50 ? '...' : ''}</span>
+                        </div>
+                      </button>
+                    ))}
+                    {/* Testimonials */}
+                    {brandData.contentNuggets?.testimonials?.slice(0, 2).map((t: any, i: number) => (
+                      <button
+                        key={`quote-${i}`}
+                        onClick={() => {
+                          setSelectedTemplate('quote');
+                          setBrief(`"${t.quote}" — ${t.author}`);
+                        }}
+                        className="px-3 py-2 bg-white border border-emerald-200 hover:border-emerald-400 hover:bg-emerald-50 transition-all text-left group"
+                      >
+                        <div className="flex items-center gap-2">
+                          <span className="text-base">💬</span>
+                          <span className="text-xs text-gray-700 group-hover:text-gray-900 line-clamp-1">"{t.quote?.slice(0, 40)}..."</span>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* ROW 2: Industry Insights */}
+              {brandData.industryInsights?.length > 0 && (
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="w-1.5 h-1.5 bg-amber-500 rounded-full" />
+                    <span className="text-[10px] font-medium text-amber-700 uppercase tracking-wider">Le saviez-vous ? (industrie)</span>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {brandData.industryInsights.slice(0, 3).map((insight: any, i: number) => (
+                      <button
+                        key={`insight-${i}`}
+                        onClick={() => {
+                          setSelectedTemplate('stat');
+                          setBrief(insight.didYouKnow || insight.fact);
+                        }}
+                        className="px-3 py-2 bg-white border border-amber-200 hover:border-amber-400 hover:bg-amber-50 transition-all text-left group max-w-xs"
+                      >
+                        <div className="flex items-start gap-2">
+                          <span className="text-base flex-shrink-0">🔍</span>
+                          <span className="text-xs text-gray-700 group-hover:text-gray-900 line-clamp-2">{insight.didYouKnow || insight.fact}</span>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* ROW 3: Brand Elements (Features, Values, Services) */}
+              {(brandData.features?.length > 0 || brandData.values?.length > 0 || brandData.services?.length > 0) && (
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="w-1.5 h-1.5 bg-purple-500 rounded-full" />
+                    <span className="text-[10px] font-medium text-purple-700 uppercase tracking-wider">Points forts à mettre en avant</span>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {/* Features */}
+                    {brandData.features?.slice(0, 2).map((f: string, i: number) => (
+                      <button
+                        key={`feat-${i}`}
+                        onClick={() => {
+                          setSelectedTemplate('product');
+                          setBrief(`Découvrez ${f}`);
+                        }}
+                        className="px-3 py-1.5 bg-purple-50 border border-purple-200 hover:border-purple-400 transition-all text-xs text-purple-700 hover:text-purple-900"
+                      >
+                        ✨ {f}
+                      </button>
+                    ))}
+                    {/* Values */}
+                    {brandData.values?.slice(0, 2).map((v: string, i: number) => (
+                      <button
+                        key={`val-${i}`}
+                        onClick={() => {
+                          setSelectedTemplate('expert');
+                          setBrief(`Pourquoi ${v.toLowerCase()} est au cœur de ${brandData.name}`);
+                        }}
+                        className="px-3 py-1.5 bg-blue-50 border border-blue-200 hover:border-blue-400 transition-all text-xs text-blue-700 hover:text-blue-900"
+                      >
+                        💎 {v}
+                      </button>
+                    ))}
+                    {/* Services */}
+                    {brandData.services?.slice(0, 2).map((s: string, i: number) => (
+                      <button
+                        key={`serv-${i}`}
+                        onClick={() => {
+                          setSelectedTemplate('announcement');
+                          setBrief(`${s} : comment ça marche ?`);
+                        }}
+                        className="px-3 py-1.5 bg-teal-50 border border-teal-200 hover:border-teal-400 transition-all text-xs text-teal-700 hover:text-teal-900"
+                      >
+                        🎯 {s}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* ROW 4: Image-based suggestions */}
+              {brandData.labeledImages?.length > 0 && (
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="w-1.5 h-1.5 bg-gray-500 rounded-full" />
+                    <span className="text-[10px] font-medium text-gray-600 uppercase tracking-wider">Visuels disponibles</span>
+                  </div>
+                  <div className="flex flex-wrap gap-2 items-center">
+                    {(() => {
+                      const categories = brandData.labeledImages.reduce((acc: any, img: any) => {
+                        const cat = img.category || 'other';
+                        if (!acc[cat]) acc[cat] = 0;
+                        acc[cat]++;
+                        return acc;
+                      }, {});
+                      
+                      const suggestions: { cat: string; label: string; icon: string; template: TemplateId; brief: string }[] = [];
+                      
+                      if (categories.product > 0) suggestions.push({ cat: 'product', label: `${categories.product} produit(s)`, icon: '📦', template: 'product', brief: `Découvrez notre produit phare` });
+                      if (categories.app_ui > 0) suggestions.push({ cat: 'app_ui', label: `${categories.app_ui} screenshot(s)`, icon: '📱', template: 'product', brief: `Notre interface en action` });
+                      if (categories.team > 0 || categories.person > 0) suggestions.push({ cat: 'team', label: `${(categories.team || 0) + (categories.person || 0)} personne(s)`, icon: '👤', template: 'expert', brief: `Rencontrez notre équipe` });
+                      if (categories.main_logo) suggestions.push({ cat: 'logo', label: `Logo`, icon: '🏷️', template: 'announcement', brief: `${brandData.name} : qui sommes-nous ?` });
+                      
+                      return suggestions.map((s, i) => (
+                        <button
+                          key={i}
+                          onClick={() => {
+                            setSelectedTemplate(s.template);
+                            setBrief(s.brief);
+                          }}
+                          className="px-3 py-1.5 bg-gray-100 border border-gray-200 hover:border-gray-400 hover:bg-gray-50 transition-all text-xs text-gray-600 hover:text-gray-900 flex items-center gap-1.5"
+                        >
+                          <span>{s.icon}</span>
+                          <span>{s.label}</span>
+                        </button>
+                      ));
+                    })()}
+                  </div>
+                </div>
+              )}
+
+              {/* Quick suggested posts if we have them */}
+              {brandData.suggestedPosts?.filter((p: any) => p.source === 'real_data').length > 0 && (
+                <div className="pt-3 border-t border-gray-100">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-base">⚡</span>
+                    <span className="text-[10px] font-medium text-gray-600 uppercase tracking-wider">Posts suggérés (prêts à l'emploi)</span>
+                  </div>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                    {brandData.suggestedPosts.filter((p: any) => p.source === 'real_data' || p.source === 'industry_insight').slice(0, 3).map((post: any, i: number) => {
+                      const template = TEMPLATES.find(t => t.id === post.templateId);
+                      const headline = post.headline || `${post.metric || ''} ${post.metricLabel || ''}`.trim();
+                      
+                      return (
+                        <button
+                          key={i}
+                          onClick={() => {
+                            setSelectedTemplate(post.templateId as TemplateId);
+                            setBrief(headline);
+                          }}
+                          className="p-3 bg-white border border-gray-200 hover:border-gray-400 hover:shadow-sm transition-all text-left group"
+                        >
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="text-lg">{template?.icon}</span>
+                            <span className="text-[9px] font-mono text-gray-400 uppercase">{template?.name}</span>
+                          </div>
+                          <p className="text-xs text-gray-600 line-clamp-2 group-hover:text-gray-900">{headline}</p>
+                          {post.intent && (
+                            <p className="text-[9px] text-gray-400 mt-1 italic line-clamp-1">{post.intent}</p>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* No data fallback */}
+              {!brandData.contentNuggets?.realStats?.length && 
+               !brandData.contentNuggets?.testimonials?.length && 
+               !brandData.industryInsights?.length &&
+               !brandData.features?.length && (
+                <div className="text-center py-4 text-gray-400">
+                  <p className="text-sm">Aucune donnée exploitable trouvée</p>
+                  <p className="text-xs mt-1">Ajoutez des informations dans l'identité ou écrivez librement !</p>
+                </div>
+              )}
             </div>
           </div>
         )}
