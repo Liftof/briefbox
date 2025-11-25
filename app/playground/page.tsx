@@ -77,7 +77,7 @@ function PlaygroundContent() {
   const [progress, setProgress] = useState(0);
   const [status, setStatus] = useState<'idle' | 'preparing' | 'running' | 'complete' | 'error'>('idle');
   
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true); // Collapsed by default
 
   const [brandData, setBrandData] = useState<any | null>(null);
   const [backgrounds, setBackgrounds] = useState<string[]>([]);
@@ -478,7 +478,7 @@ function PlaygroundContent() {
         showToast('Bienvenue ! Génération de vos premiers visuels...', 'success');
         
         // Small delay to let UI update
-        setTimeout(() => {
+      setTimeout(() => {
           handleGenerate(smartPrompt.brief, false, brandData, allImages.slice(0, 6));
         }, 600);
       } else {
@@ -1087,7 +1087,7 @@ ${enhancement}`);
               <div className="flex items-center gap-2">
                 <div className="w-8 h-8 bg-gray-900 flex items-center justify-center">
                   <span className="text-white text-sm">✦</span>
-                </div>
+          </div>
                 <div>
                   <h2 className="text-sm font-semibold text-gray-900">{brandData?.name || 'Marque'}</h2>
                   <span className="text-[10px] text-gray-400">Espace créatif</span>
@@ -1103,18 +1103,59 @@ ${enhancement}`);
                     <option key={lang.code} value={lang.code}>{lang.flag}</option>
                   ))}
                 </select>
-                <button
-                  onClick={() => setStep('bento')}
+          <button
+            onClick={() => setStep('bento')}
                   className="w-8 h-8 border border-gray-200 flex items-center justify-center text-gray-400 hover:text-gray-900 hover:border-gray-400 transition-colors"
                   title="Modifier l'identité"
-                >
+          >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
-                    <path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                    <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
-                </button>
+              <path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+              <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+          </button>
+        </div>
+        </div>
+
+            {/* IDÉES RAPIDES - En haut pour inspirer le message */}
+            {brandData?.suggestedPosts?.length > 0 && !brief && (
+              <div className="bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 border-2 border-amber-200 p-4 mb-4">
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="text-lg">💡</span>
+                  <div>
+                    <span className="text-xs font-semibold text-amber-900 block">Inspirez-vous de vos données</span>
+                    <span className="text-[9px] text-amber-600">Cliquez pour pré-remplir</span>
+          </div>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  {brandData.suggestedPosts.filter((p: any) => p.source === 'real_data' || p.source === 'industry_insight').slice(0, 4).map((post: any, i: number) => {
+                  const template = TEMPLATES.find(t => t.id === post.templateId);
+                    const headline = post.headline || `${post.metric || ''} ${post.metricLabel || ''}`.trim();
+                    const isReal = post.source === 'real_data';
+                    
+                  return (
+                    <button
+                      key={i}
+                      onClick={() => {
+                        setSelectedTemplate(post.templateId as TemplateId);
+                          setBrief(headline);
+                        }}
+                        className={`p-2 text-left text-xs transition-all border-2 flex items-start gap-2 hover:scale-[1.02] ${
+                          isReal 
+                            ? 'bg-white border-emerald-200 hover:border-emerald-400 hover:shadow-sm' 
+                            : 'bg-white border-amber-200 hover:border-amber-400 hover:shadow-sm'
+                        }`}
+                      >
+                        <span className="text-base flex-shrink-0">{template?.icon}</span>
+                        <div className="flex-1 min-w-0">
+                          <span className="text-gray-700 line-clamp-2 leading-tight">{headline}</span>
+                        </div>
+                        <span className={`w-2 h-2 rounded-full flex-shrink-0 mt-0.5 ${isReal ? 'bg-emerald-500' : 'bg-amber-500'}`} title={isReal ? 'Donnée réelle' : 'Insight industrie'} />
+                    </button>
+                  );
+                })}
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Section 1: MESSAGE */}
             <div className="bg-white border border-gray-200 p-4 mb-4">
@@ -1122,11 +1163,11 @@ ${enhancement}`);
                 <span className="w-5 h-5 bg-gray-900 text-white text-[10px] flex items-center justify-center font-bold">1</span>
                 <span className="text-xs font-medium text-gray-700 uppercase tracking-wider">Votre message</span>
               </div>
-              <textarea
-                value={brief}
-                onChange={(e) => setBrief(e.target.value)}
+            <textarea
+              value={brief}
+              onChange={(e) => setBrief(e.target.value)}
                 placeholder={selectedTemplate ? TEMPLATES.find(t => t.id === selectedTemplate)?.placeholder : "Qu'est-ce que vous voulez communiquer ?"}
-                className="w-full min-h-[100px] text-sm resize-none outline-none placeholder:text-gray-300 bg-gray-50 border border-gray-100 p-3 focus:border-gray-300 transition-colors"
+                className="w-full min-h-[80px] text-sm resize-none outline-none placeholder:text-gray-300 bg-gray-50 border border-gray-100 p-3 focus:border-gray-300 transition-colors"
               />
               {brief.trim() && (
                 <button
@@ -1181,76 +1222,38 @@ ${enhancement}`);
                 <div className="grid grid-cols-5 gap-2 mb-3">
                   {uploadedImages.slice(0, 10).map((img, i) => (
                     <div key={i} className="relative aspect-square group">
-                      <img src={img} className="w-full h-full object-cover border border-gray-200" />
-                      <button
-                        onClick={() => handleRemoveImage(i)}
+                    <img src={img} className="w-full h-full object-cover border border-gray-200" />
+                    <button
+                      onClick={() => handleRemoveImage(i)}
                         className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white flex items-center justify-center text-[10px] opacity-0 group-hover:opacity-100 transition-opacity"
-                      >
-                        ×
-                      </button>
-                    </div>
-                  ))}
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
                   {uploadedImages.length > 10 && (
                     <div className="aspect-square bg-gray-100 flex items-center justify-center text-xs text-gray-500">
                       +{uploadedImages.length - 10}
-                    </div>
-                  )}
-                </div>
+                  </div>
+                )}
+              </div>
               ) : (
                 <div className="bg-gray-50 border border-dashed border-gray-200 p-4 text-center mb-3">
                   <span className="text-gray-400 text-sm">Aucune image sélectionnée</span>
                 </div>
               )}
-              
-              <button
-                onClick={() => setShowSourceManager(true)}
+
+                <button
+                  onClick={() => setShowSourceManager(true)}
                 className="w-full py-2 text-xs text-gray-600 border border-gray-200 hover:border-gray-400 hover:text-gray-900 transition-colors flex items-center justify-center gap-2"
-              >
+                >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
                   <path d="M12 4v16m8-8H4" />
                 </svg>
                 {uploadedImages.length === 0 ? 'Ajouter des sources' : 'Gérer les sources'}
-              </button>
-              <input ref={fileInputRef} type="file" multiple accept="image/*" className="hidden" onChange={handleImageUpload} />
-            </div>
-
-            {/* Section 4: IDÉES RAPIDES (optional) */}
-            {brandData?.suggestedPosts?.length > 0 && (
-              <div className="bg-gradient-to-br from-gray-50 to-white border border-gray-200 p-4 mb-4">
-                <div className="flex items-center gap-2 mb-3">
-                  <span className="text-base">💡</span>
-                  <span className="text-xs font-medium text-gray-700 uppercase tracking-wider">Idées basées sur vos données</span>
-                </div>
-                <div className="space-y-2 max-h-[150px] overflow-y-auto no-scrollbar">
-                  {brandData.suggestedPosts.filter((p: any) => p.source === 'real_data' || p.source === 'industry_insight').slice(0, 4).map((post: any, i: number) => {
-                    const template = TEMPLATES.find(t => t.id === post.templateId);
-                    const headline = post.headline || `${post.metric || ''} ${post.metricLabel || ''}`.trim();
-                    const isReal = post.source === 'real_data';
-                    
-                    return (
-                      <button
-                        key={i}
-                        onClick={() => {
-                          setSelectedTemplate(post.templateId as TemplateId);
-                          setBrief(headline);
-                        }}
-                        className={`w-full p-2 text-left text-xs transition-all border flex items-start gap-2 ${
-                          isReal 
-                            ? 'bg-emerald-50/50 border-emerald-200 hover:border-emerald-400' 
-                            : 'bg-amber-50/50 border-amber-200 hover:border-amber-400'
-                        }`}
-                      >
-                        <span className="text-base flex-shrink-0">{template?.icon}</span>
-                        <div className="flex-1 min-w-0">
-                          <span className="text-gray-700 line-clamp-2">{headline}</span>
-                        </div>
-                        <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 mt-1.5 ${isReal ? 'bg-emerald-500' : 'bg-amber-500'}`} />
-                      </button>
-                    );
-                  })}
-                </div>
+                </button>
+                <input ref={fileInputRef} type="file" multiple accept="image/*" className="hidden" onChange={handleImageUpload} />
               </div>
-            )}
 
             {/* GENERATE BUTTON */}
             <div className="mt-auto pt-4">
@@ -1262,33 +1265,33 @@ ${enhancement}`);
                       className="h-full bg-emerald-500 transition-all duration-500 ease-out"
                       style={{ width: `${progress}%` }}
                     />
-                  </div>
+            </div>
                   <span className="text-[10px] text-gray-400 mt-1 block">{statusMessage}</span>
                 </div>
               )}
-              
+            
               <button
                 onClick={() => handleGenerate()}
                 disabled={status !== 'idle' || !brief.trim() || uploadedImages.length === 0}
                 className="w-full group bg-gray-900 text-white py-4 font-medium text-sm disabled:opacity-30 disabled:cursor-not-allowed transition-all hover:bg-black flex items-center justify-center gap-3"
-              >
-                {status === 'preparing' || status === 'running' ? (
-                  <>
+            >
+              {status === 'preparing' || status === 'running' ? (
+                <>
                     <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
-                    </svg>
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                  </svg>
                     <span>Génération en cours...</span>
-                  </>
-                ) : (
-                  <>
+                </>
+              ) : (
+                <>
                     <span className="text-emerald-400">✦</span>
                     <span>Générer 4 visuels</span>
                     <svg className="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                      <path d="M5 12h14M12 5l7 7-7 7" />
-                    </svg>
-                  </>
-                )}
+                    <path d="M5 12h14M12 5l7 7-7 7" />
+                  </svg>
+                </>
+              )}
               </button>
               
               {/* Helper text */}
@@ -1323,89 +1326,89 @@ ${enhancement}`);
                 </button>
               )}
             </div>
-
+            
             {/* Loading State */}
             {(status === 'preparing' || status === 'running') && (
               <div className="grid grid-cols-2 gap-4 animate-fade-in">
-                {[1, 2, 3, 4].map((i) => (
-                  <div key={i} className="aspect-square bg-gray-100 border border-gray-200 relative overflow-hidden">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="aspect-square bg-gray-100 border border-gray-200 relative overflow-hidden">
                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/60 to-transparent" 
-                         style={{ animation: 'shimmer 2s infinite' }} />
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="text-center">
+                       style={{ animation: 'shimmer 2s infinite' }} />
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="text-center">
                         <svg className="w-8 h-8 text-gray-300 mx-auto mb-2 animate-pulse" fill="none" stroke="currentColor" strokeWidth="1" viewBox="0 0 24 24">
-                          <path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
+                        <path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
                         <span className="text-[10px] font-mono text-gray-400">~30s</span>
-                      </div>
-                    </div>
+        </div>
                   </div>
-                ))}
-              </div>
-            )}
+                </div>
+              ))}
+          </div>
+        )}
 
             {/* Generated Images Grid */}
             {generatedImages.length > 0 && status === 'idle' && (
               <div className="grid grid-cols-2 gap-4 animate-fade-in">
                 {generatedImages.map((img) => (
-                  <div
-                    key={img.id}
+              <div
+                key={img.id}
                     className={`bg-gray-100 overflow-hidden relative group cursor-pointer border border-gray-200 hover:border-gray-400 transition-all hover:shadow-lg ${
-                      img.aspectRatio === '9:16' ? 'aspect-[9/16]' : 'aspect-square'
-                    }`}
-                  >
-                    <img src={img.url} className="w-full h-full object-cover" />
+                  img.aspectRatio === '9:16' ? 'aspect-[9/16]' : 'aspect-square'
+                }`}
+              >
+                <img src={img.url} className="w-full h-full object-cover" />
                     <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all flex items-center justify-center gap-3 opacity-0 group-hover:opacity-100">
-                      <button
-                        onClick={() => setLightboxImage(img.url)}
+                  <button
+                    onClick={() => setLightboxImage(img.url)}
                         className="w-10 h-10 bg-white text-gray-900 flex items-center justify-center hover:bg-gray-100 transition-colors shadow-lg"
                         title="Voir en grand"
-                      >
+                  >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                           <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
-                        </svg>
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setEditingImage(img.url);
-                          setEditPrompt('');
-                        }}
+                      </svg>
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setEditingImage(img.url);
+                      setEditPrompt('');
+                    }}
                         className="w-10 h-10 bg-white text-gray-900 flex items-center justify-center hover:bg-gray-100 transition-colors shadow-lg"
-                        title="Modifier"
-                      >
+                    title="Modifier"
+                  >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                          <path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                        </svg>
-                      </button>
-                      <button
-                        onClick={async (e) => {
-                          e.stopPropagation();
-                          try {
-                            const response = await fetch(img.url);
-                            const blob = await response.blob();
-                            const blobUrl = window.URL.createObjectURL(blob);
-                            const link = document.createElement('a');
-                            link.href = blobUrl;
+                        <path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                      </svg>
+                  </button>
+                  <button
+                    onClick={async (e) => {
+                      e.stopPropagation();
+                      try {
+                        const response = await fetch(img.url);
+                        const blob = await response.blob();
+                        const blobUrl = window.URL.createObjectURL(blob);
+                        const link = document.createElement('a');
+                        link.href = blobUrl;
                             link.download = `briefbox-${Date.now()}.png`;
-                            document.body.appendChild(link);
-                            link.click();
-                            document.body.removeChild(link);
-                          } catch (err) {
-                            window.open(img.url, '_blank');
-                          }
-                        }}
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                      } catch (err) {
+                        window.open(img.url, '_blank');
+                      }
+                    }}
                         className="w-10 h-10 bg-white text-gray-900 flex items-center justify-center hover:bg-gray-100 transition-colors shadow-lg"
-                        title="Télécharger"
-                      >
+                    title="Télécharger"
+                  >
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                          <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                        </svg>
-                      </button>
-                    </div>
-                  </div>
-                ))}
+                        <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                      </svg>
+                  </button>
+                </div>
               </div>
+            ))}
+            </div>
             )}
 
             {/* Empty State */}
@@ -1428,8 +1431,8 @@ ${enhancement}`);
                       <div className="text-2xl mb-2">{TEMPLATES.find(t => t.id === selectedTemplate)?.icon}</div>
                       <div className="text-xs font-medium text-gray-600">{TEMPLATES.find(t => t.id === selectedTemplate)?.name}</div>
                       <div className="text-[10px] text-gray-400 mt-1">{TEMPLATES.find(t => t.id === selectedTemplate)?.desc}</div>
-                    </div>
-                  )}
+          </div>
+        )}
                 </div>
               </div>
             )}

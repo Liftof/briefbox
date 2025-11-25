@@ -412,22 +412,88 @@ export async function POST(request: Request) {
         console.warn('Scraping error:', e);
     }
 
-    // 1.5. DEEP CRAWL: Recursive crawling for maximum editorial content
-    console.log('🔍 Starting recursive deep crawl for editorial content...');
+    // 1.5. DEEP CRAWL: Recursive crawling for maximum editorial content AND images
+    console.log('🔍 Starting recursive deep crawl for editorial content & images...');
     let deepCrawlContent = '';
     let contentNuggets: ContentNugget[] = [];
+    let deepCrawlImages: string[] = []; // NEW: Collect images from all crawled pages
     
-    // Extract nuggets from main page first
+    // Helper to extract images from Markdown (defined early so we can use it throughout)
+    const extractImagesFromMarkdown = (md: string): string[] => {
+        const images: string[] = [];
+        
+        // Pattern 1: Standard markdown ![alt](url)
+        const mdRegex = /!\[.*?\]\((https?:\/\/[^)\s]+)\)/g;
+        let match;
+        while ((match = mdRegex.exec(md)) !== null) {
+            if (match[1]) {
+                const cleanUrl = match[1].split(' ')[0].replace(/\)$/, '');
+                images.push(cleanUrl);
+            }
+        }
+        
+        // Pattern 2: HTML img tags <img src="url">
+        const imgRegex = /<img[^>]+src=["'](https?:\/\/[^"']+)["']/gi;
+        while ((match = imgRegex.exec(md)) !== null) {
+            if (match[1]) {
+                images.push(match[1]);
+            }
+        }
+        
+        // Pattern 3: Background URLs in style attributes
+        const bgRegex = /url\(['"]?(https?:\/\/[^'")\s]+)['"]?\)/gi;
+        while ((match = bgRegex.exec(md)) !== null) {
+            if (match[1]) {
+                images.push(match[1]);
+            }
+        }
+        
+        // Pattern 4: Standalone image URLs (common in markdown conversions)
+        const standaloneRegex = /(?:^|\s)(https?:\/\/[^\s]+\.(?:jpg|jpeg|png|gif|webp|svg|avif)(?:\?[^\s]*)?)/gmi;
+        while ((match = standaloneRegex.exec(md)) !== null) {
+            if (match[1]) {
+                images.push(match[1].trim());
+            }
+        }
+        
+        return images;
+    };
+    
+    // Helper to filter valid images (no tracking pixels, icons too small, etc.)
+    const isValidImageUrl = (url: string): boolean => {
+        if (!url || !url.startsWith('http')) return false;
+        
+        const invalidPatterns = [
+            /facebook\.com\/tr/i,
+            /google-analytics/i,
+            /pixel/i,
+            /1x1/i,
+            /tracking/i,
+            /beacon/i,
+            /favicon/i,
+            /\.ico$/i,
+            /data:image/i,
+            /placeholder/i,
+            /spacer/i,
+            /blank\./i,
+            /ad\./i,
+            /ads\./i,
+            /doubleclick/i,
+        ];
+        
+        return !invalidPatterns.some(pattern => pattern.test(url));
+    };
+    
+    // Extract nuggets and images from main page first
     contentNuggets = extractContentNuggets(firecrawlMarkdown + '\n' + parallelContent);
     console.log(`📊 Found ${contentNuggets.length} content nuggets from main page`);
     
-    // Use Firecrawl's /crawl endpoint for recursive crawling (more efficient than individual scrapes)
-    // This will automatically discover and follow links
+    // Use Firecrawl's /crawl endpoint for recursive crawling
     try {
         const baseUrl = new URL(url);
         
-        // Start recursive crawl job
-        console.log('🚀 Launching Firecrawl recursive crawl...');
+        // Start recursive crawl job - NOW WITH SCREENSHOTS!
+        console.log('🚀 Launching Firecrawl recursive crawl (with images)...');
         const crawlStartRes = await fetch('https://api.firecrawl.dev/v1/crawl', {
             method: 'POST',
             headers: {
@@ -436,15 +502,16 @@ export async function POST(request: Request) {
             },
             body: JSON.stringify({
                 url: baseUrl.origin,
-                maxDepth: 2, // Follow links 2 levels deep
-                limit: 10, // Max 10 pages total (homepage already done, so 9 extra)
+                maxDepth: 2,
+                limit: 12, // Increased to get more pages
                 includePaths: [
                     '/blog/*', '/articles/*', '/news/*', '/actualites/*',
                     '/about*', '/a-propos*', '/qui-sommes-nous*',
                     '/case-stud*', '/success-stor*', '/temoignages*', '/clients*',
                     '/references*', '/services*', '/solutions*', '/products*',
                     '/pricing*', '/tarifs*', '/features*', '/fonctionnalites*',
-                    '/team*', '/equipe*', '/careers*', '/jobs*'
+                    '/team*', '/equipe*', '/careers*', '/jobs*',
+                    '/portfolio*', '/work*', '/projets*', '/realisations*'
                 ],
                 excludePaths: [
                     '/cdn-cgi/*', '/api/*', '/*.pdf', '/*.zip',
@@ -452,8 +519,10 @@ export async function POST(request: Request) {
                     '/terms*', '/privacy*', '/legal*', '/cookies*'
                 ],
                 scrapeOptions: {
-                    formats: ['markdown'],
-                    onlyMainContent: true
+                    formats: ['markdown', 'html'], // Added HTML to get more image refs
+                    onlyMainContent: false, // Get full page for more images
+                    includeTags: ['img', 'picture', 'figure'], // Ensure images are captured
+                    waitFor: 2000 // Wait for lazy-loaded images
                 }
             })
         });
@@ -464,8 +533,7 @@ export async function POST(request: Request) {
             if (crawlJob.success && crawlJob.id) {
                 console.log(`📋 Crawl job started: ${crawlJob.id}`);
                 
-                // Poll for results (max 30 seconds)
-                const maxWaitTime = 30000;
+                const maxWaitTime = 45000; // Increased timeout
                 const pollInterval = 2000;
                 const startTime = Date.now();
                 let crawlComplete = false;
@@ -494,36 +562,78 @@ export async function POST(request: Request) {
                     }
                 }
                 
-                // Process crawl results
+                // Process ALL crawl results for images and content
                 if (crawlResults.length > 0) {
                     console.log(`✅ Crawl complete: ${crawlResults.length} pages found`);
                     
-                    // Skip the first result if it's the homepage (we already have it)
-                    const additionalPages = crawlResults.filter(page => 
-                        page.metadata?.sourceURL !== url && page.markdown
-                    ).slice(0, 7); // Max 7 additional pages
-                    
-                    for (const page of additionalPages) {
+                    for (const page of crawlResults) {
                         const pageUrl = page.metadata?.sourceURL || 'unknown';
                         const pageContent = page.markdown || '';
+                        const pageHtml = page.html || '';
+                        const isMainPage = pageUrl === url;
                         
-                        // Add to deep crawl content
-                        deepCrawlContent += `\n\n--- PAGE: ${pageUrl} ---\n${pageContent.substring(0, 4000)}`;
+                        // ══════════════════════════════════════════════════════════
+                        // EXTRACT IMAGES FROM EVERY PAGE
+                        // ══════════════════════════════════════════════════════════
                         
-                        // Extract nuggets from this page
-                        const pageNuggets = extractContentNuggets(pageContent);
-                        contentNuggets = [...contentNuggets, ...pageNuggets];
+                        // 1. Images from markdown
+                        const markdownImages = extractImagesFromMarkdown(pageContent);
                         
-                        console.log(`   📄 ${pageUrl.replace(baseUrl.origin, '')} - ${pageNuggets.length} nuggets`);
+                        // 2. Images from HTML (more comprehensive)
+                        const htmlImages = extractImagesFromMarkdown(pageHtml);
+                        
+                        // 3. Images from metadata
+                        const metaImages = [
+                            page.metadata?.ogImage,
+                            page.metadata?.image,
+                            page.metadata?.screenshot,
+                            page.metadata?.favicon,
+                        ].filter(Boolean);
+                        
+                        // 4. Structured data images (often contain product/hero images)
+                        if (page.metadata?.jsonLd) {
+                            try {
+                                const jsonLd = typeof page.metadata.jsonLd === 'string' 
+                                    ? JSON.parse(page.metadata.jsonLd) 
+                                    : page.metadata.jsonLd;
+                                if (jsonLd.image) {
+                                    const ldImages = Array.isArray(jsonLd.image) ? jsonLd.image : [jsonLd.image];
+                                    metaImages.push(...ldImages.map((img: any) => typeof img === 'string' ? img : img.url).filter(Boolean));
+                                }
+                                if (jsonLd.logo) {
+                                    metaImages.push(typeof jsonLd.logo === 'string' ? jsonLd.logo : jsonLd.logo?.url);
+                                }
+                            } catch {}
+                        }
+                        
+                        // Combine and filter
+                        const pageImages = [...markdownImages, ...htmlImages, ...metaImages]
+                            .filter(isValidImageUrl);
+                        
+                        deepCrawlImages.push(...pageImages);
+                        
+                        console.log(`   🖼️ ${pageUrl.replace(baseUrl.origin, '') || '/'}: ${pageImages.length} images found`);
+                        
+                        // ══════════════════════════════════════════════════════════
+                        // EXTRACT CONTENT (skip main page - we already have it)
+                        // ══════════════════════════════════════════════════════════
+                        if (!isMainPage && pageContent) {
+                            deepCrawlContent += `\n\n--- PAGE: ${pageUrl} ---\n${pageContent.substring(0, 5000)}`;
+                            
+                            const pageNuggets = extractContentNuggets(pageContent);
+                            contentNuggets = [...contentNuggets, ...pageNuggets];
+                            
+                            console.log(`   📄 ${pageUrl.replace(baseUrl.origin, '')} - ${pageNuggets.length} nuggets`);
+                        }
                     }
                     
-                    console.log(`📊 Total content from ${additionalPages.length} additional pages`);
+                    console.log(`📊 Total: ${crawlResults.length} pages, ${deepCrawlImages.length} images collected`);
                 }
             }
         } else {
             console.warn('⚠️ Crawl API call failed, falling back to direct page scrape');
             
-            // FALLBACK: Direct scrape of discovered pages (old method)
+            // FALLBACK: Direct scrape of discovered pages
             const internalPages = discoverInternalPages(url, firecrawlMarkdown);
             console.log('🔗 Fallback - discovered internal pages:', internalPages);
             
@@ -537,15 +647,20 @@ export async function POST(request: Request) {
                         },
                         body: JSON.stringify({
                             url: pageUrl,
-                            formats: ["markdown"],
-                            onlyMainContent: true
+                            formats: ["markdown", "html"],
+                            onlyMainContent: false
                         })
                     });
                     
                     if (res.ok) {
                         const data = await res.json();
-                        if (data.success && data.data?.markdown) {
-                            return { url: pageUrl, content: data.data.markdown };
+                        if (data.success && data.data) {
+                            return { 
+                                url: pageUrl, 
+                                content: data.data.markdown || '',
+                                html: data.data.html || '',
+                                metadata: data.data.metadata || {}
+                            };
                         }
                     }
                     return null;
@@ -555,15 +670,26 @@ export async function POST(request: Request) {
             });
             
             const deepResults = await Promise.all(deepCrawlPromises);
-            const validResults = deepResults.filter(Boolean) as { url: string; content: string }[];
+            const validResults = deepResults.filter(Boolean) as { url: string; content: string; html: string; metadata: any }[];
             
             for (const result of validResults) {
-                deepCrawlContent += `\n\n--- PAGE: ${result.url} ---\n${result.content.substring(0, 3000)}`;
+                deepCrawlContent += `\n\n--- PAGE: ${result.url} ---\n${result.content.substring(0, 4000)}`;
+                
+                // Extract images from fallback results too
+                const pageImages = [
+                    ...extractImagesFromMarkdown(result.content),
+                    ...extractImagesFromMarkdown(result.html),
+                    result.metadata?.ogImage,
+                    result.metadata?.image,
+                ].filter(isValidImageUrl);
+                
+                deepCrawlImages.push(...pageImages);
+                
                 const pageNuggets = extractContentNuggets(result.content);
                 contentNuggets = [...contentNuggets, ...pageNuggets];
             }
             
-            console.log(`✅ Fallback deep crawl: ${validResults.length} pages, ${contentNuggets.length} total nuggets`);
+            console.log(`✅ Fallback deep crawl: ${validResults.length} pages, ${contentNuggets.length} nuggets, ${deepCrawlImages.length} images`);
         }
     } catch (e) {
         console.warn('Deep crawl error:', e);
@@ -577,33 +703,33 @@ export async function POST(request: Request) {
             uniqueNuggetMap.set(key, nugget);
         }
     }
-    contentNuggets = Array.from(uniqueNuggetMap.values()).slice(0, 30); // Increased from 20 to 30
-    
-    // Helper to extract images from Markdown
-    const extractImagesFromMarkdown = (md: string) => {
-        const regex = /!\[.*?\]\((.*?)\)/g;
-        const matches = [];
-        let match;
-        while ((match = regex.exec(md)) !== null) {
-            if (match[1] && match[1].startsWith('http')) {
-                // Clean up URL if needed (remove trailing parenthesis if regex caught it)
-                let cleanUrl = match[1].split(' ')[0].replace(/\)$/, '');
-                matches.push(cleanUrl);
-            }
-        }
-        return matches;
-    };
+    contentNuggets = Array.from(uniqueNuggetMap.values()).slice(0, 40); // Increased from 30 to 40
 
-    const extractedImages = [
+    // ══════════════════════════════════════════════════════════════════════════════
+    // COMPREHENSIVE IMAGE COLLECTION - Main page + Deep crawl + Metadata
+    // ══════════════════════════════════════════════════════════════════════════════
+    const allCollectedImages = [
+        // Priority: Main page images
         ...extractImagesFromMarkdown(firecrawlMarkdown),
+        
+        // Metadata images (high quality, usually hero/og images)
         firecrawlMetadata.ogImage,
         firecrawlMetadata.icon,
         firecrawlMetadata.logo,
-        firecrawlMetadata.screenshot
-    ].filter(Boolean);
+        firecrawlMetadata.screenshot,
+        firecrawlMetadata.image,
+        
+        // Deep crawl images (from all crawled pages)
+        ...deepCrawlImages
+    ].filter(isValidImageUrl);
 
-    // Unique images
-    const uniqueImages = Array.from(new Set(extractedImages));
+    // Deduplicate while preserving order (priority first)
+    const uniqueImages = Array.from(new Set(allCollectedImages));
+    
+    console.log(`🖼️ TOTAL UNIQUE IMAGES COLLECTED: ${uniqueImages.length}`);
+    console.log(`   - From main page: ${extractImagesFromMarkdown(firecrawlMarkdown).length}`);
+    console.log(`   - From deep crawl: ${deepCrawlImages.length}`);
+    console.log(`   - From metadata: 5 (og, icon, logo, screenshot, image)`);
 
     // 2. Analyze with OpenRouter (Grok or other)
     console.log('🤖 Analyzing with OpenRouter...');

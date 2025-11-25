@@ -29,10 +29,11 @@ function EditButton({ onClick, title }: { onClick: () => void; title?: string })
 }
 
 // Import popup component
-function ImportPopup({ isOpen, onClose, onImport }: { 
+function ImportPopup({ isOpen, onClose, onImport, forReferences = false }: { 
   isOpen: boolean; 
   onClose: () => void; 
   onImport: (files: { url: string; tag: string }[]) => void;
+  forReferences?: boolean;
 }) {
   const [pendingFiles, setPendingFiles] = useState<{ file: File; preview: string; tag: string }[]>([]);
   const [isDragging, setIsDragging] = useState(false);
@@ -97,18 +98,28 @@ function ImportPopup({ isOpen, onClose, onImport }: {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-      <div className="bg-white w-full max-w-2xl max-h-[80vh] flex flex-col shadow-2xl border border-gray-200">
-        <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+      <div className={`bg-white w-full max-w-2xl max-h-[80vh] flex flex-col shadow-2xl border ${forReferences ? 'border-purple-300' : 'border-gray-200'}`}>
+        <div className={`px-6 py-4 border-b flex items-center justify-between ${forReferences ? 'border-purple-200 bg-gradient-to-r from-purple-50 to-fuchsia-50' : 'border-gray-200'}`}>
           <h2 className="text-sm font-medium text-gray-900 uppercase tracking-wider flex items-center gap-2">
-            <span className="w-2 h-2 bg-emerald-500 rounded-full" />
-            Importer des fichiers
+            <span className={`w-2 h-2 rounded-full ${forReferences ? 'bg-purple-500' : 'bg-emerald-500'}`} />
+            {forReferences ? '🎨 Importer des visuels de référence' : 'Importer des fichiers'}
           </h2>
           <button onClick={handleClose} className="text-gray-400 hover:text-gray-900">×</button>
         </div>
+        
+        {/* Info banner for reference imports */}
+        {forReferences && (
+          <div className="mx-6 mt-4 p-3 bg-purple-50 border border-purple-200 text-xs text-purple-700">
+            <strong>Ces visuels guideront le style de vos créations :</strong> couleurs, composition, ambiance. 
+            Ils seront automatiquement tagués "Visuel de référence".
+          </div>
+        )}
 
         <div 
           className={`m-6 border-2 border-dashed rounded-lg p-8 text-center transition-all cursor-pointer ${
-            isDragging ? 'border-emerald-500 bg-emerald-50' : 'border-gray-300 hover:border-gray-400'
+            isDragging 
+              ? (forReferences ? 'border-purple-500 bg-purple-50' : 'border-emerald-500 bg-emerald-50') 
+              : 'border-gray-300 hover:border-gray-400'
           }`}
           onDrop={handleDrop}
           onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
@@ -131,21 +142,29 @@ function ImportPopup({ isOpen, onClose, onImport }: {
           <div className="flex-1 overflow-y-auto px-6 pb-4">
             <div className="grid grid-cols-3 gap-3">
               {pendingFiles.map((item, index) => (
-                <div key={index} className="relative group border border-gray-200 bg-gray-50">
+                <div key={index} className={`relative group border bg-gray-50 ${forReferences ? 'border-purple-200' : 'border-gray-200'}`}>
                   <div className="aspect-square overflow-hidden">
                     <img src={item.preview} alt="" className="w-full h-full object-cover" />
                   </div>
-                  <div className="p-2 border-t border-gray-200 bg-white">
-                    <select
-                      value={item.tag}
-                      onChange={(e) => updateTag(index, e.target.value)}
-                      className="w-full text-[10px] font-mono uppercase bg-gray-50 border border-gray-200 px-2 py-1.5"
-                    >
-                      {TAG_OPTIONS.map(opt => (
-                        <option key={opt.value} value={opt.value}>{opt.label}</option>
-                      ))}
-                    </select>
-                  </div>
+                  {/* Hide tag selector if importing for references (auto-tagged) */}
+                  {!forReferences && (
+                    <div className="p-2 border-t border-gray-200 bg-white">
+                      <select
+                        value={item.tag}
+                        onChange={(e) => updateTag(index, e.target.value)}
+                        className="w-full text-[10px] font-mono uppercase bg-gray-50 border border-gray-200 px-2 py-1.5"
+                      >
+                        {TAG_OPTIONS.map(opt => (
+                          <option key={opt.value} value={opt.value}>{opt.label}</option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+                  {forReferences && (
+                    <div className="p-2 border-t border-purple-100 bg-purple-50">
+                      <span className="text-[10px] font-mono uppercase text-purple-600">🎨 Référence</span>
+                    </div>
+                  )}
                   <button
                     onClick={() => removeFile(index)}
                     className="absolute top-1 right-1 w-6 h-6 bg-red-500 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity text-xs"
@@ -156,15 +175,17 @@ function ImportPopup({ isOpen, onClose, onImport }: {
           </div>
         )}
 
-        <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-between bg-gray-50">
+        <div className={`px-6 py-4 border-t flex items-center justify-between ${forReferences ? 'border-purple-200 bg-purple-50/50' : 'border-gray-200 bg-gray-50'}`}>
           <button onClick={handleClose} className="px-4 py-2 text-sm text-gray-600">Annuler</button>
           <button
             onClick={handleImport}
             disabled={pendingFiles.length === 0}
             className={`px-6 py-2 text-sm font-medium ${
-              pendingFiles.length > 0 ? 'bg-emerald-500 text-white hover:bg-emerald-600' : 'bg-gray-200 text-gray-400'
+              pendingFiles.length > 0 
+                ? (forReferences ? 'bg-purple-500 text-white hover:bg-purple-600' : 'bg-emerald-500 text-white hover:bg-emerald-600') 
+                : 'bg-gray-200 text-gray-400'
             }`}
-          >Importer</button>
+          >Importer {pendingFiles.length > 0 && `(${pendingFiles.length})`}</button>
         </div>
       </div>
     </div>
@@ -275,6 +296,7 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
 }) {
   const [localData, setLocalData] = useState(brandData);
   const [importPopupOpen, setImportPopupOpen] = useState(false);
+  const [importForReferences, setImportForReferences] = useState(false); // NEW: Track if importing for reference visuals
   const [colorEditorOpen, setColorEditorOpen] = useState(false);
   const [logoSelectorOpen, setLogoSelectorOpen] = useState(false);
   const [tagEditorState, setTagEditorState] = useState<{ isOpen: boolean; imageIndex: number; position: { top: number; left: number } }>({
@@ -298,13 +320,27 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
     setLocalData(newData);
     onUpdate(newData);
   };
+  
+  // Open import popup - optionally for references
+  const openImportPopup = (forReferences: boolean = false) => {
+    setImportForReferences(forReferences);
+    setImportPopupOpen(true);
+  };
 
   const handleImportFiles = (files: { url: string; tag: string }[]) => {
-    const newImages = [...(localData.images || []), ...files.map(f => f.url)];
-    const newLabeledImages = [...(localData.labeledImages || []), ...files.map(f => ({ url: f.url, category: f.tag }))];
+    // If importing for references, force all tags to 'reference'
+    const processedFiles = importForReferences 
+      ? files.map(f => ({ ...f, tag: 'reference' }))
+      : files;
+    
+    const newImages = [...(localData.images || []), ...processedFiles.map(f => f.url)];
+    const newLabeledImages = [...(localData.labeledImages || []), ...processedFiles.map(f => ({ url: f.url, category: f.tag }))];
     const newData = { ...localData, images: newImages, labeledImages: newLabeledImages };
     setLocalData(newData);
     onUpdate(newData);
+    
+    // Reset the import mode
+    setImportForReferences(false);
   };
 
   const handleTagChange = (imageIndex: number, newTag: string) => {
@@ -370,7 +406,12 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
   return (
     <div className="animate-fade-in w-full max-w-6xl mx-auto">
       {/* Popups */}
-      <ImportPopup isOpen={importPopupOpen} onClose={() => setImportPopupOpen(false)} onImport={handleImportFiles} />
+      <ImportPopup 
+        isOpen={importPopupOpen} 
+        onClose={() => { setImportPopupOpen(false); setImportForReferences(false); }} 
+        onImport={handleImportFiles}
+        forReferences={importForReferences}
+      />
       <ColorEditorPopup isOpen={colorEditorOpen} onClose={() => setColorEditorOpen(false)} colors={localData.colors || []} onSave={(colors) => handleChange('colors', colors)} />
       {tagEditorState.isOpen && (
         <TagEditor
@@ -551,46 +592,89 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
           </div>
         </div>
 
-        {/* Asset Library - Compact */}
+        {/* Asset Library - Expanded with grid view */}
         <div className="mt-4 bg-white border border-gray-200 p-4">
           <div className="flex items-center justify-between mb-3">
-            <span className="text-[10px] font-mono uppercase tracking-widest text-gray-400">
-              Bibliothèque d'assets · {assetImages.length || 0}
-                    </span>
+            <div className="flex items-center gap-3">
+              <span className="text-[10px] font-mono uppercase tracking-widest text-gray-400">
+                Bibliothèque d'assets
+              </span>
+              <span className="px-2 py-0.5 bg-emerald-100 text-emerald-700 text-[10px] font-bold">
+                {assetImages.length || 0} images
+              </span>
+              {/* Crawl stats indicator */}
+              {localData._crawlStats && (
+                <span className="px-2 py-0.5 bg-blue-50 text-blue-600 text-[9px] font-mono">
+                  {localData._crawlStats.pagesScraped || 0} pages crawlées
+                </span>
+              )}
+            </div>
             <button 
-              onClick={() => setImportPopupOpen(true)}
+              onClick={() => openImportPopup(false)}
               className="px-2 py-1 bg-emerald-500 text-white text-[9px] font-medium uppercase hover:bg-emerald-600 flex items-center gap-1"
             >
               <span>+</span> Ajouter
             </button>
           </div>
-          <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2">
-            {assetImages.slice(0, 8).map((img: string, i: number) => {
+          
+          {/* Grid view for all images - responsive */}
+          <div className="grid grid-cols-6 sm:grid-cols-8 md:grid-cols-10 gap-2 max-h-[200px] overflow-y-auto no-scrollbar">
+            {assetImages.map((img: string, i: number) => {
               const labelObj = localData.labeledImages?.find((li: any) => li.url === img);
               const label = labelObj?.category || 'other';
               const originalIndex = localData.images?.indexOf(img);
               return (
-                <div key={i} className="relative flex-shrink-0 w-16 h-16 group">
-                  <img src={img} className="w-full h-full object-cover border border-gray-200" loading="lazy" />
+                <div key={i} className="relative aspect-square group">
+                  <img 
+                    src={img} 
+                    className="w-full h-full object-cover border border-gray-200 hover:border-emerald-400 transition-colors" 
+                    loading="lazy" 
+                    onError={(e) => {
+                      // Hide broken images
+                      (e.target as HTMLImageElement).style.display = 'none';
+                    }}
+                  />
                   <button
                     onClick={(e) => openTagEditor(e, originalIndex)}
-                    className={`absolute top-0.5 left-0.5 text-[7px] font-mono uppercase px-1 py-0.5 ${getTagColor(label)}`}
+                    className={`absolute top-0.5 left-0.5 text-[6px] font-mono uppercase px-0.5 py-0.5 leading-none ${getTagColor(label)} opacity-0 group-hover:opacity-100 transition-opacity`}
                   >
-                    {TAG_OPTIONS.find(t => t.value === label)?.label.slice(0, 6) || 'Autre'}
+                    {TAG_OPTIONS.find(t => t.value === label)?.label.slice(0, 4) || '...'}
                   </button>
                   <button 
                     onClick={() => handleChange('images', localData.images.filter((_: any, idx: number) => idx !== originalIndex))} 
-                    className="absolute top-0.5 right-0.5 w-4 h-4 bg-red-500 text-white flex items-center justify-center text-[8px] opacity-0 group-hover:opacity-100"
+                    className="absolute top-0.5 right-0.5 w-3 h-3 bg-red-500 text-white flex items-center justify-center text-[8px] opacity-0 group-hover:opacity-100 transition-opacity"
                   >×</button>
                 </div>
               );
             })}
-            {assetImages.length > 8 && (
-              <div className="flex-shrink-0 w-16 h-16 bg-gray-100 flex items-center justify-center text-xs text-gray-500">
-                +{assetImages.length - 8}
-              </div>
-            )}
           </div>
+          
+          {/* No images hint */}
+          {assetImages.length === 0 && (
+            <div className="text-center py-6 bg-gray-50 border border-dashed border-gray-200">
+              <span className="text-gray-400 text-sm">Aucune image trouvée</span>
+              <p className="text-[10px] text-gray-300 mt-1">Ajoutez des images ou vérifiez l'URL du site</p>
+            </div>
+          )}
+          
+          {/* Image count by category */}
+          {assetImages.length > 0 && (
+            <div className="flex flex-wrap gap-2 mt-3 pt-3 border-t border-gray-100">
+              {(() => {
+                const categoryCounts: Record<string, number> = {};
+                assetImages.forEach((img: string) => {
+                  const labelObj = localData.labeledImages?.find((li: any) => li.url === img);
+                  const cat = labelObj?.category || 'other';
+                  categoryCounts[cat] = (categoryCounts[cat] || 0) + 1;
+                });
+                return Object.entries(categoryCounts).map(([cat, count]) => (
+                  <span key={cat} className={`text-[9px] px-1.5 py-0.5 ${getTagColor(cat)}`}>
+                    {TAG_OPTIONS.find(t => t.value === cat)?.label || cat}: {count}
+                  </span>
+                ));
+              })()}
+            </div>
+          )}
         </div>
       </section>
 
@@ -616,26 +700,26 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
               </div>
               <div className="space-y-2">
                 {localData.industryInsights.slice(0, 3).map((insight: any, i: number) => (
-                  <button 
-                    key={i}
-                    onClick={() => {
-                      window.dispatchEvent(new CustomEvent('use-template', { 
+                    <button 
+                      key={i} 
+                      onClick={() => {
+                        window.dispatchEvent(new CustomEvent('use-template', { 
                         detail: { templateId: 'didyouknow', headline: insight.didYouKnow, subheadline: insight.source || 'Industry Report' }
-                      }));
-                    }}
+                        }));
+                      }}
                     className="w-full text-left p-2 bg-white/70 hover:bg-white transition-all border border-amber-100 hover:border-amber-300 group text-xs"
                   >
                     <div className="text-gray-800 leading-snug">{insight.didYouKnow}</div>
                     <div className="flex items-center justify-between mt-1">
                       <span className="text-[8px] text-gray-400 font-mono">{insight.source}</span>
                       <span className="text-[8px] text-amber-600 opacity-0 group-hover:opacity-100">Utiliser →</span>
-                    </div>
-                  </button>
+                      </div>
+                    </button>
                 ))}
               </div>
             </div>
           )}
-
+          
           {/* Suggested Posts - Only show if we have REAL data, otherwise ask user */}
           {(() => {
             const posts = localData.suggestedPosts || [];
@@ -671,7 +755,7 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
                       })}
                     </div>
                   </div>
-                </div>
+              </div>
               );
             }
             
@@ -701,7 +785,7 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
                       <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />industrie
                     </span>
                   </div>
-                </div>
+                      </div>
                 <div className="grid grid-cols-2 gap-2 max-h-[200px] overflow-y-auto no-scrollbar">
                   {sortedPosts.slice(0, 6).map((post: any, i: number) => {
                     const icons: Record<string, string> = { stat: '📊', announcement: '📢', quote: '💬', event: '🎤', expert: '👤', product: '✨', didyouknow: '💡' };
@@ -768,8 +852,8 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
                       className="px-2 py-1.5 bg-white border border-emerald-200 text-emerald-800 text-[9px] hover:bg-emerald-100 hover:border-emerald-300 transition-colors"
                     >{stat}</button>
                   ))}
-                </div>
-              </div>
+                    </div>
+                  </div>
             ) : (
               <div className="mb-3 p-2 bg-white/50 border border-dashed border-emerald-200 text-center">
                 <span className="text-[9px] text-emerald-600">Aucune stat trouvée sur le site</span>
@@ -861,10 +945,10 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
                   >
                     + Ajouter un témoignage
                   </button>
-                </div>
               </div>
-            )}
-          </div>
+            </div>
+          )}
+        </div>
 
           {/* Reference Visuals (Inspirations) - PROMINENT SECTION */}
           <div className="col-span-6 bg-gradient-to-br from-violet-50 via-purple-50 to-fuchsia-50 border-2 border-purple-300 p-4 relative overflow-hidden">
@@ -874,7 +958,7 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
             
             <div className="relative z-10">
               <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2">
                   <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-fuchsia-500 flex items-center justify-center text-white text-sm">
                     🎨
                   </div>
@@ -882,15 +966,15 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
                     <span className="text-xs font-semibold text-purple-900 block">Visuels de référence</span>
                     <span className="text-[9px] text-purple-500">Guident le style de génération</span>
                   </div>
-                </div>
-                <button 
-                  onClick={() => setImportPopupOpen(true)}
-                  className="px-3 py-1.5 bg-gradient-to-r from-purple-500 to-fuchsia-500 text-white text-[10px] font-medium hover:from-purple-600 hover:to-fuchsia-600 transition-all shadow-sm"
-                >
-                  + Ajouter
-                </button>
               </div>
-              
+              <button 
+                  onClick={() => openImportPopup(true)}
+                  className="px-3 py-1.5 bg-gradient-to-r from-purple-500 to-fuchsia-500 text-white text-[10px] font-medium hover:from-purple-600 hover:to-fuchsia-600 transition-all shadow-sm"
+              >
+                  + Ajouter
+              </button>
+            </div>
+            
               {referenceImages.length > 0 ? (
                 <div className="space-y-2">
                   <div className="grid grid-cols-4 gap-2">
@@ -907,12 +991,12 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
                         >×</button>
                       </div>
                     ))}
-                  </div>
+                      </div>
                   <p className="text-[9px] text-purple-600 flex items-center gap-1">
                     <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full" />
                     Ces visuels guident le style, les couleurs et l'ambiance des générations
                   </p>
-                </div>
+                    </div>
               ) : (
                 <div className="bg-white/50 border border-purple-200 border-dashed p-4 text-center">
                   <div className="text-2xl mb-2">🖼️</div>
@@ -923,7 +1007,7 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
                   <p className="text-[9px] text-purple-400 mt-2">
                     → Exemples : visuels de charte, posts LinkedIn inspirants, screenshots d'apps...
                   </p>
-                </div>
+              </div>
               )}
             </div>
           </div>
