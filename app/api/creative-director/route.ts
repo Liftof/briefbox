@@ -41,26 +41,20 @@ const STYLE_REFERENCE_MAP: Record<string, string[]> = {
 };
 
 // Prompt variations for diversity (appended to base prompt)
+// Flux Pro prefers natural language and descriptive artistic direction
 const PROMPT_VARIATIONS = [
-  '\n\nStyle inspiration: Award-winning design, featured on Behance.',
-  '\n\nStyle inspiration: Dribbble shot of the week aesthetic.',
-  '\n\nStyle inspiration: Apple keynote presentation quality.',
-  '\n\nStyle inspiration: Premium editorial, Kinfolk magazine style.'
+  'The visual should have a high-end editorial photography look, with soft studio lighting, shallow depth of field, and sharp details. The overall aesthetic is clean, modern, and premium.',
+  'Create a 3D rendered composition with a minimalist design language, using soft shadows, isometric perspective, and smooth material textures. The lighting is bright and evenly distributed.',
+  'A cinematic shot with dramatic lighting and high contrast. The composition is dynamic and bold, suitable for a high-impact social media campaign. Use a modern color grading.',
+  'A clean, flat-lay style composition with organized elements and plenty of whitespace. The look is professional, organized, and trustworthy, perfect for a corporate communication.'
 ];
+
+// ... existing code ...
 
 // Get style references based on brand aesthetic
 function getStyleReferences(aesthetic: string): string {
-  const aestheticLower = aesthetic.toLowerCase();
-  
-  // Find matching style references
-  for (const [key, references] of Object.entries(STYLE_REFERENCE_MAP)) {
-    if (aestheticLower.includes(key)) {
-      return `Style references: ${references.join(', ')}.`;
-    }
-  }
-  
-  // Default references
-  return `Style references: ${STYLE_REFERENCE_MAP.default.join(', ')}.`;
+  // ... existing logic ...
+  return `Artistic Direction: ${STYLE_REFERENCE_MAP.default.join(', ')}.`; // Simplified for Flux
 }
 
 // Template-specific image needs

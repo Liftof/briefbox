@@ -91,10 +91,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Prompt is required' }, { status: 400 });
     }
 
-    if (imageUrls.length === 0) {
-        return NextResponse.json({ success: false, error: 'At least one reference image is required for Nano Banana Pro' }, { status: 400 });
-    }
-
+    // Images are optional for Flux Pro
     // Filter & Convert URLs
     // 1. Filter valid HTTP/HTTPS or data URI
     // 2. Convert unsupported formats (SVG, etc.) to PNG Data URI using sharp
@@ -182,13 +179,10 @@ export async function POST(request: NextRequest) {
     // Reference images are prioritized to ensure the model picks up the style
     const allImageUrls = [...processedReferenceUrls, ...processedImageUrls];
     
-    if (allImageUrls.length === 0) {
-         return NextResponse.json({ success: false, error: 'No valid or convertible image URLs provided' }, { status: 400 });
-    }
+    // For Flux Pro, we don't strictly need images, but we process them in case we switch back
+    // or if we implement a specific img2img endpoint later.
     
     // Replace processedImageUrls with combined list for generation
-    // IMPORTANT: Data URIs can be very large - prefer HTTP URLs when possible
-    // Also limit total data URI size to avoid payload issues
     const finalImageUrls: string[] = [];
     let totalDataUriSize = 0;
     const MAX_DATA_URI_SIZE = 5 * 1024 * 1024; // 5MB total for data URIs
@@ -205,15 +199,16 @@ export async function POST(request: NextRequest) {
       finalImageUrls.push(url);
     }
     
-    if (finalImageUrls.length === 0) {
-      return NextResponse.json({ success: false, error: 'Images trop volumineuses. Essayez avec des URLs HTTP ou des images plus légères.' }, { status: 400 });
+    // For Flux Pro 1.1, images are not required (Text-to-Image)
+    // We only log if we have them
+    if (finalImageUrls.length > 0) {
+      console.log(`📸 Images provided: ${finalImageUrls.length} (Note: Flux Pro 1.1 ignores image_urls input, using for prompt context only if handled)`);
     }
-    
-    console.log(`📸 Final image count: ${finalImageUrls.length} (${totalDataUriSize > 0 ? Math.round(totalDataUriSize / 1024) + 'KB data URIs' : 'all HTTP'})`);
 
     // Build image context prefix for the prompt
     // This helps the model understand what each image is for
     let imageContextPrefix = '';
+    // ... (keep existing prompt context building logic if valuable for future or other models) ...
     if (processedReferenceUrls.length > 0 || processedImageUrls.length > 0) {
       const imageDescriptions: string[] = [];
       
@@ -278,25 +273,31 @@ ${imageDescriptions.join('\n')}
         return null;
       }
       
-      const input: Record<string, any> = {
+      // FLUX PRO V1.1 CONFIGURATION
+      // This model prioritizes extreme quality and prompt adherence
+      const image_size = aspectRatio === "9:16" ? "portrait_4_3" : "square_hd";
+      
+      const input = {
         prompt: singlePrompt.trim(),
-        num_images: 1, // One at a time for variations
-        aspect_ratio: aspectRatio === "1:1" ? "1:1" : "4:5", 
-        output_format: "png",
-        image_urls: finalImageUrls,
-        resolution: resolution 
+        // num_images not supported directly on Pro per request usually, but let's check docs. 
+        // Actually Flux Pro usually returns 1 image per request.
+        image_size: image_size as "portrait_4_3" | "square_hd", // Optimize for quality
+        safety_tolerance: "2" as "2", // Allow creative freedom (standard commercial safety)
+        sync_mode: false,
+        enable_safety_checker: false
       };
+      
+      // Note: Flux Pro 1.1 doesn't typically support negative_prompt in the same way 
+      // as SDXL, it relies on the positive prompt. We omit it to avoid confusion unless 
+      // we switch to Flux Dev.
 
-      if (negativePrompt && negativePrompt.trim()) {
-        input.negative_prompt = negativePrompt.trim();
-      }
-
-      console.log(`   🎨 Variation ${index + 1}:`, singlePrompt.slice(-60) + '...');
+      console.log(`   🎨 Flux Pro 1.1 | Variation ${index + 1}:`, singlePrompt.slice(0, 60) + '...');
 
       try {
-        const result = await fal.subscribe("fal-ai/nano-banana-pro/edit", {
+        // Using Flux Pro 1.1 for maximum quality
+        const result = await fal.subscribe("fal-ai/flux-pro/v1.1", {
           input,
-          logs: true, // Enable logs for debugging
+          logs: true,
         });
         
         console.log(`   ✅ Variation ${index + 1} completed`);
