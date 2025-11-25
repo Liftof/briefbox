@@ -41,11 +41,13 @@ const STYLE_REFERENCE_MAP: Record<string, string[]> = {
 };
 
 // Prompt variations for diversity (appended to base prompt)
+// Focus on TASTEFUL, EDITORIAL, and SOPHISTICATED styles
+// Avoiding generic "modern" or "tech" terms that trigger bad AI tropes
 const PROMPT_VARIATIONS = [
-  'Emphasis: Ultra-modern and clean.',
-  'Emphasis: Dynamic and high-energy.',
-  'Emphasis: Trustworthy and corporate.',
-  'Emphasis: Premium and sophisticated.'
+  'Emphasis: Swiss Design Style. Use a grid-based layout, strong typography, and negative space. Clean, structured, and timeless. No decorative elements, just pure design.',
+  'Emphasis: Editorial Photography Vibe. The visual should feel like a spread in a high-end magazine (Kinfolk, Monocle). Minimalist, soft lighting, natural textures. Avoid "tech" graphics.',
+  'Emphasis: Minimalist Abstract. Use simple geometric shapes and a very restrained color palette. The composition should be airy and calm. Think "Museum of Modern Art" poster.',
+  'Emphasis: Typographic Focus. Make the text the hero. Use big, bold, beautiful typography. The background should be solid or a very subtle gradient. Extremely legible and impactful.'
 ];
 
 // Get style references based on brand aesthetic
@@ -397,11 +399,13 @@ IMPORTANT: Use each image according to its role. The order of images reflects th
     // This is the exact prompt structure that works well with Nano Banana Pro
     const buildStructuredPrompt = (variationEmphasis: string) => {
       return `
-ROLE: Expert Social Media Designer.
+ROLE: Expert Art Director & Graphic Designer.
 
-TASK: Create a high-converting social media visual based on the following brief.
+TASK: Create a sophisticated social media visual based on the following brief.
 
-BRIEF: ${brief}. Style: ${aesthetic}. Vibe: ${toneVoice}. High quality, trending on Behance.
+BRIEF: ${brief}.
+AESTHETIC: ${aesthetic} (but interpreted with high taste).
+VIBE: ${toneVoice}.
 
 BRAND IDENTITY (STRICTLY FOLLOW):
 
@@ -412,18 +416,18 @@ Colors: ${colors.join(', ')}
 Fonts: Sans-serif (modern), Helvetica Neue
 
 DESIGN GUIDELINES:
-- COMPOSITION: Modern, balanced, and professional. Use adequate whitespace.
-- STYLE: ${templateStyleEmphasis} Matches the brand aesthetic defined above. ${variationEmphasis}
+- COMPOSITION: Clean, balanced, and airy. Use a grid system. Avoid clutter.
+- STYLE: ${variationEmphasis} ${templateStyleEmphasis}
 - ASSETS: Use the provided image as the HERO element. Integrate it naturally into a scene or layout. Do NOT just crop the image.
-- COLOR: Use the brand palette for backgrounds, shapes, or accents. Specifically use ${primaryColor} as a primary accent.
+- COLOR: Use the brand palette with restraint. Specifically use ${primaryColor} as a primary accent.
 - LOGO: If a logo is provided in the input, ensure it is visible and respectable.
-- QUALITY: 8k resolution, sharp details, photorealistic or premium illustration style.
+- QUALITY: Editorial quality, sharp details, professional lighting. Avoid "stock photo" look, avoid 3D render artifacts, avoid generic tech graphics.
 
 ${feedbackGuidance ? feedbackGuidance : ''}
 
 ${imageRoleInstructions ? imageRoleInstructions : ''}
 
-NEGATIVE PROMPT: messy, cluttered, ugly text, distorted logo, low resolution, blurry, weird cropping, amateur, wrong colors.
+NEGATIVE PROMPT: messy, cluttered, ugly text, distorted logo, low resolution, blurry, weird cropping, amateur, wrong colors, cheap 3D effects, neon glow, matrix code, busy background.
       `.trim();
     };
 
