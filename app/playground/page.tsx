@@ -105,6 +105,15 @@ function PlaygroundContent() {
   const [generatedImages, setGeneratedImages] = useState<GeneratedImage[]>([]);
   const [lightboxImage, setLightboxImage] = useState<string | null>(null);
   const [isThinking, setIsThinking] = useState(false);
+  const [contentLanguage, setContentLanguage] = useState<'fr' | 'en' | 'es' | 'de'>('fr');
+  
+  // Language options
+  const LANGUAGES = [
+    { code: 'fr' as const, label: 'Français', flag: '🇫🇷' },
+    { code: 'en' as const, label: 'English', flag: '🇬🇧' },
+    { code: 'es' as const, label: 'Español', flag: '🇪🇸' },
+    { code: 'de' as const, label: 'Deutsch', flag: '🇩🇪' },
+  ];
 
   const showToast = useCallback((message: string, type: ToastType = 'info') => {
     const id = createId();
@@ -348,65 +357,30 @@ function PlaygroundContent() {
       return;
     }
     
-    // Auto-select relevant images for generation (logo + products + UI)
+    // SYNC images from bento: prioritize logo + relevant categories
     const labeledImages = Array.isArray(brandData.labeledImages) ? brandData.labeledImages : [];
-    const relevantImages = labeledImages
-      .filter((img: any) => ['main_logo', 'product', 'app_ui'].includes(img.category))
-      .map((img: any) => img.url)
-      .slice(0, 4); // Max 4 images
     
-    // Fallback to logo + first background if no relevant images
-    const autoImages = relevantImages.length > 0 
-      ? relevantImages 
-      : [brandData.logo, ...(backgrounds || [])].filter(Boolean).slice(0, 3);
+    // Priority order: logo first, then reference, product, app_ui, others
+    const logoImg = brandData.logo ? [brandData.logo] : [];
+    const referenceImgs = labeledImages.filter((img: any) => img.category === 'reference').map((img: any) => img.url);
+    const productImgs = labeledImages.filter((img: any) => img.category === 'product').map((img: any) => img.url);
+    const appImgs = labeledImages.filter((img: any) => img.category === 'app_ui').map((img: any) => img.url);
+    const otherImgs = labeledImages.filter((img: any) => !['main_logo', 'reference', 'product', 'app_ui'].includes(img.category)).map((img: any) => img.url);
     
-    // Set default images
-    if (autoImages.length > 0 && uploadedImages.length === 0) {
-      setUploadedImages(autoImages);
-    }
+    // Combine in priority order, ensuring logo is first
+    const allImages = [...new Set([...logoImg, ...referenceImgs, ...productImgs, ...appImgs, ...otherImgs])].filter(Boolean);
     
-    // Create default brief from suggested posts (new) or marketing angles (legacy)
-    let defaultBrief = brief;
-    let defaultTemplate = selectedTemplate;
+    // ALWAYS sync with bento data (not conditional)
+    setUploadedImages(allImages.slice(0, 8));
     
-    if (!defaultBrief) {
-      // Try new suggestedPosts format first
-      const posts = Array.isArray(brandData.suggestedPosts) ? brandData.suggestedPosts : [];
-      if (posts.length > 0) {
-        const firstPost = posts[0];
-        defaultTemplate = firstPost.templateId as TemplateId;
-        defaultBrief = firstPost.headline || (firstPost.metric ? `${firstPost.metric} ${firstPost.metricLabel || ''}` : '');
-      }
-      // Fallback to old marketingAngles format
-      else {
-        const angles = Array.isArray(brandData.marketingAngles) ? brandData.marketingAngles : [];
-        if (angles.length > 0 && (angles[0].title || angles[0].concept)) {
-          defaultBrief = angles[0].concept || angles[0].title;
-        }
-      }
-      
-      // Final fallback
-      if (!defaultBrief) {
-        defaultBrief = `Découvrez ${brandData.name}`;
-        defaultTemplate = 'announcement';
-      }
-      
-      setBrief(defaultBrief);
-      if (defaultTemplate) setSelectedTemplate(defaultTemplate);
-    }
+    // Clear any previous brief - let user choose from suggestions
+    // Don't auto-set a brief, show the creative angle cards instead
     
     setStep('playground');
     setActiveTab('create');
     
-    // Auto-generate if we have images and brief
-    const finalImages = uploadedImages.length > 0 ? uploadedImages : autoImages;
-    if (defaultBrief && finalImages.length > 0 && generatedImages.length === 0) {
-      setTimeout(() => {
-        handleGenerate(defaultBrief, false, brandData, finalImages);
-      }, 500); // Small delay to let UI update
-    }
-    
-    showToast('Identité validée - génération en cours', 'success');
+    // DON'T auto-generate - let user choose from creative angle cards
+    showToast('Choisissez un angle créatif pour commencer', 'info');
   };
 
   const handleSaveBrand = async () => {
@@ -596,7 +570,8 @@ ${enhancement}`);
           body: JSON.stringify({
             brief: finalPrompt,
             brand: targetBrand,
-            templateId: selectedTemplate || undefined
+            templateId: selectedTemplate || undefined,
+            language: contentLanguage
           })
         });
         
@@ -989,16 +964,34 @@ ${enhancement}`);
             <span className="text-sm font-medium text-gray-900">{brandData?.name || 'Marque'}</span>
             <span className="text-xs text-gray-400">· Espace créatif</span>
           </div>
-          <button
-            onClick={() => setStep('bento')}
-            className="text-xs text-gray-400 hover:text-gray-700 transition-colors flex items-center gap-1"
-          >
-            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
-              <path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-              <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-            </svg>
-            Identité
-          </button>
+          <div className="flex items-center gap-3">
+            {/* Language selector */}
+            <div className="flex items-center gap-1 px-2 py-1 bg-gray-50 border border-gray-200 rounded">
+              <span className="text-[10px] font-mono uppercase text-gray-400">Langue:</span>
+              <select
+                value={contentLanguage}
+                onChange={(e) => setContentLanguage(e.target.value as 'fr' | 'en' | 'es' | 'de')}
+                className="text-xs bg-transparent border-none outline-none cursor-pointer text-gray-600"
+              >
+                {LANGUAGES.map(lang => (
+                  <option key={lang.code} value={lang.code}>
+                    {lang.flag} {lang.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            
+            <button
+              onClick={() => setStep('bento')}
+              className="text-xs text-gray-400 hover:text-gray-700 transition-colors flex items-center gap-1"
+            >
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+                <path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+              Identité
+            </button>
+          </div>
         </div>
 
         {/* Template Pills - Compact selector */}
@@ -1037,8 +1030,57 @@ ${enhancement}`);
         )}
 
           <div className="p-6">
-            {/* Quick suggestions - only if we have brand data */}
-            {brandData?.suggestedPosts?.length > 0 && (
+            {/* Creative angle cards - show prominently when no brief */}
+            {brandData?.suggestedPosts?.length > 0 && !brief && (
+              <div className="mb-6">
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="text-lg">✨</span>
+                  <span className="text-sm font-medium text-gray-700">Choisissez un angle créatif</span>
+                </div>
+                <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+                  {brandData.suggestedPosts.slice(0, 6).map((post: any, i: number) => {
+                    const template = TEMPLATES.find(t => t.id === post.templateId);
+                    const headline = post.headline || `${post.metric || ''} ${post.metricLabel || ''}`.trim();
+                    const sourceColors: Record<string, string> = {
+                      real_data: 'border-emerald-200 bg-emerald-50/50',
+                      industry_insight: 'border-amber-200 bg-amber-50/50',
+                      generated: 'border-gray-200 bg-gray-50/50'
+                    };
+                    const borderClass = sourceColors[post.source] || 'border-gray-200 bg-gray-50/50';
+                    
+                    return (
+                      <button
+                        key={i}
+                        onClick={() => {
+                          setSelectedTemplate(post.templateId as TemplateId);
+                          setBrief(headline);
+                        }}
+                        className={`p-4 text-left border-2 transition-all hover:border-gray-400 hover:shadow-sm group ${borderClass}`}
+                      >
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="text-xl">{template?.icon}</span>
+                          <span className="text-[9px] font-mono uppercase text-gray-400">{post.templateId}</span>
+                          {post.source === 'real_data' && (
+                            <span className="ml-auto w-2 h-2 rounded-full bg-emerald-500" title="Données réelles" />
+                          )}
+                        </div>
+                        <div className="text-sm text-gray-700 font-medium line-clamp-2 group-hover:text-gray-900">
+                          {headline}
+                        </div>
+                        {post.intent && (
+                          <div className="text-[10px] text-gray-400 mt-2 line-clamp-1 italic">
+                            {post.intent}
+                          </div>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+            
+            {/* Quick suggestions - compact version when brief exists */}
+            {brandData?.suggestedPosts?.length > 0 && brief && (
               <div className="flex items-center gap-2 mb-4 overflow-x-auto no-scrollbar -mx-1 px-1">
                 <span className="text-[10px] font-mono uppercase tracking-widest text-gray-300 flex-shrink-0">Idées:</span>
                 {brandData.suggestedPosts.slice(0, 3).map((post: any, i: number) => {

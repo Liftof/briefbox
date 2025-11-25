@@ -388,6 +388,7 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
   const [localData, setLocalData] = useState(brandData);
   const [importPopupOpen, setImportPopupOpen] = useState(false);
   const [colorEditorOpen, setColorEditorOpen] = useState(false);
+  const [logoSelectorOpen, setLogoSelectorOpen] = useState(false);
   const [tagEditorState, setTagEditorState] = useState<{ isOpen: boolean; imageIndex: number; position: { top: number; left: number } }>({
     isOpen: false,
     imageIndex: -1,
@@ -474,8 +475,47 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
     return ((r * 299) + (g * 587) + (b * 114)) / 1000 < 50;
   };
 
-  const effectiveLogoBg = isDark(logoBgColor) ? '#FFFFFF' : logoBgColor;
-  const finalLogoBg = effectiveLogoBg === '#FFFFFF' && logoBgColor === '#FFFFFF' ? '#F5F5F5' : effectiveLogoBg;
+  const isLight = (color: string) => {
+    if (!color || !color.startsWith('#')) return true;
+    const hex = color.replace('#', '');
+    const r = parseInt(hex.substring(0, 2), 16);
+    const g = parseInt(hex.substring(2, 4), 16);
+    const b = parseInt(hex.substring(4, 6), 16);
+    return ((r * 299) + (g * 587) + (b * 114)) / 1000 > 200;
+  };
+
+  // Better logo background logic:
+  // - If primary color is very dark (< 50 luminance), use white background
+  // - If primary color is very light (> 200 luminance), use dark background
+  // - Otherwise use the primary color
+  const getLogoBg = () => {
+    if (isDark(logoBgColor)) {
+      return '#FFFFFF'; // Dark primary → white bg for logo
+    }
+    if (isLight(logoBgColor)) {
+      return '#1a1a1a'; // Light/white primary → dark bg for logo
+    }
+    return logoBgColor; // Use primary color
+  };
+  
+  const finalLogoBg = getLogoBg();
+
+  // Handle logo change
+  const handleLogoChange = (newLogoUrl: string) => {
+    handleChange('logo', newLogoUrl);
+    // Also update labeledImages to mark old logo as 'other' and new as 'main_logo'
+    const newLabeledImages = (localData.labeledImages || []).map((li: any) => {
+      if (li.url === localData.logo) {
+        return { ...li, category: 'other' };
+      }
+      if (li.url === newLogoUrl) {
+        return { ...li, category: 'main_logo' };
+      }
+      return li;
+    });
+    handleChange('labeledImages', newLabeledImages);
+    setLogoSelectorOpen(false);
+  };
 
   const getTagColor = (tag: string) => {
     return TAG_OPTIONS.find(t => t.value === tag)?.color || 'bg-gray-200 text-gray-600';
@@ -507,6 +547,41 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
           onTagChange={(tag) => handleTagChange(tagEditorState.imageIndex, tag)}
           position={tagEditorState.position}
         />
+      )}
+
+      {/* Logo Selector Popup */}
+      {logoSelectorOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div className="bg-white w-full max-w-lg max-h-[70vh] flex flex-col shadow-2xl border border-gray-200">
+            <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <span className="text-lg">🖼️</span>
+                <h2 className="text-sm font-medium text-gray-900 uppercase tracking-wider">Changer le logo</h2>
+              </div>
+              <button onClick={() => setLogoSelectorOpen(false)} className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-gray-900 hover:bg-gray-100 transition-all">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-6">
+              <p className="text-xs text-gray-500 mb-4">Sélectionnez une image de votre bibliothèque pour l'utiliser comme logo</p>
+              <div className="grid grid-cols-3 gap-3">
+                {localData.images?.map((img: string, i: number) => (
+                  <button
+                    key={i}
+                    onClick={() => handleLogoChange(img)}
+                    className={`aspect-square border-2 overflow-hidden transition-all hover:border-emerald-500 ${
+                      img === localData.logo ? 'border-emerald-500 ring-2 ring-emerald-200' : 'border-gray-200'
+                    }`}
+                  >
+                    <img src={img} className="w-full h-full object-contain bg-gray-50" loading="lazy" />
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Header */}
@@ -555,18 +630,50 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
         
         {/* LEFT COLUMN - IDENTITY */}
         <div className="lg:col-span-3 flex flex-col gap-6">
-          {/* Logo */}
-          <div className="relative">
+          {/* Logo - clickable to change */}
+          <div className="relative group">
             <div className="absolute -top-2 -left-2 w-4 h-4 border-l-2 border-t-2 border-gray-300" />
-            <div 
-              className="aspect-square p-8 flex items-center justify-center bg-white border border-gray-200"
-              style={{ backgroundColor: finalLogoBg }}
+            <button 
+              onClick={() => setLogoSelectorOpen(true)}
+              className="w-full aspect-square p-6 flex items-center justify-center border border-gray-200 transition-all hover:border-emerald-500 relative overflow-hidden"
+              style={{ 
+                backgroundColor: finalLogoBg,
+                // Checkerboard pattern for transparent logos
+                backgroundImage: localData.logo?.toLowerCase().includes('.png') || localData.logo?.toLowerCase().includes('.svg')
+                  ? `linear-gradient(45deg, #f0f0f0 25%, transparent 25%), 
+                     linear-gradient(-45deg, #f0f0f0 25%, transparent 25%), 
+                     linear-gradient(45deg, transparent 75%, #f0f0f0 75%), 
+                     linear-gradient(-45deg, transparent 75%, #f0f0f0 75%)`
+                  : undefined,
+                backgroundSize: '20px 20px',
+                backgroundPosition: '0 0, 0 10px, 10px -10px, -10px 0px'
+              }}
             >
+              {/* Solid color overlay on top of checkerboard */}
+              <div 
+                className="absolute inset-0" 
+                style={{ backgroundColor: finalLogoBg }}
+              />
+              
               {localData.logo ? (
-                <img src={localData.logo} alt="Logo" className="w-full h-full object-contain" />
+                <img 
+                  src={localData.logo} 
+                  alt="Logo" 
+                  className="w-full h-full object-contain relative z-10" 
+                />
               ) : (
-                <span className="text-4xl text-gray-300 font-light">LOGO</span>
+                <span className="text-4xl text-gray-300 font-light relative z-10">LOGO</span>
               )}
+              
+              {/* Hover overlay */}
+              <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center z-20">
+                <span className="text-white text-xs font-medium">Changer</span>
+              </div>
+            </button>
+            
+            {/* Edit badge */}
+            <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-emerald-500 rounded-full flex items-center justify-center text-white text-xs shadow-lg opacity-0 group-hover:opacity-100 transition-opacity">
+              ✏️
             </div>
           </div>
 

@@ -120,10 +120,18 @@ function getImagePriority(labeledImages: any[]): {
   };
 }
 
+// Language-specific prompt additions
+const LANGUAGE_INSTRUCTIONS: Record<string, string> = {
+  fr: 'All text on the visual must be in FRENCH. Use proper French typography.',
+  en: 'All text on the visual must be in ENGLISH. Use proper English typography.',
+  es: 'All text on the visual must be in SPANISH. Use proper Spanish typography.',
+  de: 'All text on the visual must be in GERMAN. Use proper German typography.',
+};
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { brief, brand, templateId: requestedTemplateId } = body;
+    const { brief, brand, templateId: requestedTemplateId, language = 'fr' } = body;
 
     if (!brief || !brand) {
       return NextResponse.json(
@@ -220,6 +228,9 @@ export async function POST(request: NextRequest) {
     if (imageSelection.references.length > 0) {
       styleContext += `\n\nIMPORTANT: Use the provided reference visuals as style inspiration. Match their aesthetic, color treatment, and visual language.`;
     }
+    
+    // Add language instruction
+    const languageInstruction = LANGUAGE_INSTRUCTIONS[language] || LANGUAGE_INSTRUCTIONS.fr;
 
     console.log('🎨 Creative Director V3:');
     console.log('   Template:', result.templateUsed);
@@ -232,14 +243,20 @@ export async function POST(request: NextRequest) {
       success: true,
       concept: {
         // Base prompt (for display/debugging)
-        finalPrompt: result.prompt + '\n\n' + styleContext,
+        finalPrompt: result.prompt + '\n\n' + styleContext + '\n\n' + languageInstruction,
         // 4 variations for generation
-        promptVariations: promptVariations.map(p => p + (imageSelection.references.length > 0 
-          ? '\n\nMatch the style and aesthetic of the reference visuals provided.' 
-          : '')),
+        promptVariations: promptVariations.map(p => {
+          let enhanced = p;
+          if (imageSelection.references.length > 0) {
+            enhanced += '\n\nMatch the style and aesthetic of the reference visuals provided.';
+          }
+          enhanced += '\n\n' + languageInstruction;
+          return enhanced;
+        }),
         negativePrompt: result.negativePrompt,
         templateUsed: result.templateUsed,
         params,
+        language,
         // Smart image recommendations
         imageSelection
       }
