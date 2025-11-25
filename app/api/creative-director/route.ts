@@ -32,6 +32,8 @@ export async function POST(request: NextRequest) {
     const colors = Array.isArray(brand.colors) ? brand.colors : ['#000000'];
     const primaryColor = colors[0] || '#000000';
     const secondaryColor = colors[1] || '#ffffff';
+    const aesthetic = Array.isArray(brand.aesthetic) ? brand.aesthetic.join(', ') : (brand.aesthetic || 'Modern, Professional');
+    const toneVoice = Array.isArray(brand.toneVoice) ? brand.toneVoice.join(', ') : (brand.toneVoice || 'Confident, Clear');
 
     // Determine which template to use
     let templateId: TemplateId;
@@ -51,7 +53,9 @@ export async function POST(request: NextRequest) {
       brandName,
       primaryColor,
       secondaryColor,
-      headline: brief.slice(0, 60), // Use brief as headline (truncated)
+      aesthetic,
+      toneVoice,
+      headline: brief.slice(0, 80), // Use brief as headline
       subheadline: brand.tagline || '',
     };
 

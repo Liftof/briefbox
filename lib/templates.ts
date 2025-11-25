@@ -1,8 +1,12 @@
 // ============================================================================
-// TEMPLATE SYSTEM - Social Media Post Templates
+// TEMPLATE SYSTEM V2 - Creative prompts with quality focus
 // ============================================================================
-// Each template is a structured layout with a deterministic prompt for Fal
-// No GPT creativity needed - just fill in the blanks with brand data
+// Key insight: Don't over-specify layout. Focus on:
+// 1. Role & task framing
+// 2. Brand identity (colors, aesthetic, tone)
+// 3. Quality indicators ("trending on Behance", "8k resolution")
+// 4. Creative freedom with the provided images
+// 5. Strong negative prompt
 // ============================================================================
 
 export type TemplateId = 'stat' | 'announcement' | 'event' | 'quote' | 'expert' | 'product';
@@ -15,15 +19,6 @@ export interface Template {
   descriptionFr: string;
   icon: string;
   keywords: string[]; // For auto-detection
-  structure: string; // Visual ASCII representation
-  fields: {
-    headline: boolean;
-    subheadline: boolean;
-    metric?: boolean; // For stat template
-    quote?: boolean; // For quote template
-    date?: boolean; // For event template
-    personName?: boolean; // For expert/quote
-  };
   buildPrompt: (params: TemplateParams) => string;
   negativePrompt: string;
 }
@@ -32,10 +27,12 @@ export interface TemplateParams {
   brandName: string;
   primaryColor: string;
   secondaryColor: string;
+  aesthetic?: string;
+  toneVoice?: string;
   headline?: string;
   subheadline?: string;
-  metric?: string; // "87%", "1.7M", etc.
-  metricLabel?: string; // "de croissance", "utilisateurs"
+  metric?: string;
+  metricLabel?: string;
   quote?: string;
   personName?: string;
   personTitle?: string;
@@ -43,13 +40,22 @@ export interface TemplateParams {
   eventTime?: string;
 }
 
+// Shared quality indicators that make outputs look professional
+const QUALITY_SUFFIX = `
+High quality, 8k resolution, sharp details, premium design.
+Trending on Behance, Dribbble quality.
+Modern, balanced composition with adequate whitespace.`;
+
+// Shared negative prompt
+const NEGATIVE_PROMPT = `messy, cluttered, ugly text, distorted logo, low resolution, blurry, weird cropping, amateur, wrong colors, plastic look, AI artifacts, generic stock photo, boring, flat design without depth`;
+
 // ============================================================================
 // TEMPLATE DEFINITIONS
 // ============================================================================
 
 const TEMPLATES: Template[] = [
   // ---------------------------------------------------------------------------
-  // 1. STAT - Big number + context (Patagonia, Webedia style)
+  // 1. STAT - Big metric with impact
   // ---------------------------------------------------------------------------
   {
     id: 'stat',
@@ -59,29 +65,36 @@ const TEMPLATES: Template[] = [
     descriptionFr: 'Chiffre clé avec contexte - résultats, croissance, impact',
     icon: '📊',
     keywords: ['%', 'résultat', 'croissance', 'chiffre', 'stat', 'data', 'million', 'milliard', 'augmentation', 'baisse', 'impact', 'performance'],
-    structure: `
-┌────────────────────┐
-│   [Visual 40%]     │
-├────────────────────┤
-│      87%           │
-│   de croissance    │
-│          [Logo]    │
-└────────────────────┘`,
-    fields: { headline: false, subheadline: false, metric: true },
-    buildPrompt: ({ brandName, primaryColor, secondaryColor, metric, metricLabel }) => {
-      return `Social media stat post for ${brandName}. 
-Split layout: top half has abstract gradient from ${primaryColor} to dark, bottom half is ${primaryColor} solid. 
-Giant bold white number "${metric || '87%'}" centered in bottom zone, taking 60% width. 
-Small label text "${metricLabel || 'growth'}" below the number. 
-Brand logo small in bottom right corner. 
-Clean data visualization style. Minimal. Bold typography. No photos, no people.
-Style: Stripe, Linear, modern fintech aesthetic.`;
+    buildPrompt: ({ brandName, primaryColor, secondaryColor, aesthetic, toneVoice, metric, metricLabel }) => {
+      return `ROLE: Expert Social Media Designer.
+TASK: Create a high-converting social media visual featuring a KEY STATISTIC.
+
+BRIEF: Professional data visualization post for ${brandName}.
+The hero element is the metric "${metric || '+47%'}" ${metricLabel ? `representing "${metricLabel}"` : ''}.
+Make the number BOLD, IMPACTFUL, and the focal point of the design.
+
+Style: ${aesthetic || 'Modern, Professional, Bold'}
+Vibe: ${toneVoice || 'Confident, Data-driven, Authoritative'}
+
+BRAND IDENTITY (STRICTLY FOLLOW):
+Brand: ${brandName}
+Primary Color: ${primaryColor} (use prominently)
+Secondary Color: ${secondaryColor}
+
+DESIGN GUIDELINES:
+- COMPOSITION: The metric should be large and impossible to miss
+- ASSETS: Use the provided image(s) as design elements. Integrate naturally.
+- COLOR: Use brand colors creatively - gradients, overlays, accents
+- LOGO: Ensure brand logo is visible and respects brand guidelines
+- DEPTH: Add visual interest through shadows, gradients, or layering
+
+${QUALITY_SUFFIX}`;
     },
-    negativePrompt: 'photograph, people, office, hands, realistic scene, 3D, complex illustration, busy, cluttered'
+    negativePrompt: NEGATIVE_PROMPT
   },
 
   // ---------------------------------------------------------------------------
-  // 2. ANNOUNCEMENT - Logo + headline + CTA (Notion, Google style)
+  // 2. ANNOUNCEMENT - News, launches, partnerships
   // ---------------------------------------------------------------------------
   {
     id: 'announcement',
@@ -91,32 +104,36 @@ Style: Stripe, Linear, modern fintech aesthetic.`;
     descriptionFr: 'Grande headline avec identité - lancements, partenariats, actus',
     icon: '📢',
     keywords: ['annonce', 'nouveau', 'lancement', 'partenariat', 'rejoindre', 'bienvenue', 'officiel', 'présente', 'dévoile'],
-    structure: `
-┌────────────────────┐
-│ [Logo]             │
-│                    │
-│  GRANDE HEADLINE   │
-│  Sous-titre        │
-│                    │
-│  [Partner logos]   │
-│  ══════════════    │
-└────────────────────┘`,
-    fields: { headline: true, subheadline: true },
-    buildPrompt: ({ brandName, primaryColor, secondaryColor, headline, subheadline }) => {
-      return `Social media announcement post for ${brandName}.
-Background: solid ${primaryColor} color, clean and flat.
-Top left: brand logo, small and elegant.
-Center: large bold white headline text "${headline || 'YOUR HEADLINE'}".
-Below headline: smaller subtext "${subheadline || 'supporting text'}" in white or ${secondaryColor}.
-Bottom: thin horizontal line or simple CTA button shape.
-Typography-focused design. No photos. Flat graphic design. 
-Style: Notion, Slack, modern SaaS announcement aesthetic.`;
+    buildPrompt: ({ brandName, primaryColor, secondaryColor, aesthetic, toneVoice, headline, subheadline }) => {
+      return `ROLE: Expert Social Media Designer.
+TASK: Create a high-converting social media visual for an ANNOUNCEMENT.
+
+BRIEF: Professional announcement post for ${brandName}.
+Main message: "${headline || 'Exciting News'}"
+${subheadline ? `Supporting text: "${subheadline}"` : ''}
+
+Style: ${aesthetic || 'Modern, Sleek, Professional'}
+Vibe: ${toneVoice || 'Exciting, Confident, Forward-thinking'}
+
+BRAND IDENTITY (STRICTLY FOLLOW):
+Brand: ${brandName}
+Primary Color: ${primaryColor} (use as main accent)
+Secondary Color: ${secondaryColor}
+
+DESIGN GUIDELINES:
+- COMPOSITION: Bold, attention-grabbing, news-worthy feel
+- ASSETS: Use the provided image(s) as HERO elements. Integrate naturally into the scene.
+- COLOR: Use brand palette creatively for backgrounds, shapes, overlays
+- LOGO: Brand logo should be prominent and well-integrated
+- TYPOGRAPHY: Headlines should feel important and newsworthy
+
+${QUALITY_SUFFIX}`;
     },
-    negativePrompt: 'photograph, people, office, 3D render, realistic, complex scene, busy background'
+    negativePrompt: NEGATIVE_PROMPT
   },
 
   // ---------------------------------------------------------------------------
-  // 3. EVENT/WEBINAR - Date + speakers + CTA (Frisbii style)
+  // 3. EVENT/WEBINAR
   // ---------------------------------------------------------------------------
   {
     id: 'event',
@@ -126,31 +143,37 @@ Style: Notion, Slack, modern SaaS announcement aesthetic.`;
     descriptionFr: 'Promotion événement avec date et inscription',
     icon: '🎤',
     keywords: ['webinar', 'event', 'événement', 'conférence', 'live', 'inscription', 'rdv', 'rendez-vous', 'save the date', 'join'],
-    structure: `
-┌────────────────────┐
-│ WEBINAR            │
-│ ┌──────┐           │
-│ │Photo │ Title     │
-│ │zone  │ Date/Time │
-│ └──────┘ [CTA]     │
-│            [Logo]  │
-└────────────────────┘`,
-    fields: { headline: true, subheadline: true, date: true },
-    buildPrompt: ({ brandName, primaryColor, secondaryColor, headline, eventDate, eventTime }) => {
-      return `Social media event/webinar announcement for ${brandName}.
-Background: gradient from ${primaryColor} to lighter shade, modern.
-Top: large text "WEBINAR" or "EVENT" as decorative background element, 40% opacity.
-Left side: rounded rectangle placeholder for speaker photo (abstract silhouette or gradient shape).
-Right side: event title "${headline || 'Event Title'}" in bold white.
-Below title: date "${eventDate || 'Date'}" and time "${eventTime || 'Time'}" in ${secondaryColor} accent color.
-Bottom: CTA button shape "S'inscrire" and brand logo.
-Clean event poster style. Professional but vibrant.`;
+    buildPrompt: ({ brandName, primaryColor, secondaryColor, aesthetic, toneVoice, headline, eventDate, eventTime }) => {
+      return `ROLE: Expert Social Media Designer.
+TASK: Create a high-converting social media visual for an EVENT/WEBINAR.
+
+BRIEF: Professional event promotion for ${brandName}.
+Event: "${headline || 'Upcoming Event'}"
+${eventDate ? `Date: ${eventDate}` : ''}
+${eventTime ? `Time: ${eventTime}` : ''}
+
+Style: ${aesthetic || 'Modern, Professional, Engaging'}
+Vibe: ${toneVoice || 'Exciting, Exclusive, Must-attend'}
+
+BRAND IDENTITY (STRICTLY FOLLOW):
+Brand: ${brandName}
+Primary Color: ${primaryColor}
+Secondary Color: ${secondaryColor}
+
+DESIGN GUIDELINES:
+- COMPOSITION: Event poster feel - clear hierarchy of information
+- ASSETS: Use provided images as speakers, venue, or decorative elements
+- COLOR: Brand colors should dominate, creating cohesive event branding
+- CTA: Design should encourage registration/attendance
+- ENERGY: Feel of anticipation and exclusivity
+
+${QUALITY_SUFFIX}`;
     },
-    negativePrompt: 'realistic photo, 3D render, complex illustration, busy, cluttered, stock photo'
+    negativePrompt: NEGATIVE_PROMPT
   },
 
   // ---------------------------------------------------------------------------
-  // 4. QUOTE/TESTIMONIAL - Customer voice (Classic LinkedIn)
+  // 4. QUOTE/TESTIMONIAL
   // ---------------------------------------------------------------------------
   {
     id: 'quote',
@@ -160,31 +183,36 @@ Clean event poster style. Professional but vibrant.`;
     descriptionFr: 'Témoignage client ou citation inspirante',
     icon: '💬',
     keywords: ['témoignage', 'quote', 'citation', 'client', 'avis', 'feedback', 'dit', 'selon', 'confiance'],
-    structure: `
-┌────────────────────┐
-│ ❝                  │
-│ Citation ici       │
-│ sur deux lignes    │
-│              ❞     │
-│ — Nom, Titre       │
-│           [Logo]   │
-└────────────────────┘`,
-    fields: { headline: false, subheadline: false, quote: true, personName: true },
-    buildPrompt: ({ brandName, primaryColor, secondaryColor, quote, personName, personTitle }) => {
-      return `Social media testimonial post for ${brandName}.
-Background: solid dark ${primaryColor} or charcoal gray, elegant.
-Top left: giant quotation mark "❝" in ${secondaryColor} accent, decorative.
-Center: quote text "${quote || 'Your testimonial here'}" in large white serif or elegant sans-serif typography.
-Bottom left: attribution "— ${personName || 'Name'}, ${personTitle || 'Title'}" in smaller text.
-Bottom right: brand logo small.
-Minimal, editorial, sophisticated. Like a magazine pull quote.
-Style: Harvard Business Review, The Economist, premium editorial.`;
+    buildPrompt: ({ brandName, primaryColor, secondaryColor, aesthetic, toneVoice, headline, personName, personTitle }) => {
+      return `ROLE: Expert Social Media Designer.
+TASK: Create a high-converting social media visual featuring a TESTIMONIAL/QUOTE.
+
+BRIEF: Professional testimonial post for ${brandName}.
+Quote: "${headline || 'Customer testimonial here'}"
+${personName ? `Attribution: ${personName}${personTitle ? `, ${personTitle}` : ''}` : ''}
+
+Style: ${aesthetic || 'Editorial, Sophisticated, Trustworthy'}
+Vibe: ${toneVoice || 'Authentic, Credible, Human'}
+
+BRAND IDENTITY (STRICTLY FOLLOW):
+Brand: ${brandName}
+Primary Color: ${primaryColor}
+Secondary Color: ${secondaryColor}
+
+DESIGN GUIDELINES:
+- COMPOSITION: Quote should be the hero - elegant typography
+- ASSETS: Use provided image as portrait or decorative element
+- COLOR: Sophisticated palette, quote marks as design elements
+- FEEL: Like a magazine pull-quote or editorial feature
+- CREDIBILITY: Professional, trustworthy, authentic feeling
+
+${QUALITY_SUFFIX}`;
     },
-    negativePrompt: 'photograph, face, person, 3D, realistic, busy, colorful, playful'
+    negativePrompt: NEGATIVE_PROMPT
   },
 
   // ---------------------------------------------------------------------------
-  // 5. EXPERT/THOUGHT LEADER - Person feature (Tribune style)
+  // 5. EXPERT/THOUGHT LEADER
   // ---------------------------------------------------------------------------
   {
     id: 'expert',
@@ -194,29 +222,36 @@ Style: Harvard Business Review, The Economist, premium editorial.`;
     descriptionFr: 'Mettre en avant une personne avec design graphique',
     icon: '👤',
     keywords: ['expert', 'speaker', 'intervenant', 'tribune', 'portrait', 'interview', 'rencontre', 'présente'],
-    structure: `
-┌────────────────────┐
-│  ╭──╮   ▲ ◯       │
-│  │📷│             │
-│  ╰──╯    ★        │
-├────────────────────┤
-│ NOM + TITRE        │
-└────────────────────┘`,
-    fields: { headline: true, subheadline: true, personName: true },
-    buildPrompt: ({ brandName, primaryColor, secondaryColor, personName, personTitle, headline }) => {
-      return `Social media expert feature post for ${brandName}.
-Background: ${primaryColor} with geometric shapes overlay (circles, triangles, lines) in ${secondaryColor} and white, 30% opacity.
-Center: circular or rounded placeholder for person photo (abstract gradient or silhouette shape).
-Decorative elements: abstract geometric shapes around the photo zone (like Memphis design but refined).
-Bottom bar: solid ${primaryColor} stripe with name "${personName || 'Expert Name'}" and title "${personTitle || 'Title'}" in white.
-${headline ? `Top: "${headline}" as context headline.` : ''}
-Style: Creative agency, design conference, modern editorial.`;
+    buildPrompt: ({ brandName, primaryColor, secondaryColor, aesthetic, toneVoice, headline, personName, personTitle }) => {
+      return `ROLE: Expert Social Media Designer.
+TASK: Create a high-converting social media visual featuring an EXPERT/SPEAKER.
+
+BRIEF: Professional expert feature for ${brandName}.
+${headline ? `Topic/Title: "${headline}"` : ''}
+${personName ? `Expert: ${personName}${personTitle ? `, ${personTitle}` : ''}` : ''}
+
+Style: ${aesthetic || 'Modern, Editorial, Professional'}
+Vibe: ${toneVoice || 'Authoritative, Inspiring, Thought-provoking'}
+
+BRAND IDENTITY (STRICTLY FOLLOW):
+Brand: ${brandName}
+Primary Color: ${primaryColor}
+Secondary Color: ${secondaryColor}
+
+DESIGN GUIDELINES:
+- COMPOSITION: Person/expert as hero with supporting graphics
+- ASSETS: Use provided portrait prominently, integrated with brand elements
+- COLOR: Brand colors as overlays, accents, or graphic elements
+- GRAPHICS: Add geometric shapes, lines, or patterns for visual interest
+- AUTHORITY: Design should convey expertise and credibility
+
+${QUALITY_SUFFIX}`;
     },
-    negativePrompt: 'realistic photo, stock photo, corporate, boring, 3D render, cluttered'
+    negativePrompt: NEGATIVE_PROMPT
   },
 
   // ---------------------------------------------------------------------------
-  // 6. PRODUCT - Screenshot/mockup feature (ChatGPT, Apple style)
+  // 6. PRODUCT/FEATURE
   // ---------------------------------------------------------------------------
   {
     id: 'product',
@@ -226,29 +261,32 @@ Style: Creative agency, design conference, modern editorial.`;
     descriptionFr: 'Mettre en avant un produit ou une fonctionnalité',
     icon: '✨',
     keywords: ['produit', 'feature', 'fonctionnalité', 'nouveau', 'découvrez', 'interface', 'app', 'outil', 'solution'],
-    structure: `
-┌────────────────────┐
-│ [Logo]             │
-│                    │
-│  Headline produit  │
-│                    │
-│  ┌──────────────┐  │
-│  │  Screenshot  │  │
-│  └──────────────┘  │
-└────────────────────┘`,
-    fields: { headline: true, subheadline: true },
-    buildPrompt: ({ brandName, primaryColor, secondaryColor, headline, subheadline }) => {
-      return `Social media product showcase for ${brandName}.
-Background: clean white or very light gray, minimal.
-Top left: brand logo.
-Center-top: product headline "${headline || 'Product Feature'}" in large bold black text.
-Below headline: subtext "${subheadline || 'description'}" in gray.
-Center-bottom: rounded rectangle mockup frame (like a floating app window or phone screen), with soft shadow.
-Inside mockup: abstract UI elements suggesting an interface (colored blocks, lines, shapes representing content).
-The mockup uses ${primaryColor} as accent color.
-Style: Apple, Linear, Notion - clean product marketing.`;
+    buildPrompt: ({ brandName, primaryColor, secondaryColor, aesthetic, toneVoice, headline, subheadline }) => {
+      return `ROLE: Expert Social Media Designer.
+TASK: Create a high-converting social media visual showcasing a PRODUCT/FEATURE.
+
+BRIEF: Professional product showcase for ${brandName}.
+Feature: "${headline || 'New Feature'}"
+${subheadline ? `Description: "${subheadline}"` : ''}
+
+Style: ${aesthetic || 'Clean, Modern, Tech-forward'}
+Vibe: ${toneVoice || 'Innovative, Sleek, Desirable'}
+
+BRAND IDENTITY (STRICTLY FOLLOW):
+Brand: ${brandName}
+Primary Color: ${primaryColor}
+Secondary Color: ${secondaryColor}
+
+DESIGN GUIDELINES:
+- COMPOSITION: Product/UI as hero, beautifully staged
+- ASSETS: Use provided screenshot/product image as the main focus
+- MOCKUP: Frame in device mockup or floating UI style if appropriate
+- COLOR: Brand colors as backgrounds, accents, highlights
+- PREMIUM: Apple/Linear-style product marketing aesthetic
+
+${QUALITY_SUFFIX}`;
     },
-    negativePrompt: 'realistic photo, people, hands, 3D render, complex scene, busy, cluttered, dark'
+    negativePrompt: NEGATIVE_PROMPT
   }
 ];
 
@@ -256,23 +294,14 @@ Style: Apple, Linear, Notion - clean product marketing.`;
 // HELPER FUNCTIONS
 // ============================================================================
 
-/**
- * Get all templates
- */
 export function getAllTemplates(): Template[] {
   return TEMPLATES;
 }
 
-/**
- * Get a template by ID
- */
 export function getTemplate(id: TemplateId): Template | undefined {
   return TEMPLATES.find(t => t.id === id);
 }
 
-/**
- * Auto-detect best template based on brief text
- */
 export function detectTemplate(brief: string): Template {
   const lowerBrief = brief.toLowerCase();
   
@@ -284,13 +313,11 @@ export function detectTemplate(brief: string): Template {
     for (const keyword of template.keywords) {
       if (lowerBrief.includes(keyword.toLowerCase())) {
         score += 1;
-        // Bonus for exact word match
         if (new RegExp(`\\b${keyword}\\b`, 'i').test(lowerBrief)) {
           score += 0.5;
         }
       }
     }
-    // Check for numbers/percentages for stat template
     if (template.id === 'stat' && /\d+[%KMB]?/.test(brief)) {
       score += 2;
     }
@@ -304,56 +331,18 @@ export function detectTemplate(brief: string): Template {
   return bestMatch;
 }
 
-/**
- * Extract metric from brief (for stat template)
- */
 export function extractMetric(brief: string): { metric: string; label: string } | null {
-  // Match patterns like "87%", "1.7M", "182,646", "+45%"
   const metricMatch = brief.match(/([+-]?\d+[.,]?\d*\s*[%KMB]?|\d{1,3}(?:[,.\s]\d{3})+)/i);
   
   if (metricMatch) {
     const metric = metricMatch[1].trim();
-    // Try to find context around the metric
     const labelMatch = brief.match(new RegExp(`${metric.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*(?:de\\s+)?([\\w\\s]+)`, 'i'));
     const label = labelMatch ? labelMatch[1].trim().slice(0, 30) : '';
-    
     return { metric, label };
   }
   
   return null;
 }
-
-/**
- * Generate 3 template suggestions for a brand
- */
-export function suggestTemplates(brandData: {
-  name: string;
-  industry?: string;
-  toneVoice?: string[];
-}): { templateId: TemplateId; suggestedHeadline: string; suggestedContent: string }[] {
-  // Always suggest these 3 versatile templates with brand-specific content
-  return [
-    {
-      templateId: 'stat',
-      suggestedHeadline: '',
-      suggestedContent: `Chiffre clé: ex. "+47% de croissance" ou "10 000 clients"`
-    },
-    {
-      templateId: 'announcement',
-      suggestedHeadline: `${brandData.name} présente...`,
-      suggestedContent: 'Annonce, lancement, partenariat'
-    },
-    {
-      templateId: 'quote',
-      suggestedHeadline: '',
-      suggestedContent: 'Témoignage client ou citation inspirante'
-    }
-  ];
-}
-
-// ============================================================================
-// PROMPT BUILDER - Main function to call
-// ============================================================================
 
 export interface BuildPromptResult {
   prompt: string;
@@ -361,9 +350,6 @@ export interface BuildPromptResult {
   templateUsed: TemplateId;
 }
 
-/**
- * Build the final Fal prompt from template + params
- */
 export function buildTemplatePrompt(
   templateId: TemplateId,
   params: TemplateParams
@@ -371,7 +357,6 @@ export function buildTemplatePrompt(
   const template = getTemplate(templateId);
   
   if (!template) {
-    // Fallback to announcement
     const fallback = TEMPLATES[1];
     return {
       prompt: fallback.buildPrompt(params),
@@ -386,4 +371,3 @@ export function buildTemplatePrompt(
     templateUsed: template.id
   };
 }
-
