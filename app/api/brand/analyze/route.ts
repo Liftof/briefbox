@@ -775,6 +775,7 @@ export async function POST(request: Request) {
         "name": "Brand Name",
         "tagline": "Brand Tagline or Slogan",
         "description": "A short summary paragraph (max 200 chars)",
+        "brandStory": "A compelling 2-3 sentence summary of the brand's origin, mission, or founding story found in the content.",
         "colors": ["#hex1", "#hex2", "#hex3", "#hex4"], 
         "fonts": ["Font Name 1", "Font Name 2"],
         "values": ["Value 1", "Value 2", "Value 3"],
