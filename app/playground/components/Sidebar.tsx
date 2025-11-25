@@ -18,7 +18,7 @@ export default function Sidebar({
   const menuItems = [
     { id: 'create', icon: '✦', label: 'Créer', disabled: false },
     { id: 'projects', icon: '◫', label: 'Projets', disabled: false },
-    { id: 'calendar', icon: '▤', label: 'Calendrier', disabled: false },
+    { id: 'calendar', icon: '▤', label: 'Calendrier', disabled: true },
     { id: 'stats', icon: '◔', label: 'Statistiques', disabled: true },
   ];
 

@@ -5,7 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import Sidebar from './components/Sidebar';
 import BentoGrid from './components/BentoGrid';
 import CalendarView from './components/CalendarView';
-import ProjectsView from './components/ProjectsView';
+import ProjectsView, { addGenerations } from './components/ProjectsView';
 import { TemplateId } from '@/lib/templates';
 
 type Step = 'url' | 'analyzing' | 'bento' | 'playground';
@@ -649,10 +649,22 @@ ${enhancement}`);
         throw new Error('Aucune image retournée par le générateur');
       }
 
+      // Save to Projects (localStorage)
+      const generationsToSave = normalized.map(img => ({
+        url: img.url,
+        prompt: finalPrompt,
+        templateId: selectedTemplate || undefined,
+        brandName: targetBrand?.name,
+      }));
+      addGenerations(generationsToSave);
+      
+      // Trigger update event for ProjectsView
+      window.dispatchEvent(new Event('generations-updated'));
+
       setGeneratedImages((prev) => [...normalized, ...prev].slice(0, 16));
       setStatus('complete');
       setProgress(100);
-      showToast('Visuels générés', 'success');
+      showToast('Visuels générés et sauvegardés', 'success');
     } catch (error: any) {
       console.error('Generation error', error);
       setStatus('error');
