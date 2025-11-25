@@ -41,20 +41,26 @@ const STYLE_REFERENCE_MAP: Record<string, string[]> = {
 };
 
 // Prompt variations for diversity (appended to base prompt)
-// Flux Pro prefers natural language and descriptive artistic direction
 const PROMPT_VARIATIONS = [
-  'The visual should have a high-end editorial photography look, with soft studio lighting, shallow depth of field, and sharp details. The overall aesthetic is clean, modern, and premium.',
-  'Create a 3D rendered composition with a minimalist design language, using soft shadows, isometric perspective, and smooth material textures. The lighting is bright and evenly distributed.',
-  'A cinematic shot with dramatic lighting and high contrast. The composition is dynamic and bold, suitable for a high-impact social media campaign. Use a modern color grading.',
-  'A clean, flat-lay style composition with organized elements and plenty of whitespace. The look is professional, organized, and trustworthy, perfect for a corporate communication.'
+  'Emphasis: Ultra-modern and clean.',
+  'Emphasis: Dynamic and high-energy.',
+  'Emphasis: Trustworthy and corporate.',
+  'Emphasis: Premium and sophisticated.'
 ];
-
-// ... existing code ...
 
 // Get style references based on brand aesthetic
 function getStyleReferences(aesthetic: string): string {
-  // ... existing logic ...
-  return `Artistic Direction: ${STYLE_REFERENCE_MAP.default.join(', ')}.`; // Simplified for Flux
+  const aestheticLower = aesthetic.toLowerCase();
+  
+  // Find matching style references
+  for (const [key, references] of Object.entries(STYLE_REFERENCE_MAP)) {
+    if (aestheticLower.includes(key)) {
+      return `Style references: ${references.join(', ')}.`;
+    }
+  }
+  
+  // Default references
+  return `Style references: ${STYLE_REFERENCE_MAP.default.join(', ')}.`;
 }
 
 // Template-specific image needs
@@ -385,24 +391,53 @@ IMPORTANT: Use each image according to its role. The order of images reflects th
     }
 
     // Add template-specific style emphasis
-    const templateStyleEmphasis = `\n\nTEMPLATE STYLE: ${templateNeeds.styleEmphasis}`;
+    const templateStyleEmphasis = templateNeeds.styleEmphasis;
 
-    // Create 4 prompt variations - each with a different style suffix + feedback guidance + image instructions
+    // FORCE THE STRUCTURE REQUESTED BY USER
+    // This is the exact prompt structure that works well with Nano Banana Pro
+    const buildStructuredPrompt = (variationEmphasis: string) => {
+      return `
+ROLE: Expert Social Media Designer.
+
+TASK: Create a high-converting social media visual based on the following brief.
+
+BRIEF: ${brief}. Style: ${aesthetic}. Vibe: ${toneVoice}. High quality, trending on Behance.
+
+BRAND IDENTITY (STRICTLY FOLLOW):
+
+Brand: ${brandName}
+Aesthetic: ${aesthetic}
+Tone: ${toneVoice}
+Colors: ${colors.join(', ')}
+Fonts: Sans-serif (modern), Helvetica Neue
+
+DESIGN GUIDELINES:
+- COMPOSITION: Modern, balanced, and professional. Use adequate whitespace.
+- STYLE: ${templateStyleEmphasis} Matches the brand aesthetic defined above. ${variationEmphasis}
+- ASSETS: Use the provided image as the HERO element. Integrate it naturally into a scene or layout. Do NOT just crop the image.
+- COLOR: Use the brand palette for backgrounds, shapes, or accents. Specifically use ${primaryColor} as a primary accent.
+- LOGO: If a logo is provided in the input, ensure it is visible and respectable.
+- QUALITY: 8k resolution, sharp details, photorealistic or premium illustration style.
+
+${feedbackGuidance ? feedbackGuidance : ''}
+
+${imageRoleInstructions ? imageRoleInstructions : ''}
+
+NEGATIVE PROMPT: messy, cluttered, ugly text, distorted logo, low resolution, blurry, weird cropping, amateur, wrong colors.
+      `.trim();
+    };
+
+    // Create 4 prompt variations using the structured builder
     const promptVariations = PROMPT_VARIATIONS.map((variation) => {
-      const fullPrompt = `${result.prompt}\n\n${styleRefs}${variation}${templateStyleEmphasis}${imageRoleInstructions}${feedbackGuidance}`;
-      return fullPrompt.trim();
-    }).filter(p => p && p.length > 0); // Extra safety filter
+      return buildStructuredPrompt(variation);
+    });
 
-    // If we have reference images, add them to the style context
-    let styleContext = styleRefs;
-    if (imageSelection.references.length > 0) {
-      styleContext += `\n\nSTYLE REFERENCE IMAGES PROVIDED: Match their aesthetic, color treatment, composition, and visual language exactly. These define the target style.`;
-    }
-    
-    // Add language instruction
+    // Add language instruction (appended at the very end to ensure it's respected)
     const languageInstruction = LANGUAGE_INSTRUCTIONS[language] || LANGUAGE_INSTRUCTIONS.fr;
+    
+    const finalVariations = promptVariations.map(p => p + `\n\nNOTE: ${languageInstruction}`);
 
-    console.log('🎨 Creative Director V4:');
+    console.log('🎨 Creative Director V4 (Structured):');
     console.log('   Template:', result.templateUsed);
     console.log('   Template needs:', templateNeeds.priority.slice(0, 3).join(', '));
     console.log('   Style refs:', styleRefs.slice(0, 50) + '...');
@@ -416,17 +451,11 @@ IMPORTANT: Use each image according to its role. The order of images reflects th
       success: true,
       concept: {
         // Base prompt (for display/debugging)
-        finalPrompt: result.prompt + '\n\n' + styleContext + templateStyleEmphasis + imageRoleInstructions + feedbackGuidance + '\n\n' + languageInstruction,
+        finalPrompt: finalVariations[0],
         // 4 variations for generation
-        promptVariations: promptVariations.map(p => {
-          let enhanced = p;
-          if (imageSelection.references.length > 0) {
-            enhanced += '\n\nSTYLE REFERENCE: The first images provided are style references - match their aesthetic exactly.';
-          }
-          enhanced += '\n\n' + languageInstruction;
-          return enhanced;
-        }),
-        negativePrompt: result.negativePrompt,
+        promptVariations: finalVariations,
+        // Use standard negative prompt if not defined in the big block
+        negativePrompt: "messy, cluttered, ugly text, distorted logo, low resolution, blurry, weird cropping, amateur, wrong colors",
         templateUsed: result.templateUsed,
         params,
         language,

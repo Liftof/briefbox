@@ -91,7 +91,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Prompt is required' }, { status: 400 });
     }
 
-    // Images are optional for Flux Pro
     // Filter & Convert URLs
     // 1. Filter valid HTTP/HTTPS or data URI
     // 2. Convert unsupported formats (SVG, etc.) to PNG Data URI using sharp
@@ -99,6 +98,11 @@ export async function POST(request: NextRequest) {
     // 4. PRIORITIZE reference images (they define the style)
     const processedImageUrls: string[] = [];
     const processedReferenceUrls: string[] = [];
+
+    // NANO BANANA PRO REQUIREMENT: At least one image is strongly recommended for best results
+    if (imageUrls.length === 0 && referenceImages.length === 0) {
+        console.warn('⚠️ No images provided for Nano Banana Pro - results might be suboptimal');
+    }
 
     // Process reference images FIRST - they define the style
     for (const url of referenceImages) {
@@ -273,31 +277,28 @@ ${imageDescriptions.join('\n')}
         return null;
       }
       
-      // FLUX PRO V1.1 CONFIGURATION
-      // This model prioritizes extreme quality and prompt adherence
-      const image_size = aspectRatio === "9:16" ? "portrait_4_3" : "square_hd";
-      
-      const input = {
+      // NANO BANANA PRO CONFIGURATION
+      // As requested: Google SOTA / Flagship model
+      const input: Record<string, any> = {
         prompt: singlePrompt.trim(),
-        // num_images not supported directly on Pro per request usually, but let's check docs. 
-        // Actually Flux Pro usually returns 1 image per request.
-        image_size: image_size as "portrait_4_3" | "square_hd", // Optimize for quality
-        safety_tolerance: "2" as "2", // Allow creative freedom (standard commercial safety)
-        sync_mode: false,
-        enable_safety_checker: false
+        num_images: 1, // One at a time for variations
+        aspect_ratio: aspectRatio === "1:1" ? "1:1" : "4:5", 
+        output_format: "png",
+        image_urls: finalImageUrls, // CRITICAL: We restore image inputs
+        resolution: resolution 
       };
-      
-      // Note: Flux Pro 1.1 doesn't typically support negative_prompt in the same way 
-      // as SDXL, it relies on the positive prompt. We omit it to avoid confusion unless 
-      // we switch to Flux Dev.
 
-      console.log(`   🎨 Flux Pro 1.1 | Variation ${index + 1}:`, singlePrompt.slice(0, 60) + '...');
+      if (negativePrompt && negativePrompt.trim()) {
+        input.negative_prompt = negativePrompt.trim();
+      }
+
+      console.log(`   🍌 Nano Banana Pro | Variation ${index + 1}:`, singlePrompt.slice(0, 60) + '...');
 
       try {
-        // Using Flux Pro 1.1 for maximum quality
-        const result = await fal.subscribe("fal-ai/flux-pro/v1.1", {
+        // Reverting to Nano Banana Pro as requested
+        const result = await fal.subscribe("fal-ai/nano-banana-pro/edit", {
           input,
-          logs: true,
+          logs: true, 
         });
         
         console.log(`   ✅ Variation ${index + 1} completed`);
