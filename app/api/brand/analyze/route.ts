@@ -194,7 +194,7 @@ function discoverInternalPages(baseUrl: string, markdown: string): string[] {
     }
   }
   
-  return discoveredPages.slice(0, 5); // Limit to 5 extra pages
+  return discoveredPages.slice(0, 10); // Limit to 10 extra pages for fallback
 }
 
 // Helper: Extract content nuggets (stats, quotes, facts) from text
@@ -412,8 +412,8 @@ export async function POST(request: Request) {
         console.warn('Scraping error:', e);
     }
 
-    // 1.5. DEEP CRAWL: Discover and scrape additional pages for editorial content
-    console.log('🔍 Deep crawling for editorial content...');
+    // 1.5. DEEP CRAWL: Recursive crawling for maximum editorial content
+    console.log('🔍 Starting recursive deep crawl for editorial content...');
     let deepCrawlContent = '';
     let contentNuggets: ContentNugget[] = [];
     
@@ -421,14 +421,113 @@ export async function POST(request: Request) {
     contentNuggets = extractContentNuggets(firecrawlMarkdown + '\n' + parallelContent);
     console.log(`📊 Found ${contentNuggets.length} content nuggets from main page`);
     
-    // Discover internal pages
-    const internalPages = discoverInternalPages(url, firecrawlMarkdown);
-    console.log('🔗 Discovered internal pages:', internalPages);
-    
-    // Crawl up to 3 internal pages for additional content
-    if (internalPages.length > 0) {
-        try {
-            const deepCrawlPromises = internalPages.slice(0, 3).map(async (pageUrl) => {
+    // Use Firecrawl's /crawl endpoint for recursive crawling (more efficient than individual scrapes)
+    // This will automatically discover and follow links
+    try {
+        const baseUrl = new URL(url);
+        
+        // Start recursive crawl job
+        console.log('🚀 Launching Firecrawl recursive crawl...');
+        const crawlStartRes = await fetch('https://api.firecrawl.dev/v1/crawl', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${process.env.FIRECRAWL_API_KEY}`
+            },
+            body: JSON.stringify({
+                url: baseUrl.origin,
+                maxDepth: 2, // Follow links 2 levels deep
+                limit: 10, // Max 10 pages total (homepage already done, so 9 extra)
+                includePaths: [
+                    '/blog/*', '/articles/*', '/news/*', '/actualites/*',
+                    '/about*', '/a-propos*', '/qui-sommes-nous*',
+                    '/case-stud*', '/success-stor*', '/temoignages*', '/clients*',
+                    '/references*', '/services*', '/solutions*', '/products*',
+                    '/pricing*', '/tarifs*', '/features*', '/fonctionnalites*',
+                    '/team*', '/equipe*', '/careers*', '/jobs*'
+                ],
+                excludePaths: [
+                    '/cdn-cgi/*', '/api/*', '/*.pdf', '/*.zip',
+                    '/login*', '/signup*', '/register*', '/cart*', '/checkout*',
+                    '/terms*', '/privacy*', '/legal*', '/cookies*'
+                ],
+                scrapeOptions: {
+                    formats: ['markdown'],
+                    onlyMainContent: true
+                }
+            })
+        });
+
+        if (crawlStartRes.ok) {
+            const crawlJob = await crawlStartRes.json();
+            
+            if (crawlJob.success && crawlJob.id) {
+                console.log(`📋 Crawl job started: ${crawlJob.id}`);
+                
+                // Poll for results (max 30 seconds)
+                const maxWaitTime = 30000;
+                const pollInterval = 2000;
+                const startTime = Date.now();
+                let crawlComplete = false;
+                let crawlResults: any[] = [];
+                
+                while (Date.now() - startTime < maxWaitTime && !crawlComplete) {
+                    await new Promise(resolve => setTimeout(resolve, pollInterval));
+                    
+                    const statusRes = await fetch(`https://api.firecrawl.dev/v1/crawl/${crawlJob.id}`, {
+                        headers: {
+                            'Authorization': `Bearer ${process.env.FIRECRAWL_API_KEY}`
+                        }
+                    });
+                    
+                    if (statusRes.ok) {
+                        const statusData = await statusRes.json();
+                        console.log(`   📊 Crawl status: ${statusData.status}, pages: ${statusData.completed || 0}/${statusData.total || '?'}`);
+                        
+                        if (statusData.status === 'completed') {
+                            crawlComplete = true;
+                            crawlResults = statusData.data || [];
+                        } else if (statusData.status === 'failed') {
+                            console.warn('❌ Crawl job failed');
+                            break;
+                        }
+                    }
+                }
+                
+                // Process crawl results
+                if (crawlResults.length > 0) {
+                    console.log(`✅ Crawl complete: ${crawlResults.length} pages found`);
+                    
+                    // Skip the first result if it's the homepage (we already have it)
+                    const additionalPages = crawlResults.filter(page => 
+                        page.metadata?.sourceURL !== url && page.markdown
+                    ).slice(0, 7); // Max 7 additional pages
+                    
+                    for (const page of additionalPages) {
+                        const pageUrl = page.metadata?.sourceURL || 'unknown';
+                        const pageContent = page.markdown || '';
+                        
+                        // Add to deep crawl content
+                        deepCrawlContent += `\n\n--- PAGE: ${pageUrl} ---\n${pageContent.substring(0, 4000)}`;
+                        
+                        // Extract nuggets from this page
+                        const pageNuggets = extractContentNuggets(pageContent);
+                        contentNuggets = [...contentNuggets, ...pageNuggets];
+                        
+                        console.log(`   📄 ${pageUrl.replace(baseUrl.origin, '')} - ${pageNuggets.length} nuggets`);
+                    }
+                    
+                    console.log(`📊 Total content from ${additionalPages.length} additional pages`);
+                }
+            }
+        } else {
+            console.warn('⚠️ Crawl API call failed, falling back to direct page scrape');
+            
+            // FALLBACK: Direct scrape of discovered pages (old method)
+            const internalPages = discoverInternalPages(url, firecrawlMarkdown);
+            console.log('🔗 Fallback - discovered internal pages:', internalPages);
+            
+            const deepCrawlPromises = internalPages.slice(0, 7).map(async (pageUrl) => {
                 try {
                     const res = await fetch('https://api.firecrawl.dev/v1/scrape', {
                         method: 'POST',
@@ -464,10 +563,10 @@ export async function POST(request: Request) {
                 contentNuggets = [...contentNuggets, ...pageNuggets];
             }
             
-            console.log(`✅ Deep crawl complete: ${validResults.length} pages, ${contentNuggets.length} total nuggets`);
-        } catch (e) {
-            console.warn('Deep crawl error:', e);
+            console.log(`✅ Fallback deep crawl: ${validResults.length} pages, ${contentNuggets.length} total nuggets`);
         }
+    } catch (e) {
+        console.warn('Deep crawl error:', e);
     }
     
     // Deduplicate nuggets
@@ -478,7 +577,7 @@ export async function POST(request: Request) {
             uniqueNuggetMap.set(key, nugget);
         }
     }
-    contentNuggets = Array.from(uniqueNuggetMap.values()).slice(0, 20);
+    contentNuggets = Array.from(uniqueNuggetMap.values()).slice(0, 30); // Increased from 20 to 30
     
     // Helper to extract images from Markdown
     const extractImagesFromMarkdown = (md: string) => {
@@ -527,8 +626,8 @@ export async function POST(request: Request) {
     SOURCE 3 (PARALLEL AI EXTRACT):
     ${parallelContent.substring(0, 4000)}
     
-    SOURCE 4 (DEEP CRAWL - BLOG/ABOUT/CASE STUDIES):
-    ${deepCrawlContent.substring(0, 5000)}
+    SOURCE 4 (DEEP CRAWL - BLOG/ABOUT/CASE STUDIES - UP TO 7 PAGES):
+    ${deepCrawlContent.substring(0, 10000)}
     ${nuggetsFormatted}
     
     DETECTED IMAGES:
