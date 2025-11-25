@@ -6,6 +6,7 @@ import Sidebar from './components/Sidebar';
 import BentoGrid from './components/BentoGrid';
 import CalendarView from './components/CalendarView';
 import ProjectsView, { addGenerations, loadFeedbackPatterns } from './components/ProjectsView';
+import StrategyView from './components/StrategyView';
 import { TemplateId } from '@/lib/templates';
 
 type Step = 'url' | 'analyzing' | 'bento' | 'playground';
@@ -1121,6 +1122,19 @@ ${enhancement}`);
 
     if (activeTab === 'projects') {
       return <ProjectsView />;
+    }
+
+    if (activeTab === 'strategy') {
+      return (
+        <StrategyView 
+          brandData={brandData} 
+          onUseIdea={(templateId, brief) => {
+            setActiveTab('create');
+            setSelectedTemplate(templateId);
+            setBrief(brief);
+          }} 
+        />
+      );
     }
 
     return (
