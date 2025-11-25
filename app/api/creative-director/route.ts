@@ -44,10 +44,10 @@ const STYLE_REFERENCE_MAP: Record<string, string[]> = {
 // Focus on TASTEFUL, EDITORIAL, and SOPHISTICATED styles
 // Avoiding generic "modern" or "tech" terms that trigger bad AI tropes
 const PROMPT_VARIATIONS = [
-  'Emphasis: Swiss Design Style. Use a grid-based layout, strong typography, and negative space. Clean, structured, and timeless. No decorative elements, just pure design.',
-  'Emphasis: Editorial Photography Vibe. The visual should feel like a spread in a high-end magazine (Kinfolk, Monocle). Minimalist, soft lighting, natural textures. Avoid "tech" graphics.',
-  'Emphasis: Minimalist Abstract. Use simple geometric shapes and a very restrained color palette. The composition should be airy and calm. Think "Museum of Modern Art" poster.',
-  'Emphasis: Typographic Focus. Make the text the hero. Use big, bold, beautiful typography. The background should be solid or a very subtle gradient. Extremely legible and impactful.'
+  'Emphasis: Swiss Design Style. Use a grid-based layout, strong typography. Use bold color accents from the palette to create structure. Clean, timeless, but visually striking.',
+  'Emphasis: Neo-Geometric / Bauhaus. Use bold geometric shapes (circles, arches, rectangles) in brand colors to create a dynamic composition. Play with depth, layering, and colored backgrounds. Architectural and artistic.',
+  'Emphasis: Vibrant Color Blocking. Use the brand\'s secondary colors as large background solids to create high contrast. Modern, energetic, and confident. Avoid white backgrounds if possible.',
+  'Emphasis: Editorial Photography Vibe. The visual should feel like a spread in a high-end magazine. Minimalist, soft lighting, natural textures. If using text, place it on a clean area or use a colored text box.'
 ];
 
 // Get style references based on brand aesthetic
@@ -426,7 +426,7 @@ DESIGN GUIDELINES:
 - COMPOSITION: Clean, balanced, and airy. Use a grid system. Avoid clutter.
 - STYLE: ${variationEmphasis} ${templateStyleEmphasis}
 - ASSETS: Use the provided image as the HERO element. Integrate it naturally into a scene or layout. Do NOT just crop the image.
-- COLOR: Use the brand palette with restraint. Specifically use ${primaryColor} as a primary accent.
+- COLOR: Use the brand palette confidently. Don't be afraid of colored backgrounds, large color fields, or geometric accents. Mix ${primaryColor} with secondary colors for vibrancy.
 - LOGO PROTECTION (CRITICAL): If a logo is provided, it must be treated as a sacred asset. DO NOT DISTORT, WARP, or MODIFY the logo. It must remain perfectly legible and respecting its original proportions. Place it on a high-contrast area.
 - TYPOGRAPHY & TEXT: PERFECT SPELLING IS MANDATORY. Double-check all generated text for correctness. No typos, no gibberish. Use professional kerning and spacing.
 - QUALITY: Editorial quality, sharp details, professional lighting. Avoid "stock photo" look, avoid 3D render artifacts, avoid generic tech graphics.
