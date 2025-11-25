@@ -636,29 +636,50 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
             </div>
           )}
 
-          {/* Suggested Posts */}
+          {/* Suggested Posts - With source indicators */}
           {localData.suggestedPosts && localData.suggestedPosts.length > 0 && (
             <div className="col-span-6 bg-gray-900 p-4 border border-gray-800">
-              <div className="flex items-center gap-2 mb-3">
-                <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full" />
-                <span className="text-[10px] font-mono uppercase tracking-widest text-emerald-400">Posts suggérés</span>
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full" />
+                  <span className="text-[10px] font-mono uppercase tracking-widest text-emerald-400">Posts suggérés</span>
+                </div>
+                <div className="flex items-center gap-2 text-[8px]">
+                  <span className="flex items-center gap-1 text-emerald-400">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />réel
+                  </span>
+                  <span className="flex items-center gap-1 text-amber-400">
+                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />industrie
+                  </span>
+                  <span className="flex items-center gap-1 text-gray-500">
+                    <span className="w-1.5 h-1.5 rounded-full bg-gray-500" />généré
+                  </span>
+                </div>
               </div>
               <div className="grid grid-cols-2 gap-2 max-h-[200px] overflow-y-auto no-scrollbar">
                 {localData.suggestedPosts.slice(0, 6).map((post: any, i: number) => {
                   const icons: Record<string, string> = { stat: '📊', announcement: '📢', quote: '💬', event: '🎤', expert: '👤', product: '✨', didyouknow: '💡' };
                   const displayText = post.headline || (post.metric ? `${post.metric} ${post.metricLabel || ''}` : 'Post');
+                  const sourceColor = post.source === 'real_data' ? 'bg-emerald-500' : post.source === 'industry_insight' ? 'bg-amber-500' : 'bg-gray-500';
+                  const borderColor = post.source === 'real_data' ? 'hover:border-emerald-500/50' : post.source === 'industry_insight' ? 'hover:border-amber-500/50' : 'hover:border-gray-500/50';
+                  
                   return (
                     <button 
                       key={i} 
                       onClick={() => window.dispatchEvent(new CustomEvent('use-template', { detail: { templateId: post.templateId, ...post } }))}
-                      className="p-2 bg-white/5 hover:bg-emerald-500/20 transition-all text-left border border-transparent hover:border-emerald-500/50 group"
+                      className={`p-2 bg-white/5 hover:bg-white/10 transition-all text-left border border-transparent ${borderColor} group relative`}
                     >
                       <div className="flex items-center gap-1.5 mb-1">
                         <span className="text-sm">{icons[post.templateId] || '📝'}</span>
                         <span className="text-[8px] uppercase text-gray-500 font-mono">{post.templateId}</span>
-                        {post.source === 'real_data' && <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 ml-auto" />}
+                        <span className={`w-1.5 h-1.5 rounded-full ${sourceColor} ml-auto`} title={post.source || 'generated'} />
                       </div>
                       <div className="text-white text-[11px] font-medium line-clamp-2">{displayText}</div>
+                      {post.intent && (
+                        <div className="text-[8px] text-gray-500 mt-1 line-clamp-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          💡 {post.intent}
+                        </div>
+                      )}
                     </button>
                   );
                 })}
@@ -666,40 +687,93 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
             </div>
           )}
           
-          {/* Extracted Data */}
-          {localData.contentNuggets && (localData.contentNuggets.realStats?.length > 0 || localData.contentNuggets.testimonials?.length > 0) && (
-            <div className="col-span-6 bg-white border border-gray-200 p-4">
-              <div className="flex items-center gap-2 mb-3">
-                <span className="text-base">🔍</span>
-                <span className="text-[10px] font-mono uppercase tracking-widest text-gray-400">Données extraites</span>
-              </div>
-              {localData.contentNuggets.realStats?.length > 0 && (
-                <div className="mb-3">
-                  <span className="text-[8px] font-mono text-emerald-600 uppercase block mb-1">Stats trouvées</span>
-                  <div className="flex flex-wrap gap-1">
-                    {localData.contentNuggets.realStats.slice(0, 4).map((stat: string, i: number) => (
-                      <button key={i} onClick={() => window.dispatchEvent(new CustomEvent('use-template', { detail: { templateId: 'stat', headline: stat } }))}
-                        className="px-2 py-1 bg-emerald-50 text-emerald-700 text-[9px] hover:bg-emerald-100"
-                      >📊 {stat}</button>
-                    ))}
-                  </div>
-                </div>
-              )}
-              {localData.contentNuggets.testimonials?.length > 0 && (
+          {/* Extracted Data - REAL DATA FROM CRAWL */}
+          <div className="col-span-6 bg-gradient-to-br from-emerald-50 to-teal-50 border-2 border-emerald-200 p-4">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <div className="w-6 h-6 bg-emerald-500 flex items-center justify-center text-white text-xs">✓</div>
                 <div>
-                  <span className="text-[8px] font-mono text-blue-600 uppercase block mb-1">Témoignages</span>
-                  {localData.contentNuggets.testimonials.slice(0, 2).map((t: any, i: number) => (
-                    <button key={i} onClick={() => window.dispatchEvent(new CustomEvent('use-template', { detail: { templateId: 'quote', headline: t.quote, subheadline: t.author } }))}
-                      className="w-full text-left p-2 bg-blue-50 hover:bg-blue-100 mb-1 text-[10px]"
-                    >
-                      <div className="text-gray-700 italic line-clamp-2">"{t.quote}"</div>
-                      {t.author && <div className="text-gray-500 mt-0.5">— {t.author}</div>}
-                    </button>
-                ))}
+                  <span className="text-xs font-semibold text-emerald-900 block">Données réelles extraites</span>
+                  <span className="text-[9px] text-emerald-600">
+                    {localData._crawlStats?.pagesScraped || 1} page{(localData._crawlStats?.pagesScraped || 1) > 1 ? 's' : ''} analysée{(localData._crawlStats?.pagesScraped || 1) > 1 ? 's' : ''}
+                    {localData._crawlStats?.nuggetsExtracted ? ` · ${localData._crawlStats.nuggetsExtracted} éléments` : ''}
+                  </span>
+                </div>
               </div>
+              {localData.contentNuggets?._meta?.hasRealData && (
+                <span className="px-2 py-0.5 bg-emerald-500 text-white text-[8px] font-medium">VÉRIFIÉ</span>
               )}
             </div>
-          )}
+            
+            {/* Real Stats */}
+            {localData.contentNuggets?.realStats?.length > 0 ? (
+              <div className="mb-3">
+                <span className="text-[8px] font-mono text-emerald-700 uppercase block mb-1.5">📊 Stats trouvées sur le site</span>
+                <div className="flex flex-wrap gap-1.5">
+                  {localData.contentNuggets.realStats.slice(0, 6).map((stat: string, i: number) => (
+                    <button key={i} onClick={() => window.dispatchEvent(new CustomEvent('use-template', { detail: { templateId: 'stat', headline: stat } }))}
+                      className="px-2 py-1.5 bg-white border border-emerald-200 text-emerald-800 text-[9px] hover:bg-emerald-100 hover:border-emerald-300 transition-colors"
+                    >{stat}</button>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div className="mb-3 p-2 bg-white/50 border border-dashed border-emerald-200 text-center">
+                <span className="text-[9px] text-emerald-600">Aucune stat trouvée sur le site</span>
+              </div>
+            )}
+            
+            {/* Testimonials */}
+            {localData.contentNuggets?.testimonials?.length > 0 && (
+              <div className="mb-3">
+                <span className="text-[8px] font-mono text-blue-700 uppercase block mb-1.5">💬 Témoignages clients</span>
+                {localData.contentNuggets.testimonials.slice(0, 2).map((t: any, i: number) => (
+                  <button key={i} onClick={() => window.dispatchEvent(new CustomEvent('use-template', { detail: { templateId: 'quote', headline: t.quote, subheadline: t.author } }))}
+                    className="w-full text-left p-2 bg-white border border-blue-100 hover:bg-blue-50 mb-1.5 text-[10px] transition-colors"
+                  >
+                    <div className="text-gray-700 italic line-clamp-2">"{t.quote}"</div>
+                    {t.author && <div className="text-gray-500 mt-0.5 text-[9px]">— {t.author}{t.company ? `, ${t.company}` : ''}</div>}
+                  </button>
+                ))}
+              </div>
+            )}
+            
+            {/* Achievements */}
+            {localData.contentNuggets?.achievements?.length > 0 && (
+              <div className="mb-3">
+                <span className="text-[8px] font-mono text-amber-700 uppercase block mb-1.5">🏆 Prix & Reconnaissances</span>
+                <div className="flex flex-wrap gap-1">
+                  {localData.contentNuggets.achievements.slice(0, 3).map((achievement: string, i: number) => (
+                    <span key={i} className="px-2 py-1 bg-amber-50 border border-amber-200 text-amber-800 text-[9px]">
+                      {achievement.length > 50 ? achievement.slice(0, 47) + '...' : achievement}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+            
+            {/* Blog Topics */}
+            {localData.contentNuggets?.blogTopics?.length > 0 && (
+              <div>
+                <span className="text-[8px] font-mono text-purple-700 uppercase block mb-1.5">📝 Sujets du blog</span>
+                <div className="flex flex-wrap gap-1">
+                  {localData.contentNuggets.blogTopics.slice(0, 4).map((topic: string, i: number) => (
+                    <span key={i} className="px-2 py-1 bg-purple-50 border border-purple-200 text-purple-700 text-[9px]">
+                      {topic.length > 40 ? topic.slice(0, 37) + '...' : topic}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+            
+            {/* No data at all */}
+            {(!localData.contentNuggets?.realStats?.length && !localData.contentNuggets?.testimonials?.length && !localData.contentNuggets?.achievements?.length) && (
+              <div className="text-center py-2">
+                <p className="text-[10px] text-emerald-600">Peu de données structurées trouvées</p>
+                <p className="text-[9px] text-emerald-500 mt-1">Le site utilise peut-être un format non standard</p>
+              </div>
+            )}
+          </div>
 
           {/* Reference Visuals (Inspirations) - PROMINENT SECTION */}
           <div className="col-span-6 bg-gradient-to-br from-violet-50 via-purple-50 to-fuchsia-50 border-2 border-purple-300 p-4 relative overflow-hidden">

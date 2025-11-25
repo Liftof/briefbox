@@ -986,13 +986,99 @@ Be SPECIFIC with numbers. Attribute sources when clear from the excerpts.`;
         };
     });
 
+    // ═══════════════════════════════════════════════════════════════════════════
+    // INJECT REAL EXTRACTED DATA - Don't trust AI to fill contentNuggets properly
+    // ═══════════════════════════════════════════════════════════════════════════
+    
+    // Build REAL contentNuggets from our extraction (not AI-generated)
+    const realContentNuggets = {
+        realStats: contentNuggets
+            .filter(n => n.type === 'stat')
+            .map(n => n.content)
+            .slice(0, 8),
+        testimonials: contentNuggets
+            .filter(n => n.type === 'testimonial')
+            .map(n => ({
+                quote: n.content,
+                author: n.source || 'Client',
+                company: n.context || ''
+            }))
+            .slice(0, 5),
+        achievements: contentNuggets
+            .filter(n => n.type === 'achievement')
+            .map(n => n.content)
+            .slice(0, 5),
+        blogTopics: contentNuggets
+            .filter(n => n.type === 'blog_topic')
+            .map(n => n.content)
+            .slice(0, 5),
+        // Keep track of extraction metadata
+        _extractedCount: contentNuggets.length,
+        _pagesScraped: deepCrawlContent.split('--- PAGE:').length - 1
+    };
+
+    // Merge: prioritize REAL data, then AI-generated as fallback
+    const mergedContentNuggets = {
+        realStats: realContentNuggets.realStats.length > 0 
+            ? realContentNuggets.realStats 
+            : (brandData.contentNuggets?.realStats || []),
+        testimonials: realContentNuggets.testimonials.length > 0
+            ? realContentNuggets.testimonials
+            : (brandData.contentNuggets?.testimonials || []),
+        achievements: realContentNuggets.achievements.length > 0
+            ? realContentNuggets.achievements
+            : (brandData.contentNuggets?.achievements || []),
+        blogTopics: realContentNuggets.blogTopics.length > 0
+            ? realContentNuggets.blogTopics
+            : (brandData.contentNuggets?.blogTopics || []),
+        _meta: {
+            extractedNuggets: realContentNuggets._extractedCount,
+            pagesScraped: realContentNuggets._pagesScraped,
+            hasRealData: realContentNuggets.realStats.length > 0 || realContentNuggets.testimonials.length > 0
+        }
+    };
+
+    console.log('📊 Content Nuggets Summary:');
+    console.log(`   Real stats: ${mergedContentNuggets.realStats.length}`);
+    console.log(`   Testimonials: ${mergedContentNuggets.testimonials.length}`);
+    console.log(`   Achievements: ${mergedContentNuggets.achievements.length}`);
+    console.log(`   Blog topics: ${mergedContentNuggets.blogTopics.length}`);
+    console.log(`   Pages scraped: ${mergedContentNuggets._meta.pagesScraped}`);
+
+    // Also validate suggestedPosts - mark which ones use real data
+    if (Array.isArray(brandData.suggestedPosts)) {
+        brandData.suggestedPosts = brandData.suggestedPosts.map((post: any) => {
+            // Check if this post's content matches any real extracted data
+            const postText = (post.headline || '') + (post.metric || '') + (post.metricLabel || '');
+            const usesRealStat = mergedContentNuggets.realStats.some((stat: string) => 
+                postText.toLowerCase().includes(stat.toLowerCase().slice(0, 20))
+            );
+            const usesRealTestimonial = mergedContentNuggets.testimonials.some((t: any) =>
+                postText.toLowerCase().includes(t.quote?.toLowerCase().slice(0, 30) || '')
+            );
+            
+            return {
+                ...post,
+                source: usesRealStat || usesRealTestimonial ? 'real_data' : (post.source || 'generated'),
+                _verified: usesRealStat || usesRealTestimonial
+            };
+        });
+    }
+
     return NextResponse.json({
       success: true,
       brand: {
         ...brandData,
         url: url,
-        images: uniqueFinalImages, // Keep simple array for compatibility
-        labeledImages: labeledImages // New structured array with descriptions
+        images: uniqueFinalImages,
+        labeledImages: labeledImages,
+        contentNuggets: mergedContentNuggets, // OVERRIDE with real data
+        _crawlStats: {
+            mainPageLength: firecrawlMarkdown.length,
+            deepCrawlLength: deepCrawlContent.length,
+            pagesScraped: mergedContentNuggets._meta.pagesScraped,
+            nuggetsExtracted: mergedContentNuggets._meta.extractedNuggets
+        }
       }
     });
 
