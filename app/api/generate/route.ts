@@ -139,11 +139,33 @@ export async function POST(request: NextRequest) {
 
     // Determine prompts to use
     // If we have variations, we'll generate each image with a different prompt
-    const prompts = hasVariations 
-      ? promptVariations.slice(0, 4) // Use up to 4 variations
-      : [prompt, prompt, prompt, prompt].slice(0, numImages); // Same prompt repeated
+    // IMPORTANT: Filter out any null/undefined/empty prompts
+    let prompts: string[];
+    
+    if (hasVariations) {
+      // Filter valid strings from variations
+      prompts = promptVariations
+        .filter((p: any) => p && typeof p === 'string' && p.trim().length > 0)
+        .slice(0, 4);
+      
+      // If all variations were invalid, fall back to single prompt
+      if (prompts.length === 0 && hasPrompt) {
+        prompts = [prompt];
+      }
+    } else if (hasPrompt) {
+      prompts = [prompt, prompt, prompt, prompt].slice(0, numImages);
+    } else {
+      return NextResponse.json({ success: false, error: 'No valid prompts provided' }, { status: 400 });
+    }
+    
+    // Final safety check
+    if (prompts.length === 0) {
+      return NextResponse.json({ success: false, error: 'No valid prompts after filtering' }, { status: 400 });
+    }
     
     const actualNumImages = Math.min(prompts.length, 4);
+    
+    console.log('📝 Valid prompts:', prompts.length, prompts.map(p => p.slice(0, 30) + '...'));
 
     console.log('🍌 Generating with Nano Banana Pro:');
     console.log('   📝 Prompts:', actualNumImages, hasVariations ? '(with variations)' : '(same prompt)');
@@ -152,8 +174,14 @@ export async function POST(request: NextRequest) {
 
     // Generate each image with its own prompt (for variations) or batch
     const generateSingleImage = async (singlePrompt: string, index: number) => {
+      // Safety check - skip if prompt is invalid
+      if (!singlePrompt || typeof singlePrompt !== 'string' || !singlePrompt.trim()) {
+        console.warn(`⚠️ Skipping generation ${index + 1}: invalid prompt`);
+        return null;
+      }
+      
       const input: Record<string, any> = {
-        prompt: singlePrompt,
+        prompt: singlePrompt.trim(),
         num_images: 1, // One at a time for variations
         aspect_ratio: aspectRatio === "1:1" ? "1:1" : "4:5", 
         output_format: "png",

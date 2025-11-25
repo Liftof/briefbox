@@ -172,13 +172,23 @@ export async function POST(request: NextRequest) {
     // Build the base prompt
     const result = buildTemplatePrompt(templateId, params);
     
+    // Safety check - ensure we have a valid base prompt
+    if (!result.prompt || typeof result.prompt !== 'string') {
+      console.error('❌ Template returned invalid prompt');
+      return NextResponse.json(
+        { success: false, error: 'Failed to build prompt from template' },
+        { status: 500 }
+      );
+    }
+    
     // Get style references based on brand aesthetic
     const styleRefs = getStyleReferences(aesthetic);
     
-    // Create 4 prompt variations
-    const promptVariations = PROMPT_VARIATIONS.map((variation, i) => {
-      return `${result.prompt}\n\n${styleRefs}${variation}`;
-    });
+    // Create 4 prompt variations - each with a different style suffix
+    const promptVariations = PROMPT_VARIATIONS.map((variation) => {
+      const fullPrompt = `${result.prompt}\n\n${styleRefs}${variation}`;
+      return fullPrompt.trim();
+    }).filter(p => p && p.length > 0); // Extra safety filter
 
     // Smart image selection
     const imageSelection = getImagePriority(brand.labeledImages || []);
