@@ -138,8 +138,13 @@ export async function POST(request: NextRequest) {
 
         const imageUrl = extractImageFromResult(result);
         return imageUrl || null;
-      } catch (error) {
-        console.error('Background generation error:', error);
+      } catch (error: any) {
+        // Don't log full error for 403/rate limits - it's expected sometimes
+        if (error.status === 403 || error.status === 429) {
+          console.warn('Background generation skipped (service busy)');
+        } else {
+          console.error('Background generation error:', error.message || error);
+        }
         return null;
       }
     });

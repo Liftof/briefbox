@@ -225,11 +225,19 @@ export async function POST(request: NextRequest) {
         console.error("Fal API Error:", falError);
         
         let errorMessage = falError.message || "Failed to generate images";
-        if (falError.body) {
+        let statusCode = 500;
+        
+        // Check for specific error types
+        if (falError.status === 403 || errorMessage.toLowerCase().includes('forbidden')) {
+            errorMessage = "Service de génération temporairement indisponible. Réessayez dans quelques instants.";
+            statusCode = 503;
+        } else if (falError.status === 429 || errorMessage.toLowerCase().includes('rate limit')) {
+            errorMessage = "Trop de requêtes. Attendez quelques secondes avant de réessayer.";
+            statusCode = 429;
+        } else if (falError.body) {
             try {
                 const body = typeof falError.body === 'string' ? JSON.parse(falError.body) : falError.body;
                 errorMessage = body.message || errorMessage;
-                // If detail exists (pydantic validation error), show it
                 if (body.detail && Array.isArray(body.detail)) {
                     errorMessage += ` Details: ${JSON.stringify(body.detail)}`;
                 }
@@ -241,9 +249,9 @@ export async function POST(request: NextRequest) {
         return NextResponse.json(
           {
             success: false,
-            error: `Fal Error: ${errorMessage}`,
+            error: errorMessage,
           },
-          { status: 500 } 
+          { status: statusCode } 
         );
     }
   } catch (error: any) {
