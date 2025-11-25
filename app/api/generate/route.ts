@@ -54,10 +54,20 @@ async function pollForResult(requestId: string, maxWaitMs: number = 120000): Pro
 }
 
 export async function POST(request: NextRequest) {
-  if (!process.env.FAL_KEY) {
+  const FAL_KEY = process.env.FAL_KEY;
+  
+  if (!FAL_KEY) {
     console.error("❌ Error: FAL_KEY is missing in environment variables.");
     return NextResponse.json({ success: false, error: 'Server configuration error: Missing API Key (FAL_KEY)' }, { status: 500 });
   }
+  
+  // Validate FAL_KEY format (should be a UUID-like string)
+  if (FAL_KEY.length < 20) {
+    console.error("❌ Error: FAL_KEY appears to be invalid (too short).");
+    return NextResponse.json({ success: false, error: 'Server configuration error: Invalid API Key format' }, { status: 500 });
+  }
+  
+  console.log(`🔑 FAL_KEY configured (ends with: ...${FAL_KEY.slice(-6)})`);
 
   try {
     const body = await request.json();
@@ -177,7 +187,29 @@ export async function POST(request: NextRequest) {
     }
     
     // Replace processedImageUrls with combined list for generation
-    const finalImageUrls = allImageUrls.slice(0, 5); // Max 5 images for Fal
+    // IMPORTANT: Data URIs can be very large - prefer HTTP URLs when possible
+    // Also limit total data URI size to avoid payload issues
+    const finalImageUrls: string[] = [];
+    let totalDataUriSize = 0;
+    const MAX_DATA_URI_SIZE = 5 * 1024 * 1024; // 5MB total for data URIs
+    
+    for (const url of allImageUrls.slice(0, 5)) {
+      if (url.startsWith('data:')) {
+        const size = url.length * 0.75; // Approximate decoded size
+        if (totalDataUriSize + size > MAX_DATA_URI_SIZE) {
+          console.warn(`⚠️ Skipping data URI - total size would exceed limit`);
+          continue;
+        }
+        totalDataUriSize += size;
+      }
+      finalImageUrls.push(url);
+    }
+    
+    if (finalImageUrls.length === 0) {
+      return NextResponse.json({ success: false, error: 'Images trop volumineuses. Essayez avec des URLs HTTP ou des images plus légères.' }, { status: 400 });
+    }
+    
+    console.log(`📸 Final image count: ${finalImageUrls.length} (${totalDataUriSize > 0 ? Math.round(totalDataUriSize / 1024) + 'KB data URIs' : 'all HTTP'})`);
 
     // Build image context prefix for the prompt
     // This helps the model understand what each image is for
@@ -261,19 +293,38 @@ ${imageDescriptions.join('\n')}
 
       console.log(`   🎨 Variation ${index + 1}:`, singlePrompt.slice(-60) + '...');
 
-      return fal.subscribe("fal-ai/nano-banana-pro/edit", {
-        input,
-        logs: false,
-      });
+      try {
+        const result = await fal.subscribe("fal-ai/nano-banana-pro/edit", {
+          input,
+          logs: true, // Enable logs for debugging
+        });
+        
+        console.log(`   ✅ Variation ${index + 1} completed`);
+        return result;
+      } catch (err: any) {
+        // Log detailed error info
+        console.error(`   ❌ Variation ${index + 1} error:`, {
+          message: err.message,
+          status: err.status,
+          body: err.body,
+          detail: err.body?.detail,
+        });
+        throw err;
+      }
     };
 
     try {
         // Generate all images in parallel with their respective prompts
         console.log(`🚀 Launching ${actualNumImages} parallel generations...`);
+        console.log(`   📸 Images being sent to Fal:`, finalImageUrls.map(u => u.startsWith('data:') ? 'data:image...' : u.slice(0, 60)));
+        
+        const errors: string[] = [];
         
         const generationPromises = prompts.map((p, i) => 
           generateSingleImage(p, i).catch(err => {
-            console.warn(`⚠️ Generation ${i + 1} failed:`, err.message);
+            const errorMsg = err?.body?.detail || err?.message || String(err);
+            console.error(`❌ Generation ${i + 1} failed:`, errorMsg);
+            errors.push(`Gen ${i + 1}: ${errorMsg}`);
             return null; // Return null for failed generations
           })
         );
@@ -283,28 +334,45 @@ ${imageDescriptions.join('\n')}
         // Extract images from results
         const finalImages: any[] = [];
         
-        for (const result of results) {
-          if (!result) continue; // Skip failed generations
+        for (let i = 0; i < results.length; i++) {
+          const result = results[i];
+          if (!result) {
+            console.log(`   ⚠️ Result ${i + 1}: null (failed)`);
+            continue;
+          }
+          
+          // Log the raw result structure for debugging
+          console.log(`   📦 Result ${i + 1} structure:`, Object.keys(result));
           
           // Cast to any to handle various response formats from Fal
           const r = result as any;
           
           // Extract image URL from various response formats
           if (r.data?.images && Array.isArray(r.data.images)) {
+            console.log(`   ✅ Found images in r.data.images:`, r.data.images.length);
             finalImages.push(...r.data.images);
           } else if (r.images && Array.isArray(r.images)) {
+            console.log(`   ✅ Found images in r.images:`, r.images.length);
             finalImages.push(...r.images);
           } else if (r.image) {
+            console.log(`   ✅ Found single image in r.image`);
             finalImages.push(r.image);
           } else if (r.data?.image) {
+            console.log(`   ✅ Found single image in r.data.image`);
             finalImages.push(r.data.image);
+          } else {
+            console.log(`   ⚠️ Result ${i + 1} has unknown structure:`, JSON.stringify(r).slice(0, 200));
           }
         }
 
         console.log(`✅ Generated ${finalImages.length}/${actualNumImages} images successfully`);
 
         if (finalImages.length === 0) {
-          throw new Error('Aucune image générée. Réessayez.');
+          // Provide more detail about what went wrong
+          const errorDetail = errors.length > 0 
+            ? `Erreurs: ${errors.join('; ')}` 
+            : 'Aucun résultat retourné par le service';
+          throw new Error(`Aucune image générée. ${errorDetail}`);
         }
 
         return NextResponse.json({

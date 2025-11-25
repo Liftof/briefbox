@@ -172,8 +172,9 @@ function PlaygroundContent() {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true); // Collapsed by default
 
   const [brandData, setBrandData] = useState<any | null>(null);
-  const [backgrounds, setBackgrounds] = useState<string[]>([]);
-  const [isGeneratingBackgrounds, setIsGeneratingBackgrounds] = useState(false);
+  // Backgrounds/textures generation removed for cost optimization
+  const backgrounds: string[] = [];
+  const isGeneratingBackgrounds = false;
 
   const [toasts, setToasts] = useState<Toast[]>([]);
   const toastTimeouts = useRef<Record<string, ReturnType<typeof setTimeout>>>({});
@@ -262,49 +263,12 @@ function PlaygroundContent() {
     return () => window.removeEventListener('use-template', handleUseTemplate as EventListener);
   }, [showToast]);
 
-  const generateBackgroundsForBrand = useCallback(
-    async (brand: any) => {
-      if (!brand) return;
-      if (isGeneratingBackgrounds) return;
-      const alreadyHasBackgrounds = Array.isArray(brand.backgrounds) && brand.backgrounds.length > 0;
-      const availablePrompts = Array.isArray(brand.backgroundPrompts) ? brand.backgroundPrompts.filter(Boolean) : [];
-      if (alreadyHasBackgrounds || availablePrompts.length === 0) return;
-
-      try {
-        setIsGeneratingBackgrounds(true);
-        const response = await fetch('/api/backgrounds/generate', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            brand: {
-              name: brand.name,
-              colors: brand.colors,
-              aesthetic: brand.aesthetic,
-              toneVoice: brand.toneVoice,
-              visualMotifs: brand.visualMotifs,
-              backgroundPrompts: availablePrompts.slice(0, 3)
-            }
-          })
-        });
-
-        const data = await response.json();
-        if (response.ok && data.success && Array.isArray(data.backgrounds) && data.backgrounds.length > 0) {
-          setBackgrounds(data.backgrounds);
-          setBrandData((prev: any) => (prev ? { ...prev, backgrounds: data.backgrounds } : prev));
-        }
-      } catch (error) {
-        console.error('Background generation error', error);
-      } finally {
-        setIsGeneratingBackgrounds(false);
-      }
-    },
-    [isGeneratingBackgrounds]
-  );
+  // generateBackgroundsForBrand removed - textures disabled for cost optimization
 
   const hydrateBrand = (brand: any) => {
     if (!brand) return;
     setBrandData(brand);
-    setBackgrounds(Array.isArray(brand.backgrounds) ? brand.backgrounds : []);
+    // setBackgrounds removed - textures disabled
     setVisualIdeas(Array.isArray(brand.visualConcepts) ? brand.visualConcepts : []);
 
     const labeled = Array.isArray(brand.labeledImages) ? brand.labeledImages : [];
@@ -333,9 +297,7 @@ function PlaygroundContent() {
       }
     }
 
-    if ((!brand.backgrounds || brand.backgrounds.length === 0) && brand.backgroundPrompts?.length) {
-      generateBackgroundsForBrand(brand);
-    }
+    // Background generation removed for cost optimization
   };
 
   useEffect(() => {
@@ -830,7 +792,7 @@ ${enhancement}`);
           negativePrompt: negativePrompt,
           imageUrls: imagesToUse,
           referenceImages: styleReferenceImages, // Style reference images
-          numImages: 4,
+          numImages: 2, // Reduced to 2 for cost optimization
           aspectRatio: '1:1'
         })
       });
@@ -1378,7 +1340,7 @@ ${enhancement}`);
               ) : (
                 <>
                     <span className="text-emerald-400">✦</span>
-                    <span>Générer 4 visuels</span>
+                    <span>Générer 2 visuels</span>
                     <svg className="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                     <path d="M5 12h14M12 5l7 7-7 7" />
                   </svg>
@@ -1422,7 +1384,7 @@ ${enhancement}`);
             {/* Loading State */}
             {(status === 'preparing' || status === 'running') && (
               <div className="grid grid-cols-2 gap-4 animate-fade-in">
-              {[1, 2, 3, 4].map((i) => (
+              {[1, 2].map((i) => (
                 <div key={i} className="aspect-square bg-gray-100 border border-gray-200 relative overflow-hidden">
                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/60 to-transparent" 
                        style={{ animation: 'shimmer 2s infinite' }} />

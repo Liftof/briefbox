@@ -950,8 +950,8 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
           )}
         </div>
 
-          {/* Reference Visuals (Inspirations) - PROMINENT SECTION */}
-          <div className="col-span-6 bg-gradient-to-br from-violet-50 via-purple-50 to-fuchsia-50 border-2 border-purple-300 p-4 relative overflow-hidden">
+          {/* Reference Visuals (Inspirations) - PROMINENT SECTION - Full width since textures removed */}
+          <div className="col-span-10 bg-gradient-to-br from-violet-50 via-purple-50 to-fuchsia-50 border-2 border-purple-300 p-4 relative overflow-hidden">
             {/* Decorative elements */}
             <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-purple-200/30 to-transparent rounded-full -translate-y-1/2 translate-x-1/2" />
             <div className="absolute bottom-0 left-0 w-16 h-16 bg-gradient-to-tr from-fuchsia-200/30 to-transparent rounded-full translate-y-1/2 -translate-x-1/2" />
@@ -1012,25 +1012,7 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
             </div>
           </div>
 
-          {/* Textures - Smaller, only 2 */}
-          <div className="col-span-4 bg-gray-900 border border-gray-800 p-3">
-            <span className="text-[9px] font-mono uppercase tracking-widest text-gray-500 block mb-2">Textures générées</span>
-              {backgrounds && backgrounds.length > 0 ? (
-                <div className="grid grid-cols-2 gap-2">
-                {backgrounds.slice(0, 2).map((bg, i) => (
-                    <div key={i} className="aspect-square overflow-hidden border border-gray-800 group relative">
-                      <img src={bg} className="w-full h-full object-cover" loading="lazy" />
-                    </div>
-                  ))}
-                    </div>
-            ) : isGeneratingBackgrounds ? (
-              <div className="flex items-center justify-center py-4">
-                <div className="w-4 h-4 border-2 border-gray-600 border-t-white rounded-full animate-spin" />
-                </div>
-              ) : (
-              <p className="text-[9px] text-gray-600 text-center py-2">Aucune texture</p>
-            )}
-          </div>
+          {/* Textures section removed for cost optimization */}
         </div>
       </section>
 
