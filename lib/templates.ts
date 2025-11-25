@@ -1,12 +1,11 @@
 // ============================================================================
-// TEMPLATE SYSTEM V2 - Creative prompts with quality focus
+// TEMPLATE SYSTEM V3 - Creative Freedom + Quality Focus
 // ============================================================================
-// Key insight: Don't over-specify layout. Focus on:
-// 1. Role & task framing
-// 2. Brand identity (colors, aesthetic, tone)
-// 3. Quality indicators ("trending on Behance", "8k resolution")
-// 4. Creative freedom with the provided images
-// 5. Strong negative prompt
+// Key insight: Don't be too literal. Focus on:
+// 1. Quality and style references
+// 2. Brand identity (colors, aesthetic)
+// 3. Using provided images CREATIVELY
+// 4. Letting the model interpret the brief
 // ============================================================================
 
 export type TemplateId = 'stat' | 'announcement' | 'event' | 'quote' | 'expert' | 'product';
@@ -18,7 +17,7 @@ export interface Template {
   description: string;
   descriptionFr: string;
   icon: string;
-  keywords: string[]; // For auto-detection
+  keywords: string[];
   buildPrompt: (params: TemplateParams) => string;
   negativePrompt: string;
 }
@@ -40,14 +39,21 @@ export interface TemplateParams {
   eventTime?: string;
 }
 
-// Shared quality indicators that make outputs look professional
-const QUALITY_SUFFIX = `
-High quality, 8k resolution, sharp details, premium design.
-Trending on Behance, Dribbble quality.
-Modern, balanced composition with adequate whitespace.`;
+// ============================================================================
+// CORE PROMPT COMPONENTS
+// ============================================================================
 
-// Shared negative prompt
-const NEGATIVE_PROMPT = `messy, cluttered, ugly text, distorted logo, low resolution, blurry, weird cropping, amateur, wrong colors, plastic look, AI artifacts, generic stock photo, boring, flat design without depth`;
+// This is the magic sauce - quality indicators that work
+const QUALITY_BLOCK = `
+QUALITY REQUIREMENTS:
+- Trending on Behance, Dribbble shot of the week quality
+- 8k resolution, sharp details, premium design
+- Rich gradients, NO flat solid backgrounds
+- Depth through shadows, overlays, and layering
+- Premium editorial feel, NOT generic corporate`;
+
+// Negative prompt to avoid common issues
+const NEGATIVE_PROMPT = `solid black background, solid white background, plain flat background, messy, cluttered, ugly text, distorted logo, low resolution, blurry, amateur, generic stock photo, boring, flat design, plastic AI look, corporate clip art, PowerPoint style, basic, uninspired`;
 
 // ============================================================================
 // TEMPLATE DEFINITIONS
@@ -55,7 +61,7 @@ const NEGATIVE_PROMPT = `messy, cluttered, ugly text, distorted logo, low resolu
 
 const TEMPLATES: Template[] = [
   // ---------------------------------------------------------------------------
-  // 1. STAT - Big metric with impact
+  // 1. STAT - Data-driven visual
   // ---------------------------------------------------------------------------
   {
     id: 'stat',
@@ -64,37 +70,39 @@ const TEMPLATES: Template[] = [
     description: 'Big metric with context - perfect for results, growth, impact',
     descriptionFr: 'Chiffre clé avec contexte - résultats, croissance, impact',
     icon: '📊',
-    keywords: ['%', 'résultat', 'croissance', 'chiffre', 'stat', 'data', 'million', 'milliard', 'augmentation', 'baisse', 'impact', 'performance'],
-    buildPrompt: ({ brandName, primaryColor, secondaryColor, aesthetic, toneVoice, metric, metricLabel }) => {
-      return `ROLE: Expert Social Media Designer.
-TASK: Create a high-converting social media visual featuring a KEY STATISTIC.
+    keywords: ['%', 'résultat', 'croissance', 'chiffre', 'stat', 'data', 'million', 'milliard', 'augmentation', 'baisse', 'impact', 'performance', 'x'],
+    buildPrompt: ({ brandName, primaryColor, secondaryColor, aesthetic, toneVoice, headline, metric, metricLabel }) => {
+      const fullContext = headline || `${metric || ''} ${metricLabel || ''}`.trim();
+      
+      return `ROLE: Expert Social Media Designer creating a high-impact visual.
 
-BRIEF: Professional data visualization post for ${brandName}.
-The hero element is the metric "${metric || '+47%'}" ${metricLabel ? `representing "${metricLabel}"` : ''}.
-Make the number BOLD, IMPACTFUL, and the focal point of the design.
+TASK: Design a stunning social media post for ${brandName} about: "${fullContext}"
 
-Style: ${aesthetic || 'Modern, Professional, Bold'}
-Vibe: ${toneVoice || 'Confident, Data-driven, Authoritative'}
+This is NOT just a number on a background. Create a COMPLETE, CREATIVE visual that tells a story.
+The data point should be integrated into an engaging, premium design composition.
 
-BRAND IDENTITY (STRICTLY FOLLOW):
+CREATIVE DIRECTION:
+- Use the provided brand assets as hero elements
+- Create visual metaphors or abstract representations of the data
+- Rich gradient backgrounds using ${primaryColor} and ${secondaryColor}
+- Dynamic composition with depth and movement
+- Typography integrated naturally, not just overlaid
+
+BRAND IDENTITY:
 Brand: ${brandName}
-Primary Color: ${primaryColor} (use prominently)
-Secondary Color: ${secondaryColor}
+Aesthetic: ${aesthetic || 'Modern, Bold, Premium'}
+Vibe: ${toneVoice || 'Confident, Innovative'}
+Colors: ${primaryColor} (primary), ${secondaryColor} (accent)
 
-DESIGN GUIDELINES:
-- COMPOSITION: The metric should be large and impossible to miss
-- ASSETS: Use the provided image(s) as design elements. Integrate naturally.
-- COLOR: Use brand colors creatively - gradients, overlays, accents
-- LOGO: Ensure brand logo is visible and respects brand guidelines
-- DEPTH: Add visual interest through shadows, gradients, or layering
+${QUALITY_BLOCK}
 
-${QUALITY_SUFFIX}`;
+Style references: Spotify Wrapped, Apple keynotes, Stripe marketing, Nike campaigns.`;
     },
     negativePrompt: NEGATIVE_PROMPT
   },
 
   // ---------------------------------------------------------------------------
-  // 2. ANNOUNCEMENT - News, launches, partnerships
+  // 2. ANNOUNCEMENT - News and launches
   // ---------------------------------------------------------------------------
   {
     id: 'announcement',
@@ -105,29 +113,31 @@ ${QUALITY_SUFFIX}`;
     icon: '📢',
     keywords: ['annonce', 'nouveau', 'lancement', 'partenariat', 'rejoindre', 'bienvenue', 'officiel', 'présente', 'dévoile'],
     buildPrompt: ({ brandName, primaryColor, secondaryColor, aesthetic, toneVoice, headline, subheadline }) => {
-      return `ROLE: Expert Social Media Designer.
-TASK: Create a high-converting social media visual for an ANNOUNCEMENT.
+      return `ROLE: Expert Social Media Designer creating a high-impact visual.
 
-BRIEF: Professional announcement post for ${brandName}.
-Main message: "${headline || 'Exciting News'}"
-${subheadline ? `Supporting text: "${subheadline}"` : ''}
+TASK: Design a stunning announcement post for ${brandName}.
+Message: "${headline || 'Exciting News'}"
+${subheadline ? `Context: "${subheadline}"` : ''}
 
-Style: ${aesthetic || 'Modern, Sleek, Professional'}
-Vibe: ${toneVoice || 'Exciting, Confident, Forward-thinking'}
+Create a visual that feels like a major brand moment - exciting, premium, shareable.
+NOT a boring corporate announcement. Make it FEEL important.
 
-BRAND IDENTITY (STRICTLY FOLLOW):
+CREATIVE DIRECTION:
+- Use provided brand assets prominently and creatively
+- Dynamic, energetic composition that draws attention
+- Rich colors: gradients from ${primaryColor} to ${secondaryColor}
+- Premium typography treatment
+- Visual excitement through shapes, patterns, or abstract elements
+
+BRAND IDENTITY:
 Brand: ${brandName}
-Primary Color: ${primaryColor} (use as main accent)
-Secondary Color: ${secondaryColor}
+Aesthetic: ${aesthetic || 'Modern, Sleek, Professional'}
+Vibe: ${toneVoice || 'Exciting, Confident'}
+Colors: ${primaryColor}, ${secondaryColor}
 
-DESIGN GUIDELINES:
-- COMPOSITION: Bold, attention-grabbing, news-worthy feel
-- ASSETS: Use the provided image(s) as HERO elements. Integrate naturally into the scene.
-- COLOR: Use brand palette creatively for backgrounds, shapes, overlays
-- LOGO: Brand logo should be prominent and well-integrated
-- TYPOGRAPHY: Headlines should feel important and newsworthy
+${QUALITY_BLOCK}
 
-${QUALITY_SUFFIX}`;
+Style references: Apple product launches, Tesla announcements, Notion updates.`;
     },
     negativePrompt: NEGATIVE_PROMPT
   },
@@ -144,30 +154,31 @@ ${QUALITY_SUFFIX}`;
     icon: '🎤',
     keywords: ['webinar', 'event', 'événement', 'conférence', 'live', 'inscription', 'rdv', 'rendez-vous', 'save the date', 'join'],
     buildPrompt: ({ brandName, primaryColor, secondaryColor, aesthetic, toneVoice, headline, eventDate, eventTime }) => {
-      return `ROLE: Expert Social Media Designer.
-TASK: Create a high-converting social media visual for an EVENT/WEBINAR.
+      return `ROLE: Expert Social Media Designer creating a high-impact visual.
 
-BRIEF: Professional event promotion for ${brandName}.
+TASK: Design an exciting event promotion for ${brandName}.
 Event: "${headline || 'Upcoming Event'}"
 ${eventDate ? `Date: ${eventDate}` : ''}
-${eventTime ? `Time: ${eventTime}` : ''}
 
-Style: ${aesthetic || 'Modern, Professional, Engaging'}
-Vibe: ${toneVoice || 'Exciting, Exclusive, Must-attend'}
+Create anticipation and FOMO. This should feel like an exclusive, must-attend event.
+NOT a boring calendar invite. Make people WANT to register.
 
-BRAND IDENTITY (STRICTLY FOLLOW):
+CREATIVE DIRECTION:
+- Use provided assets to create an atmosphere of exclusivity
+- Dynamic composition suggesting action and energy
+- Rich gradient background from ${primaryColor} through ${secondaryColor}
+- Clear visual hierarchy: event name prominent
+- Modern, festival-poster or tech-conference vibe
+
+BRAND IDENTITY:
 Brand: ${brandName}
-Primary Color: ${primaryColor}
-Secondary Color: ${secondaryColor}
+Aesthetic: ${aesthetic || 'Modern, Professional, Engaging'}
+Vibe: ${toneVoice || 'Exciting, Exclusive'}
+Colors: ${primaryColor}, ${secondaryColor}
 
-DESIGN GUIDELINES:
-- COMPOSITION: Event poster feel - clear hierarchy of information
-- ASSETS: Use provided images as speakers, venue, or decorative elements
-- COLOR: Brand colors should dominate, creating cohesive event branding
-- CTA: Design should encourage registration/attendance
-- ENERGY: Feel of anticipation and exclusivity
+${QUALITY_BLOCK}
 
-${QUALITY_SUFFIX}`;
+Style references: TED talks, Web Summit, Apple WWDC, Figma Config.`;
     },
     negativePrompt: NEGATIVE_PROMPT
   },
@@ -184,29 +195,31 @@ ${QUALITY_SUFFIX}`;
     icon: '💬',
     keywords: ['témoignage', 'quote', 'citation', 'client', 'avis', 'feedback', 'dit', 'selon', 'confiance'],
     buildPrompt: ({ brandName, primaryColor, secondaryColor, aesthetic, toneVoice, headline, personName, personTitle }) => {
-      return `ROLE: Expert Social Media Designer.
-TASK: Create a high-converting social media visual featuring a TESTIMONIAL/QUOTE.
+      return `ROLE: Expert Social Media Designer creating a high-impact visual.
 
-BRIEF: Professional testimonial post for ${brandName}.
-Quote: "${headline || 'Customer testimonial here'}"
-${personName ? `Attribution: ${personName}${personTitle ? `, ${personTitle}` : ''}` : ''}
+TASK: Design a compelling testimonial/quote post for ${brandName}.
+Quote: "${headline || 'Customer testimonial'}"
+${personName ? `From: ${personName}${personTitle ? `, ${personTitle}` : ''}` : ''}
 
-Style: ${aesthetic || 'Editorial, Sophisticated, Trustworthy'}
-Vibe: ${toneVoice || 'Authentic, Credible, Human'}
+Create an editorial, magazine-quality quote visual. Elegant, credible, premium.
+NOT just text on a background. Create a DESIGNED piece.
 
-BRAND IDENTITY (STRICTLY FOLLOW):
+CREATIVE DIRECTION:
+- Use provided assets as supporting visual elements
+- Sophisticated color palette based on ${primaryColor} and ${secondaryColor}
+- Elegant typography treatment - quotation marks as design elements
+- Subtle textures or gradients for depth
+- Editorial, magazine-quality aesthetic
+
+BRAND IDENTITY:
 Brand: ${brandName}
-Primary Color: ${primaryColor}
-Secondary Color: ${secondaryColor}
+Aesthetic: ${aesthetic || 'Editorial, Sophisticated, Trustworthy'}
+Vibe: ${toneVoice || 'Authentic, Credible'}
+Colors: ${primaryColor}, ${secondaryColor}
 
-DESIGN GUIDELINES:
-- COMPOSITION: Quote should be the hero - elegant typography
-- ASSETS: Use provided image as portrait or decorative element
-- COLOR: Sophisticated palette, quote marks as design elements
-- FEEL: Like a magazine pull-quote or editorial feature
-- CREDIBILITY: Professional, trustworthy, authentic feeling
+${QUALITY_BLOCK}
 
-${QUALITY_SUFFIX}`;
+Style references: Harvard Business Review, Monocle magazine, The Economist, Kinfolk.`;
     },
     negativePrompt: NEGATIVE_PROMPT
   },
@@ -223,29 +236,31 @@ ${QUALITY_SUFFIX}`;
     icon: '👤',
     keywords: ['expert', 'speaker', 'intervenant', 'tribune', 'portrait', 'interview', 'rencontre', 'présente'],
     buildPrompt: ({ brandName, primaryColor, secondaryColor, aesthetic, toneVoice, headline, personName, personTitle }) => {
-      return `ROLE: Expert Social Media Designer.
-TASK: Create a high-converting social media visual featuring an EXPERT/SPEAKER.
+      return `ROLE: Expert Social Media Designer creating a high-impact visual.
 
-BRIEF: Professional expert feature for ${brandName}.
-${headline ? `Topic/Title: "${headline}"` : ''}
+TASK: Design a speaker/expert feature post for ${brandName}.
+${headline ? `Topic: "${headline}"` : ''}
 ${personName ? `Expert: ${personName}${personTitle ? `, ${personTitle}` : ''}` : ''}
 
-Style: ${aesthetic || 'Modern, Editorial, Professional'}
-Vibe: ${toneVoice || 'Authoritative, Inspiring, Thought-provoking'}
+Create a bold, modern expert feature. Think TED talk speaker card meets fashion editorial.
+Dynamic, memorable, authority-building.
 
-BRAND IDENTITY (STRICTLY FOLLOW):
+CREATIVE DIRECTION:
+- Use provided portrait/assets as the HERO element
+- Add graphic elements: shapes, lines, patterns in ${primaryColor}
+- Modern composition mixing photography with graphics
+- Bold color accents using ${secondaryColor}
+- Contemporary, design-forward aesthetic
+
+BRAND IDENTITY:
 Brand: ${brandName}
-Primary Color: ${primaryColor}
-Secondary Color: ${secondaryColor}
+Aesthetic: ${aesthetic || 'Modern, Editorial, Professional'}
+Vibe: ${toneVoice || 'Authoritative, Inspiring'}
+Colors: ${primaryColor}, ${secondaryColor}
 
-DESIGN GUIDELINES:
-- COMPOSITION: Person/expert as hero with supporting graphics
-- ASSETS: Use provided portrait prominently, integrated with brand elements
-- COLOR: Brand colors as overlays, accents, or graphic elements
-- GRAPHICS: Add geometric shapes, lines, or patterns for visual interest
-- AUTHORITY: Design should convey expertise and credibility
+${QUALITY_BLOCK}
 
-${QUALITY_SUFFIX}`;
+Style references: TED speakers, Forbes features, design conference programs.`;
     },
     negativePrompt: NEGATIVE_PROMPT
   },
@@ -262,29 +277,31 @@ ${QUALITY_SUFFIX}`;
     icon: '✨',
     keywords: ['produit', 'feature', 'fonctionnalité', 'nouveau', 'découvrez', 'interface', 'app', 'outil', 'solution'],
     buildPrompt: ({ brandName, primaryColor, secondaryColor, aesthetic, toneVoice, headline, subheadline }) => {
-      return `ROLE: Expert Social Media Designer.
-TASK: Create a high-converting social media visual showcasing a PRODUCT/FEATURE.
+      return `ROLE: Expert Social Media Designer creating a high-impact visual.
 
-BRIEF: Professional product showcase for ${brandName}.
+TASK: Design a product showcase post for ${brandName}.
 Feature: "${headline || 'New Feature'}"
 ${subheadline ? `Description: "${subheadline}"` : ''}
 
-Style: ${aesthetic || 'Clean, Modern, Tech-forward'}
-Vibe: ${toneVoice || 'Innovative, Sleek, Desirable'}
+Create an Apple-level product reveal. Premium, desirable, innovative.
+The product/screenshot should be the hero, beautifully presented.
 
-BRAND IDENTITY (STRICTLY FOLLOW):
+CREATIVE DIRECTION:
+- Use provided product/UI assets as the HERO element
+- Floating or staged presentation (like Apple product shots)
+- Rich gradient background from ${primaryColor} to dark
+- Subtle shadows and reflections for premium feel
+- Clean but NOT boring - add visual interest
+
+BRAND IDENTITY:
 Brand: ${brandName}
-Primary Color: ${primaryColor}
-Secondary Color: ${secondaryColor}
+Aesthetic: ${aesthetic || 'Clean, Modern, Tech-forward'}
+Vibe: ${toneVoice || 'Innovative, Premium'}
+Colors: ${primaryColor}, ${secondaryColor}
 
-DESIGN GUIDELINES:
-- COMPOSITION: Product/UI as hero, beautifully staged
-- ASSETS: Use provided screenshot/product image as the main focus
-- MOCKUP: Frame in device mockup or floating UI style if appropriate
-- COLOR: Brand colors as backgrounds, accents, highlights
-- PREMIUM: Apple/Linear-style product marketing aesthetic
+${QUALITY_BLOCK}
 
-${QUALITY_SUFFIX}`;
+Style references: Apple product pages, Linear app marketing, Notion features.`;
     },
     negativePrompt: NEGATIVE_PROMPT
   }
@@ -318,7 +335,7 @@ export function detectTemplate(brief: string): Template {
         }
       }
     }
-    if (template.id === 'stat' && /\d+[%KMB]?/.test(brief)) {
+    if (template.id === 'stat' && /\d+[%xXKMB]?/.test(brief)) {
       score += 2;
     }
     
@@ -332,7 +349,7 @@ export function detectTemplate(brief: string): Template {
 }
 
 export function extractMetric(brief: string): { metric: string; label: string } | null {
-  const metricMatch = brief.match(/([+-]?\d+[.,]?\d*\s*[%KMB]?|\d{1,3}(?:[,.\s]\d{3})+)/i);
+  const metricMatch = brief.match(/([+-]?\d+[.,]?\d*\s*[%xXKMB]?|\d{1,3}(?:[,.\s]\d{3})+)/i);
   
   if (metricMatch) {
     const metric = metricMatch[1].trim();

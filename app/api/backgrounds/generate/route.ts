@@ -52,22 +52,76 @@ const createColorSwatch = async (hex: string) => {
   return `data:image/png;base64,${buffer.toString('base64')}`;
 };
 
-const buildPrompt = (brand: BrandContext | undefined, idea: string, index: number) => {
-  const primaryColor = Array.isArray(brand?.colors) ? brand?.colors[0] : (brand?.colors || '#1a1a2e');
+// Create a gradient swatch to hint at the model we want gradients, not solid colors
+const createGradientSwatch = async (hex1: string, hex2: string) => {
+  const color1 = hexToRgb(hex1 || '#1a1a2e');
+  const color2 = hexToRgb(hex2 || '#0066ff');
   
-  // Different background styles for variety
+  // Create a simple vertical gradient using raw pixel data
+  const width = 512;
+  const height = 512;
+  const channels = 3;
+  const pixels = Buffer.alloc(width * height * channels);
+  
+  for (let y = 0; y < height; y++) {
+    const ratio = y / height;
+    const r = Math.round(color1.r + (color2.r - color1.r) * ratio);
+    const g = Math.round(color1.g + (color2.g - color1.g) * ratio);
+    const b = Math.round(color1.b + (color2.b - color1.b) * ratio);
+    
+    for (let x = 0; x < width; x++) {
+      const idx = (y * width + x) * channels;
+      pixels[idx] = r;
+      pixels[idx + 1] = g;
+      pixels[idx + 2] = b;
+    }
+  }
+  
+  const buffer = await sharp(pixels, {
+    raw: { width, height, channels }
+  })
+    .png()
+    .toBuffer();
+    
+  return `data:image/png;base64,${buffer.toString('base64')}`;
+};
+
+const buildPrompt = (brand: BrandContext | undefined, idea: string, index: number) => {
+  const colors = Array.isArray(brand?.colors) ? brand?.colors : ['#1a1a2e', '#0066ff', '#00cc88'];
+  const primaryColor = colors[0] || '#1a1a2e';
+  const secondaryColor = colors[1] || '#0066ff';
+  const accentColor = colors[2] || '#00cc88';
+  
+  // VARIED background styles - each uses DIFFERENT colors and styles
+  // NO solid single colors - always gradients, textures, or patterns
   const backgroundStyles = [
     {
-      type: 'gradient',
-      prompt: `Smooth vertical gradient from ${primaryColor} at top to deep black at bottom. Ultra-clean, no elements, subtle film grain texture. Premium minimal aesthetic.`
+      // Style 1: Rich gradient with TWO brand colors
+      prompt: `Beautiful diagonal gradient flowing from ${primaryColor} to ${secondaryColor}. 
+Smooth color transition with subtle noise texture overlay. 
+Rich, vibrant, not flat. Like a premium app splash screen.
+Hint of lighter glow in the center. Depth and dimension.`
     },
     {
-      type: 'blur',
-      prompt: `Soft blurred abstract color field. Primary color ${primaryColor} with darker edges. Dreamy, out-of-focus, ethereal quality. Like a defocused light or aurora. Smooth transitions.`
+      // Style 2: Soft blur with ACCENT color - dreamy
+      prompt: `Ethereal soft-focus abstract composition.
+Blurred shapes of ${secondaryColor} and ${accentColor} floating on dark background.
+Like bokeh lights or aurora borealis. Dreamy, premium, organic.
+NOT a solid color - visible color variations and soft gradients.`
     },
     {
-      type: 'grid',
-      prompt: `Very subtle geometric grid pattern. Fine lines in ${primaryColor} on dark charcoal background. Lines barely visible at 10-15% opacity. Clean, technical, modern. Think: blueprint aesthetic but minimal.`
+      // Style 3: Geometric with ALL brand colors
+      prompt: `Modern geometric abstract composition.
+Overlapping translucent shapes in ${primaryColor}, ${secondaryColor}, and white.
+Shapes at different opacities creating depth. Clean lines, premium feel.
+Like a Stripe or Linear marketing visual. Sophisticated, not boring.`
+    },
+    {
+      // Style 4: Gradient mesh - trendy
+      prompt: `Gradient mesh background with flowing color transitions.
+Colors: ${primaryColor}, ${secondaryColor}, touches of ${accentColor}.
+Organic flowing shapes like Apple's iOS wallpapers.
+Vibrant yet professional. NOT flat, NOT single color.`
     }
   ];
   
@@ -75,14 +129,14 @@ const buildPrompt = (brand: BrandContext | undefined, idea: string, index: numbe
 
   return `${style.prompt}
 
-Requirements:
-- Perfect for social media post backgrounds
+CRITICAL RULES:
+- NEVER a solid single color (no plain black, no plain white)
+- ALWAYS has visible texture, gradient, or pattern
 - Must work with white text overlay
 - No objects, icons, logos, or text
-- Professional quality, 8K resolution
-- Symmetrical and balanced composition
+- 8K resolution, premium quality
 
-Style reference: Apple keynote backgrounds, Stripe website gradients, Linear app aesthetics.`;
+Style: Apple keynote, Stripe gradients, Linear aesthetics, Figma community.`;
 };
 
 const extractImageFromResult = (result: any) => {
@@ -117,8 +171,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'No background prompts provided' }, { status: 400 });
     }
 
-    const palette = Array.isArray(brand?.colors) && brand?.colors.length > 0 ? brand?.colors : ['#111111'];
-    const referenceSwatch = await createColorSwatch(palette[0]);
+    const palette = Array.isArray(brand?.colors) && brand?.colors.length > 0 ? brand?.colors : ['#1a1a2e', '#0066ff'];
+    
+    // Create a gradient swatch instead of solid color (helps model understand we want gradients)
+    const referenceSwatch = await createGradientSwatch(palette[0], palette[1] || palette[0]);
 
     const generationTasks = cleanedPrompts.map(async (prompt: string, index: number) => {
       const styledPrompt = buildPrompt(brand, prompt, index);
