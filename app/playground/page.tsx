@@ -193,7 +193,7 @@ function PlaygroundContent() {
   const [isAddingSource, setIsAddingSource] = useState(false);
 
   const [editingImage, setEditingImage] = useState<string | null>(null);
-  const [styleRefImage, setStyleRefImage] = useState<string | null>(null); // New state for style reference
+  const [styleRefImages, setStyleRefImages] = useState<string[]>([]); // Changed to array for multi-ref
   const [editPrompt, setEditPrompt] = useState('');
   const [visualIdeas, setVisualIdeas] = useState<string[]>([]);
   const [brief, setBrief] = useState('');
@@ -789,9 +789,9 @@ ${enhancement}`);
         ? smartImageSelection 
         : references;
 
-    // Add manual style reference if present
-    if (styleRefImage) {
-      styleReferenceImages = [styleRefImage, ...styleReferenceImages];
+    // Add manual style references if present
+    if (styleRefImages.length > 0) {
+      styleReferenceImages = [...styleRefImages, ...styleReferenceImages];
     }
 
       // STEP 2: Generate with Fal using variations (or single prompt)
@@ -1489,7 +1489,7 @@ ${enhancement}`);
                   <span className="text-[10px] text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">Recommandé</span>
                 </div>
                 
-                {!styleRefImage ? (
+                {styleRefImages.length === 0 ? (
                   <div 
                     className="border-2 border-dashed border-gray-200 rounded-lg p-4 flex flex-col items-center justify-center text-center cursor-pointer hover:border-gray-400 hover:bg-gray-50 transition-all h-32"
                     onClick={() => document.getElementById('style-ref-upload')?.click()}
@@ -1501,31 +1501,46 @@ ${enhancement}`);
                     <span className="text-[9px] text-gray-400 mt-1">Image dont on copiera le look</span>
                   </div>
                 ) : (
-                  <div className="relative h-32 group rounded-lg overflow-hidden border border-emerald-200 shadow-sm">
-                    <img src={styleRefImage} className="w-full h-full object-cover opacity-90 hover:opacity-100 transition-opacity" />
-                    <button
-                      onClick={() => setStyleRefImage(null)}
-                      className="absolute top-2 right-2 w-6 h-6 bg-black/50 text-white rounded-full flex items-center justify-center hover:bg-black transition-colors text-xs backdrop-blur-sm"
+                  <div className="grid grid-cols-3 gap-2">
+                    {styleRefImages.map((img, i) => (
+                      <div key={i} className="relative h-24 group rounded-lg overflow-hidden border border-emerald-200 shadow-sm">
+                        <img src={img} className="w-full h-full object-cover opacity-90 hover:opacity-100 transition-opacity" />
+                        <button
+                          onClick={() => setStyleRefImages(prev => prev.filter((_, idx) => idx !== i))}
+                          className="absolute top-1 right-1 w-5 h-5 bg-black/50 text-white rounded-full flex items-center justify-center hover:bg-black transition-colors text-[10px] backdrop-blur-sm"
                     >
                       ×
                     </button>
-                    <div className="absolute bottom-0 left-0 right-0 bg-black/60 backdrop-blur-sm p-2">
-                      <p className="text-[9px] text-white font-medium text-center uppercase tracking-wider">Référence active</p>
-                    </div>
+                  </div>
+                ))}
+                    {styleRefImages.length < 3 && (
+                      <div 
+                        onClick={() => document.getElementById('style-ref-upload')?.click()}
+                        className="h-24 border-2 border-dashed border-gray-200 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-gray-400 hover:bg-gray-50 transition-all"
+                      >
+                        <span className="text-gray-400 text-xl">+</span>
+                        <span className="text-[9px] text-gray-400">Ajouter</span>
+                  </div>
+                )}
                   </div>
                 )}
                 <input 
                   id="style-ref-upload" 
                   type="file" 
+                  multiple
                   accept="image/*" 
                   className="hidden" 
                   onChange={(e) => {
-                    if (e.target.files?.[0]) {
-                      const reader = new FileReader();
-                      reader.onload = (ev) => {
-                        if (typeof ev.target?.result === 'string') setStyleRefImage(ev.target.result);
-                      };
-                      reader.readAsDataURL(e.target.files[0]);
+                    if (e.target.files?.length) {
+                      Array.from(e.target.files).forEach(file => {
+                        const reader = new FileReader();
+                        reader.onload = (ev) => {
+                          if (typeof ev.target?.result === 'string') {
+                             setStyleRefImages(prev => [...prev, ev.target!.result as string].slice(0, 3));
+                          }
+                        };
+                        reader.readAsDataURL(file);
+                      });
                     }
                   }} 
                 />
