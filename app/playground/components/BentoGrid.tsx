@@ -636,56 +636,109 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
             </div>
           )}
 
-          {/* Suggested Posts - With source indicators */}
-          {localData.suggestedPosts && localData.suggestedPosts.length > 0 && (
-            <div className="col-span-6 bg-gray-900 p-4 border border-gray-800">
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2">
-                  <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full" />
-                  <span className="text-[10px] font-mono uppercase tracking-widest text-emerald-400">Posts suggérés</span>
+          {/* Suggested Posts - Only show if we have REAL data, otherwise ask user */}
+          {(() => {
+            const posts = localData.suggestedPosts || [];
+            const realPosts = posts.filter((p: any) => p.source === 'real_data' || p.source === 'industry_insight');
+            const hasRealData = localData.contentNuggets?._meta?.hasRealData || realPosts.length > 0;
+            
+            // If no real data at all, show prompt to add data
+            if (!hasRealData && posts.length > 0) {
+              return (
+                <div className="col-span-6 bg-gray-900 p-4 border border-gray-800">
+                  <div className="flex items-center gap-2 mb-3">
+                    <span className="w-1.5 h-1.5 bg-amber-500 rounded-full" />
+                    <span className="text-[10px] font-mono uppercase tracking-widest text-amber-400">Posts suggérés</span>
+                  </div>
+                  <div className="text-center py-4">
+                    <div className="text-2xl mb-2">⚠️</div>
+                    <p className="text-sm text-gray-300 mb-2">Ces idées sont générées, pas basées sur vos vraies données</p>
+                    <p className="text-[10px] text-gray-500 mb-3">Ajoutez vos stats et témoignages ci-dessus pour des suggestions pertinentes</p>
+                    <div className="grid grid-cols-2 gap-2 opacity-50">
+                      {posts.slice(0, 4).map((post: any, i: number) => {
+                        const icons: Record<string, string> = { stat: '📊', announcement: '📢', quote: '💬', event: '🎤', expert: '👤', product: '✨', didyouknow: '💡' };
+                        const displayText = post.headline || (post.metric ? `${post.metric} ${post.metricLabel || ''}` : 'Post');
+                        return (
+                          <div key={i} className="p-2 bg-white/5 text-left border border-gray-700">
+                            <div className="flex items-center gap-1.5 mb-1">
+                              <span className="text-sm">{icons[post.templateId] || '📝'}</span>
+                              <span className="text-[8px] uppercase text-gray-600 font-mono">{post.templateId}</span>
+                              <span className="w-1.5 h-1.5 rounded-full bg-gray-500 ml-auto" />
+                            </div>
+                            <div className="text-gray-400 text-[11px] line-clamp-2">{displayText}</div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2 text-[8px]">
-                  <span className="flex items-center gap-1 text-emerald-400">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />réel
-                  </span>
-                  <span className="flex items-center gap-1 text-amber-400">
-                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />industrie
-                  </span>
-                  <span className="flex items-center gap-1 text-gray-500">
-                    <span className="w-1.5 h-1.5 rounded-full bg-gray-500" />généré
-                  </span>
+              );
+            }
+            
+            // Show real posts (prioritize real_data and industry_insight)
+            const sortedPosts = [...posts].sort((a: any, b: any) => {
+              const order: Record<string, number> = { real_data: 0, industry_insight: 1, generated: 2 };
+              return (order[a.source] || 2) - (order[b.source] || 2);
+            });
+            
+            return posts.length > 0 ? (
+              <div className="col-span-6 bg-gray-900 p-4 border border-gray-800">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full" />
+                    <span className="text-[10px] font-mono uppercase tracking-widest text-emerald-400">Posts suggérés</span>
+                    {realPosts.length > 0 && (
+                      <span className="px-1.5 py-0.5 bg-emerald-500/20 text-emerald-400 text-[8px]">
+                        {realPosts.length} basé{realPosts.length > 1 ? 's' : ''} sur vos données
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-2 text-[8px]">
+                    <span className="flex items-center gap-1 text-emerald-400">
+                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />réel
+                    </span>
+                    <span className="flex items-center gap-1 text-amber-400">
+                      <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />industrie
+                    </span>
+                  </div>
                 </div>
-              </div>
-              <div className="grid grid-cols-2 gap-2 max-h-[200px] overflow-y-auto no-scrollbar">
-                {localData.suggestedPosts.slice(0, 6).map((post: any, i: number) => {
-                  const icons: Record<string, string> = { stat: '📊', announcement: '📢', quote: '💬', event: '🎤', expert: '👤', product: '✨', didyouknow: '💡' };
-                  const displayText = post.headline || (post.metric ? `${post.metric} ${post.metricLabel || ''}` : 'Post');
-                  const sourceColor = post.source === 'real_data' ? 'bg-emerald-500' : post.source === 'industry_insight' ? 'bg-amber-500' : 'bg-gray-500';
-                  const borderColor = post.source === 'real_data' ? 'hover:border-emerald-500/50' : post.source === 'industry_insight' ? 'hover:border-amber-500/50' : 'hover:border-gray-500/50';
-                  
-                  return (
-                    <button 
-                      key={i} 
-                      onClick={() => window.dispatchEvent(new CustomEvent('use-template', { detail: { templateId: post.templateId, ...post } }))}
-                      className={`p-2 bg-white/5 hover:bg-white/10 transition-all text-left border border-transparent ${borderColor} group relative`}
-                    >
-                      <div className="flex items-center gap-1.5 mb-1">
-                        <span className="text-sm">{icons[post.templateId] || '📝'}</span>
-                        <span className="text-[8px] uppercase text-gray-500 font-mono">{post.templateId}</span>
-                        <span className={`w-1.5 h-1.5 rounded-full ${sourceColor} ml-auto`} title={post.source || 'generated'} />
-                      </div>
-                      <div className="text-white text-[11px] font-medium line-clamp-2">{displayText}</div>
-                      {post.intent && (
-                        <div className="text-[8px] text-gray-500 mt-1 line-clamp-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                          💡 {post.intent}
+                <div className="grid grid-cols-2 gap-2 max-h-[200px] overflow-y-auto no-scrollbar">
+                  {sortedPosts.slice(0, 6).map((post: any, i: number) => {
+                    const icons: Record<string, string> = { stat: '📊', announcement: '📢', quote: '💬', event: '🎤', expert: '👤', product: '✨', didyouknow: '💡' };
+                    const displayText = post.headline || (post.metric ? `${post.metric} ${post.metricLabel || ''}` : 'Post');
+                    const isReal = post.source === 'real_data';
+                    const isIndustry = post.source === 'industry_insight';
+                    const sourceColor = isReal ? 'bg-emerald-500' : isIndustry ? 'bg-amber-500' : 'bg-gray-600';
+                    const borderColor = isReal ? 'border-emerald-500/30 hover:border-emerald-500/60' : isIndustry ? 'border-amber-500/30 hover:border-amber-500/60' : 'border-gray-700 hover:border-gray-600';
+                    const bgColor = isReal ? 'bg-emerald-500/10' : isIndustry ? 'bg-amber-500/10' : 'bg-white/5';
+                    
+                    // Skip purely generated posts if we have real ones
+                    if (!isReal && !isIndustry && realPosts.length >= 4) return null;
+                    
+                    return (
+                      <button 
+                        key={i} 
+                        onClick={() => window.dispatchEvent(new CustomEvent('use-template', { detail: { templateId: post.templateId, ...post } }))}
+                        className={`p-2 ${bgColor} hover:bg-white/10 transition-all text-left border ${borderColor} group relative`}
+                      >
+                        <div className="flex items-center gap-1.5 mb-1">
+                          <span className="text-sm">{icons[post.templateId] || '📝'}</span>
+                          <span className="text-[8px] uppercase text-gray-500 font-mono">{post.templateId}</span>
+                          <span className={`w-1.5 h-1.5 rounded-full ${sourceColor} ml-auto`} title={post.source || 'generated'} />
                         </div>
-                      )}
-                    </button>
-                  );
-                })}
+                        <div className="text-white text-[11px] font-medium line-clamp-2">{displayText}</div>
+                        {post.intent && (
+                          <div className="text-[8px] text-gray-500 mt-1 line-clamp-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            💡 {post.intent}
+                          </div>
+                        )}
+                      </button>
+                    );
+                  }).filter(Boolean)}
+                </div>
               </div>
-            </div>
-          )}
+            ) : null;
+          })()}
           
           {/* Extracted Data - REAL DATA FROM CRAWL */}
           <div className="col-span-6 bg-gradient-to-br from-emerald-50 to-teal-50 border-2 border-emerald-200 p-4">
@@ -766,11 +819,49 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
               </div>
             )}
             
-            {/* No data at all */}
+            {/* No data at all - Ask user to provide */}
             {(!localData.contentNuggets?.realStats?.length && !localData.contentNuggets?.testimonials?.length && !localData.contentNuggets?.achievements?.length) && (
-              <div className="text-center py-2">
-                <p className="text-[10px] text-emerald-600">Peu de données structurées trouvées</p>
-                <p className="text-[9px] text-emerald-500 mt-1">Le site utilise peut-être un format non standard</p>
+              <div className="bg-white border-2 border-dashed border-amber-300 p-4 text-center">
+                <div className="text-xl mb-2">📝</div>
+                <p className="text-sm font-medium text-gray-700 mb-1">Aucune donnée trouvée sur le site</p>
+                <p className="text-[10px] text-gray-500 mb-3">
+                  On n'a pas réussi à extraire de stats ou témoignages. Ajoutez-les manuellement !
+                </p>
+                <div className="flex flex-wrap gap-2 justify-center">
+                  <button 
+                    onClick={() => {
+                      const stat = prompt('Entrez une stat clé (ex: "10K+ clients actifs")');
+                      if (stat) {
+                        const currentStats = localData.contentNuggets?.realStats || [];
+                        handleChange('contentNuggets', {
+                          ...localData.contentNuggets,
+                          realStats: [...currentStats, stat],
+                          _meta: { ...localData.contentNuggets?._meta, hasRealData: true }
+                        });
+                      }
+                    }}
+                    className="px-3 py-1.5 bg-emerald-500 text-white text-[10px] font-medium hover:bg-emerald-600"
+                  >
+                    + Ajouter une stat
+                  </button>
+                  <button 
+                    onClick={() => {
+                      const quote = prompt('Citation client (ex: "Ce produit a changé notre façon de travailler")');
+                      const author = quote ? prompt('Auteur (ex: "Marie D., CEO de TechCorp")') : null;
+                      if (quote && author) {
+                        const currentTestimonials = localData.contentNuggets?.testimonials || [];
+                        handleChange('contentNuggets', {
+                          ...localData.contentNuggets,
+                          testimonials: [...currentTestimonials, { quote, author, company: '' }],
+                          _meta: { ...localData.contentNuggets?._meta, hasRealData: true }
+                        });
+                      }
+                    }}
+                    className="px-3 py-1.5 bg-blue-500 text-white text-[10px] font-medium hover:bg-blue-600"
+                  >
+                    + Ajouter un témoignage
+                  </button>
+                </div>
               </div>
             )}
           </div>
