@@ -48,17 +48,19 @@ async function searchIndustryInsights(industry: string, brandName: string): Prom
       },
       body: JSON.stringify({
         mode: 'agentic',
-        objective: `Find recent market statistics, industry trends, and business insights for the ${industry} industry. I need:
-1. Market size and growth projections (with numbers)
-2. Key pain points or challenges companies face in this sector
-3. Recent trends or innovations
-4. Benchmark statistics (conversion rates, average metrics, etc.)
-Prefer authoritative sources like Gartner, Forrester, McKinsey, industry reports, and business publications. Focus on data from 2023-2025.`,
+        objective: `Find specific, quantified market data and trends for the ${industry} industry, specifically related to ${brandName}. 
+I do NOT want generic statements like "the market is growing".
+I need:
+1. Precise numbers (CAGR, Market Value in Billions, User adoption %).
+2. Named trends with dates (e.g. "The shift to Headless CMS in 2024").
+3. Specific pain points reported by users in this sector.
+4. Competitor benchmarks if available.
+Focus on data from 2024-2025 reports from Gartner, Forrester, Statista, or specialized industry blogs.`,
         search_queries: [
-          `${industry} market size 2024 2025`,
-          `${industry} industry statistics trends`,
-          `${industry} challenges pain points businesses`,
-          `${industry} benchmark metrics`
+          `${industry} market size statistics 2024 2025`,
+          `${industry} key trends and challenges 2025`,
+          `${industry} user pain points report`,
+          `${industry} benchmark metrics 2024`
         ],
         max_results: 8,
         excerpts: {
@@ -411,7 +413,7 @@ export async function POST(request: Request) {
     } catch (e) {
         console.warn('Scraping error:', e);
     }
-
+    
     // 1.5. DEEP CRAWL: Recursive crawling for maximum editorial content AND images
     console.log('🔍 Starting recursive deep crawl for editorial content & images...');
     let deepCrawlContent = '';
@@ -740,7 +742,7 @@ export async function POST(request: Request) {
             `- [${n.type.toUpperCase()}] ${n.content}${n.source ? ` (Source: ${n.source})` : ''}`
           ).join('\n')}`
         : '';
-
+    
     const combinedContent = `
     SOURCE 1 (FIRECRAWL METADATA):
     Title: ${firecrawlMetadata.title || 'Unknown'}
@@ -776,7 +778,9 @@ export async function POST(request: Request) {
         "colors": ["#hex1", "#hex2", "#hex3", "#hex4"], 
         "fonts": ["Font Name 1", "Font Name 2"],
         "values": ["Value 1", "Value 2", "Value 3"],
-        "features": ["Feature 1", "Feature 2", "Feature 3", "Feature 4", "Feature 5"],
+        "features": ["Specific Feature 1", "Specific Feature 2", "Specific Feature 3", "Specific Feature 4"],
+        "painPoints": ["Customer Pain Point 1", "Pain Point 2", "Pain Point 3"],
+        "vocabulary": ["Specific Term 1", "Specific Term 2", "Brand Keyword 1", "Brand Keyword 2"],
         "services": ["Service 1", "Service 2", "Service 3"],
         "keyPoints": ["Unique Selling Point 1", "USP 2", "USP 3"],
         "aesthetic": ["Adjective 1", "Adjective 2", "Adjective 3"],
@@ -824,8 +828,11 @@ export async function POST(request: Request) {
       
       IMPORTANT ANALYSIS RULES:
       1. **MAIN LOGO:** Identify the brand's OWN logo. Do NOT mistake 'Client' or 'Partner' logos for the main brand logo. Look for the logo usually found in the navbar or footer top.
-      2. **INDUSTRY & MOTIFS:** Identify the specific sector. List 3 visual elements typical of this industry (e.g. for Cybersec: 'Locks', 'Shields', 'Code').
-      3. **IMAGE CATEGORIZATION (STRICT RULES):** 
+      2. **VOCABULARY & PAIN POINTS (NEW):**
+         - 'vocabulary': Extract specific terms the brand uses. E.g. instead of "software", do they say "Platform", "OS", "Hub"? Extract 4-5 distinct terms.
+         - 'painPoints': What problems do they solve? Extract 3-4 specific customer struggles (e.g. "Manual data entry", "Security compliance costs").
+      3. **INDUSTRY & MOTIFS:** Identify the specific sector. List 3 visual elements typical of this industry (e.g. for Cybersec: 'Locks', 'Shields', 'Code').
+      4. **IMAGE CATEGORIZATION (STRICT RULES):** 
          - 'main_logo': The brand's logo.
          - 'client_logo': Logos of customers, partners, or 'featured in' sections.
          - 'product': Physical items, packaging, devices, equipment, or direct representations of what they sell. This includes: microphones, headphones, electronics, tools, furniture, food, clothing, etc.
@@ -999,37 +1006,28 @@ export async function POST(request: Request) {
                 
                 // Use AI to extract structured insights from the search results
                 const insightPrompt = `
-You are an expert at extracting business insights from research data.
-
+You are an expert Market Analyst.
 INDUSTRY: ${brandData.industry}
 BRAND: ${brandData.name}
 
 SEARCH RESULTS:
 ${rawExcerpts.substring(0, 12000)}
 
-Extract 4-6 compelling industry insights that would be valuable for ${brandData.name} to share on social media. 
-Each insight should:
-1. Include a specific statistic or fact (with numbers when possible)
-2. Be relevant to their industry (${brandData.industry})
-3. Be formatted as an engaging "Le saviez-vous ?" (Did you know?)
+TASK: Extract 4-6 ultra-specific market insights.
+CRITICAL RULES:
+1. **NO GENERIC FLUFF**: Reject phrases like "The market is growing", "Social media is important", "Efficiency is key".
+2. **MUST CONTAIN A NUMBER OR PROPER NOUN**: If an insight doesn't have a %, a $, a year, or a specific entity name (e.g. "Google"), DELETE IT.
+3. **SOURCE IS MANDATORY**: Must attribute to a specific report or entity found in the text.
 
-Return ONLY a valid JSON array:
+FORMAT: Return ONLY a valid JSON array:
 [
   {
-    "fact": "The raw statistic or fact (e.g., 'The global CRM market will reach $128.97 billion by 2028')",
-    "didYouKnow": "Le saviez-vous ? [Engaging French version of the fact for social media]",
-    "source": "Source name (e.g., 'Gartner 2024', 'Forbes', 'McKinsey Report')",
+    "fact": "Specific stat (e.g. 'SaaS churn rates increased to 5.4% in 2024')",
+    "didYouKnow": "Le saviez-vous ? [Hook based on the stat]",
+    "source": "Source (e.g. 'Paddle 2024 Report')",
     "relevance": "Why this matters for ${brandData.name}"
   }
-]
-
-Focus on:
-- Market size & growth statistics
-- Pain points / challenges (e.g., "67% of sales teams struggle with...")
-- Trend data (e.g., "AI adoption in X has grown 300%...")
-- Benchmark metrics (e.g., "Average conversion rate in X is...")
-
-Be SPECIFIC with numbers. Attribute sources when clear from the excerpts.`;
+]`;
 
                 const insightResponse = await fetch("https://openrouter.ai/api/v1/chat/completions", {
                     method: "POST",
