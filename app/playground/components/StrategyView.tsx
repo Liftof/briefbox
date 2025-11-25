@@ -27,18 +27,19 @@ export default function StrategyView({ brandData, onUseIdea }: StrategyViewProps
   const insightsCount = brandData?.industryInsights?.length || 0;
   const featuresCount = (brandData?.features?.length || 0) + (brandData?.values?.length || 0);
   const totalIdeas = statsCount + testimonialsCount + insightsCount + featuresCount;
+  // Even if no real data, show generic ideas so the view is never empty
+  const showGenerics = totalIdeas === 0;
 
-  if (!brandData || totalIdeas === 0) {
+  if (!brandData) {
     return (
       <div className="max-w-5xl mx-auto py-12 px-6">
         <div className="text-center py-20 bg-white border border-gray-200 border-dashed">
           <div className="w-16 h-16 bg-gray-50 mx-auto mb-4 flex items-center justify-center text-3xl">
             💡
           </div>
-          <h2 className="text-xl font-semibold text-gray-900 mb-2">Aucune idée détectée pour le moment</h2>
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">Aucune donnée de marque</h2>
           <p className="text-gray-500 max-w-md mx-auto mb-6">
-            Nous n'avons pas encore trouvé de données exploitables sur votre marque. 
-            Essayez de compléter votre identité ou de relancer l'analyse.
+            Veuillez d'abord analyser une marque pour voir les idées.
           </p>
         </div>
       </div>
@@ -52,17 +53,21 @@ export default function StrategyView({ brandData, onUseIdea }: StrategyViewProps
         <div>
           <h1 className="text-2xl font-bold text-gray-900 mb-1">Stratégie de Contenu</h1>
           <p className="text-sm text-gray-500">
-            {totalIdeas} opportunités de communication détectées pour {brandData.name}
+            {totalIdeas > 0 
+              ? `${totalIdeas} opportunités de communication détectées pour ${brandData.name}`
+              : `Idées de contenu génériques pour ${brandData.name} (manque de données)`}
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <span className="px-3 py-1 bg-emerald-100 text-emerald-700 text-xs font-medium rounded-full">
-            {statsCount + testimonialsCount} Données réelles
-          </span>
-          <span className="px-3 py-1 bg-amber-100 text-amber-700 text-xs font-medium rounded-full">
-            {insightsCount} Insights marché
-          </span>
-        </div>
+        {totalIdeas > 0 && (
+          <div className="flex items-center gap-2">
+            <span className="px-3 py-1 bg-emerald-100 text-emerald-700 text-xs font-medium rounded-full">
+              {statsCount + testimonialsCount} Données réelles
+            </span>
+            <span className="px-3 py-1 bg-amber-100 text-amber-700 text-xs font-medium rounded-full">
+              {insightsCount} Insights marché
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Masonry-like Grid */}
@@ -74,6 +79,15 @@ export default function StrategyView({ brandData, onUseIdea }: StrategyViewProps
             <span className="w-2 h-2 bg-emerald-500 rounded-full" />
             <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest">Preuve & Confiance</h3>
           </div>
+
+          {showGenerics && (
+            <div className="group relative bg-white p-6 border border-gray-200 border-dashed hover:border-solid hover:border-emerald-300 transition-all cursor-pointer"
+              onClick={() => onUseIdea('quote', `"Le service de ${brandData.name} est exceptionnel..."`)}>
+              <div className="w-10 h-10 bg-gray-50 text-gray-400 flex items-center justify-center text-xl mb-4">💬</div>
+              <h4 className="text-sm font-medium text-gray-900 mb-2">Idée : Témoignage client</h4>
+              <p className="text-xs text-gray-500">Partagez un retour d'expérience positif pour rassurer vos prospects.</p>
+            </div>
+          )}
 
           {brandData.contentNuggets?.realStats?.map((stat: string, i: number) => (
             <div key={`stat-${i}`} className="group relative bg-white p-6 border border-emerald-100 shadow-sm hover:shadow-md transition-all hover:-translate-y-1 cursor-pointer"
@@ -128,6 +142,15 @@ export default function StrategyView({ brandData, onUseIdea }: StrategyViewProps
             <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest">Expertise & Marché</h3>
           </div>
 
+          {showGenerics && (
+            <div className="group relative bg-white p-6 border border-gray-200 border-dashed hover:border-solid hover:border-amber-300 transition-all cursor-pointer"
+              onClick={() => onUseIdea('expert', `3 conseils pour mieux gérer votre...`)}>
+              <div className="w-10 h-10 bg-gray-50 text-gray-400 flex items-center justify-center text-xl mb-4">💡</div>
+              <h4 className="text-sm font-medium text-gray-900 mb-2">Idée : Conseil d'expert</h4>
+              <p className="text-xs text-gray-500">Partagez votre expertise pour éduquer votre audience.</p>
+            </div>
+          )}
+
           {brandData.industryInsights?.map((insight: any, i: number) => (
             <div key={`insight-${i}`} className="group relative bg-white p-6 border border-amber-100 shadow-sm hover:shadow-md transition-all hover:-translate-y-1 cursor-pointer"
               onClick={() => onUseIdea('expert', insight.didYouKnow || insight.fact)}>
@@ -172,6 +195,15 @@ export default function StrategyView({ brandData, onUseIdea }: StrategyViewProps
             <span className="w-2 h-2 bg-purple-500 rounded-full" />
             <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest">Marque & Produit</h3>
           </div>
+
+          {showGenerics && (
+            <div className="group relative bg-white p-6 border border-gray-200 border-dashed hover:border-solid hover:border-purple-300 transition-all cursor-pointer"
+              onClick={() => onUseIdea('product', `Découvrez notre solution pour...`)}>
+              <div className="w-10 h-10 bg-gray-50 text-gray-400 flex items-center justify-center text-xl mb-4">✨</div>
+              <h4 className="text-sm font-medium text-gray-900 mb-2">Idée : Présentation produit</h4>
+              <p className="text-xs text-gray-500">Mettez en avant votre proposition de valeur unique.</p>
+            </div>
+          )}
 
           {brandData.features?.map((f: string, i: number) => (
             <div key={`feat-${i}`} className="group relative bg-white p-6 border border-purple-100 shadow-sm hover:shadow-md transition-all hover:-translate-y-1 cursor-pointer"

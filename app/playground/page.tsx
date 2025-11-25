@@ -537,12 +537,14 @@ function PlaygroundContent() {
           handleGenerate(smartPrompt.brief, false, brandData, allImages.slice(0, 6));
         }, 600);
       } else {
-        // No good data - let user choose
-        showToast('Choisissez un angle créatif pour commencer', 'info');
+        // No good data - redirect to strategy for manual selection
+        setActiveTab('strategy');
+        showToast('Découvrez vos opportunités de contenu', 'info');
       }
     } else {
-      // Existing user - let them choose
-      showToast('Choisissez un angle créatif pour commencer', 'info');
+      // Existing user - redirect to strategy
+      setActiveTab('strategy');
+      showToast('Découvrez vos opportunités de contenu', 'info');
     }
   };
 
