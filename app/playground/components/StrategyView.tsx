@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { TemplateId } from '@/lib/templates';
 
 // Template definitions for UI display
@@ -37,8 +37,8 @@ export default function StrategyView({ brandData, onUseIdea }: StrategyViewProps
   if (!brandData) {
     return (
       <div className="max-w-5xl mx-auto py-12 px-6">
-        <div className="text-center py-20 bg-white border border-gray-200 border-dashed">
-          <div className="w-16 h-16 bg-gray-50 mx-auto mb-4 flex items-center justify-center text-3xl">
+        <div className="text-center py-20 bg-white border border-gray-200 border-dashed rounded-lg">
+          <div className="w-16 h-16 bg-gray-50 mx-auto mb-4 flex items-center justify-center text-3xl rounded-full">
             💡
           </div>
           <h2 className="text-xl font-semibold text-gray-900 mb-2">Aucune donnée de marque</h2>
@@ -52,95 +52,129 @@ export default function StrategyView({ brandData, onUseIdea }: StrategyViewProps
 
   return (
     <div className="max-w-7xl mx-auto py-8 px-6 animate-fade-in">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between mb-10 gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Stratégie de Contenu</h1>
-          <p className="text-gray-500">
-            {totalIdeas > 0 
-              ? `${totalIdeas} angles d'attaque détectés pour ${brandData.name}`
-              : `Pistes de contenu suggérées pour ${brandData.name}`}
-          </p>
-        </div>
-        {totalIdeas > 0 && (
-          <div className="flex flex-wrap gap-2">
-            <div className="px-4 py-2 bg-white border border-emerald-100 text-emerald-700 text-sm font-medium rounded-lg shadow-sm flex items-center gap-2">
-              <span className="w-2 h-2 bg-emerald-500 rounded-full"/>
-              {statsCount + testimonialsCount} Preuves
-            </div>
-            <div className="px-4 py-2 bg-white border border-amber-100 text-amber-700 text-sm font-medium rounded-lg shadow-sm flex items-center gap-2">
-              <span className="w-2 h-2 bg-amber-500 rounded-full"/>
-              {insightsCount} Insights
-            </div>
-            <div className="px-4 py-2 bg-white border border-purple-100 text-purple-700 text-sm font-medium rounded-lg shadow-sm flex items-center gap-2">
-              <span className="w-2 h-2 bg-purple-500 rounded-full"/>
-              {featuresCount} Atouts
-            </div>
+      {/* Header Section */}
+      <div className="mb-10">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-6">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">Stratégie & Idées</h1>
+            <p className="text-gray-500 text-sm max-w-xl">
+              Explorez les angles de communication détectés pour <span className="font-medium text-gray-900">{brandData.name}</span>. 
+              Cliquez sur une carte pour générer un visuel instantanément.
+            </p>
           </div>
-        )}
+          
+          {totalIdeas > 0 && (
+            <div className="flex gap-3">
+              <div className="px-3 py-1.5 bg-white border border-gray-200 rounded-md shadow-sm flex items-center gap-2 text-xs text-gray-600">
+                <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full"/>
+                {statsCount + testimonialsCount} Preuves
+              </div>
+              <div className="px-3 py-1.5 bg-white border border-gray-200 rounded-md shadow-sm flex items-center gap-2 text-xs text-gray-600">
+                <span className="w-1.5 h-1.5 bg-amber-500 rounded-full"/>
+                {insightsCount} Insights
+              </div>
+              <div className="px-3 py-1.5 bg-white border border-gray-200 rounded-md shadow-sm flex items-center gap-2 text-xs text-gray-600">
+                <span className="w-1.5 h-1.5 bg-purple-500 rounded-full"/>
+                {featuresCount} Atouts
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* STYLE MATCH ZONE - NEW FEATURE */}
+        <div className="bg-gradient-to-r from-gray-900 to-gray-800 text-white rounded-xl p-6 shadow-lg mb-10 flex flex-col md:flex-row items-center justify-between gap-6">
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <span className="bg-white/20 text-white text-[10px] font-mono uppercase tracking-widest px-2 py-1 rounded">Nouveau</span>
+              <h3 className="text-lg font-semibold">Reproduire un style</h3>
+            </div>
+            <p className="text-gray-300 text-sm max-w-md">
+              Vous avez vu un visuel incroyable sur Instagram ou Pinterest ? 
+              Importez-le ici et nous recréerons ce style exact pour votre marque.
+            </p>
+          </div>
+          <button 
+            onClick={() => document.getElementById('style-upload')?.click()}
+            className="whitespace-nowrap px-5 py-3 bg-white text-gray-900 text-sm font-medium rounded-lg hover:bg-gray-100 transition-colors flex items-center gap-2"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+            Importer une référence
+          </button>
+          <input 
+            id="style-upload" 
+            type="file" 
+            accept="image/*" 
+            className="hidden" 
+            onChange={(e) => {
+              if (e.target.files?.[0]) {
+                // Logic to handle style transfer would go here
+                // For now, just trigger a toast or console log
+                console.log("Style reference uploaded:", e.target.files[0]);
+              }
+            }}
+          />
+        </div>
       </div>
 
       {/* Masonry-like Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         
         {/* COL 1: PROOF & TRUST (Stats, Testimonials) */}
         <div className="space-y-6">
-          <div className="flex items-center gap-3 mb-2 pb-2 border-b border-gray-100">
-            <div className="w-8 h-8 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center text-lg">📊</div>
-            <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide">Preuve & Confiance</h3>
+          <div className="flex items-center justify-between pb-3 border-b border-gray-100">
+            <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest">Preuve & Confiance</h3>
+            <span className="text-xs text-gray-300">{statsCount + testimonialsCount}</span>
           </div>
 
           {showGenerics && (
-            <div className="group relative bg-white p-6 rounded-xl border border-gray-200 border-dashed hover:border-solid hover:border-emerald-400 transition-all cursor-pointer hover:shadow-md"
+            <div className="group relative bg-white p-5 rounded-lg border border-gray-200 border-dashed hover:border-emerald-400 hover:shadow-md transition-all cursor-pointer"
               onClick={() => onUseIdea('quote', `"Le service de ${brandData.name} est exceptionnel..."`)}>
-              <div className="flex justify-between items-start mb-4">
-                <span className="text-3xl">💬</span>
-                <span className="bg-gray-100 text-gray-500 text-[10px] px-2 py-1 rounded-full uppercase tracking-wider font-medium">Générique</span>
+              <div className="flex items-start gap-3 mb-3">
+                <div className="w-8 h-8 bg-gray-50 rounded-full flex items-center justify-center text-lg text-gray-400">💬</div>
+                <div>
+                  <h4 className="text-sm font-semibold text-gray-900">Témoignage client</h4>
+                  <span className="text-[10px] text-gray-400 bg-gray-50 px-1.5 py-0.5 rounded">Générique</span>
+                </div>
               </div>
-              <h4 className="text-lg font-semibold text-gray-900 mb-2">Idée : Témoignage client</h4>
-              <p className="text-sm text-gray-500 leading-relaxed">Partagez un retour d'expérience positif pour rassurer vos prospects et créer de la confiance.</p>
-              <div className="mt-4 pt-4 border-t border-gray-50 flex justify-end">
-                <span className="text-xs font-medium text-emerald-600 group-hover:underline">Créer ce post →</span>
-              </div>
+              <p className="text-xs text-gray-500 leading-relaxed">Partagez un retour d'expérience positif pour rassurer vos prospects.</p>
             </div>
           )}
 
           {brandData.contentNuggets?.realStats?.map((stat: string, i: number) => (
-            <div key={`stat-${i}`} className="group relative bg-white p-7 rounded-xl border border-gray-100 shadow-sm hover:shadow-lg hover:border-emerald-200 transition-all hover:-translate-y-1 cursor-pointer"
+            <div key={`stat-${i}`} className="group relative bg-white p-6 rounded-lg border border-gray-200 shadow-sm hover:shadow-md hover:border-emerald-300 transition-all cursor-pointer"
               onClick={() => onUseIdea('stat', stat)}>
-              <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity bg-gray-900 text-white text-[10px] px-3 py-1.5 rounded-full font-medium">
-                Utiliser
+              <div className="mb-4">
+                <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 px-2 py-1 rounded uppercase tracking-wide">Statistique</span>
               </div>
-              <div className="text-emerald-600 font-bold text-xs uppercase tracking-widest mb-3">Chiffre Clé</div>
-              <h4 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4 leading-tight">
+              <h4 className="text-xl font-semibold text-gray-900 mb-4 leading-snug">
                 {stat}
               </h4>
-              <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-50">
-                <span className="flex items-center gap-1.5 text-xs font-medium text-gray-500 bg-gray-50 px-2 py-1 rounded">
-                  {getTemplateIcon('stat')} Statistique
-                </span>
-                <span className="text-[10px] text-gray-400">Source: Site Web</span>
+              <div className="flex items-center justify-between pt-4 border-t border-gray-50">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xs text-gray-400">Format suggéré</span>
+                  <span className="text-xs font-medium text-gray-700">{getTemplateIcon('stat')} Chiffre clé</span>
+                </div>
+                <span className="text-emerald-600 opacity-0 group-hover:opacity-100 transition-opacity text-xs font-medium">Créer →</span>
               </div>
             </div>
           ))}
 
           {brandData.contentNuggets?.testimonials?.map((t: any, i: number) => (
-            <div key={`testi-${i}`} className="group relative bg-gradient-to-br from-white to-emerald-50/30 p-7 rounded-xl border border-gray-100 shadow-sm hover:shadow-lg hover:border-emerald-200 transition-all hover:-translate-y-1 cursor-pointer"
+            <div key={`testi-${i}`} className="group relative bg-white p-6 rounded-lg border border-gray-200 shadow-sm hover:shadow-md hover:border-emerald-300 transition-all cursor-pointer"
               onClick={() => onUseIdea('quote', `"${t.quote}" — ${t.author}`)}>
-              <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity bg-gray-900 text-white text-[10px] px-3 py-1.5 rounded-full font-medium">
-                Utiliser
+              <div className="mb-3">
+                <span className="text-3xl text-emerald-200 font-serif">“</span>
               </div>
-              <div className="text-emerald-600 text-4xl font-serif leading-none mb-2 opacity-30">"</div>
-              <blockquote className="text-lg text-gray-800 font-medium mb-6 leading-relaxed relative z-10">
+              <blockquote className="text-sm text-gray-700 font-medium mb-4 leading-relaxed pl-2 border-l-2 border-emerald-100">
                 {t.quote}
               </blockquote>
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-white border border-emerald-100 rounded-full flex items-center justify-center text-sm font-bold text-emerald-700 shadow-sm">
+                <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center text-xs font-bold text-gray-500">
                   {t.author?.[0] || '?'}
                 </div>
-                <div>
-                  <div className="font-bold text-sm text-gray-900">{t.author || 'Client'}</div>
-                  <div className="text-xs text-gray-500">{t.role || 'Témoignage vérifié'}</div>
+                <div className="min-w-0">
+                  <div className="text-xs font-bold text-gray-900 truncate">{t.author || 'Client'}</div>
+                  <div className="text-[10px] text-gray-500 truncate">{t.role || 'Vérifié'}</div>
                 </div>
               </div>
             </div>
@@ -149,60 +183,56 @@ export default function StrategyView({ brandData, onUseIdea }: StrategyViewProps
 
         {/* COL 2: EXPERTISE & INDUSTRY (Insights) */}
         <div className="space-y-6">
-          <div className="flex items-center gap-3 mb-2 pb-2 border-b border-gray-100">
-            <div className="w-8 h-8 bg-amber-100 text-amber-600 rounded-full flex items-center justify-center text-lg">💡</div>
-            <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide">Expertise & Marché</h3>
+          <div className="flex items-center justify-between pb-3 border-b border-gray-100">
+            <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest">Expertise & Marché</h3>
+            <span className="text-xs text-gray-300">{insightsCount}</span>
           </div>
 
           {showGenerics && (
-            <div className="group relative bg-white p-6 rounded-xl border border-gray-200 border-dashed hover:border-solid hover:border-amber-400 transition-all cursor-pointer hover:shadow-md"
+            <div className="group relative bg-white p-5 rounded-lg border border-gray-200 border-dashed hover:border-amber-400 hover:shadow-md transition-all cursor-pointer"
               onClick={() => onUseIdea('expert', `3 conseils pour mieux gérer votre...`)}>
-              <div className="flex justify-between items-start mb-4">
-                <span className="text-3xl">🎓</span>
-                <span className="bg-gray-100 text-gray-500 text-[10px] px-2 py-1 rounded-full uppercase tracking-wider font-medium">Générique</span>
+              <div className="flex items-start gap-3 mb-3">
+                <div className="w-8 h-8 bg-gray-50 rounded-full flex items-center justify-center text-lg text-gray-400">💡</div>
+                <div>
+                  <h4 className="text-sm font-semibold text-gray-900">Conseil d'expert</h4>
+                  <span className="text-[10px] text-gray-400 bg-gray-50 px-1.5 py-0.5 rounded">Générique</span>
+                </div>
               </div>
-              <h4 className="text-lg font-semibold text-gray-900 mb-2">Idée : Conseil d'expert</h4>
-              <p className="text-sm text-gray-500 leading-relaxed">Partagez votre expertise pour éduquer votre audience et vous positionner en leader.</p>
-              <div className="mt-4 pt-4 border-t border-gray-50 flex justify-end">
-                <span className="text-xs font-medium text-amber-600 group-hover:underline">Créer ce post →</span>
-              </div>
+              <p className="text-xs text-gray-500 leading-relaxed">Partagez votre expertise pour éduquer votre audience.</p>
             </div>
           )}
 
           {brandData.industryInsights?.map((insight: any, i: number) => (
-            <div key={`insight-${i}`} className="group relative bg-white p-7 rounded-xl border border-gray-100 shadow-sm hover:shadow-lg hover:border-amber-200 transition-all hover:-translate-y-1 cursor-pointer"
+            <div key={`insight-${i}`} className="group relative bg-white p-6 rounded-lg border border-gray-200 shadow-sm hover:shadow-md hover:border-amber-300 transition-all cursor-pointer"
               onClick={() => onUseIdea('expert', insight.didYouKnow || insight.fact)}>
-              <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity bg-gray-900 text-white text-[10px] px-3 py-1.5 rounded-full font-medium">
-                Utiliser
+              <div className="mb-3 flex items-center gap-2">
+                <span className="text-lg">💡</span>
+                <span className="text-[10px] font-bold text-amber-700 bg-amber-50 px-2 py-1 rounded uppercase tracking-wide">Le saviez-vous ?</span>
               </div>
-              <div className="flex items-center gap-2 mb-3">
-                <span className="bg-amber-100 text-amber-700 text-[10px] px-2 py-1 rounded font-bold uppercase tracking-wider">Le saviez-vous ?</span>
-              </div>
-              <h4 className="text-lg font-semibold text-gray-900 mb-3 leading-snug">
+              <h4 className="text-sm font-medium text-gray-900 mb-3 leading-relaxed">
                 {insight.didYouKnow || insight.fact}
               </h4>
               {insight.source && (
-                <div className="flex items-center gap-1 text-[10px] text-gray-400 italic mt-2">
-                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>
-                  Source: {insight.source}
-                </div>
+                <p className="text-[10px] text-gray-400 italic mb-4">Source: {insight.source}</p>
               )}
-              <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-50">
-                <span className="flex items-center gap-1.5 text-xs font-medium text-gray-500 bg-gray-50 px-2 py-1 rounded">
-                  {getTemplateIcon('expert')} Expertise
-                </span>
+              <div className="flex items-center justify-between pt-4 border-t border-gray-50">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xs text-gray-400">Format</span>
+                  <span className="text-xs font-medium text-gray-700">{getTemplateIcon('expert')} Expertise</span>
+                </div>
+                <span className="text-amber-600 opacity-0 group-hover:opacity-100 transition-opacity text-xs font-medium">Créer →</span>
               </div>
             </div>
           ))}
 
           {brandData.contentNuggets?.blogTopics?.slice(0, 3).map((topic: string, i: number) => (
-            <div key={`topic-${i}`} className="group relative bg-gray-50 p-5 rounded-xl border border-gray-200 hover:bg-white hover:border-gray-300 hover:shadow-md transition-all cursor-pointer"
+            <div key={`topic-${i}`} className="group relative bg-white p-4 rounded-lg border border-gray-200 hover:border-gray-300 hover:shadow-sm transition-all cursor-pointer"
               onClick={() => onUseIdea('expert', topic)}>
               <div className="flex items-start gap-3">
-                <div className="w-8 h-8 bg-white rounded border border-gray-200 flex items-center justify-center text-lg shadow-sm flex-shrink-0">📰</div>
+                <span className="text-xl opacity-50">📰</span>
                 <div>
-                  <h4 className="text-sm font-semibold text-gray-900 mb-1 leading-snug">{topic}</h4>
-                  <p className="text-xs text-gray-500">Sujet issu de votre blog</p>
+                  <h4 className="text-sm font-medium text-gray-900 mb-1">{topic}</h4>
+                  <p className="text-[10px] text-gray-400">Sujet issu de votre blog</p>
                 </div>
               </div>
             </div>
@@ -211,57 +241,52 @@ export default function StrategyView({ brandData, onUseIdea }: StrategyViewProps
 
         {/* COL 3: BRAND & PRODUCT (Features, Values) */}
         <div className="space-y-6">
-          <div className="flex items-center gap-3 mb-2 pb-2 border-b border-gray-100">
-            <div className="w-8 h-8 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center text-lg">✨</div>
-            <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wide">Marque & Produit</h3>
+          <div className="flex items-center justify-between pb-3 border-b border-gray-100">
+            <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest">Marque & Produit</h3>
+            <span className="text-xs text-gray-300">{featuresCount}</span>
           </div>
 
           {showGenerics && (
-            <div className="group relative bg-white p-6 rounded-xl border border-gray-200 border-dashed hover:border-solid hover:border-purple-400 transition-all cursor-pointer hover:shadow-md"
+            <div className="group relative bg-white p-5 rounded-lg border border-gray-200 border-dashed hover:border-purple-400 hover:shadow-md transition-all cursor-pointer"
               onClick={() => onUseIdea('product', `Découvrez notre solution pour...`)}>
-              <div className="flex justify-between items-start mb-4">
-                <span className="text-3xl">📦</span>
-                <span className="bg-gray-100 text-gray-500 text-[10px] px-2 py-1 rounded-full uppercase tracking-wider font-medium">Générique</span>
+              <div className="flex items-start gap-3 mb-3">
+                <div className="w-8 h-8 bg-gray-50 rounded-full flex items-center justify-center text-lg text-gray-400">✨</div>
+                <div>
+                  <h4 className="text-sm font-semibold text-gray-900">Focus Produit</h4>
+                  <span className="text-[10px] text-gray-400 bg-gray-50 px-1.5 py-0.5 rounded">Générique</span>
+                </div>
               </div>
-              <h4 className="text-lg font-semibold text-gray-900 mb-2">Idée : Présentation produit</h4>
-              <p className="text-sm text-gray-500 leading-relaxed">Mettez en avant votre produit phare ou une fonctionnalité clé.</p>
-              <div className="mt-4 pt-4 border-t border-gray-50 flex justify-end">
-                <span className="text-xs font-medium text-purple-600 group-hover:underline">Créer ce post →</span>
-              </div>
+              <p className="text-xs text-gray-500 leading-relaxed">Mettez en avant votre produit phare.</p>
             </div>
           )}
 
           {brandData.features?.map((f: string, i: number) => (
-            <div key={`feat-${i}`} className="group relative bg-white p-7 rounded-xl border border-purple-100 shadow-sm hover:shadow-lg hover:border-purple-300 transition-all hover:-translate-y-1 cursor-pointer"
+            <div key={`feat-${i}`} className="group relative bg-white p-6 rounded-lg border border-gray-200 shadow-sm hover:shadow-md hover:border-purple-300 transition-all cursor-pointer"
               onClick={() => onUseIdea('product', `Découvrez ${f}`)}>
-              <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity bg-gray-900 text-white text-[10px] px-3 py-1.5 rounded-full font-medium">
-                Utiliser
+              <div className="flex items-start justify-between mb-3">
+                <div className="w-8 h-8 bg-purple-50 text-purple-600 rounded-lg flex items-center justify-center text-sm shadow-sm">✨</div>
+                <span className="text-[10px] text-gray-400 bg-gray-50 px-1.5 py-0.5 rounded">Atout</span>
               </div>
-              <div className="w-12 h-12 bg-purple-50 text-purple-600 rounded-2xl flex items-center justify-center text-2xl mb-4 shadow-sm group-hover:scale-110 transition-transform duration-300">
-                ✨
-              </div>
-              <h4 className="text-lg font-bold text-gray-900 mb-2">
+              <h4 className="text-base font-semibold text-gray-900 mb-2">
                 {f}
               </h4>
-              <p className="text-sm text-gray-500 leading-relaxed mb-4">
-                Mettez en avant cet atout compétitif clé.
+              <p className="text-xs text-gray-500 leading-relaxed mb-4">
+                Mettez en avant cet avantage compétitif.
               </p>
-              <div className="flex items-center justify-between mt-auto pt-4 border-t border-gray-50">
-                <span className="flex items-center gap-1.5 text-xs font-medium text-gray-500 bg-gray-50 px-2 py-1 rounded">
-                  {getTemplateIcon('product')} Produit
-                </span>
+              <div className="flex justify-end">
+                <span className="text-purple-600 opacity-0 group-hover:opacity-100 transition-opacity text-xs font-medium">Générer →</span>
               </div>
             </div>
           ))}
 
           {brandData.values?.map((v: string, i: number) => (
-            <div key={`val-${i}`} className="group relative bg-gradient-to-br from-blue-50 to-indigo-50 p-6 rounded-xl border border-blue-100 hover:border-blue-300 hover:shadow-md transition-all cursor-pointer"
+            <div key={`val-${i}`} className="group relative bg-gradient-to-br from-gray-50 to-white p-5 rounded-lg border border-gray-200 hover:border-blue-300 transition-all cursor-pointer"
               onClick={() => onUseIdea('announcement', `Nos valeurs : ${v}`)}>
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-[10px] font-bold text-blue-600 uppercase tracking-widest bg-white/50 px-2 py-1 rounded">Valeur</span>
-                <span className="text-xl group-hover:rotate-12 transition-transform duration-300">💎</span>
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-sm">💎</span>
+                <span className="text-[10px] font-bold text-gray-500 uppercase tracking-wider">Valeur</span>
               </div>
-              <h4 className="text-xl font-bold text-blue-900 leading-tight">
+              <h4 className="text-sm font-bold text-gray-900">
                 {v}
               </h4>
             </div>
