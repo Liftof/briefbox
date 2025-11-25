@@ -63,60 +63,170 @@ function getStyleReferences(aesthetic: string): string {
   return `Style references: ${STYLE_REFERENCE_MAP.default.join(', ')}.`;
 }
 
-// Smart image selection recommendations
-function getImagePriority(labeledImages: any[]): { 
+// Template-specific image needs
+const TEMPLATE_IMAGE_NEEDS: Record<TemplateId, {
+  priority: string[];      // Categories to prioritize
+  required: string[];      // Must have at least one
+  maxImages: number;       // Total content images
+  needsLogo: boolean;      // Should logo be prominent
+  needsPerson: boolean;    // Needs human element
+  styleEmphasis: string;   // Style guidance for this template
+}> = {
+  stat: {
+    priority: ['main_logo', 'texture', 'app_ui'],
+    required: ['main_logo'],
+    maxImages: 2,
+    needsLogo: true,
+    needsPerson: false,
+    styleEmphasis: 'Clean, minimal design. Logo should be visible. Focus on typography and the metric.'
+  },
+  announcement: {
+    priority: ['main_logo', 'product', 'app_ui'],
+    required: ['main_logo'],
+    maxImages: 3,
+    needsLogo: true,
+    needsPerson: false,
+    styleEmphasis: 'Bold, attention-grabbing. Logo prominently displayed. Professional corporate style.'
+  },
+  quote: {
+    priority: ['person', 'team', 'lifestyle', 'main_logo'],
+    required: [],
+    maxImages: 2,
+    needsLogo: false,
+    needsPerson: true,
+    styleEmphasis: 'Warm, human, authentic. If person image available, feature it subtly. Testimonial-focused.'
+  },
+  event: {
+    priority: ['main_logo', 'person', 'lifestyle'],
+    required: ['main_logo'],
+    maxImages: 2,
+    needsLogo: true,
+    needsPerson: false,
+    styleEmphasis: 'Dynamic, engaging, professional. Event-focused with clear branding.'
+  },
+  expert: {
+    priority: ['person', 'team', 'main_logo'],
+    required: [],
+    maxImages: 2,
+    needsLogo: false,
+    needsPerson: true,
+    styleEmphasis: 'Authoritative, thought-leadership feel. Person/expert should be prominent if available.'
+  },
+  product: {
+    priority: ['product', 'app_ui', 'main_logo'],
+    required: ['product'],
+    maxImages: 3,
+    needsLogo: true,
+    needsPerson: false,
+    styleEmphasis: 'Product showcase. The product image should be the hero. Clean, premium presentation.'
+  }
+};
+
+// Smart image selection based on template type
+function getImagePriority(
+  labeledImages: any[], 
+  templateId: TemplateId = 'announcement'
+): { 
   priority: string[], 
   excluded: string[], 
   references: string[],
-  reasoning: string 
+  reasoning: string,
+  imageRoles: Record<string, string> // Describes what each image is for
 } {
   if (!Array.isArray(labeledImages) || labeledImages.length === 0) {
-    return { priority: [], excluded: [], references: [], reasoning: 'No labeled images available' };
+    return { 
+      priority: [], 
+      excluded: [], 
+      references: [], 
+      reasoning: 'No labeled images available',
+      imageRoles: {}
+    };
   }
   
+  const templateNeeds = TEMPLATE_IMAGE_NEEDS[templateId] || TEMPLATE_IMAGE_NEEDS.announcement;
   const priority: string[] = [];
   const excluded: string[] = [];
   const references: string[] = [];
+  const imageRoles: Record<string, string> = {};
   
   // First, extract reference images separately - these are style guidelines
   const referenceImages = labeledImages.filter(img => img.category === 'reference');
   for (const img of referenceImages) {
     if (img.url && !img.url.includes('placeholder')) {
       references.push(img.url);
+      imageRoles[img.url] = 'STYLE_REFERENCE: Match this visual style, colors, and aesthetic';
     }
   }
   
-  // Priority order for content images: logo > product > app_ui > texture > other
-  // Reference images are separate - used for style guidance, not content
-  const priorityOrder = ['main_logo', 'product', 'app_ui', 'texture', 'person', 'lifestyle', 'team', 'other'];
-  
-  for (const category of priorityOrder) {
+  // Select images based on template-specific priority order
+  for (const category of templateNeeds.priority) {
+    if (priority.length >= templateNeeds.maxImages) break;
+    
     const images = labeledImages.filter(img => img.category === category);
     for (const img of images) {
+      if (priority.length >= templateNeeds.maxImages) break;
+      
       // Skip very small images or placeholders
       if (img.url?.includes('placeholder') || img.url?.includes('1x1')) {
         excluded.push(img.url);
         continue;
       }
+      
       priority.push(img.url);
+      
+      // Assign semantic role based on category
+      switch (category) {
+        case 'main_logo':
+          imageRoles[img.url] = 'BRAND_LOGO: This is the brand logo - display it clearly and prominently';
+          break;
+        case 'product':
+          imageRoles[img.url] = 'PRODUCT_IMAGE: This is the main product - make it the hero element';
+          break;
+        case 'app_ui':
+          imageRoles[img.url] = 'APP_SCREENSHOT: Use as a visual element showing the product interface';
+          break;
+        case 'person':
+        case 'team':
+          imageRoles[img.url] = 'PERSON_IMAGE: Human element - can be used subtly or prominently';
+          break;
+        case 'texture':
+          imageRoles[img.url] = 'TEXTURE: Use as background element or visual texture';
+          break;
+        default:
+          imageRoles[img.url] = 'SUPPORTING_VISUAL: Secondary visual element';
+      }
     }
   }
   
-  // Limit to best 4 content images
-  const selected = priority.slice(0, 4);
-  const skipped = priority.slice(4);
-  
-  const reasoningParts = [`Selected ${selected.length} content images`];
-  if (references.length > 0) {
-    reasoningParts.push(`${references.length} reference visuals for style`);
+  // If we don't have required images but have others, fall back
+  if (priority.length === 0) {
+    const fallbackOrder = ['main_logo', 'product', 'app_ui', 'texture', 'lifestyle', 'other'];
+    for (const category of fallbackOrder) {
+      if (priority.length >= 2) break;
+      const images = labeledImages.filter(img => img.category === category && !img.url?.includes('placeholder'));
+      for (const img of images) {
+        if (priority.length >= 2) break;
+        priority.push(img.url);
+        imageRoles[img.url] = 'FALLBACK_VISUAL: Use as available';
+      }
+    }
   }
-  reasoningParts.push('logo/product prioritized');
+  
+  // Build reasoning
+  const reasoningParts = [
+    `Template "${templateId}" needs: ${templateNeeds.priority.slice(0, 3).join(', ')}`,
+    `Selected ${priority.length}/${templateNeeds.maxImages} content images`
+  ];
+  if (references.length > 0) {
+    reasoningParts.push(`${references.length} style references`);
+  }
   
   return {
-    priority: selected,
-    excluded: [...excluded, ...skipped],
-    references: references.slice(0, 3), // Max 3 reference images
-    reasoning: reasoningParts.join(', ')
+    priority,
+    excluded,
+    references: references.slice(0, 3),
+    reasoning: reasoningParts.join('. '),
+    imageRoles
   };
 }
 
@@ -262,29 +372,49 @@ export async function POST(request: NextRequest) {
     // Get style references based on brand aesthetic
     const styleRefs = getStyleReferences(aesthetic);
     
-    // Create 4 prompt variations - each with a different style suffix + feedback guidance
+    // Smart image selection - BASED ON TEMPLATE TYPE
+    const imageSelection = getImagePriority(brand.labeledImages || [], templateId);
+    const templateNeeds = TEMPLATE_IMAGE_NEEDS[templateId] || TEMPLATE_IMAGE_NEEDS.announcement;
+
+    // Build image role instructions for the prompt
+    let imageRoleInstructions = '';
+    if (Object.keys(imageSelection.imageRoles).length > 0) {
+      const roleDescriptions = Object.entries(imageSelection.imageRoles)
+        .map(([_, role]) => `- ${role}`)
+        .join('\n');
+      
+      imageRoleInstructions = `\n\nIMAGE USAGE INSTRUCTIONS:
+The following images are provided with specific purposes:
+${roleDescriptions}
+
+IMPORTANT: Use each image according to its role. The order of images reflects their importance.`;
+    }
+
+    // Add template-specific style emphasis
+    const templateStyleEmphasis = `\n\nTEMPLATE STYLE: ${templateNeeds.styleEmphasis}`;
+
+    // Create 4 prompt variations - each with a different style suffix + feedback guidance + image instructions
     const promptVariations = PROMPT_VARIATIONS.map((variation) => {
-      const fullPrompt = `${result.prompt}\n\n${styleRefs}${variation}${feedbackGuidance}`;
+      const fullPrompt = `${result.prompt}\n\n${styleRefs}${variation}${templateStyleEmphasis}${imageRoleInstructions}${feedbackGuidance}`;
       return fullPrompt.trim();
     }).filter(p => p && p.length > 0); // Extra safety filter
-
-    // Smart image selection
-    const imageSelection = getImagePriority(brand.labeledImages || []);
 
     // If we have reference images, add them to the style context
     let styleContext = styleRefs;
     if (imageSelection.references.length > 0) {
-      styleContext += `\n\nIMPORTANT: Use the provided reference visuals as style inspiration. Match their aesthetic, color treatment, and visual language.`;
+      styleContext += `\n\nSTYLE REFERENCE IMAGES PROVIDED: Match their aesthetic, color treatment, composition, and visual language exactly. These define the target style.`;
     }
     
     // Add language instruction
     const languageInstruction = LANGUAGE_INSTRUCTIONS[language] || LANGUAGE_INSTRUCTIONS.fr;
 
-    console.log('🎨 Creative Director V3:');
+    console.log('🎨 Creative Director V4:');
     console.log('   Template:', result.templateUsed);
+    console.log('   Template needs:', templateNeeds.priority.slice(0, 3).join(', '));
     console.log('   Style refs:', styleRefs.slice(0, 50) + '...');
     console.log('   Variations:', promptVariations.length);
     console.log('   Image selection:', imageSelection.reasoning);
+    console.log('   Image roles:', Object.keys(imageSelection.imageRoles).length);
     console.log('   Reference visuals:', imageSelection.references.length);
     console.log('   Feedback guidance:', feedbackGuidance ? 'Yes' : 'No');
 
@@ -292,12 +422,12 @@ export async function POST(request: NextRequest) {
       success: true,
       concept: {
         // Base prompt (for display/debugging)
-        finalPrompt: result.prompt + '\n\n' + styleContext + feedbackGuidance + '\n\n' + languageInstruction,
+        finalPrompt: result.prompt + '\n\n' + styleContext + templateStyleEmphasis + imageRoleInstructions + feedbackGuidance + '\n\n' + languageInstruction,
         // 4 variations for generation
         promptVariations: promptVariations.map(p => {
           let enhanced = p;
           if (imageSelection.references.length > 0) {
-            enhanced += '\n\nMatch the style and aesthetic of the reference visuals provided.';
+            enhanced += '\n\nSTYLE REFERENCE: The first images provided are style references - match their aesthetic exactly.';
           }
           enhanced += '\n\n' + languageInstruction;
           return enhanced;
@@ -306,7 +436,7 @@ export async function POST(request: NextRequest) {
         templateUsed: result.templateUsed,
         params,
         language,
-        // Smart image recommendations
+        // Smart image recommendations with roles
         imageSelection
       }
     });

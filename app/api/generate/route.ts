@@ -179,23 +179,47 @@ export async function POST(request: NextRequest) {
     // Replace processedImageUrls with combined list for generation
     const finalImageUrls = allImageUrls.slice(0, 5); // Max 5 images for Fal
 
+    // Build image context prefix for the prompt
+    // This helps the model understand what each image is for
+    let imageContextPrefix = '';
+    if (processedReferenceUrls.length > 0 || processedImageUrls.length > 0) {
+      const imageDescriptions: string[] = [];
+      
+      if (processedReferenceUrls.length > 0) {
+        imageDescriptions.push(`Images 1-${processedReferenceUrls.length}: STYLE REFERENCES - Match their aesthetic, color palette, and visual style exactly`);
+      }
+      
+      if (processedImageUrls.length > 0) {
+        const startIdx = processedReferenceUrls.length + 1;
+        const endIdx = startIdx + processedImageUrls.length - 1;
+        imageDescriptions.push(`Images ${startIdx}-${endIdx}: CONTENT ELEMENTS - Logo, product, or brand assets to incorporate into the design`);
+      }
+      
+      imageContextPrefix = `[IMAGE CONTEXT]
+${imageDescriptions.join('\n')}
+
+`;
+    }
+
     // Determine prompts to use
     // If we have variations, we'll generate each image with a different prompt
     // IMPORTANT: Filter out any null/undefined/empty prompts
     let prompts: string[];
     
     if (hasVariations) {
-      // Filter valid strings from variations
+      // Filter valid strings from variations and add image context
       prompts = promptVariations
         .filter((p: any) => p && typeof p === 'string' && p.trim().length > 0)
+        .map((p: string) => imageContextPrefix + p.trim())
         .slice(0, 4);
       
       // If all variations were invalid, fall back to single prompt
       if (prompts.length === 0 && hasPrompt) {
-        prompts = [prompt];
+        prompts = [imageContextPrefix + prompt];
       }
     } else if (hasPrompt) {
-      prompts = [prompt, prompt, prompt, prompt].slice(0, numImages);
+      const enhancedPrompt = imageContextPrefix + prompt;
+      prompts = [enhancedPrompt, enhancedPrompt, enhancedPrompt, enhancedPrompt].slice(0, numImages);
     } else {
       return NextResponse.json({ success: false, error: 'No valid prompts provided' }, { status: 400 });
     }
@@ -207,12 +231,12 @@ export async function POST(request: NextRequest) {
     
     const actualNumImages = Math.min(prompts.length, 4);
     
-    console.log('📝 Valid prompts:', prompts.length, prompts.map(p => p.slice(0, 30) + '...'));
+    console.log('📝 Valid prompts:', prompts.length, prompts.map(p => p.slice(0, 50) + '...'));
 
     console.log('🍌 Generating with Nano Banana Pro:');
     console.log('   📝 Prompts:', actualNumImages, hasVariations ? '(with variations)' : '(same prompt)');
     console.log('   🚫 Negative:', negativePrompt?.substring(0, 50) || 'none');
-    console.log('   🖼️ Total images:', finalImageUrls.length, `(${processedReferenceUrls.length} reference, ${processedImageUrls.length} content)`);
+    console.log('   🖼️ Total images:', finalImageUrls.length, `(${processedReferenceUrls.length} style refs, ${processedImageUrls.length} content)`);
 
     // Generate each image with its own prompt (for variations) or batch
     const generateSingleImage = async (singlePrompt: string, index: number) => {
