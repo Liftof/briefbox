@@ -13,7 +13,93 @@ interface ContentNugget {
 interface IndustryInsight {
   fact: string;
   didYouKnow: string;
-  trend?: string;
+  source?: string;
+  url?: string;
+}
+
+interface ParallelSearchResult {
+  url: string;
+  title: string;
+  publish_date?: string;
+  excerpts: string[];
+}
+
+// Helper: Search for real industry insights using Parallel Search API
+async function searchIndustryInsights(industry: string, brandName: string): Promise<{
+  rawExcerpts: string;
+  sources: { url: string; title: string }[];
+}> {
+  const PARALLEL_API_KEY = process.env.PARALLEL_API_KEY;
+  
+  if (!PARALLEL_API_KEY) {
+    console.warn('⚠️ PARALLEL_API_KEY not set, skipping industry search');
+    return { rawExcerpts: '', sources: [] };
+  }
+
+  try {
+    console.log(`🔍 Searching industry insights for: ${industry}`);
+    
+    const response = await fetch('https://api.parallel.ai/v1beta/search', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': PARALLEL_API_KEY,
+        'parallel-beta': 'search-extract-2025-10-10'
+      },
+      body: JSON.stringify({
+        mode: 'agentic',
+        objective: `Find recent market statistics, industry trends, and business insights for the ${industry} industry. I need:
+1. Market size and growth projections (with numbers)
+2. Key pain points or challenges companies face in this sector
+3. Recent trends or innovations
+4. Benchmark statistics (conversion rates, average metrics, etc.)
+Prefer authoritative sources like Gartner, Forrester, McKinsey, industry reports, and business publications. Focus on data from 2023-2025.`,
+        search_queries: [
+          `${industry} market size 2024 2025`,
+          `${industry} industry statistics trends`,
+          `${industry} challenges pain points businesses`,
+          `${industry} benchmark metrics`
+        ],
+        max_results: 8,
+        excerpts: {
+          max_chars_per_result: 3000,
+          max_chars_total: 15000
+        }
+      })
+    });
+
+    if (!response.ok) {
+      console.warn('Parallel Search API error:', await response.text());
+      return { rawExcerpts: '', sources: [] };
+    }
+
+    const data = await response.json();
+    
+    if (!data.results || data.results.length === 0) {
+      console.warn('No search results found');
+      return { rawExcerpts: '', sources: [] };
+    }
+
+    console.log(`✅ Found ${data.results.length} industry sources`);
+
+    // Compile excerpts and sources
+    const sources = data.results.map((r: ParallelSearchResult) => ({
+      url: r.url,
+      title: r.title
+    }));
+
+    const rawExcerpts = data.results
+      .map((r: ParallelSearchResult) => {
+        const excerptText = r.excerpts?.join('\n\n') || '';
+        return `SOURCE: ${r.title} (${r.url})\n${excerptText}`;
+      })
+      .join('\n\n---\n\n');
+
+    return { rawExcerpts, sources };
+  } catch (error) {
+    console.error('Industry search error:', error);
+    return { rawExcerpts: '', sources: [] };
+  }
 }
 
 // Helper: Extract dominant colors from an image URL
@@ -671,6 +757,109 @@ export async function POST(request: Request) {
         brandData.logo = aiIdentifiedLogo;
     } else if (!brandData.logo && firecrawlMetadata.ogImage) {
         brandData.logo = firecrawlMetadata.ogImage;
+    }
+
+    // 4. Search for REAL industry insights using Parallel Search API
+    if (brandData.industry) {
+        console.log(`🔍 Searching real industry insights for: ${brandData.industry}`);
+        
+        try {
+            const { rawExcerpts, sources } = await searchIndustryInsights(
+                brandData.industry, 
+                brandData.name || 'the company'
+            );
+            
+            if (rawExcerpts && rawExcerpts.length > 500) {
+                console.log('📊 Processing industry data from search...');
+                
+                // Use AI to extract structured insights from the search results
+                const insightPrompt = `
+You are an expert at extracting business insights from research data.
+
+INDUSTRY: ${brandData.industry}
+BRAND: ${brandData.name}
+
+SEARCH RESULTS:
+${rawExcerpts.substring(0, 12000)}
+
+Extract 4-6 compelling industry insights that would be valuable for ${brandData.name} to share on social media. 
+Each insight should:
+1. Include a specific statistic or fact (with numbers when possible)
+2. Be relevant to their industry (${brandData.industry})
+3. Be formatted as an engaging "Le saviez-vous ?" (Did you know?)
+
+Return ONLY a valid JSON array:
+[
+  {
+    "fact": "The raw statistic or fact (e.g., 'The global CRM market will reach $128.97 billion by 2028')",
+    "didYouKnow": "Le saviez-vous ? [Engaging French version of the fact for social media]",
+    "source": "Source name (e.g., 'Gartner 2024', 'Forbes', 'McKinsey Report')",
+    "relevance": "Why this matters for ${brandData.name}"
+  }
+]
+
+Focus on:
+- Market size & growth statistics
+- Pain points / challenges (e.g., "67% of sales teams struggle with...")
+- Trend data (e.g., "AI adoption in X has grown 300%...")
+- Benchmark metrics (e.g., "Average conversion rate in X is...")
+
+Be SPECIFIC with numbers. Attribute sources when clear from the excerpts.`;
+
+                const insightResponse = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+                    method: "POST",
+                    headers: {
+                        "Authorization": `Bearer ${process.env.OPENROUTER_API_KEY}`,
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        "model": "openai/gpt-4o-mini",
+                        "messages": [
+                            {"role": "system", "content": "You extract business insights from research data and format them for social media. Always return valid JSON."},
+                            {"role": "user", "content": insightPrompt}
+                        ]
+                    })
+                });
+
+                if (insightResponse.ok) {
+                    const insightData = await insightResponse.json();
+                    let insightText = insightData.choices[0]?.message?.content || '';
+                    insightText = insightText.replace(/```json\n?/g, '').replace(/```/g, '').trim();
+                    
+                    try {
+                        const jsonMatch = insightText.match(/\[[\s\S]*\]/);
+                        if (jsonMatch) {
+                            const realInsights = JSON.parse(jsonMatch[0]);
+                            
+                            // Merge with AI-generated insights, prioritizing real data
+                            if (Array.isArray(realInsights) && realInsights.length > 0) {
+                                console.log(`✅ Extracted ${realInsights.length} real industry insights`);
+                                
+                                // Mark these as real data
+                                const enrichedInsights = realInsights.map((insight: any) => ({
+                                    ...insight,
+                                    isRealData: true
+                                }));
+                                
+                                // Replace or merge with AI-generated insights
+                                brandData.industryInsights = [
+                                    ...enrichedInsights,
+                                    ...(brandData.industryInsights || []).slice(0, 2) // Keep max 2 AI-generated as fallback
+                                ].slice(0, 6);
+                                
+                                // Also add source URLs for transparency
+                                brandData.industrySources = sources.slice(0, 5);
+                            }
+                        }
+                    } catch (parseError) {
+                        console.warn('Failed to parse industry insights:', parseError);
+                    }
+                }
+            }
+        } catch (searchError) {
+            console.warn('Industry search error:', searchError);
+            // Keep AI-generated insights as fallback
+        }
     }
 
     // Prioritize the logo, then unique images found

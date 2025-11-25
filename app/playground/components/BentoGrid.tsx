@@ -689,10 +689,15 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
               <div className="flex items-center gap-2 mb-4">
                 <span className="text-lg">💡</span>
                 <span className="text-[10px] font-mono uppercase tracking-widest text-amber-600">Insights Industrie</span>
+                {localData.industryInsights.some((i: any) => i.isRealData) && (
+                  <span className="ml-auto px-2 py-0.5 bg-emerald-100 text-emerald-700 text-[8px] font-mono uppercase rounded-full">
+                    ✓ Données réelles
+                  </span>
+                )}
               </div>
               
               <div className="space-y-3">
-                {localData.industryInsights.slice(0, 3).map((insight: any, i: number) => (
+                {localData.industryInsights.slice(0, 4).map((insight: any, i: number) => (
                   <button 
                     key={i}
                     onClick={() => {
@@ -700,17 +705,34 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
                         detail: { 
                           templateId: 'didyouknow', 
                           headline: insight.didYouKnow,
-                          subheadline: insight.source || 'Source: Industry Report'
+                          subheadline: insight.source ? `Source: ${insight.source}` : 'Source: Industry Report',
+                          source: insight.isRealData ? 'industry_insight' : 'generated'
                         } 
                       }));
                     }}
-                    className="w-full text-left p-3 bg-white/60 hover:bg-white transition-all border border-amber-200 hover:border-amber-400 group"
+                    className="w-full text-left p-3 bg-white/60 hover:bg-white transition-all border border-amber-200 hover:border-amber-400 group relative"
                   >
-                    <div className="text-sm text-gray-800 font-medium leading-snug">
+                    {/* Real data indicator */}
+                    {insight.isRealData && (
+                      <div className="absolute top-2 right-2 w-2 h-2 rounded-full bg-emerald-500" title="Données réelles" />
+                    )}
+                    
+                    <div className="text-sm text-gray-800 font-medium leading-snug pr-4">
                       {insight.didYouKnow}
                     </div>
+                    
+                    {/* Relevance hint */}
+                    {insight.relevance && (
+                      <div className="text-[9px] text-amber-700/70 italic mt-1.5 line-clamp-1">
+                        → {insight.relevance}
+                      </div>
+                    )}
+                    
                     <div className="flex items-center justify-between mt-2">
-                      <span className="text-[9px] text-gray-400 font-mono">{insight.source}</span>
+                      <span className="text-[9px] text-gray-400 font-mono flex items-center gap-1">
+                        {insight.isRealData && <span className="text-emerald-500">●</span>}
+                        {insight.source || 'Industry Report'}
+                      </span>
                       <span className="text-[9px] text-amber-600 font-medium opacity-0 group-hover:opacity-100 transition-opacity">
                         Utiliser →
                       </span>
@@ -718,6 +740,27 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
                   </button>
                 ))}
               </div>
+              
+              {/* Sources list */}
+              {localData.industrySources && localData.industrySources.length > 0 && (
+                <div className="mt-4 pt-3 border-t border-amber-200/50">
+                  <div className="text-[8px] font-mono uppercase text-amber-600/60 mb-2">Sources consultées</div>
+                  <div className="flex flex-wrap gap-1">
+                    {localData.industrySources.slice(0, 4).map((source: any, i: number) => (
+                      <a 
+                        key={i}
+                        href={source.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-[8px] text-gray-500 hover:text-amber-600 truncate max-w-[150px]"
+                        title={source.title}
+                      >
+                        {source.title?.slice(0, 30)}...
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
@@ -888,7 +931,7 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
               )}
             </div>
           ))}
-
+          
           {/* Fallback: Old Marketing Angles (backwards compatibility) */}
           {!localData.suggestedPosts?.length && localData.marketingAngles?.length > 0 && (
             <div className="relative bg-gray-900 p-6 border border-gray-800">
