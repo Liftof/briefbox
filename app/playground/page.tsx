@@ -1124,123 +1124,117 @@ ${enhancement}`);
     }
 
     return (
-      <div className="animate-fade-in relative min-h-[calc(100vh-120px)]">
+      <div className="animate-fade-in max-w-3xl mx-auto">
         {/* ═══════════════════════════════════════════════════════════════════════════
-            TWO-COLUMN CREATIVE SPACE LAYOUT
-            Left: Input controls | Right: Results gallery
+            VERTICAL STACKED CREATIVE SPACE
+            Clean top-to-bottom flow: Header → Ideas → Form → Results
             ═══════════════════════════════════════════════════════════════════════════ */}
         
-        <div className="flex gap-8 h-full">
-          {/* ═══════════════════════════════════════════════════════════════════════
-              LEFT COLUMN - Input Controls (40%)
-              ═══════════════════════════════════════════════════════════════════════ */}
-          <div className="w-[420px] flex-shrink-0 flex flex-col">
-            
-            {/* Header */}
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 bg-gray-900 flex items-center justify-center">
-                  <span className="text-white text-sm">✦</span>
+        {/* Header Bar */}
+        <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-100">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-gray-900 flex items-center justify-center">
+              <span className="text-white text-lg">✦</span>
+            </div>
+            <div>
+              <h1 className="text-lg font-semibold text-gray-900">{brandData?.name || 'Marque'}</h1>
+              <span className="text-xs text-gray-400">Créez vos visuels</span>
+            </div>
           </div>
-                <div>
-                  <h2 className="text-sm font-semibold text-gray-900">{brandData?.name || 'Marque'}</h2>
-                  <span className="text-[10px] text-gray-400">Espace créatif</span>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <select
-                  value={contentLanguage}
-                  onChange={(e) => setContentLanguage(e.target.value as 'fr' | 'en' | 'es' | 'de')}
-                  className="text-xs bg-gray-50 border border-gray-200 px-2 py-1 outline-none cursor-pointer text-gray-600"
-                >
-                  {LANGUAGES.map(lang => (
-                    <option key={lang.code} value={lang.code}>{lang.flag}</option>
-                  ))}
-                </select>
-          <button
-            onClick={() => setStep('bento')}
-                  className="w-8 h-8 border border-gray-200 flex items-center justify-center text-gray-400 hover:text-gray-900 hover:border-gray-400 transition-colors"
-                  title="Modifier l'identité"
-          >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
-              <path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-              <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-            </svg>
-          </button>
-        </div>
+          <div className="flex items-center gap-2">
+            <select
+              value={contentLanguage}
+              onChange={(e) => setContentLanguage(e.target.value as 'fr' | 'en' | 'es' | 'de')}
+              className="text-xs bg-white border border-gray-200 px-3 py-2 outline-none cursor-pointer text-gray-600 hover:border-gray-300"
+            >
+              {LANGUAGES.map(lang => (
+                <option key={lang.code} value={lang.code}>{lang.flag} {lang.label}</option>
+              ))}
+            </select>
+            <button
+              onClick={() => setStep('bento')}
+              className="px-3 py-2 border border-gray-200 text-xs text-gray-500 hover:text-gray-900 hover:border-gray-400 transition-colors flex items-center gap-2"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+                <path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+              Identité
+            </button>
+          </div>
         </div>
 
-            {/* IDÉES RAPIDES - En haut pour inspirer le message */}
-            {brandData?.suggestedPosts?.length > 0 && !brief && (
-              <div className="bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50 border-2 border-amber-200 p-4 mb-4">
-                <div className="flex items-center gap-2 mb-3">
-                  <span className="text-lg">💡</span>
-                  <div>
-                    <span className="text-xs font-semibold text-amber-900 block">Inspirez-vous de vos données</span>
-                    <span className="text-[9px] text-amber-600">Cliquez pour pré-remplir</span>
+        {/* IDÉES RAPIDES - Clickable cards to inspire */}
+        {brandData?.suggestedPosts?.length > 0 && !brief && (
+          <div className="mb-6">
+            <div className="flex items-center gap-2 mb-3">
+              <span className="text-lg">💡</span>
+              <span className="text-sm font-medium text-gray-700">Inspirez-vous</span>
+              <span className="text-xs text-gray-400">— cliquez pour utiliser</span>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              {brandData.suggestedPosts.filter((p: any) => p.source === 'real_data' || p.source === 'industry_insight').slice(0, 4).map((post: any, i: number) => {
+                const template = TEMPLATES.find(t => t.id === post.templateId);
+                const headline = post.headline || `${post.metric || ''} ${post.metricLabel || ''}`.trim();
+                const isReal = post.source === 'real_data';
+                
+                return (
+                  <button
+                    key={i}
+                    onClick={() => {
+                      setSelectedTemplate(post.templateId as TemplateId);
+                      setBrief(headline);
+                    }}
+                    className={`p-3 text-left transition-all border-2 hover:shadow-md group ${
+                      isReal 
+                        ? 'bg-emerald-50/50 border-emerald-200 hover:border-emerald-400' 
+                        : 'bg-amber-50/50 border-amber-200 hover:border-amber-400'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-xl">{template?.icon}</span>
+                      <span className={`w-2 h-2 rounded-full ${isReal ? 'bg-emerald-500' : 'bg-amber-500'}`} />
+                    </div>
+                    <p className="text-xs text-gray-700 line-clamp-2 leading-snug group-hover:text-gray-900">{headline}</p>
+                  </button>
+                );
+              })}
+            </div>
           </div>
-                </div>
-                <div className="grid grid-cols-2 gap-2">
-                  {brandData.suggestedPosts.filter((p: any) => p.source === 'real_data' || p.source === 'industry_insight').slice(0, 4).map((post: any, i: number) => {
-                  const template = TEMPLATES.find(t => t.id === post.templateId);
-                    const headline = post.headline || `${post.metric || ''} ${post.metricLabel || ''}`.trim();
-                    const isReal = post.source === 'real_data';
-                    
-                  return (
-                    <button
-                      key={i}
-                      onClick={() => {
-                        setSelectedTemplate(post.templateId as TemplateId);
-                          setBrief(headline);
-                        }}
-                        className={`p-2 text-left text-xs transition-all border-2 flex items-start gap-2 hover:scale-[1.02] ${
-                          isReal 
-                            ? 'bg-white border-emerald-200 hover:border-emerald-400 hover:shadow-sm' 
-                            : 'bg-white border-amber-200 hover:border-amber-400 hover:shadow-sm'
-                        }`}
-                      >
-                        <span className="text-base flex-shrink-0">{template?.icon}</span>
-                        <div className="flex-1 min-w-0">
-                          <span className="text-gray-700 line-clamp-2 leading-tight">{headline}</span>
-                        </div>
-                        <span className={`w-2 h-2 rounded-full flex-shrink-0 mt-0.5 ${isReal ? 'bg-emerald-500' : 'bg-amber-500'}`} title={isReal ? 'Donnée réelle' : 'Insight industrie'} />
-                    </button>
-                  );
-                })}
-                </div>
-              </div>
-            )}
+        )}
 
-            {/* Section 1: MESSAGE */}
-            <div className="bg-white border border-gray-200 p-4 mb-4">
-              <div className="flex items-center gap-2 mb-3">
-                <span className="w-5 h-5 bg-gray-900 text-white text-[10px] flex items-center justify-center font-bold">1</span>
-                <span className="text-xs font-medium text-gray-700 uppercase tracking-wider">Votre message</span>
-              </div>
-            <textarea
-              value={brief}
-              onChange={(e) => setBrief(e.target.value)}
-                placeholder={getSmartPlaceholder(selectedTemplate, brandData)}
-                className="w-full min-h-[80px] text-sm resize-none outline-none placeholder:text-gray-300 bg-gray-50 border border-gray-100 p-3 focus:border-gray-300 transition-colors"
-              />
+        {/* MAIN CREATION CARD */}
+        <div className="bg-white border border-gray-200 shadow-sm mb-8">
+          
+          {/* Message Section */}
+          <div className="p-5 border-b border-gray-100">
+            <div className="flex items-center justify-between mb-3">
+              <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">Votre message</label>
               {brief.trim() && (
                 <button
                   onClick={handleMagicEnhance}
                   disabled={isThinking}
-                  className="mt-2 text-[10px] text-emerald-600 hover:text-emerald-700 transition-colors disabled:opacity-30 flex items-center gap-1"
+                  className="text-xs text-emerald-600 hover:text-emerald-700 transition-colors disabled:opacity-30 flex items-center gap-1"
                 >
-                  <span>✦</span> Enrichir avec l'IA
+                  <span>✦</span> Enrichir
                 </button>
               )}
             </div>
+            <textarea
+              value={brief}
+              onChange={(e) => setBrief(e.target.value)}
+              placeholder={getSmartPlaceholder(selectedTemplate, brandData)}
+              className="w-full min-h-[100px] text-base resize-none outline-none placeholder:text-gray-300 leading-relaxed"
+            />
+          </div>
 
-            {/* Section 2: FORMAT */}
-            <div className="bg-white border border-gray-200 p-4 mb-4">
-              <div className="flex items-center gap-2 mb-3">
-                <span className="w-5 h-5 bg-gray-900 text-white text-[10px] flex items-center justify-center font-bold">2</span>
-                <span className="text-xs font-medium text-gray-700 uppercase tracking-wider">Format</span>
-              </div>
-              <div className="grid grid-cols-3 gap-2">
+          {/* Format + Sources Row */}
+          <div className="p-5 flex flex-col md:flex-row gap-5">
+            
+            {/* Format Selection */}
+            <div className="flex-1">
+              <label className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-3 block">Format</label>
+              <div className="flex flex-wrap gap-2">
                 {TEMPLATES.map((template) => (
                   <button
                     key={template.id}
@@ -1248,250 +1242,226 @@ ${enhancement}`);
                       setSelectedTemplate(template.id);
                       if (!brief) setBrief(template.placeholder);
                     }}
-                    className={`p-3 text-center transition-all border ${
+                    className={`px-3 py-2 text-sm transition-all border flex items-center gap-2 ${
                       selectedTemplate === template.id
                         ? 'bg-gray-900 text-white border-gray-900'
                         : 'bg-white text-gray-600 border-gray-200 hover:border-gray-400'
                     }`}
                     title={template.desc}
                   >
-                    <span className="text-lg block mb-1">{template.icon}</span>
-                    <span className="text-[10px] font-medium">{template.name}</span>
+                    <span>{template.icon}</span>
+                    <span className="text-xs font-medium">{template.name}</span>
                   </button>
                 ))}
               </div>
             </div>
 
-            {/* Section 3: VISUELS SOURCES */}
-            <div className="bg-white border border-gray-200 p-4 mb-4">
+            {/* Divider */}
+            <div className="hidden md:block w-px bg-gray-100" />
+            
+            {/* Sources */}
+            <div className="w-full md:w-64">
               <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2">
-                  <span className="w-5 h-5 bg-gray-900 text-white text-[10px] flex items-center justify-center font-bold">3</span>
-                  <span className="text-xs font-medium text-gray-700 uppercase tracking-wider">Visuels sources</span>
-                </div>
-                <span className="text-[10px] text-gray-400">{uploadedImages.length} image{uploadedImages.length !== 1 ? 's' : ''}</span>
+                <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">Sources</label>
+                <span className="text-xs text-gray-400">{uploadedImages.length}</span>
               </div>
               
               {uploadedImages.length > 0 ? (
-                <div className="grid grid-cols-5 gap-2 mb-3">
-                  {uploadedImages.slice(0, 10).map((img, i) => (
-                    <div key={i} className="relative aspect-square group">
-                    <img src={img} className="w-full h-full object-cover border border-gray-200" />
-                    <button
-                      onClick={() => handleRemoveImage(i)}
+                <div className="flex gap-1 flex-wrap mb-2">
+                  {uploadedImages.slice(0, 6).map((img, i) => (
+                    <div key={i} className="relative w-10 h-10 group">
+                      <img src={img} className="w-full h-full object-cover border border-gray-200" />
+                      <button
+                        onClick={() => handleRemoveImage(i)}
                         className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white flex items-center justify-center text-[10px] opacity-0 group-hover:opacity-100 transition-opacity"
-                    >
-                      ×
-                    </button>
-                  </div>
-                ))}
-                  {uploadedImages.length > 10 && (
-                    <div className="aspect-square bg-gray-100 flex items-center justify-center text-xs text-gray-500">
-                      +{uploadedImages.length - 10}
-                  </div>
-                )}
-              </div>
-              ) : (
-                <div className="bg-gray-50 border border-dashed border-gray-200 p-4 text-center mb-3">
-                  <span className="text-gray-400 text-sm">Aucune image sélectionnée</span>
+                      >×</button>
+                    </div>
+                  ))}
+                  {uploadedImages.length > 6 && (
+                    <div className="w-10 h-10 bg-gray-100 flex items-center justify-center text-[10px] text-gray-500">
+                      +{uploadedImages.length - 6}
+                    </div>
+                  )}
                 </div>
+              ) : (
+                <p className="text-xs text-gray-400 mb-2">Aucune image</p>
               )}
-
-                <button
-                  onClick={() => setShowSourceManager(true)}
-                className="w-full py-2 text-xs text-gray-600 border border-gray-200 hover:border-gray-400 hover:text-gray-900 transition-colors flex items-center justify-center gap-2"
-                >
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+              
+              <button
+                onClick={() => setShowSourceManager(true)}
+                className="text-xs text-emerald-600 hover:text-emerald-700 flex items-center gap-1"
+              >
+                <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                   <path d="M12 4v16m8-8H4" />
                 </svg>
-                {uploadedImages.length === 0 ? 'Ajouter des sources' : 'Gérer les sources'}
-                </button>
-                <input ref={fileInputRef} type="file" multiple accept="image/*" className="hidden" onChange={handleImageUpload} />
-              </div>
-
-            {/* GENERATE BUTTON */}
-            <div className="mt-auto pt-4">
-              {/* Progress indicator */}
-              {status !== 'idle' && status !== 'complete' && status !== 'error' && (
-                <div className="mb-3">
-                  <div className="h-1 bg-gray-100 rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-emerald-500 transition-all duration-500 ease-out"
-                      style={{ width: `${progress}%` }}
-                    />
+                {uploadedImages.length === 0 ? 'Ajouter' : 'Gérer'}
+              </button>
+              <input ref={fileInputRef} type="file" multiple accept="image/*" className="hidden" onChange={handleImageUpload} />
             </div>
-                  <span className="text-[10px] text-gray-400 mt-1 block">{statusMessage}</span>
+          </div>
+
+          {/* Generate Button */}
+          <div className="p-5 bg-gray-50 border-t border-gray-100">
+            {/* Progress */}
+            {status !== 'idle' && status !== 'complete' && status !== 'error' && (
+              <div className="mb-4">
+                <div className="h-1 bg-gray-200 rounded-full overflow-hidden mb-2">
+                  <div className="h-full bg-emerald-500 transition-all duration-500" style={{ width: `${progress}%` }} />
                 </div>
-              )}
+                <span className="text-xs text-gray-500">{statusMessage}</span>
+              </div>
+            )}
             
-              <button
-                onClick={() => handleGenerate()}
-                disabled={status !== 'idle' || !brief.trim() || uploadedImages.length === 0}
-                className="w-full group bg-gray-900 text-white py-4 font-medium text-sm disabled:opacity-30 disabled:cursor-not-allowed transition-all hover:bg-black flex items-center justify-center gap-3"
+            <button
+              onClick={() => handleGenerate()}
+              disabled={status !== 'idle' || !brief.trim() || uploadedImages.length === 0}
+              className="w-full group bg-gray-900 text-white py-4 font-medium disabled:opacity-30 disabled:cursor-not-allowed transition-all hover:bg-black flex items-center justify-center gap-3"
             >
               {status === 'preparing' || status === 'running' ? (
                 <>
-                    <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
                   </svg>
-                    <span>Génération en cours...</span>
+                  <span>Génération en cours...</span>
                 </>
               ) : (
                 <>
-                    <span className="text-emerald-400">✦</span>
-                    <span>Générer 2 visuels</span>
-                    <svg className="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <span className="text-emerald-400 text-lg">✦</span>
+                  <span>Générer 2 visuels</span>
+                  <svg className="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                     <path d="M5 12h14M12 5l7 7-7 7" />
                   </svg>
                 </>
               )}
-              </button>
-              
-              {/* Helper text */}
-              {uploadedImages.length === 0 && (
-                <p className="text-[10px] text-amber-600 mt-2 text-center">⚠ Ajoutez au moins une image source</p>
-              )}
-              {!brief.trim() && uploadedImages.length > 0 && (
-                <p className="text-[10px] text-amber-600 mt-2 text-center">⚠ Décrivez votre message</p>
-              )}
-            </div>
-          </div>
-
-          {/* ═══════════════════════════════════════════════════════════════════════
-              RIGHT COLUMN - Results Gallery (60%)
-              ═══════════════════════════════════════════════════════════════════════ */}
-          <div className="flex-1 min-w-0">
+            </button>
             
-            {/* Results Header */}
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] font-mono uppercase tracking-widest text-gray-400">Résultats</span>
-                {generatedImages.length > 0 && (
-                  <span className="px-2 py-0.5 bg-gray-100 text-gray-600 text-[10px]">{generatedImages.length}</span>
-                )}
+            {/* Validation hints */}
+            {(uploadedImages.length === 0 || !brief.trim()) && (
+              <div className="flex justify-center gap-4 mt-3">
+                {!brief.trim() && <span className="text-xs text-amber-600">⚠ Message requis</span>}
+                {uploadedImages.length === 0 && <span className="text-xs text-amber-600">⚠ Image requise</span>}
               </div>
-              {generatedImages.length > 0 && (
-                <button
-                  onClick={() => setGeneratedImages([])}
-                  className="text-[10px] text-gray-400 hover:text-gray-600 transition-colors"
-                >
-                  Effacer tout
-                </button>
-              )}
+            )}
+          </div>
+        </div>
+
+        {/* ═══════════════════════════════════════════════════════════════════════════
+            RESULTS SECTION
+            ═══════════════════════════════════════════════════════════════════════════ */}
+        
+        {/* Loading State */}
+        {(status === 'preparing' || status === 'running') && (
+          <div className="mb-8">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+              <span className="text-sm text-gray-500">Création en cours...</span>
             </div>
-            
-            {/* Loading State */}
-            {(status === 'preparing' || status === 'running') && (
-              <div className="grid grid-cols-2 gap-4 animate-fade-in">
+            <div className="grid grid-cols-2 gap-4">
               {[1, 2].map((i) => (
                 <div key={i} className="aspect-square bg-gray-100 border border-gray-200 relative overflow-hidden">
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/60 to-transparent" 
-                       style={{ animation: 'shimmer 2s infinite' }} />
+                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/60 to-transparent" style={{ animation: 'shimmer 2s infinite' }} />
                   <div className="absolute inset-0 flex items-center justify-center">
                     <div className="text-center">
-                        <svg className="w-8 h-8 text-gray-300 mx-auto mb-2 animate-pulse" fill="none" stroke="currentColor" strokeWidth="1" viewBox="0 0 24 24">
+                      <svg className="w-10 h-10 text-gray-300 mx-auto mb-2" fill="none" stroke="currentColor" strokeWidth="1" viewBox="0 0 24 24">
                         <path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                       </svg>
-                        <span className="text-[10px] font-mono text-gray-400">~30s</span>
-        </div>
+                      <span className="text-xs text-gray-400">~30 secondes</span>
+                    </div>
                   </div>
                 </div>
               ))}
+            </div>
           </div>
         )}
 
-            {/* Generated Images Grid */}
-            {generatedImages.length > 0 && status === 'idle' && (
-              <div className="grid grid-cols-2 gap-4 animate-fade-in">
-                {generatedImages.map((img) => (
-              <div
-                key={img.id}
-                    className={`bg-gray-100 overflow-hidden relative group cursor-pointer border border-gray-200 hover:border-gray-400 transition-all hover:shadow-lg ${
-                  img.aspectRatio === '9:16' ? 'aspect-[9/16]' : 'aspect-square'
-                }`}
+        {/* Generated Results */}
+        {generatedImages.length > 0 && status === 'idle' && (
+          <div className="mb-8">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-medium text-gray-700">Vos créations</span>
+                <span className="px-2 py-0.5 bg-emerald-100 text-emerald-700 text-xs font-medium">{generatedImages.length}</span>
+              </div>
+              <button
+                onClick={() => setGeneratedImages([])}
+                className="text-xs text-gray-400 hover:text-gray-600"
               >
-                <img src={img.url} className="w-full h-full object-cover" />
-                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all flex items-center justify-center gap-3 opacity-0 group-hover:opacity-100">
-                  <button
-                    onClick={() => setLightboxImage(img.url)}
-                        className="w-10 h-10 bg-white text-gray-900 flex items-center justify-center hover:bg-gray-100 transition-colors shadow-lg"
-                        title="Voir en grand"
-                  >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                          <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+                Effacer
+              </button>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              {generatedImages.map((img) => (
+                <div
+                  key={img.id}
+                  className={`bg-gray-100 overflow-hidden relative group cursor-pointer border border-gray-200 hover:border-gray-400 transition-all hover:shadow-xl ${
+                    img.aspectRatio === '9:16' ? 'aspect-[9/16]' : 'aspect-square'
+                  }`}
+                >
+                  <img src={img.url} className="w-full h-full object-cover" />
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all flex items-center justify-center gap-3 opacity-0 group-hover:opacity-100">
+                    <button
+                      onClick={() => setLightboxImage(img.url)}
+                      className="w-11 h-11 bg-white text-gray-900 flex items-center justify-center hover:bg-gray-100 transition-colors shadow-lg"
+                      title="Voir"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                        <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
                       </svg>
-                  </button>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setEditingImage(img.url);
-                      setEditPrompt('');
-                    }}
-                        className="w-10 h-10 bg-white text-gray-900 flex items-center justify-center hover:bg-gray-100 transition-colors shadow-lg"
-                    title="Modifier"
-                  >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setEditingImage(img.url);
+                        setEditPrompt('');
+                      }}
+                      className="w-11 h-11 bg-white text-gray-900 flex items-center justify-center hover:bg-gray-100 transition-colors shadow-lg"
+                      title="Modifier"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                         <path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                       </svg>
-                  </button>
-                  <button
-                    onClick={async (e) => {
-                      e.stopPropagation();
-                      try {
-                        const response = await fetch(img.url);
-                        const blob = await response.blob();
-                        const blobUrl = window.URL.createObjectURL(blob);
-                        const link = document.createElement('a');
-                        link.href = blobUrl;
-                            link.download = `briefbox-${Date.now()}.png`;
-                        document.body.appendChild(link);
-                        link.click();
-                        document.body.removeChild(link);
-                      } catch (err) {
-                        window.open(img.url, '_blank');
-                      }
-                    }}
-                        className="w-10 h-10 bg-white text-gray-900 flex items-center justify-center hover:bg-gray-100 transition-colors shadow-lg"
-                    title="Télécharger"
-                  >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    </button>
+                    <button
+                      onClick={async (e) => {
+                        e.stopPropagation();
+                        try {
+                          const response = await fetch(img.url);
+                          const blob = await response.blob();
+                          const blobUrl = window.URL.createObjectURL(blob);
+                          const link = document.createElement('a');
+                          link.href = blobUrl;
+                          link.download = `briefbox-${Date.now()}.png`;
+                          document.body.appendChild(link);
+                          link.click();
+                          document.body.removeChild(link);
+                        } catch (err) {
+                          window.open(img.url, '_blank');
+                        }
+                      }}
+                      className="w-11 h-11 bg-white text-gray-900 flex items-center justify-center hover:bg-gray-100 transition-colors shadow-lg"
+                      title="Télécharger"
+                    >
+                      <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                         <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                       </svg>
-                  </button>
-                </div>
-              </div>
-            ))}
-            </div>
-            )}
-
-            {/* Empty State */}
-            {generatedImages.length === 0 && status === 'idle' && (
-              <div className="h-full min-h-[400px] border-2 border-dashed border-gray-200 flex items-center justify-center">
-                <div className="text-center max-w-xs">
-                  <div className="w-16 h-16 bg-gray-100 mx-auto mb-4 flex items-center justify-center">
-                    <svg className="w-8 h-8 text-gray-300" fill="none" stroke="currentColor" strokeWidth="1" viewBox="0 0 24 24">
-                      <path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
+                    </button>
                   </div>
-                  <h3 className="text-sm font-medium text-gray-700 mb-1">Prêt à créer</h3>
-                  <p className="text-xs text-gray-400">
-                    Remplissez le formulaire à gauche et cliquez sur "Générer" pour créer vos visuels
-                  </p>
-                  
-                  {/* Template preview */}
-                  {selectedTemplate && (
-                    <div className="mt-6 p-4 bg-gray-50 border border-gray-200">
-                      <div className="text-2xl mb-2">{TEMPLATES.find(t => t.id === selectedTemplate)?.icon}</div>
-                      <div className="text-xs font-medium text-gray-600">{TEMPLATES.find(t => t.id === selectedTemplate)?.name}</div>
-                      <div className="text-[10px] text-gray-400 mt-1">{TEMPLATES.find(t => t.id === selectedTemplate)?.desc}</div>
+                </div>
+              ))}
+            </div>
           </div>
         )}
-                </div>
-              </div>
-            )}
+
+        {/* Empty state hint - subtle, at the bottom */}
+        {generatedImages.length === 0 && status === 'idle' && brief.trim() && uploadedImages.length > 0 && (
+          <div className="text-center py-8 border-t border-gray-100">
+            <p className="text-sm text-gray-400">
+              ✨ Cliquez sur <span className="font-medium text-gray-600">"Générer 2 visuels"</span> pour créer
+            </p>
           </div>
-        </div>
+        )}
       </div>
     );
   };
