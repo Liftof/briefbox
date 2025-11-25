@@ -2,6 +2,20 @@ import { NextResponse } from 'next/server';
 import getColors from 'get-image-colors';
 import sharp from 'sharp';
 
+// Content nugget types for editorial extraction
+interface ContentNugget {
+  type: 'stat' | 'testimonial' | 'achievement' | 'fact' | 'blog_topic';
+  content: string;
+  source?: string;
+  context?: string;
+}
+
+interface IndustryInsight {
+  fact: string;
+  didYouKnow: string;
+  trend?: string;
+}
+
 // Helper: Extract dominant colors from an image URL
 async function extractColorsFromImage(imageUrl: string): Promise<string[]> {
   try {
@@ -45,6 +59,137 @@ async function extractColorsFromImage(imageUrl: string): Promise<string[]> {
     console.error('Color extraction error:', error);
     return [];
   }
+}
+
+// Helper: Discover internal pages to crawl (blog, about, case studies, etc.)
+function discoverInternalPages(baseUrl: string, markdown: string): string[] {
+  const url = new URL(baseUrl);
+  const baseOrigin = url.origin;
+  
+  // Keywords to find valuable internal pages
+  const valuablePagePatterns = [
+    /\/blog\/?$/i, /\/articles?\/?$/i, /\/news\/?$/i, /\/actualites?\/?$/i,
+    /\/about\/?$/i, /\/a-propos\/?$/i, /\/qui-sommes-nous\/?$/i,
+    /\/case-stud(y|ies)\/?$/i, /\/success-stories?\/?$/i, /\/temoignages?\/?$/i,
+    /\/clients?\/?$/i, /\/references?\/?$/i,
+    /\/services?\/?$/i, /\/solutions?\/?$/i, /\/products?\/?$/i,
+    /\/pricing\/?$/i, /\/tarifs?\/?$/i
+  ];
+  
+  // Extract all links from markdown
+  const linkRegex = /\[([^\]]*)\]\(([^)]+)\)/g;
+  const discoveredPages: string[] = [];
+  let match;
+  
+  while ((match = linkRegex.exec(markdown)) !== null) {
+    let href = match[2];
+    
+    // Convert relative to absolute
+    if (href.startsWith('/')) {
+      href = baseOrigin + href;
+    }
+    
+    // Only same-origin pages
+    if (!href.startsWith(baseOrigin)) continue;
+    
+    // Check if it matches valuable patterns
+    const isValuable = valuablePagePatterns.some(pattern => pattern.test(href));
+    if (isValuable && !discoveredPages.includes(href)) {
+      discoveredPages.push(href);
+    }
+  }
+  
+  // Also try common paths even if not found in content
+  const commonPaths = ['/blog', '/about', '/a-propos', '/case-studies', '/clients', '/temoignages'];
+  for (const path of commonPaths) {
+    const fullUrl = baseOrigin + path;
+    if (!discoveredPages.includes(fullUrl)) {
+      discoveredPages.push(fullUrl);
+    }
+  }
+  
+  return discoveredPages.slice(0, 5); // Limit to 5 extra pages
+}
+
+// Helper: Extract content nuggets (stats, quotes, facts) from text
+function extractContentNuggets(text: string): ContentNugget[] {
+  const nuggets: ContentNugget[] = [];
+  
+  // Extract statistics (numbers with context)
+  const statPatterns = [
+    /(\d+(?:[,\.]\d+)?(?:\s*[%xX×]|\s*(?:millions?|milliards?|K\+?|M\+?)))\s+([^.!?\n]{10,80})/gi,
+    /([+\-]?\d+(?:[,\.]\d+)?%)\s*(?:de\s+)?([^.!?\n]{10,60})/gi,
+    /(\d+(?:\s*\d+)*)\s+(clients?|users?|utilisateurs?|entreprises?|projets?|années?)/gi
+  ];
+  
+  for (const pattern of statPatterns) {
+    let match;
+    while ((match = pattern.exec(text)) !== null) {
+      const stat = match[1];
+      const context = match[2] || match[0];
+      if (stat && context && context.length > 5) {
+        nuggets.push({
+          type: 'stat',
+          content: `${stat} ${context}`.trim(),
+          context: context.trim()
+        });
+      }
+    }
+  }
+  
+  // Extract testimonials/quotes
+  const quotePatterns = [
+    /"([^"]{30,200})"\s*[-–—]\s*([^,\n]+)/g,
+    /«([^»]{30,200})»\s*[-–—]\s*([^,\n]+)/g,
+    /"([^"]{30,200})"\s*[-–—]\s*([^,\n]+)/g
+  ];
+  
+  for (const pattern of quotePatterns) {
+    let match;
+    while ((match = pattern.exec(text)) !== null) {
+      nuggets.push({
+        type: 'testimonial',
+        content: match[1].trim(),
+        source: match[2]?.trim()
+      });
+    }
+  }
+  
+  // Extract achievements/certifications
+  const achievementPatterns = [
+    /(certifi[ée]|labelli[ée]|récompens[ée]|award|prix|distinction|best of|top \d+)/gi
+  ];
+  
+  for (const pattern of achievementPatterns) {
+    let match;
+    while ((match = pattern.exec(text)) !== null) {
+      // Get surrounding context (50 chars before and after)
+      const start = Math.max(0, match.index - 50);
+      const end = Math.min(text.length, match.index + match[0].length + 50);
+      const context = text.slice(start, end).replace(/\n/g, ' ').trim();
+      
+      if (context.length > 20) {
+        nuggets.push({
+          type: 'achievement',
+          content: context
+        });
+      }
+    }
+  }
+  
+  // Remove duplicates and limit
+  const uniqueNuggets: ContentNugget[] = [];
+  const seen = new Set<string>();
+  
+  for (const nugget of nuggets) {
+    const key = nugget.content.toLowerCase().slice(0, 50);
+    if (!seen.has(key)) {
+      seen.add(key);
+      uniqueNuggets.push(nugget);
+    }
+  }
+  
+  return uniqueNuggets.slice(0, 15);
 }
 
 // Helper: Merge AI colors with extracted colors, prioritizing extracted
@@ -180,6 +325,74 @@ export async function POST(request: Request) {
     } catch (e) {
         console.warn('Scraping error:', e);
     }
+
+    // 1.5. DEEP CRAWL: Discover and scrape additional pages for editorial content
+    console.log('🔍 Deep crawling for editorial content...');
+    let deepCrawlContent = '';
+    let contentNuggets: ContentNugget[] = [];
+    
+    // Extract nuggets from main page first
+    contentNuggets = extractContentNuggets(firecrawlMarkdown + '\n' + parallelContent);
+    console.log(`📊 Found ${contentNuggets.length} content nuggets from main page`);
+    
+    // Discover internal pages
+    const internalPages = discoverInternalPages(url, firecrawlMarkdown);
+    console.log('🔗 Discovered internal pages:', internalPages);
+    
+    // Crawl up to 3 internal pages for additional content
+    if (internalPages.length > 0) {
+        try {
+            const deepCrawlPromises = internalPages.slice(0, 3).map(async (pageUrl) => {
+                try {
+                    const res = await fetch('https://api.firecrawl.dev/v1/scrape', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${process.env.FIRECRAWL_API_KEY}`
+                        },
+                        body: JSON.stringify({
+                            url: pageUrl,
+                            formats: ["markdown"],
+                            onlyMainContent: true
+                        })
+                    });
+                    
+                    if (res.ok) {
+                        const data = await res.json();
+                        if (data.success && data.data?.markdown) {
+                            return { url: pageUrl, content: data.data.markdown };
+                        }
+                    }
+                    return null;
+                } catch {
+                    return null;
+                }
+            });
+            
+            const deepResults = await Promise.all(deepCrawlPromises);
+            const validResults = deepResults.filter(Boolean) as { url: string; content: string }[];
+            
+            for (const result of validResults) {
+                deepCrawlContent += `\n\n--- PAGE: ${result.url} ---\n${result.content.substring(0, 3000)}`;
+                const pageNuggets = extractContentNuggets(result.content);
+                contentNuggets = [...contentNuggets, ...pageNuggets];
+            }
+            
+            console.log(`✅ Deep crawl complete: ${validResults.length} pages, ${contentNuggets.length} total nuggets`);
+        } catch (e) {
+            console.warn('Deep crawl error:', e);
+        }
+    }
+    
+    // Deduplicate nuggets
+    const uniqueNuggetMap = new Map<string, ContentNugget>();
+    for (const nugget of contentNuggets) {
+        const key = nugget.content.toLowerCase().slice(0, 40);
+        if (!uniqueNuggetMap.has(key)) {
+            uniqueNuggetMap.set(key, nugget);
+        }
+    }
+    contentNuggets = Array.from(uniqueNuggetMap.values()).slice(0, 20);
     
     // Helper to extract images from Markdown
     const extractImagesFromMarkdown = (md: string) => {
@@ -210,16 +423,27 @@ export async function POST(request: Request) {
     // 2. Analyze with OpenRouter (Grok or other)
     console.log('🤖 Analyzing with OpenRouter...');
     
+    // Format content nuggets for the AI
+    const nuggetsFormatted = contentNuggets.length > 0 
+        ? `\n\nEXTRACTED CONTENT NUGGETS (USE THESE FOR POSTS):\n${contentNuggets.map(n => 
+            `- [${n.type.toUpperCase()}] ${n.content}${n.source ? ` (Source: ${n.source})` : ''}`
+          ).join('\n')}`
+        : '';
+
     const combinedContent = `
     SOURCE 1 (FIRECRAWL METADATA):
     Title: ${firecrawlMetadata.title || 'Unknown'}
     Description: ${firecrawlMetadata.description || 'Unknown'}
     
-    SOURCE 2 (FIRECRAWL CONTENT):
-    ${firecrawlMarkdown.substring(0, 15000)}
+    SOURCE 2 (FIRECRAWL CONTENT - MAIN PAGE):
+    ${firecrawlMarkdown.substring(0, 12000)}
 
     SOURCE 3 (PARALLEL AI EXTRACT):
-    ${parallelContent.substring(0, 5000)}
+    ${parallelContent.substring(0, 4000)}
+    
+    SOURCE 4 (DEEP CRAWL - BLOG/ABOUT/CASE STUDIES):
+    ${deepCrawlContent.substring(0, 5000)}
+    ${nuggetsFormatted}
     
     DETECTED IMAGES:
     ${uniqueImages.join('\n')}
@@ -251,13 +475,28 @@ export async function POST(request: Request) {
         "visualMotifs": ["Motif 1 (e.g. 'Data charts')", "Motif 2 (e.g. 'Abstract networks')", "Motif 3"],
         "suggestedPosts": [
            {
-             "templateId": "stat | announcement | event | quote | expert | product",
-             "headline": "Le texte principal du post (ex: '+47% de productivité')",
+             "templateId": "stat | announcement | event | quote | expert | product | didyouknow",
+             "headline": "Le texte principal du post",
              "subheadline": "Texte secondaire optionnel",
              "metric": "Pour stat: le chiffre clé (ex: '87%', '10K+')",
-             "metricLabel": "Pour stat: le contexte du chiffre (ex: 'de croissance')"
+             "metricLabel": "Pour stat: le contexte du chiffre",
+             "source": "real_data | industry_insight | generated",
+             "intent": "Pourquoi ce post est pertinent pour cette marque (1 phrase)"
            }
         ],
+        "industryInsights": [
+           {
+             "fact": "Un fait macro sur l'industrie avec un chiffre (ex: 'Le marché du SaaS atteindra 232Mds$ en 2024')",
+             "didYouKnow": "Le saviez-vous ? Version vulgarisée et engageante du fait",
+             "source": "Source probable ou 'Industry Report 2024'"
+           }
+        ],
+        "contentNuggets": {
+           "realStats": ["Statistiques réelles trouvées sur le site"],
+           "testimonials": [{"quote": "Citation client", "author": "Nom", "company": "Entreprise"}],
+           "achievements": ["Prix, certifications, reconnaissances trouvées"],
+           "blogTopics": ["Sujets de blog/articles trouvés sur le site"]
+        },
         "analyzedImages": [
            { 
              "url": "url_from_detected_list", 
@@ -286,7 +525,7 @@ export async function POST(request: Request) {
          
          ⚠️ CRITICAL: A microphone is ALWAYS 'product', NEVER 'person'. An object with a round top and a stand is NOT a person. Apply strict visual criteria.
       4. **MAPPING:** 'analyzedImages' must map the URLs from the 'DETECTED IMAGES' list provided above.
-      5. **SUGGESTED POSTS (CRITICAL):** Generate 4-5 ready-to-use social media post suggestions.
+      5. **SUGGESTED POSTS (CRITICAL - 6-8 suggestions):** Generate smart, contextual post ideas.
          
          AVAILABLE TEMPLATE IDS:
          - "stat": Big metric post (+47%, 10K+, 3x). REQUIRES: metric + metricLabel
@@ -295,17 +534,41 @@ export async function POST(request: Request) {
          - "event": Webinar/event post. REQUIRES: headline (event name)
          - "expert": Feature a speaker/expert. REQUIRES: headline + subheadline
          - "product": Product showcase. REQUIRES: headline + subheadline
+         - "didyouknow": Industry insight/educational post. REQUIRES: headline (the fact) + subheadline (so what?)
          
-         EXAMPLES:
-         - { "templateId": "stat", "headline": "", "metric": "+47%", "metricLabel": "de productivité" }
-         - { "templateId": "announcement", "headline": "Nouveau: Dashboard V2", "subheadline": "Plus rapide, plus intuitif" }
-         - { "templateId": "quote", "headline": "Grâce à [Brand], on a doublé notre ROI", "subheadline": "— Marie, CEO @Startup" }
+         POST SOURCES (in priority order):
+         1. REAL DATA (source: "real_data"): Use stats, quotes, achievements from EXTRACTED CONTENT NUGGETS
+         2. INDUSTRY INSIGHTS (source: "industry_insight"): Use facts from industryInsights for "didyouknow" posts
+         3. GENERATED (source: "generated"): Only if no real data, create plausible specific content
+         
+         EXAMPLES WITH INTENT:
+         - { "templateId": "stat", "metric": "10K+", "metricLabel": "utilisateurs actifs", "source": "real_data", "intent": "Crédibilité sociale - chiffre trouvé sur leur page clients" }
+         - { "templateId": "didyouknow", "headline": "85% des équipes perdent 2h/jour sur des tâches répétitives", "subheadline": "L'automatisation change la donne", "source": "industry_insight", "intent": "Pain point industrie → positionnement solution" }
+         - { "templateId": "quote", "headline": "On a réduit nos coûts de 40% en 6 mois", "subheadline": "— Sophie Martin, DG @TechCorp", "source": "real_data", "intent": "Preuve sociale avec résultat chiffré" }
          
          RULES:
-         - Use REAL data from the brand (real metrics, real features, real testimonials if found)
-         - If no real data, INVENT plausible but specific content (not generic "growth" but "+47% in Q3")
-         - Each suggestion should be immediately usable without editing
-      6. **BACKGROUNDS:** 'backgroundPrompts' should generate high-quality, versatile backgrounds that match the brand aesthetic, suitable for overlays.
+         - PRIORITIZE real data from extracted nuggets when available
+         - Include at least 2 "didyouknow" posts with industry macro insights
+         - Each post MUST have an "intent" explaining WHY this post is strategic
+         - Be SPECIFIC: not "amélioration" but "+47% en 3 mois"
+         
+      6. **INDUSTRY INSIGHTS (CRITICAL):** Generate 3-4 relevant industry facts/stats.
+         
+         These should be:
+         - Macro-level statistics about the industry (market size, trends, pain points)
+         - Written as "Le saviez-vous ?" hooks
+         - Credible and specific (not vague claims)
+         
+         EXAMPLES for a CRM SaaS:
+         - { "fact": "Le marché mondial du CRM atteindra 128Mds$ en 2028", "didYouKnow": "Le saviez-vous ? Le CRM est le logiciel d'entreprise #1 en croissance depuis 5 ans", "source": "Gartner 2024" }
+         - { "fact": "67% des commerciaux n'atteignent pas leurs quotas", "didYouKnow": "Le saviez-vous ? 2 commerciaux sur 3 passent plus de temps sur l'admin que sur la vente", "source": "Salesforce State of Sales" }
+         
+      7. **CONTENT NUGGETS:** Extract and structure REAL content found on the site.
+         - realStats: Any numbers, percentages, metrics mentioned
+         - testimonials: Client quotes with attribution
+         - achievements: Awards, certifications, recognitions
+         - blogTopics: Headlines/topics from blog or articles section
+      8. **BACKGROUNDS:** 'backgroundPrompts' should generate high-quality, versatile backgrounds that match the brand aesthetic, suitable for overlays.
       
       If content is empty, INFER reasonable defaults based on the URL and domain name.
     `;
