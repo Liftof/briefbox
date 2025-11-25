@@ -420,14 +420,15 @@ DESIGN GUIDELINES:
 - STYLE: ${variationEmphasis} ${templateStyleEmphasis}
 - ASSETS: Use the provided image as the HERO element. Integrate it naturally into a scene or layout. Do NOT just crop the image.
 - COLOR: Use the brand palette with restraint. Specifically use ${primaryColor} as a primary accent.
-- LOGO: If a logo is provided in the input, ensure it is visible and respectable.
+- LOGO PROTECTION (CRITICAL): If a logo is provided, it must be treated as a sacred asset. DO NOT DISTORT, WARP, or MODIFY the logo. It must remain perfectly legible and respecting its original proportions. Place it on a high-contrast area.
+- TYPOGRAPHY & TEXT: PERFECT SPELLING IS MANDATORY. Double-check all generated text for correctness. No typos, no gibberish. Use professional kerning and spacing.
 - QUALITY: Editorial quality, sharp details, professional lighting. Avoid "stock photo" look, avoid 3D render artifacts, avoid generic tech graphics.
 
 ${feedbackGuidance ? feedbackGuidance : ''}
 
 ${imageRoleInstructions ? imageRoleInstructions : ''}
 
-NEGATIVE PROMPT: messy, cluttered, ugly text, distorted logo, low resolution, blurry, weird cropping, amateur, wrong colors, cheap 3D effects, neon glow, matrix code, busy background.
+NEGATIVE PROMPT: distorted logo, warped logo, cut off logo, spelling mistakes, typos, gibberish text, bad grammar, messy, cluttered, ugly text, low resolution, blurry, weird cropping, amateur, wrong colors, cheap 3D effects, neon glow, matrix code, busy background.
       `.trim();
     };
 
