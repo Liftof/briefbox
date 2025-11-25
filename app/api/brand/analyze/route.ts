@@ -699,6 +699,8 @@ export async function POST(request: Request) {
         "tagline": "Brand Tagline or Slogan",
         "description": "A short summary paragraph (max 200 chars)",
         "brandStory": "A compelling 2-3 sentence summary of the brand's origin, mission, or founding story found in the content.",
+        "targetAudience": "Specific description of who this brand targets (e.g. 'Busy HR Managers', 'Eco-conscious students', 'Small Business Owners').",
+        "uniqueValueProposition": "The single most important promise or benefit they offer (e.g. 'Saves 10h/week', 'Provides clean water to villages').",
         "colors": ["#hex1", "#hex2", "#hex3", "#hex4"], 
         "fonts": ["Font Name 1", "Font Name 2"],
         "values": ["Value 1", "Value 2", "Value 3"],
@@ -755,8 +757,11 @@ export async function POST(request: Request) {
       2. **VOCABULARY & PAIN POINTS (NEW):**
          - 'vocabulary': Extract specific terms the brand uses. E.g. instead of "software", do they say "Platform", "OS", "Hub"? Extract 4-5 distinct terms.
          - 'painPoints': What problems do they solve? Extract 3-4 specific customer struggles (e.g. "Manual data entry", "Security compliance costs").
-      3. **INDUSTRY & MOTIFS:** Identify the specific sector. List 3 visual elements typical of this industry (e.g. for Cybersec: 'Locks', 'Shields', 'Code').
-      4. **IMAGE CATEGORIZATION (STRICT RULES):** 
+      3. **TARGET AUDIENCE & UVP (CRITICAL):**
+         - 'targetAudience': Be precise. Not just "Everyone", but "Remote-first CTOs" or "Parents of toddlers".
+         - 'uniqueValueProposition': What is the #1 Benefit? If it's a non-profit, it's the Impact (e.g. "Saving oceans"). If service, it's the Outcome (e.g. "Doubling revenue"). If product, it's the Utility.
+      4. **INDUSTRY & MOTIFS:** Identify the specific sector. List 3 visual elements typical of this industry (e.g. for Cybersec: 'Locks', 'Shields', 'Code').
+      5. **IMAGE CATEGORIZATION (STRICT RULES):** 
          - 'main_logo': The brand's logo.
          - 'client_logo': Logos of customers, partners, or 'featured in' sections.
          - 'product': Physical items, packaging, devices, equipment, or direct representations of what they sell. This includes: microphones, headphones, electronics, tools, furniture, food, clothing, etc.
@@ -766,8 +771,8 @@ export async function POST(request: Request) {
          - 'texture': Abstract backgrounds, patterns, gradients, or zoomed-in details suitable for design backgrounds.
          
          ⚠️ CRITICAL: A microphone is ALWAYS 'product', NEVER 'person'. An object with a round top and a stand is NOT a person. Apply strict visual criteria.
-      4. **MAPPING:** 'analyzedImages' must map the URLs from the 'DETECTED IMAGES' list provided above.
-      5. **SUGGESTED POSTS (CRITICAL - 6-8 suggestions):** Generate smart, contextual post ideas.
+      6. **MAPPING:** 'analyzedImages' must map the URLs from the 'DETECTED IMAGES' list provided above.
+      7. **SUGGESTED POSTS (CRITICAL - 6-8 suggestions):** Generate smart, contextual post ideas.
          
          AVAILABLE TEMPLATE IDS:
          - "stat": Big metric post (+47%, 10K+, 3x). REQUIRES: metric + metricLabel
@@ -794,7 +799,7 @@ export async function POST(request: Request) {
          - Each post MUST have an "intent" explaining WHY this post is strategic
          - Be SPECIFIC: not "amélioration" but "+47% en 3 mois"
          
-      6. **INDUSTRY INSIGHTS (CRITICAL):** Generate 3-4 relevant industry facts/stats.
+      8. **INDUSTRY INSIGHTS (CRITICAL):** Generate 3-4 relevant industry facts/stats.
          
          These should be:
          - Macro-level statistics about the industry (market size, trends, pain points)
@@ -805,15 +810,31 @@ export async function POST(request: Request) {
          - { "fact": "Le marché mondial du CRM atteindra 128Mds$ en 2028", "didYouKnow": "Le saviez-vous ? Le CRM est le logiciel d'entreprise #1 en croissance depuis 5 ans", "source": "Gartner 2024" }
          - { "fact": "67% des commerciaux n'atteignent pas leurs quotas", "didYouKnow": "Le saviez-vous ? 2 commerciaux sur 3 passent plus de temps sur l'admin que sur la vente", "source": "Salesforce State of Sales" }
          
-      7. **CONTENT NUGGETS:** Extract and structure REAL content found on the site.
+      9. **CONTENT NUGGETS:** Extract and structure REAL content found on the site.
          - realStats: Any numbers, percentages, metrics mentioned
          - testimonials: Client quotes with attribution
          - achievements: Awards, certifications, recognitions
          - blogTopics: Headlines/topics from blog or articles section
-      8. **BACKGROUNDS:** 'backgroundPrompts' should generate high-quality, versatile backgrounds that match the brand aesthetic, suitable for overlays.
+      10. **BACKGROUNDS:** 'backgroundPrompts' should generate high-quality, versatile backgrounds that match the brand aesthetic, suitable for overlays.
       
       If content is empty, INFER reasonable defaults based on the URL and domain name.
     `;
+
+    // Prepare message content for GPT-4o (Vision or Text)
+    const userMessageContent: any[] = [
+        { type: "text", text: prompt }
+    ];
+
+    // Add screenshot if available
+    if (firecrawlMetadata.screenshot && firecrawlMetadata.screenshot.startsWith('http')) {
+        console.log('📸 Adding screenshot to Vision analysis');
+        userMessageContent.push({
+            type: "image_url",
+            image_url: {
+                "url": firecrawlMetadata.screenshot
+            }
+        });
+    }
 
     const aiResponse = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
@@ -824,10 +845,10 @@ export async function POST(request: Request) {
         "X-Title": "BriefBox" // Optional. Shows in rankings on openrouter.ai.
       },
       body: JSON.stringify({
-        "model": "openai/gpt-4o", // Using GPT-4o for high-quality reasoning (simulating 'gpt-5.1-chat' capability)
+        "model": "openai/gpt-4o", // Using GPT-4o for high-quality reasoning + Vision
         "messages": [
-          {"role": "system", "content": "You are an expert Brand Strategist & Creative Director. Your goal is to deeply analyze a website's content to extract a precise Brand Identity and actionable Social Media Visual Concepts. You must understand the company's positioning, value proposition, and aesthetic to generating high-converting visual briefs.\n\nIMAGE CLASSIFICATION RULES:\n- 'person' category is ONLY for images with clearly visible human faces, bodies or hands.\n- Objects like microphones, cameras, headphones, or any equipment are ALWAYS 'product', never 'person'.\n- When in doubt between 'person' and 'product', choose 'product'.\n- Apply strict visual analysis, do not anthropomorphize objects."},
-          {"role": "user", "content": prompt}
+          {"role": "system", "content": "You are an expert Brand Strategist & Creative Director. Your goal is to deeply analyze a website's content (and screenshot if provided) to extract a precise Brand Identity and actionable Social Media Visual Concepts. You must understand the company's positioning, value proposition, and aesthetic to generating high-converting visual briefs.\n\nIMAGE CLASSIFICATION RULES:\n- 'person' category is ONLY for images with clearly visible human faces, bodies or hands.\n- Objects like microphones, cameras, headphones, or any equipment are ALWAYS 'product', never 'person'.\n- When in doubt between 'person' and 'product', choose 'product'.\n- Apply strict visual analysis, do not anthropomorphize objects."},
+          {"role": "user", "content": userMessageContent}
         ]
       })
     });
