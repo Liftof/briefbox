@@ -61,10 +61,22 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { prompt, negativePrompt = "", imageUrls = [], numImages = 1, aspectRatio = "1:1", resolution = "1K", useAsync = false } = body;
+    const { 
+      prompt, 
+      promptVariations, // NEW: Array of 4 different prompts for diversity
+      negativePrompt = "", 
+      imageUrls = [], 
+      numImages = 4, 
+      aspectRatio = "1:1", 
+      resolution = "1K", 
+      useAsync = false 
+    } = body;
 
-    // Basic Validation
-    if (!prompt || typeof prompt !== 'string') {
+    // Basic Validation - accept either prompt or promptVariations
+    const hasPrompt = prompt && typeof prompt === 'string';
+    const hasVariations = Array.isArray(promptVariations) && promptVariations.length > 0;
+    
+    if (!hasPrompt && !hasVariations) {
       return NextResponse.json({ success: false, error: 'Prompt is required' }, { status: 400 });
     }
 
@@ -125,100 +137,87 @@ export async function POST(request: NextRequest) {
          return NextResponse.json({ success: false, error: 'No valid or convertible image URLs provided' }, { status: 400 });
     }
 
-    // Prepare Input for Nano Banana Pro
-    // Note: If this model is not available, consider using 'fal-ai/flux-pro/v1.1' or similar.
-    const input: Record<string, any> = {
-      prompt: prompt,
-      num_images: numImages,
-      aspect_ratio: aspectRatio === "1:1" ? "1:1" : "4:5", 
-      output_format: "png",
-      image_urls: processedImageUrls,
-      resolution: resolution 
-    };
-
-    // Add negative prompt if provided (model-dependent support)
-    if (negativePrompt && negativePrompt.trim()) {
-      input.negative_prompt = negativePrompt.trim();
-    }
+    // Determine prompts to use
+    // If we have variations, we'll generate each image with a different prompt
+    const prompts = hasVariations 
+      ? promptVariations.slice(0, 4) // Use up to 4 variations
+      : [prompt, prompt, prompt, prompt].slice(0, numImages); // Same prompt repeated
+    
+    const actualNumImages = Math.min(prompts.length, 4);
 
     console.log('🍌 Generating with Nano Banana Pro:');
-    console.log('   📝 Prompt:', prompt.substring(0, 100) + '...');
+    console.log('   📝 Prompts:', actualNumImages, hasVariations ? '(with variations)' : '(same prompt)');
     console.log('   🚫 Negative:', negativePrompt?.substring(0, 50) || 'none');
-    console.log('   🖼️ Images:', input.image_urls.length);
+    console.log('   🖼️ Reference images:', processedImageUrls.length);
+
+    // Generate each image with its own prompt (for variations) or batch
+    const generateSingleImage = async (singlePrompt: string, index: number) => {
+      const input: Record<string, any> = {
+        prompt: singlePrompt,
+        num_images: 1, // One at a time for variations
+        aspect_ratio: aspectRatio === "1:1" ? "1:1" : "4:5", 
+        output_format: "png",
+        image_urls: processedImageUrls,
+        resolution: resolution 
+      };
+
+      if (negativePrompt && negativePrompt.trim()) {
+        input.negative_prompt = negativePrompt.trim();
+      }
+
+      console.log(`   🎨 Variation ${index + 1}:`, singlePrompt.slice(-60) + '...');
+
+      return fal.subscribe("fal-ai/nano-banana-pro/edit", {
+        input,
+        logs: false,
+      });
+    };
 
     try {
-        let result: any;
+        // Generate all images in parallel with their respective prompts
+        console.log(`🚀 Launching ${actualNumImages} parallel generations...`);
         
-        // Use queue-based async approach to avoid Vercel timeouts
-        // This submits to queue and polls for result, avoiding long HTTP connections
-        if (useAsync) {
-            console.log('🔄 Using async queue mode...');
-            
-            // Submit to queue
-            const { request_id } = await fal.queue.submit("fal-ai/nano-banana-pro/edit", {
-              input,
-            });
-            
-            console.log('📤 Queued request:', request_id);
-            
-            // Poll for result with 2-minute timeout
-            result = await pollForResult(request_id, 120000);
-        } else {
-            // Standard subscribe with built-in timeout handling
-            // This uses Fal's internal queue but maintains the HTTP connection
-            // Works well for faster generations, falls back gracefully
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 55000); // 55s timeout (under Vercel's 60s limit)
-            
-            try {
-                result = await fal.subscribe("fal-ai/nano-banana-pro/edit", {
-                  input,
-                  logs: true,
-                  onQueueUpdate: (update) => {
-                    if (update.status === "IN_PROGRESS") {
-                      update.logs.map((log) => log.message).forEach(console.log);
-                    }
-                  },
-                });
-            } catch (subscribeError: any) {
-                clearTimeout(timeoutId);
-                
-                // If it timed out or connection dropped, try queue mode as fallback
-                if (subscribeError.name === 'AbortError' || subscribeError.message?.includes('timeout') || subscribeError.message?.includes('connection')) {
-                    console.log('⚠️ Subscribe timed out, retrying with queue mode...');
-                    
-                    const { request_id } = await fal.queue.submit("fal-ai/nano-banana-pro/edit", {
-                      input,
-                    });
-                    
-                    result = await pollForResult(request_id, 120000);
-                } else {
-                    throw subscribeError;
-                }
-            }
-            
-            clearTimeout(timeoutId);
+        const generationPromises = prompts.map((p, i) => 
+          generateSingleImage(p, i).catch(err => {
+            console.warn(`⚠️ Generation ${i + 1} failed:`, err.message);
+            return null; // Return null for failed generations
+          })
+        );
+
+        const results = await Promise.all(generationPromises);
+        
+        // Extract images from results
+        const finalImages: any[] = [];
+        
+        for (const result of results) {
+          if (!result) continue; // Skip failed generations
+          
+          // Cast to any to handle various response formats from Fal
+          const r = result as any;
+          
+          // Extract image URL from various response formats
+          if (r.data?.images && Array.isArray(r.data.images)) {
+            finalImages.push(...r.data.images);
+          } else if (r.images && Array.isArray(r.images)) {
+            finalImages.push(...r.images);
+          } else if (r.image) {
+            finalImages.push(r.image);
+          } else if (r.data?.image) {
+            finalImages.push(r.data.image);
+          }
         }
 
-        console.log('🍌 Fal Result:', JSON.stringify(result, null, 2));
+        console.log(`✅ Generated ${finalImages.length}/${actualNumImages} images successfully`);
 
-        // Normalize images output
-        // Fal API might return 'images' (array) or 'image' (object) depending on the model version or inputs
-        let finalImages = [];
-        if (result.data?.images && Array.isArray(result.data.images)) {
-            finalImages = result.data.images;
-        } else if (result.images && Array.isArray(result.images)) {
-            finalImages = result.images;
-        } else if (result.image) {
-            finalImages = [result.image];
-        } else if (result.data?.image) {
-            finalImages = [result.data.image];
+        if (finalImages.length === 0) {
+          throw new Error('Aucune image générée. Réessayez.');
         }
 
         return NextResponse.json({
           success: true,
           images: finalImages,
-          description: result.description || result.data?.description,
+          generatedCount: finalImages.length,
+          requestedCount: actualNumImages
         });
     } catch (falError: any) {
         // Catch Fal specific errors

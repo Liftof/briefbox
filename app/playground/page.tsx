@@ -582,9 +582,11 @@ ${enhancement}`);
     setProgress(10);
 
     try {
-      // STEP 1: Call Creative Director API to transform brief into structured concept
+      // STEP 1: Call Creative Director API to get prompt variations + smart image selection
+      let promptVariations: string[] | null = null;
       let finalGenerationPrompt: string;
       let negativePrompt: string = 'blurry, low quality, watermark, amateur, generic stock photo, clipart';
+      let smartImageSelection: string[] | null = null;
       
       try {
         const cdResponse = await fetch('/api/creative-director', {
@@ -599,15 +601,22 @@ ${enhancement}`);
         
         const cdData = await cdResponse.json();
         
-        if (cdResponse.ok && cdData.success && cdData.concept?.finalPrompt) {
+        if (cdResponse.ok && cdData.success && cdData.concept) {
           finalGenerationPrompt = cdData.concept.finalPrompt;
+          promptVariations = cdData.concept.promptVariations || null;
           negativePrompt = cdData.concept.negativePrompt || negativePrompt;
-          console.log('🎬 Creative Director prompt:', finalGenerationPrompt.substring(0, 100) + '...');
+          
+          // Use smart image selection if provided
+          if (cdData.concept.imageSelection?.priority?.length > 0) {
+            smartImageSelection = cdData.concept.imageSelection.priority;
+            console.log('🎯 Smart image selection:', smartImageSelection.length, 'images');
+          }
+          
+          console.log('🎬 Creative Director:', promptVariations ? `${promptVariations.length} variations` : 'single prompt');
           console.log('🚫 Negative prompt:', negativePrompt.substring(0, 50) + '...');
           setProgress(30);
-          setStatusMessage('✨ Concept créatif validé, génération en cours...');
+          setStatusMessage('✨ 4 variations créatives préparées...');
         } else {
-          // Fallback to basic prompt if Creative Director fails
           console.warn('Creative Director fallback:', cdData.error);
           finalGenerationPrompt = buildFallbackPrompt(finalPrompt, targetBrand);
         }
@@ -618,14 +627,20 @@ ${enhancement}`);
 
       setProgress(40);
 
-      // STEP 2: Generate with Fal using the enriched prompt
+      // Use smart image selection or fall back to user selection
+      const imagesToUse = smartImageSelection && smartImageSelection.length > 0 
+        ? smartImageSelection 
+        : references;
+
+      // STEP 2: Generate with Fal using variations (or single prompt)
       const response = await fetch('/api/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           prompt: finalGenerationPrompt,
+          promptVariations: promptVariations, // NEW: 4 different prompts
           negativePrompt: negativePrompt,
-          imageUrls: references,
+          imageUrls: imagesToUse,
           numImages: 4,
           aspectRatio: '1:1'
         })

@@ -9,11 +9,94 @@ import {
 } from '@/lib/templates';
 
 // ============================================================================
-// CREATIVE DIRECTOR V2 - Template-Based System
+// CREATIVE DIRECTOR V3 - Variations + Style References + Smart Selection
 // ============================================================================
-// No more GPT creativity - just templates filled with brand data
-// Predictable, fast, consistent results
-// ============================================================================
+
+// Style references mapped to brand aesthetics
+// These are styles that Nano Banana Pro understands well
+const STYLE_REFERENCE_MAP: Record<string, string[]> = {
+  // Tech/SaaS
+  'modern': ['Linear app', 'Stripe website', 'Vercel dashboard'],
+  'minimal': ['Apple marketing', 'Notion design', 'Figma community'],
+  'professional': ['IBM design', 'Salesforce marketing', 'Microsoft Fluent'],
+  'sleek': ['Tesla website', 'Rivian branding', 'Nothing phone'],
+  
+  // Creative/Bold
+  'bold': ['Spotify Wrapped', 'Nike advertising', 'Gatorade visuals'],
+  'creative': ['Pentagram portfolio', 'IDEO projects', 'Sagmeister work'],
+  'playful': ['Mailchimp illustrations', 'Slack marketing', 'Duolingo style'],
+  
+  // Premium/Luxury
+  'luxury': ['Hermès photography', 'Rolex advertising', 'Cartier visuals'],
+  'elegant': ['Aesop branding', 'Kinfolk magazine', 'Cereal magazine'],
+  'sophisticated': ['The New Yorker', 'Monocle magazine', 'Wallpaper design'],
+  
+  // Corporate/Trust
+  'corporate': ['McKinsey reports', 'Deloitte marketing', 'Goldman Sachs'],
+  'trustworthy': ['Mayo Clinic', 'Harvard branding', 'The Economist'],
+  'authoritative': ['Bloomberg Terminal', 'Reuters graphics', 'FT design'],
+  
+  // Default fallback
+  'default': ['Behance featured', 'Dribbble popular', 'Awwwards winner']
+};
+
+// Prompt variations for diversity (appended to base prompt)
+const PROMPT_VARIATIONS = [
+  '\n\nStyle inspiration: Award-winning design, featured on Behance.',
+  '\n\nStyle inspiration: Dribbble shot of the week aesthetic.',
+  '\n\nStyle inspiration: Apple keynote presentation quality.',
+  '\n\nStyle inspiration: Premium editorial, Kinfolk magazine style.'
+];
+
+// Get style references based on brand aesthetic
+function getStyleReferences(aesthetic: string): string {
+  const aestheticLower = aesthetic.toLowerCase();
+  
+  // Find matching style references
+  for (const [key, references] of Object.entries(STYLE_REFERENCE_MAP)) {
+    if (aestheticLower.includes(key)) {
+      return `Style references: ${references.join(', ')}.`;
+    }
+  }
+  
+  // Default references
+  return `Style references: ${STYLE_REFERENCE_MAP.default.join(', ')}.`;
+}
+
+// Smart image selection recommendations
+function getImagePriority(labeledImages: any[]): { priority: string[], excluded: string[], reasoning: string } {
+  if (!Array.isArray(labeledImages) || labeledImages.length === 0) {
+    return { priority: [], excluded: [], reasoning: 'No labeled images available' };
+  }
+  
+  const priority: string[] = [];
+  const excluded: string[] = [];
+  
+  // Priority order: logo > product > app_ui > texture > other
+  const priorityOrder = ['main_logo', 'product', 'app_ui', 'texture', 'person', 'other'];
+  
+  for (const category of priorityOrder) {
+    const images = labeledImages.filter(img => img.category === category);
+    for (const img of images) {
+      // Skip very small images or placeholders
+      if (img.url?.includes('placeholder') || img.url?.includes('1x1')) {
+        excluded.push(img.url);
+        continue;
+      }
+      priority.push(img.url);
+    }
+  }
+  
+  // Limit to best 4 images
+  const selected = priority.slice(0, 4);
+  const skipped = priority.slice(4);
+  
+  return {
+    priority: selected,
+    excluded: [...excluded, ...skipped],
+    reasoning: `Selected ${selected.length} images: logo/product prioritized, small/placeholder excluded`
+  };
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -42,10 +125,9 @@ export async function POST(request: NextRequest) {
       templateId = requestedTemplateId as TemplateId;
       console.log(`📋 Using requested template: ${templateId}`);
     } else {
-      // Auto-detect from brief
       const detected = detectTemplate(brief);
       templateId = detected.id;
-      console.log(`🔍 Auto-detected template: ${templateId} for brief: "${brief.slice(0, 50)}..."`);
+      console.log(`🔍 Auto-detected template: ${templateId}`);
     }
 
     // Build template params
@@ -55,57 +137,70 @@ export async function POST(request: NextRequest) {
       secondaryColor,
       aesthetic,
       toneVoice,
-      headline: brief.slice(0, 80), // Use brief as headline
+      headline: brief.slice(0, 80),
       subheadline: brand.tagline || '',
     };
 
-    // Special handling for stat template - extract metric
+    // Special handling per template type
     if (templateId === 'stat') {
       const extracted = extractMetric(brief);
       if (extracted) {
         params.metric = extracted.metric;
         params.metricLabel = extracted.label;
-        console.log(`📊 Extracted metric: ${extracted.metric} (${extracted.label})`);
       } else {
-        // Default metric if none found
         params.metric = '100%';
         params.metricLabel = 'satisfaction';
       }
     }
 
-    // Special handling for quote template
     if (templateId === 'quote') {
       params.quote = brief;
       params.personName = 'Client';
       params.personTitle = brand.industry || 'Partner';
     }
 
-    // Special handling for event template
     if (templateId === 'event') {
       params.eventDate = 'À venir';
       params.eventTime = '';
     }
 
-    // Special handling for expert template
     if (templateId === 'expert') {
       params.personName = 'Expert';
       params.personTitle = brand.industry || 'Specialist';
     }
 
-    // Build the final prompt
+    // Build the base prompt
     const result = buildTemplatePrompt(templateId, params);
+    
+    // Get style references based on brand aesthetic
+    const styleRefs = getStyleReferences(aesthetic);
+    
+    // Create 4 prompt variations
+    const promptVariations = PROMPT_VARIATIONS.map((variation, i) => {
+      return `${result.prompt}\n\n${styleRefs}${variation}`;
+    });
 
-    console.log('🎨 Template prompt built:');
+    // Smart image selection
+    const imageSelection = getImagePriority(brand.labeledImages || []);
+
+    console.log('🎨 Creative Director V3:');
     console.log('   Template:', result.templateUsed);
-    console.log('   Prompt:', result.prompt.slice(0, 100) + '...');
+    console.log('   Style refs:', styleRefs.slice(0, 50) + '...');
+    console.log('   Variations:', promptVariations.length);
+    console.log('   Image selection:', imageSelection.reasoning);
 
     return NextResponse.json({
       success: true,
       concept: {
-        finalPrompt: result.prompt,
+        // Base prompt (for display/debugging)
+        finalPrompt: result.prompt + '\n\n' + styleRefs,
+        // 4 variations for generation
+        promptVariations,
         negativePrompt: result.negativePrompt,
         templateUsed: result.templateUsed,
-        params: params // Return params so frontend can edit them
+        params,
+        // Smart image recommendations
+        imageSelection
       }
     });
 
@@ -127,12 +222,12 @@ export async function GET() {
     description: t.description,
     descriptionFr: t.descriptionFr,
     icon: t.icon,
-    structure: t.structure,
     fields: t.fields
   }));
 
   return NextResponse.json({
     success: true,
-    templates
+    templates,
+    styleReferences: Object.keys(STYLE_REFERENCE_MAP)
   });
 }
