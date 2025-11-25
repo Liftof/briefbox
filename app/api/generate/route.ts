@@ -242,7 +242,7 @@ ${imageDescriptions.join('\n')}
       prompts = promptVariations
         .filter((p: any) => p && typeof p === 'string' && p.trim().length > 0)
         .map((p: string) => imageContextPrefix + p.trim())
-        .slice(0, 4);
+        .slice(0, numImages); // Respect requested numImages limit (default 4)
       
       // If all variations were invalid, fall back to single prompt
       if (prompts.length === 0 && hasPrompt) {
