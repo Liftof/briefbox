@@ -5,7 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import Sidebar from './components/Sidebar';
 import BentoGrid from './components/BentoGrid';
 import CalendarView from './components/CalendarView';
-import ProjectsView, { addGenerations } from './components/ProjectsView';
+import ProjectsView, { addGenerations, loadFeedbackPatterns } from './components/ProjectsView';
 import { TemplateId } from '@/lib/templates';
 
 type Step = 'url' | 'analyzing' | 'bento' | 'playground';
@@ -672,6 +672,9 @@ ${enhancement}`);
       let styleReferenceImages: string[] = [];
       
       try {
+        // Load feedback patterns to personalize generation
+        const feedbackPatterns = loadFeedbackPatterns();
+        
         const cdResponse = await fetch('/api/creative-director', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -679,7 +682,10 @@ ${enhancement}`);
             brief: finalPrompt,
             brand: targetBrand,
             templateId: selectedTemplate || undefined,
-            language: contentLanguage
+            language: contentLanguage,
+            feedbackPatterns: feedbackPatterns.likedKeywords.length > 0 || feedbackPatterns.dislikedKeywords.length > 0 
+              ? feedbackPatterns 
+              : undefined
           })
         });
         

@@ -128,16 +128,64 @@ const LANGUAGE_INSTRUCTIONS: Record<string, string> = {
   de: 'All text on the visual must be in GERMAN. Use proper German typography.',
 };
 
+// Feedback patterns type (matching client-side)
+interface FeedbackPatterns {
+  likedStyles: string[];
+  dislikedStyles: string[];
+  likedKeywords: string[];
+  dislikedKeywords: string[];
+  avgRatingByTemplate: Record<string, { total: number; count: number }>;
+  lastUpdated: string;
+}
+
+// Build feedback-aware prompt adjustments
+function buildFeedbackGuidance(patterns?: FeedbackPatterns): string {
+  if (!patterns) return '';
+  
+  const guidance: string[] = [];
+  
+  // Templates with high ratings
+  const bestTemplates = Object.entries(patterns.avgRatingByTemplate)
+    .filter(([_, stats]) => stats.count >= 2 && (stats.total / stats.count) >= 2.5)
+    .map(([template]) => template);
+  
+  if (bestTemplates.length > 0) {
+    guidance.push(`User prefers these template styles: ${bestTemplates.join(', ')}.`);
+  }
+  
+  // Liked keywords (things that worked)
+  if (patterns.likedKeywords.length > 0) {
+    const topLiked = patterns.likedKeywords.slice(-5); // Most recent
+    guidance.push(`Elements user liked: ${topLiked.join(', ')}.`);
+  }
+  
+  // Disliked keywords (things to avoid)
+  if (patterns.dislikedKeywords.length > 0) {
+    const topDisliked = patterns.dislikedKeywords.slice(-5);
+    guidance.push(`AVOID these elements that user disliked: ${topDisliked.join(', ')}.`);
+  }
+  
+  return guidance.length > 0 
+    ? `\n\nUSER PREFERENCES (from past feedback):\n${guidance.join('\n')}` 
+    : '';
+}
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { brief, brand, templateId: requestedTemplateId, language = 'fr' } = body;
+    const { brief, brand, templateId: requestedTemplateId, language = 'fr', feedbackPatterns } = body;
 
     if (!brief || !brand) {
       return NextResponse.json(
         { success: false, error: 'Brief and brand data required' },
         { status: 400 }
       );
+    }
+
+    // Build feedback guidance if available
+    const feedbackGuidance = buildFeedbackGuidance(feedbackPatterns);
+    if (feedbackGuidance) {
+      console.log('📊 Using user feedback patterns to guide generation');
     }
 
     // Extract brand essentials
@@ -214,9 +262,9 @@ export async function POST(request: NextRequest) {
     // Get style references based on brand aesthetic
     const styleRefs = getStyleReferences(aesthetic);
     
-    // Create 4 prompt variations - each with a different style suffix
+    // Create 4 prompt variations - each with a different style suffix + feedback guidance
     const promptVariations = PROMPT_VARIATIONS.map((variation) => {
-      const fullPrompt = `${result.prompt}\n\n${styleRefs}${variation}`;
+      const fullPrompt = `${result.prompt}\n\n${styleRefs}${variation}${feedbackGuidance}`;
       return fullPrompt.trim();
     }).filter(p => p && p.length > 0); // Extra safety filter
 
@@ -238,12 +286,13 @@ export async function POST(request: NextRequest) {
     console.log('   Variations:', promptVariations.length);
     console.log('   Image selection:', imageSelection.reasoning);
     console.log('   Reference visuals:', imageSelection.references.length);
+    console.log('   Feedback guidance:', feedbackGuidance ? 'Yes' : 'No');
 
     return NextResponse.json({
       success: true,
       concept: {
         // Base prompt (for display/debugging)
-        finalPrompt: result.prompt + '\n\n' + styleContext + '\n\n' + languageInstruction,
+        finalPrompt: result.prompt + '\n\n' + styleContext + feedbackGuidance + '\n\n' + languageInstruction,
         // 4 variations for generation
         promptVariations: promptVariations.map(p => {
           let enhanced = p;

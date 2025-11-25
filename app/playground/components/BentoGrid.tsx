@@ -701,39 +701,66 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
             </div>
           )}
 
-          {/* Reference Visuals (Inspirations) */}
-          <div className="col-span-6 bg-gradient-to-br from-purple-50 to-pink-50 border border-purple-200 p-4">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <span className="text-base">🎨</span>
-                <span className="text-[10px] font-mono uppercase tracking-widest text-purple-700">Inspirations visuelles</span>
-                <span className="text-[8px] font-mono text-purple-400">(optionnel)</span>
+          {/* Reference Visuals (Inspirations) - PROMINENT SECTION */}
+          <div className="col-span-6 bg-gradient-to-br from-violet-50 via-purple-50 to-fuchsia-50 border-2 border-purple-300 p-4 relative overflow-hidden">
+            {/* Decorative elements */}
+            <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-purple-200/30 to-transparent rounded-full -translate-y-1/2 translate-x-1/2" />
+            <div className="absolute bottom-0 left-0 w-16 h-16 bg-gradient-to-tr from-fuchsia-200/30 to-transparent rounded-full translate-y-1/2 -translate-x-1/2" />
+            
+            <div className="relative z-10">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-fuchsia-500 flex items-center justify-center text-white text-sm">
+                    🎨
+                  </div>
+                  <div>
+                    <span className="text-xs font-semibold text-purple-900 block">Visuels de référence</span>
+                    <span className="text-[9px] text-purple-500">Guident le style de génération</span>
+                  </div>
+                </div>
+                <button 
+                  onClick={() => setImportPopupOpen(true)}
+                  className="px-3 py-1.5 bg-gradient-to-r from-purple-500 to-fuchsia-500 text-white text-[10px] font-medium hover:from-purple-600 hover:to-fuchsia-600 transition-all shadow-sm"
+                >
+                  + Ajouter
+                </button>
               </div>
-              <button 
-                onClick={() => setImportPopupOpen(true)}
-                className="px-2 py-1 bg-purple-500 text-white text-[8px] font-medium hover:bg-purple-600"
-              >+ Ajouter</button>
-            </div>
-            {referenceImages.length > 0 ? (
-              <div className="grid grid-cols-4 gap-2">
-                {referenceImages.slice(0, 4).map((img: string, i: number) => (
-                  <div key={i} className="aspect-square overflow-hidden border border-purple-200 group relative">
-                    <img src={img} className="w-full h-full object-cover" loading="lazy" />
-                    <button 
-                      onClick={() => {
-                        const newLabeledImages = localData.labeledImages?.map((li: any) => li.url === img ? { ...li, category: 'other' } : li) || [];
-                        handleChange('labeledImages', newLabeledImages);
-                      }}
-                      className="absolute top-0.5 right-0.5 w-4 h-4 bg-white/90 text-[8px] opacity-0 group-hover:opacity-100"
-                    >×</button>
+              
+              {referenceImages.length > 0 ? (
+                <div className="space-y-2">
+                  <div className="grid grid-cols-4 gap-2">
+                    {referenceImages.slice(0, 4).map((img: string, i: number) => (
+                      <div key={i} className="aspect-square overflow-hidden border-2 border-purple-200 group relative bg-white shadow-sm">
+                        <img src={img} className="w-full h-full object-cover" loading="lazy" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-purple-900/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                        <button 
+                          onClick={() => {
+                            const newLabeledImages = localData.labeledImages?.map((li: any) => li.url === img ? { ...li, category: 'other' } : li) || [];
+                            handleChange('labeledImages', newLabeledImages);
+                          }}
+                          className="absolute top-1 right-1 w-5 h-5 bg-white/90 text-[10px] opacity-0 group-hover:opacity-100 hover:bg-red-500 hover:text-white transition-all"
+                        >×</button>
                       </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-xs text-purple-400 text-center py-4">
-                Ajoutez des visuels avec le tag "Visuel de référence" pour guider la génération
-              </p>
-            )}
+                    ))}
+                  </div>
+                  <p className="text-[9px] text-purple-600 flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full" />
+                    Ces visuels guident le style, les couleurs et l'ambiance des générations
+                  </p>
+                </div>
+              ) : (
+                <div className="bg-white/50 border border-purple-200 border-dashed p-4 text-center">
+                  <div className="text-2xl mb-2">🖼️</div>
+                  <p className="text-xs text-purple-600 font-medium">Aucune inspiration visuelle</p>
+                  <p className="text-[10px] text-purple-400 mt-1">
+                    Importez des visuels et ajoutez le tag <span className="bg-purple-100 px-1 py-0.5 rounded text-purple-700">"Visuel de référence"</span>
+                  </p>
+                  <p className="text-[9px] text-purple-400 mt-2">
+                    → Exemples : visuels de charte, posts LinkedIn inspirants, screenshots d'apps...
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Textures - Smaller, only 2 */}

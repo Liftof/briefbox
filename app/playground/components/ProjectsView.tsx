@@ -3,6 +3,12 @@
 import { useState, useEffect } from 'react';
 
 // Types for generations and folders
+export interface GenerationFeedback {
+  rating: 1 | 2 | 3; // 1=bad, 2=ok, 3=good
+  comment?: string;
+  timestamp: string;
+}
+
 export interface Generation {
   id: string;
   url: string;
@@ -11,6 +17,7 @@ export interface Generation {
   brandName?: string;
   createdAt: string;
   folderId?: string;
+  feedback?: GenerationFeedback;
 }
 
 export interface Folder {
@@ -23,6 +30,122 @@ export interface Folder {
 // LocalStorage keys
 const GENERATIONS_KEY = 'briefbox_generations';
 const FOLDERS_KEY = 'briefbox_folders';
+const FEEDBACK_PATTERNS_KEY = 'briefbox_feedback_patterns';
+
+// Feedback patterns for learning
+export interface FeedbackPatterns {
+  likedStyles: string[];      // Styles/templates user rates highly
+  dislikedStyles: string[];   // Styles user rates poorly
+  likedKeywords: string[];    // Keywords from highly rated prompts
+  dislikedKeywords: string[]; // Keywords from poorly rated prompts
+  avgRatingByTemplate: Record<string, { total: number; count: number }>;
+  lastUpdated: string;
+}
+
+// Load/save feedback patterns
+export const loadFeedbackPatterns = (): FeedbackPatterns => {
+  if (typeof window === 'undefined') return getDefaultPatterns();
+  try {
+    const data = localStorage.getItem(FEEDBACK_PATTERNS_KEY);
+    return data ? JSON.parse(data) : getDefaultPatterns();
+  } catch {
+    return getDefaultPatterns();
+  }
+};
+
+const getDefaultPatterns = (): FeedbackPatterns => ({
+  likedStyles: [],
+  dislikedStyles: [],
+  likedKeywords: [],
+  dislikedKeywords: [],
+  avgRatingByTemplate: {},
+  lastUpdated: new Date().toISOString()
+});
+
+const saveFeedbackPatterns = (patterns: FeedbackPatterns) => {
+  if (typeof window === 'undefined') return;
+  localStorage.setItem(FEEDBACK_PATTERNS_KEY, JSON.stringify(patterns));
+};
+
+// Update feedback patterns when user rates
+const updateFeedbackPatterns = (generation: Generation, rating: 1 | 2 | 3, comment?: string) => {
+  const patterns = loadFeedbackPatterns();
+  
+  // Extract keywords from prompt
+  const promptKeywords = generation.prompt 
+    ? generation.prompt.toLowerCase().split(/\s+/).filter(w => w.length > 4)
+    : [];
+  
+  const templateId = generation.templateId || 'unknown';
+  
+  // Update template averages
+  if (!patterns.avgRatingByTemplate[templateId]) {
+    patterns.avgRatingByTemplate[templateId] = { total: 0, count: 0 };
+  }
+  patterns.avgRatingByTemplate[templateId].total += rating;
+  patterns.avgRatingByTemplate[templateId].count += 1;
+  
+  // Learn from ratings
+  if (rating === 3) {
+    // User loved it - learn from this
+    if (templateId && !patterns.likedStyles.includes(templateId)) {
+      patterns.likedStyles.push(templateId);
+    }
+    // Remove from disliked if present
+    patterns.dislikedStyles = patterns.dislikedStyles.filter(s => s !== templateId);
+    // Add keywords
+    promptKeywords.forEach(kw => {
+      if (!patterns.likedKeywords.includes(kw)) {
+        patterns.likedKeywords.push(kw);
+      }
+    });
+  } else if (rating === 1) {
+    // User didn't like it
+    if (templateId && !patterns.dislikedStyles.includes(templateId)) {
+      patterns.dislikedStyles.push(templateId);
+    }
+    patterns.likedStyles = patterns.likedStyles.filter(s => s !== templateId);
+    // Add to disliked keywords
+    promptKeywords.forEach(kw => {
+      if (!patterns.dislikedKeywords.includes(kw)) {
+        patterns.dislikedKeywords.push(kw);
+      }
+    });
+  }
+  
+  // Parse comment for insights
+  if (comment) {
+    const commentLower = comment.toLowerCase();
+    
+    // Simple sentiment patterns (French)
+    const positivePatterns = ['j\'aime', 'super', 'parfait', 'excellent', 'bien', 'top', 'nice', 'love'];
+    const negativePatterns = ['pas bien', 'moche', 'nul', 'mauvais', 'horrible', 'non', 'déteste', 'trop'];
+    
+    positivePatterns.forEach(p => {
+      if (commentLower.includes(p)) {
+        // Extract what they liked
+        const context = commentLower.split(p)[1]?.split(/[.,!?]/)[0]?.trim();
+        if (context && context.length > 2 && !patterns.likedKeywords.includes(context)) {
+          patterns.likedKeywords.push(context);
+        }
+      }
+    });
+    
+    negativePatterns.forEach(p => {
+      if (commentLower.includes(p)) {
+        const context = commentLower.split(p)[1]?.split(/[.,!?]/)[0]?.trim();
+        if (context && context.length > 2 && !patterns.dislikedKeywords.includes(context)) {
+          patterns.dislikedKeywords.push(context);
+        }
+      }
+    });
+  }
+  
+  patterns.lastUpdated = new Date().toISOString();
+  saveFeedbackPatterns(patterns);
+  
+  return patterns;
+};
 
 // Helper to load from localStorage
 const loadGenerations = (): Generation[] => {
@@ -107,6 +230,10 @@ export default function ProjectsView() {
   const [draggedGen, setDraggedGen] = useState<string | null>(null);
   const [lightboxImage, setLightboxImage] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
+  
+  // Feedback UI state
+  const [feedbackGenId, setFeedbackGenId] = useState<string | null>(null);
+  const [feedbackComment, setFeedbackComment] = useState('');
 
   // Load data on mount
   useEffect(() => {
@@ -215,6 +342,65 @@ export default function ProjectsView() {
     return date.toLocaleDateString('fr-FR');
   };
 
+  // Handle feedback rating
+  const handleFeedback = (genId: string, rating: 1 | 2 | 3, comment?: string) => {
+    const gen = generations.find(g => g.id === genId);
+    if (!gen) return;
+    
+    const feedback: GenerationFeedback = {
+      rating,
+      comment: comment || feedbackComment || undefined,
+      timestamp: new Date().toISOString()
+    };
+    
+    // Update the generation with feedback
+    const updated = generations.map(g => 
+      g.id === genId ? { ...g, feedback } : g
+    );
+    setGenerations(updated);
+    saveGenerations(updated);
+    
+    // Update patterns for learning
+    updateFeedbackPatterns(gen, rating, feedback.comment);
+    
+    // Reset UI
+    setFeedbackGenId(null);
+    setFeedbackComment('');
+  };
+
+  // Render stars for rating
+  const renderRatingStars = (gen: Generation, isCompact = false) => {
+    const currentRating = gen.feedback?.rating;
+    const starSize = isCompact ? 'text-xs' : 'text-sm';
+    
+    return (
+      <div className={`flex items-center gap-0.5 ${isCompact ? 'scale-90' : ''}`}>
+        {[1, 2, 3].map((star) => (
+          <button
+            key={star}
+            onClick={(e) => {
+              e.stopPropagation();
+              if (currentRating === star) {
+                // Click same star opens comment
+                setFeedbackGenId(gen.id);
+              } else {
+                handleFeedback(gen.id, star as 1 | 2 | 3);
+              }
+            }}
+            className={`${starSize} transition-all hover:scale-110 ${
+              currentRating && currentRating >= star 
+                ? star === 1 ? 'text-red-400' : star === 2 ? 'text-amber-400' : 'text-emerald-400'
+                : 'text-gray-300 hover:text-gray-400'
+            }`}
+            title={star === 1 ? 'Pas bien' : star === 2 ? 'Moyen' : 'Super !'}
+          >
+            ★
+          </button>
+        ))}
+      </div>
+    );
+  };
+
   return (
     <div className="animate-fade-in">
       {/* Lightbox */}
@@ -225,6 +411,80 @@ export default function ProjectsView() {
         >
           <img src={lightboxImage} alt="" className="max-w-full max-h-full object-contain" />
           <button className="absolute top-4 right-4 text-white/60 hover:text-white text-2xl">×</button>
+        </div>
+      )}
+
+      {/* Feedback Comment Popup */}
+      {feedbackGenId && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
+          onClick={() => setFeedbackGenId(null)}
+        >
+          <div 
+            className="bg-white p-6 max-w-md w-full shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-semibold text-gray-900">Votre avis</h3>
+              <button 
+                onClick={() => setFeedbackGenId(null)}
+                className="text-gray-400 hover:text-gray-600"
+              >×</button>
+            </div>
+            
+            {/* Current rating display */}
+            {(() => {
+              const gen = generations.find(g => g.id === feedbackGenId);
+              return gen ? (
+                <div className="flex items-center gap-3 mb-4">
+                  <span className="text-sm text-gray-500">Note :</span>
+                  {renderRatingStars(gen)}
+                </div>
+              ) : null;
+            })()}
+            
+            <textarea
+              value={feedbackComment}
+              onChange={(e) => setFeedbackComment(e.target.value)}
+              placeholder="Qu'est-ce qui vous plaît ou déplaît ? (optionnel)"
+              className="w-full p-3 border border-gray-200 text-sm resize-none focus:outline-none focus:border-gray-400"
+              rows={3}
+            />
+            
+            <div className="flex items-center gap-2 mt-4">
+              <button
+                onClick={() => {
+                  const gen = generations.find(g => g.id === feedbackGenId);
+                  if (gen && gen.feedback?.rating) {
+                    handleFeedback(feedbackGenId, gen.feedback.rating, feedbackComment);
+                  }
+                  setFeedbackGenId(null);
+                }}
+                className="flex-1 py-2 bg-gray-900 text-white text-sm font-medium hover:bg-black"
+              >
+                Enregistrer
+              </button>
+              <button
+                onClick={() => setFeedbackGenId(null)}
+                className="px-4 py-2 text-sm text-gray-500 hover:text-gray-700"
+              >
+                Annuler
+              </button>
+            </div>
+            
+            {/* Quick comment suggestions */}
+            <div className="mt-3 flex flex-wrap gap-1">
+              {['Couleurs parfaites', 'Trop chargé', 'Texte illisible', 'Super composition', 'Pas assez pro'].map(suggestion => (
+                <button
+                  key={suggestion}
+                  onClick={() => setFeedbackComment(prev => prev ? `${prev}, ${suggestion.toLowerCase()}` : suggestion)}
+                  className="px-2 py-1 text-[10px] bg-gray-100 text-gray-600 hover:bg-gray-200"
+                >
+                  {suggestion}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
       )}
 
@@ -257,7 +517,7 @@ export default function ProjectsView() {
                   onDragEnd={() => setDraggedGen(null)}
                   className={`relative aspect-square bg-gray-100 border border-gray-200 overflow-hidden group cursor-move hover:border-gray-400 transition-all ${
                     draggedGen === gen.id ? 'opacity-50 scale-95' : ''
-                  }`}
+                  } ${gen.feedback?.rating === 3 ? 'ring-2 ring-emerald-400' : ''}`}
                 >
                   <img 
                     src={gen.url} 
@@ -266,20 +526,71 @@ export default function ProjectsView() {
                     onClick={() => setLightboxImage(gen.url)}
                   />
                   
-                  {/* Overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+                  {/* Persistent rating indicator (if rated) */}
+                  {gen.feedback?.rating && (
+                    <div className="absolute bottom-1 left-1 px-1.5 py-0.5 bg-black/70 backdrop-blur-sm flex items-center gap-0.5">
+                      {[1, 2, 3].map((star) => (
+                        <span
+                          key={star}
+                          className={`text-[10px] ${
+                            gen.feedback!.rating >= star 
+                              ? star === 1 ? 'text-red-400' : star === 2 ? 'text-amber-400' : 'text-emerald-400'
+                              : 'text-gray-500'
+                          }`}
+                        >★</span>
+                      ))}
+                    </div>
+                  )}
+                  
+                  {/* Hover Overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+                    {/* Bottom info */}
                     <div className="absolute bottom-0 left-0 right-0 p-2">
-                      <div className="text-[9px] text-white/60 font-mono truncate">
-                        {gen.templateId || 'custom'}
+                      <div className="flex items-center justify-between mb-1">
+                        <div className="text-[9px] text-white/60 font-mono truncate">
+                          {gen.templateId || 'custom'}
+                        </div>
+                        <div className="text-[10px] text-white/80">
+                          {formatDate(gen.createdAt)}
+                        </div>
                       </div>
-                      <div className="text-[10px] text-white/80">
-                        {formatDate(gen.createdAt)}
+                      
+                      {/* Rating stars - always visible on hover */}
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-1">
+                          <span className="text-[8px] text-white/50 uppercase">Note:</span>
+                          {renderRatingStars(gen, true)}
+                        </div>
+                        {gen.feedback?.comment && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setFeedbackGenId(gen.id);
+                              setFeedbackComment(gen.feedback?.comment || '');
+                            }}
+                            className="text-[9px] text-white/70 hover:text-white"
+                            title={gen.feedback.comment}
+                          >
+                            💬
+                          </button>
+                        )}
                       </div>
                     </div>
                   </div>
                   
                   {/* Actions */}
                   <div className="absolute top-1 right-1 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setFeedbackGenId(gen.id);
+                        setFeedbackComment(gen.feedback?.comment || '');
+                      }}
+                      className="w-6 h-6 bg-white/90 flex items-center justify-center text-xs hover:bg-white"
+                      title="Donner mon avis"
+                    >
+                      ✎
+                    </button>
                     <a 
                       href={gen.url} 
                       download 
