@@ -674,7 +674,7 @@ export default function ProjectsView() {
             <p className="text-gray-500 text-sm">Aucune génération pour l'instant</p>
             <p className="text-gray-400 text-xs mt-1">Créez votre premier visuel dans l'espace Créer</p>
           </div>
-        )
+        )}
       </section>
 
       {/* Folders Section */}
