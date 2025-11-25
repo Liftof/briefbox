@@ -609,7 +609,7 @@ ${enhancement}`);
           // Use smart image selection if provided
           if (cdData.concept.imageSelection?.priority?.length > 0) {
             smartImageSelection = cdData.concept.imageSelection.priority;
-            console.log('🎯 Smart image selection:', smartImageSelection.length, 'images');
+            console.log('🎯 Smart image selection:', cdData.concept.imageSelection.priority.length, 'images');
           }
           
           console.log('🎬 Creative Director:', promptVariations ? `${promptVariations.length} variations` : 'single prompt');
