@@ -232,7 +232,7 @@ export async function GET() {
     description: t.description,
     descriptionFr: t.descriptionFr,
     icon: t.icon,
-    fields: t.fields
+    keywords: t.keywords
   }));
 
   return NextResponse.json({
