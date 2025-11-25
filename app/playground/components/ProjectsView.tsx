@@ -65,21 +65,22 @@ export const addGeneration = (gen: Omit<Generation, 'id' | 'createdAt'>) => {
     createdAt: new Date().toISOString(),
   };
   generations.unshift(newGen);
-  // Keep only last 100 generations
-  saveGenerations(generations.slice(0, 100));
+  // No limit - save all generations
+  saveGenerations(generations);
   return newGen;
 };
 
 // Export function to add multiple generations at once
 export const addGenerations = (gens: Omit<Generation, 'id' | 'createdAt'>[]) => {
   const generations = loadGenerations();
-  const newGens = gens.map(gen => ({
+  const newGens = gens.map((gen, i) => ({
     ...gen,
-    id: `gen_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+    id: `gen_${Date.now()}_${i}_${Math.random().toString(36).slice(2, 8)}`,
     createdAt: new Date().toISOString(),
   }));
   generations.unshift(...newGens);
-  saveGenerations(generations.slice(0, 100));
+  // No limit - save all generations
+  saveGenerations(generations);
   return newGens;
 };
 
@@ -94,6 +95,8 @@ const FOLDER_COLORS = [
   { name: 'Rose', value: '#EC4899' },
 ];
 
+const ITEMS_PER_PAGE = 20;
+
 export default function ProjectsView() {
   const [generations, setGenerations] = useState<Generation[]>([]);
   const [folders, setFolders] = useState<Folder[]>([]);
@@ -103,6 +106,7 @@ export default function ProjectsView() {
   const [selectedFolder, setSelectedFolder] = useState<string | null>(null);
   const [draggedGen, setDraggedGen] = useState<string | null>(null);
   const [lightboxImage, setLightboxImage] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
 
   // Load data on mount
   useEffect(() => {
@@ -122,10 +126,13 @@ export default function ProjectsView() {
     };
   }, []);
 
-  // Filter generations
-  const recentGenerations = generations
-    .filter(g => !g.folderId)
-    .slice(0, 20);
+  // Filter generations - all without folder
+  const unorganizedGenerations = generations.filter(g => !g.folderId);
+  const totalPages = Math.ceil(unorganizedGenerations.length / ITEMS_PER_PAGE);
+  
+  // Paginated recent generations
+  const recentGenerations = unorganizedGenerations
+    .slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
 
   const folderGenerations = (folderId: string) => 
     generations.filter(g => g.folderId === folderId);
@@ -224,7 +231,7 @@ export default function ProjectsView() {
       {/* Header */}
       <header className="flex items-center justify-between mb-8">
         <div>
-          <h2 className="text-2xl font-bold mb-1">Mes Projets</h2>
+           <h2 className="text-2xl font-bold mb-1">Mes Projets</h2>
           <p className="text-gray-500 text-sm">
             {generations.length} génération{generations.length !== 1 ? 's' : ''} · {folders.length} dossier{folders.length !== 1 ? 's' : ''}
           </p>
@@ -236,70 +243,127 @@ export default function ProjectsView() {
         <div className="flex items-center gap-2 mb-4">
           <span className="text-lg">🕐</span>
           <h3 className="text-sm font-medium text-gray-900 uppercase tracking-wider">Générations récentes</h3>
-          <span className="text-xs text-gray-400 font-mono">{recentGenerations.length}/20</span>
+          <span className="text-xs text-gray-400 font-mono">{unorganizedGenerations.length} visuel{unorganizedGenerations.length !== 1 ? 's' : ''}</span>
         </div>
         
         {recentGenerations.length > 0 ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-            {recentGenerations.map((gen) => (
-              <div 
-                key={gen.id}
-                draggable
-                onDragStart={() => setDraggedGen(gen.id)}
-                onDragEnd={() => setDraggedGen(null)}
-                className={`relative aspect-square bg-gray-100 border border-gray-200 overflow-hidden group cursor-move hover:border-gray-400 transition-all ${
-                  draggedGen === gen.id ? 'opacity-50 scale-95' : ''
-                }`}
-              >
-                <img 
-                  src={gen.url} 
-                  alt="" 
-                  className="w-full h-full object-cover"
-                  onClick={() => setLightboxImage(gen.url)}
-                />
-                
-                {/* Overlay */}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
-                  <div className="absolute bottom-0 left-0 right-0 p-2">
-                    <div className="text-[9px] text-white/60 font-mono truncate">
-                      {gen.templateId || 'custom'}
-                    </div>
-                    <div className="text-[10px] text-white/80">
-                      {formatDate(gen.createdAt)}
+          <>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
+              {recentGenerations.map((gen) => (
+                <div 
+                  key={gen.id}
+                  draggable
+                  onDragStart={() => setDraggedGen(gen.id)}
+                  onDragEnd={() => setDraggedGen(null)}
+                  className={`relative aspect-square bg-gray-100 border border-gray-200 overflow-hidden group cursor-move hover:border-gray-400 transition-all ${
+                    draggedGen === gen.id ? 'opacity-50 scale-95' : ''
+                  }`}
+                >
+                  <img 
+                    src={gen.url} 
+                    alt="" 
+                    className="w-full h-full object-cover"
+                    onClick={() => setLightboxImage(gen.url)}
+                  />
+                  
+                  {/* Overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="absolute bottom-0 left-0 right-0 p-2">
+                      <div className="text-[9px] text-white/60 font-mono truncate">
+                        {gen.templateId || 'custom'}
+                      </div>
+                      <div className="text-[10px] text-white/80">
+                        {formatDate(gen.createdAt)}
+                      </div>
                     </div>
                   </div>
+                  
+                  {/* Actions */}
+                  <div className="absolute top-1 right-1 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <a 
+                      href={gen.url} 
+                      download 
+                      className="w-6 h-6 bg-white/90 flex items-center justify-center text-xs hover:bg-white"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      ↓
+                    </a>
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteGeneration(gen.id);
+                      }}
+                      className="w-6 h-6 bg-red-500/90 text-white flex items-center justify-center text-xs hover:bg-red-500"
+                    >
+                      ×
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+            
+            {/* Pagination */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-center gap-2 mt-6">
+                <button
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  className="px-3 py-1.5 text-sm border border-gray-300 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
+                >
+                  ←
+                </button>
+                
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => {
+                    // Smart pagination: show first, last, and around current
+                    let pageNum: number;
+                    if (totalPages <= 7) {
+                      pageNum = i + 1;
+                    } else if (currentPage <= 4) {
+                      pageNum = i < 5 ? i + 1 : (i === 5 ? -1 : totalPages);
+                    } else if (currentPage >= totalPages - 3) {
+                      pageNum = i === 0 ? 1 : (i === 1 ? -1 : totalPages - 6 + i);
+                    } else {
+                      pageNum = i === 0 ? 1 : (i === 1 ? -1 : (i === 5 ? -1 : (i === 6 ? totalPages : currentPage - 2 + i)));
+                    }
+                    
+                    if (pageNum === -1) {
+                      return <span key={i} className="px-2 text-gray-400">…</span>;
+                    }
+                    
+                    return (
+                      <button
+                        key={pageNum}
+                        onClick={() => setCurrentPage(pageNum)}
+                        className={`w-8 h-8 text-sm transition-colors ${
+                          currentPage === pageNum 
+                            ? 'bg-gray-900 text-white' 
+                            : 'hover:bg-gray-100'
+                        }`}
+                      >
+                        {pageNum}
+                      </button>
+                    );
+                  })}
                 </div>
                 
-                {/* Actions */}
-                <div className="absolute top-1 right-1 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <a 
-                    href={gen.url} 
-                    download 
-                    className="w-6 h-6 bg-white/90 flex items-center justify-center text-xs hover:bg-white"
-                    onClick={(e) => e.stopPropagation()}
-                  >
-                    ↓
-                  </a>
-                  <button 
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleDeleteGeneration(gen.id);
-                    }}
-                    className="w-6 h-6 bg-red-500/90 text-white flex items-center justify-center text-xs hover:bg-red-500"
-                  >
-                    ×
-                  </button>
-                </div>
+                <button
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                  className="px-3 py-1.5 text-sm border border-gray-300 disabled:opacity-30 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
+                >
+                  →
+                </button>
               </div>
-            ))}
-          </div>
+            )}
+          </>
         ) : (
           <div className="bg-gray-50 border border-gray-200 p-8 text-center">
             <span className="text-3xl mb-3 block">🎨</span>
             <p className="text-gray-500 text-sm">Aucune génération pour l'instant</p>
             <p className="text-gray-400 text-xs mt-1">Créez votre premier visuel dans l'espace Créer</p>
           </div>
-        )}
+        )
       </section>
 
       {/* Folders Section */}
@@ -309,12 +373,12 @@ export default function ProjectsView() {
             <span className="text-lg">📁</span>
             <h3 className="text-sm font-medium text-gray-900 uppercase tracking-wider">Dossiers</h3>
           </div>
-          <button
+            <button 
             onClick={() => setShowNewFolder(true)}
             className="px-3 py-1.5 bg-gray-900 text-white text-xs font-medium hover:bg-black transition-colors flex items-center gap-1"
-          >
+            >
             <span>+</span> Nouveau dossier
-          </button>
+            </button>
         </div>
 
         {/* New folder form */}
@@ -340,8 +404,8 @@ export default function ProjectsView() {
                     style={{ backgroundColor: c.value }}
                     title={c.name}
                   />
-                ))}
-              </div>
+         ))}
+      </div>
             </div>
             <div className="flex justify-end gap-2">
               <button
@@ -416,8 +480,8 @@ export default function ProjectsView() {
                           <path d="M19 9l-7 7-7-7" />
                         </svg>
                       </div>
-                    </div>
-                    
+               </div>
+               
                     {/* Thumbnail preview */}
                     {!isExpanded && folderGens.length > 0 && (
                       <div className="flex gap-1 mt-3">
@@ -431,10 +495,10 @@ export default function ProjectsView() {
                             +{folderGens.length - 4}
                           </div>
                         )}
-                      </div>
-                    )}
-                  </div>
-                  
+                     </div>
+                  )}
+               </div>
+
                   {/* Expanded content */}
                   {isExpanded && (
                     <div className="border-t border-gray-100 p-4">
@@ -455,9 +519,9 @@ export default function ProjectsView() {
                               >
                                 ↩
                               </button>
-                            </div>
-                          ))}
-                        </div>
+            </div>
+         ))}
+      </div>
                       ) : (
                         <p className="text-center text-gray-400 text-sm py-4">
                           Glissez des images ici

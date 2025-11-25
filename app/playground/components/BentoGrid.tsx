@@ -431,10 +431,10 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
       {/* ═══════════════════════════════════════════════════════════════════════════
           SECTION 1: BRAND IDENTITY & DIRECTION ARTISTIQUE
           ═══════════════════════════════════════════════════════════════════════════ */}
-      <section className="mb-8">
-        <div className="flex items-center gap-2 mb-4">
-          <span className="w-1.5 h-1.5 bg-gray-900 rounded-full" />
-          <span className="text-[10px] font-mono uppercase tracking-widest text-gray-400">Identité & Direction Artistique</span>
+      <section className="mb-10">
+        <div className="flex items-center gap-3 mb-6">
+          <span className="w-2 h-2 bg-gray-900 rounded-full" />
+          <h3 className="text-lg font-semibold text-gray-900">Identité & Direction Artistique</h3>
       </div>
 
         <div className="grid grid-cols-12 gap-4">
@@ -597,10 +597,10 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
       {/* ═══════════════════════════════════════════════════════════════════════════
           SECTION 2: IDÉES & ANGLES DE CONTENU
           ═══════════════════════════════════════════════════════════════════════════ */}
-      <section className="mb-8">
-        <div className="flex items-center gap-2 mb-4">
-          <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full" />
-          <span className="text-[10px] font-mono uppercase tracking-widest text-gray-400">Idées & Angles de contenu</span>
+      <section className="mb-10">
+        <div className="flex items-center gap-3 mb-6">
+          <span className="w-2 h-2 bg-emerald-500 rounded-full" />
+          <h3 className="text-lg font-semibold text-gray-900">Idées & Angles de contenu</h3>
         </div>
 
         <div className="grid grid-cols-12 gap-4">

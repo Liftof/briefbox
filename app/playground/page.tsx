@@ -351,6 +351,96 @@ function PlaygroundContent() {
     }
   };
 
+  // Check if user is new (no previous generations)
+  const isNewUser = useCallback(() => {
+    if (typeof window === 'undefined') return false;
+    try {
+      const data = localStorage.getItem('briefbox_generations');
+      const generations = data ? JSON.parse(data) : [];
+      return !Array.isArray(generations) || generations.length === 0;
+    } catch {
+      return true;
+    }
+  }, []);
+
+  // Build a smart prompt from the best available brand data
+  const buildSmartWelcomePrompt = useCallback((brand: any): { brief: string; templateId: TemplateId } | null => {
+    // Priority 1: Industry insights with real data
+    const insights = Array.isArray(brand.industryInsights) ? brand.industryInsights : [];
+    const insightWithFact = insights.find((i: any) => i.fact && i.fact.length > 20);
+    if (insightWithFact) {
+      return {
+        brief: `Le saviez-vous ? ${insightWithFact.fact}`,
+        templateId: 'stat'
+      };
+    }
+
+    // Priority 2: Real testimonial or quote
+    const posts = Array.isArray(brand.suggestedPosts) ? brand.suggestedPosts : [];
+    const quotePost = posts.find((p: any) => p.templateId === 'quote' && p.source === 'real_data');
+    if (quotePost?.headline) {
+      return {
+        brief: quotePost.headline,
+        templateId: 'quote'
+      };
+    }
+
+    // Priority 3: Real stat from the website
+    const statPost = posts.find((p: any) => p.templateId === 'stat' && (p.source === 'real_data' || p.source === 'industry_insight'));
+    if (statPost) {
+      const metricText = statPost.metric && statPost.metricLabel 
+        ? `${statPost.metric} ${statPost.metricLabel}` 
+        : statPost.headline;
+      if (metricText && metricText.length > 5) {
+        return {
+          brief: metricText,
+          templateId: 'stat'
+        };
+      }
+    }
+
+    // Priority 4: Any post with real data source
+    const realDataPost = posts.find((p: any) => p.source === 'real_data' && p.headline);
+    if (realDataPost) {
+      return {
+        brief: realDataPost.headline,
+        templateId: realDataPost.templateId as TemplateId || 'announcement'
+      };
+    }
+
+    // Priority 5: Product announcement if we have product images
+    const labeledImages = Array.isArray(brand.labeledImages) ? brand.labeledImages : [];
+    const hasProduct = labeledImages.some((img: any) => img.category === 'product');
+    if (hasProduct && brand.name) {
+      return {
+        brief: `Découvrez ${brand.name} : ${brand.tagline || brand.description?.substring(0, 60) || 'une nouvelle façon de travailler'}`,
+        templateId: 'product'
+      };
+    }
+
+    // Priority 6: Brand announcement with tagline
+    if (brand.tagline && brand.tagline.length > 10) {
+      return {
+        brief: brand.tagline,
+        templateId: 'announcement'
+      };
+    }
+
+    // Priority 7: Use brand description if meaningful
+    if (brand.description && brand.description.length > 30) {
+      const shortDesc = brand.description.length > 80 
+        ? brand.description.substring(0, 77) + '...' 
+        : brand.description;
+      return {
+        brief: shortDesc,
+        templateId: 'announcement'
+      };
+    }
+
+    // No good data found - return null to skip auto-generation
+    return null;
+  }, []);
+
   const handleValidateBento = () => {
     if (!brandData) {
       showToast('Analysez ou chargez une marque avant de continuer', 'error');
@@ -373,14 +463,32 @@ function PlaygroundContent() {
     // ALWAYS sync with bento data (not conditional)
     setUploadedImages(allImages.slice(0, 8));
     
-    // Clear any previous brief - let user choose from suggestions
-    // Don't auto-set a brief, show the creative angle cards instead
-    
     setStep('playground');
     setActiveTab('create');
     
-    // DON'T auto-generate - let user choose from creative angle cards
-    showToast('Choisissez un angle créatif pour commencer', 'info');
+    // For new users: auto-generate 4 visuals if we have smart content
+    const userIsNew = isNewUser();
+    if (userIsNew && allImages.length > 0) {
+      const smartPrompt = buildSmartWelcomePrompt(brandData);
+      
+      if (smartPrompt) {
+        // We have good data - auto-generate!
+        setBrief(smartPrompt.brief);
+        setSelectedTemplate(smartPrompt.templateId);
+        showToast('Bienvenue ! Génération de vos premiers visuels...', 'success');
+        
+        // Small delay to let UI update
+        setTimeout(() => {
+          handleGenerate(smartPrompt.brief, false, brandData, allImages.slice(0, 6));
+        }, 600);
+      } else {
+        // No good data - let user choose
+        showToast('Choisissez un angle créatif pour commencer', 'info');
+      }
+    } else {
+      // Existing user - let them choose
+      showToast('Choisissez un angle créatif pour commencer', 'info');
+    }
   };
 
   const handleSaveBrand = async () => {
