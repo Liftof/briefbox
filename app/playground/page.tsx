@@ -19,6 +19,98 @@ const TEMPLATES = [
   { id: 'expert' as TemplateId, icon: '👤', name: 'Expert', desc: 'Thought leadership', placeholder: 'Interview de notre CEO sur l\'innovation' },
   { id: 'product' as TemplateId, icon: '✨', name: 'Produit', desc: 'Feature, showcase', placeholder: 'Découvrez notre nouvelle fonctionnalité' },
 ];
+
+// Smart placeholder generator based on brand context
+const getSmartPlaceholder = (templateId: TemplateId | null, brandData: any): string => {
+  if (!brandData) return "Qu'est-ce que vous voulez communiquer ?";
+  
+  const brandName = brandData.name || 'votre marque';
+  const industry = brandData.industry || '';
+  const features = brandData.features || [];
+  const values = brandData.values || [];
+  const services = brandData.services || [];
+  const realStats = brandData.contentNuggets?.realStats || [];
+  const testimonials = brandData.contentNuggets?.testimonials || [];
+  
+  // Get first feature/service for context
+  const mainFeature = features[0] || services[0] || '';
+  const mainValue = values[0] || '';
+  
+  // Industry-specific terms
+  const industryTerms: Record<string, { metric: string; action: string; event: string }> = {
+    'saas': { metric: 'utilisateurs actifs', action: 'automatisé', event: 'Product Hunt Launch' },
+    'fintech': { metric: 'transactions traitées', action: 'sécurisé', event: 'Finance Summit' },
+    'ecommerce': { metric: 'commandes livrées', action: 'expédié', event: 'Black Friday' },
+    'marketing': { metric: 'leads générés', action: 'converti', event: 'Marketing Week' },
+    'tech': { metric: 'lignes de code', action: 'déployé', event: 'Tech Conference' },
+    'health': { metric: 'patients accompagnés', action: 'soigné', event: 'Salon Santé' },
+    'education': { metric: 'étudiants formés', action: 'certifié', event: 'EdTech Summit' },
+    'default': { metric: 'clients satisfaits', action: 'accompagné', event: 'notre prochain événement' }
+  };
+  
+  // Find matching industry or use default
+  const industryKey = Object.keys(industryTerms).find(key => 
+    industry.toLowerCase().includes(key)
+  ) || 'default';
+  const terms = industryTerms[industryKey];
+  
+  // Generate placeholder based on template
+  const placeholders: Record<TemplateId, string[]> = {
+    'stat': [
+      realStats[0] ? `${realStats[0]}` : `+10K ${terms.metric} ce mois`,
+      `${brandName} : 3x plus rapide que la moyenne du marché`,
+      mainFeature ? `${mainFeature} : +47% d'efficacité` : `95% de satisfaction client`,
+      `${industry ? industry : 'Notre secteur'} : les chiffres qui comptent`
+    ],
+    'announcement': [
+      mainFeature ? `Nouveau : ${mainFeature} maintenant disponible` : `Grande nouvelle pour ${brandName}`,
+      `${brandName} lance sa nouvelle version`,
+      `Mise à jour majeure : ce qui change pour vous`,
+      services[0] ? `${services[0]} : nouvelle offre disponible` : `Lancement officiel !`
+    ],
+    'quote': [
+      testimonials[0]?.quote || `"${brandName} a transformé notre façon de travailler"`,
+      `"Depuis qu'on utilise ${brandName}, tout a changé"`,
+      mainValue ? `"Leur ${mainValue.toLowerCase()} fait vraiment la différence"` : `"Un partenaire de confiance"`,
+      `"On ne reviendrait pas en arrière" — Client ${industry || 'satisfait'}`
+    ],
+    'event': [
+      `Webinar : Comment ${mainFeature?.toLowerCase() || 'optimiser vos process'}`,
+      `Rejoignez-nous pour ${terms.event}`,
+      `Live : Les coulisses de ${brandName}`,
+      `Masterclass : ${industry || 'Les tendances'} 2025`
+    ],
+    'expert': [
+      `Ce que ${industry || 'le marché'} nous apprend en 2024`,
+      mainValue ? `Pourquoi ${mainValue.toLowerCase()} est notre priorité` : `Notre vision du futur`,
+      `3 conseils de notre équipe pour réussir`,
+      `Interview : ${brandName} sur les défis de demain`
+    ],
+    'product': [
+      mainFeature ? `${mainFeature} : découvrez comment ça marche` : `Notre produit phare en action`,
+      `Pourquoi nos clients adorent ${services[0] || 'notre solution'}`,
+      `Le détail qui change tout`,
+      `${brandName} : la fonctionnalité que vous attendiez`
+    ]
+  };
+  
+  // Get placeholders for the template
+  const templatePlaceholders = templateId ? placeholders[templateId] : null;
+  
+  if (!templatePlaceholders) {
+    // Generic smart placeholder when no template selected
+    const genericOptions = [
+      `Que voulez-vous faire savoir sur ${brandName} ?`,
+      realStats[0] ? `Ex: "${realStats[0]}"` : `Partagez une info clé sur ${brandName}`,
+      mainFeature ? `Mettez en avant ${mainFeature.toLowerCase()}` : `Votre message principal...`,
+      `Quelle est votre actu du moment ?`
+    ];
+    return genericOptions[Math.floor(Math.random() * genericOptions.length)];
+  }
+  
+  // Return a random placeholder from the options (or first one for consistency)
+  return templatePlaceholders[0];
+};
 type ToastType = 'success' | 'error' | 'info';
 
 type Toast = {
@@ -1166,7 +1258,7 @@ ${enhancement}`);
             <textarea
               value={brief}
               onChange={(e) => setBrief(e.target.value)}
-                placeholder={selectedTemplate ? TEMPLATES.find(t => t.id === selectedTemplate)?.placeholder : "Qu'est-ce que vous voulez communiquer ?"}
+                placeholder={getSmartPlaceholder(selectedTemplate, brandData)}
                 className="w-full min-h-[80px] text-sm resize-none outline-none placeholder:text-gray-300 bg-gray-50 border border-gray-100 p-3 focus:border-gray-300 transition-colors"
               />
               {brief.trim() && (
