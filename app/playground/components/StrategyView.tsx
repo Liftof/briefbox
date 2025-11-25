@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { TemplateId } from '@/lib/templates';
 
 // Template definitions for UI display
@@ -111,6 +111,7 @@ export default function StrategyView({ brandData, onUseIdea }: StrategyViewProps
             className="hidden" 
             onChange={(e) => {
               if (e.target.files?.[0]) {
+                // For now just log, the real implementation would pass this to parent
                 console.log("Style reference uploaded:", e.target.files[0]);
               }
             }}
@@ -200,7 +201,7 @@ export default function StrategyView({ brandData, onUseIdea }: StrategyViewProps
                 <span className="bg-gray-100 text-gray-500 text-[10px] px-2 py-1 rounded-full uppercase tracking-wider font-medium">Générique</span>
               </div>
               <h4 className="text-lg font-semibold text-gray-900 mb-2">Idée : Conseil d'expert</h4>
-              <p className="text-sm text-gray-500 leading-relaxed">Partagez votre expertise pour éduquer votre audience.</p>
+              <p className="text-sm text-gray-500 leading-relaxed">Partagez votre expertise pour éduquer votre audience et vous positionner en leader.</p>
               <div className="mt-4 pt-4 border-t border-gray-50 flex justify-end">
                 <span className="text-xs font-medium text-amber-600 group-hover:underline">Créer ce post →</span>
               </div>
@@ -234,13 +235,13 @@ export default function StrategyView({ brandData, onUseIdea }: StrategyViewProps
           ))}
 
           {brandData.contentNuggets?.blogTopics?.slice(0, 3).map((topic: string, i: number) => (
-            <div key={`topic-${i}`} className="group relative bg-gray-50 p-5 rounded-xl border border-gray-200 hover:bg-white hover:border-gray-300 hover:shadow-md transition-all cursor-pointer"
+            <div key={`topic-${i}`} className="group relative bg-white p-5 rounded-xl border border-gray-200 hover:bg-white hover:border-gray-300 hover:shadow-md transition-all cursor-pointer"
               onClick={() => onUseIdea('expert', topic)}>
               <div className="flex items-start gap-3">
                 <div className="w-8 h-8 bg-white rounded border border-gray-200 flex items-center justify-center text-lg shadow-sm flex-shrink-0">📰</div>
                 <div>
                   <h4 className="text-sm font-semibold text-gray-900 mb-1 leading-snug">{topic}</h4>
-                  <p className="text-xs text-gray-500">Sujet issu de votre blog</p>
+                  <p className="text-xs text-gray-500">Recycler cet article de blog en post visuel</p>
                 </div>
               </div>
             </div>
