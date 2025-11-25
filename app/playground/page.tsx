@@ -193,6 +193,7 @@ function PlaygroundContent() {
   const [isAddingSource, setIsAddingSource] = useState(false);
 
   const [editingImage, setEditingImage] = useState<string | null>(null);
+  const [styleRefImage, setStyleRefImage] = useState<string | null>(null); // New state for style reference
   const [editPrompt, setEditPrompt] = useState('');
   const [visualIdeas, setVisualIdeas] = useState<string[]>([]);
   const [brief, setBrief] = useState('');
@@ -788,6 +789,11 @@ ${enhancement}`);
         ? smartImageSelection 
         : references;
 
+    // Add manual style reference if present
+    if (styleRefImage) {
+      styleReferenceImages = [styleRefImage, ...styleReferenceImages];
+    }
+
       // STEP 2: Generate with Fal using variations (or single prompt)
       const response = await fetch('/api/generate', {
         method: 'POST',
@@ -1130,7 +1136,7 @@ ${enhancement}`);
     }
 
     if (activeTab === 'strategy') {
-      return (
+    return (
         <StrategyView 
           brandData={brandData} 
           onUseIdea={(templateId, brief) => {
@@ -1159,7 +1165,7 @@ ${enhancement}`);
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-gray-900 flex items-center justify-center">
               <span className="text-white text-lg">✦</span>
-            </div>
+          </div>
             <div>
               <h1 className="text-lg font-semibold text-gray-900">{brandData?.name || 'Marque'}</h1>
               <span className="text-xs text-gray-400">Créez vos visuels</span>
@@ -1175,16 +1181,16 @@ ${enhancement}`);
                 <option key={lang.code} value={lang.code}>{lang.flag} {lang.label}</option>
               ))}
             </select>
-            <button
-              onClick={() => setStep('bento')}
+          <button
+            onClick={() => setStep('bento')}
               className="px-3 py-2 border border-gray-200 text-xs text-gray-500 hover:text-gray-900 hover:border-gray-400 transition-colors flex items-center gap-2"
-            >
+          >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
-                <path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
-              Identité
-            </button>
+              <path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+              <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+            Identité
+          </button>
           </div>
         </div>
 
@@ -1214,9 +1220,9 @@ ${enhancement}`);
                   <div className="flex flex-wrap gap-2">
                     {/* Stats */}
                     {brandData.contentNuggets?.realStats?.slice(0, 3).map((stat: string, i: number) => (
-                      <button
+              <button
                         key={`stat-${i}`}
-                        onClick={() => {
+              onClick={() => {
                           setSelectedTemplate('stat');
                           setBrief(stat);
                         }}
@@ -1226,8 +1232,8 @@ ${enhancement}`);
                           <span className="text-base">📊</span>
                           <span className="text-xs text-gray-700 group-hover:text-gray-900">{stat.slice(0, 50)}{stat.length > 50 ? '...' : ''}</span>
                         </div>
-                      </button>
-                    ))}
+              </button>
+            ))}
                     {/* Testimonials */}
                     {brandData.contentNuggets?.testimonials?.slice(0, 2).map((t: any, i: number) => (
                       <button
@@ -1241,7 +1247,7 @@ ${enhancement}`);
                         <div className="flex items-center gap-2">
                           <span className="text-base">💬</span>
                           <span className="text-xs text-gray-700 group-hover:text-gray-900 line-clamp-1">"{t.quote?.slice(0, 40)}..."</span>
-                        </div>
+        </div>
                       </button>
                     ))}
                   </div>
@@ -1272,8 +1278,8 @@ ${enhancement}`);
                       </button>
                     ))}
                   </div>
-                </div>
-              )}
+          </div>
+        )}
 
               {/* ROW 3: Brand Elements (Features, Values, Services) */}
               {(brandData.features?.length > 0 || brandData.values?.length > 0 || brandData.services?.length > 0) && (
@@ -1376,14 +1382,14 @@ ${enhancement}`);
                   </div>
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
                     {brandData.suggestedPosts.filter((p: any) => p.source === 'real_data' || p.source === 'industry_insight').slice(0, 3).map((post: any, i: number) => {
-                      const template = TEMPLATES.find(t => t.id === post.templateId);
+                  const template = TEMPLATES.find(t => t.id === post.templateId);
                       const headline = post.headline || `${post.metric || ''} ${post.metricLabel || ''}`.trim();
                       
-                      return (
-                        <button
-                          key={i}
-                          onClick={() => {
-                            setSelectedTemplate(post.templateId as TemplateId);
+                  return (
+                    <button
+                      key={i}
+                      onClick={() => {
+                        setSelectedTemplate(post.templateId as TemplateId);
                             setBrief(headline);
                           }}
                           className="p-3 bg-white border border-gray-200 hover:border-gray-400 hover:shadow-sm transition-all text-left group"
@@ -1396,12 +1402,12 @@ ${enhancement}`);
                           {post.intent && (
                             <p className="text-[9px] text-gray-400 mt-1 italic line-clamp-1">{post.intent}</p>
                           )}
-                        </button>
-                      );
-                    })}
+                    </button>
+                  );
+                })}
                   </div>
-                </div>
-              )}
+              </div>
+            )}
 
               {/* No data fallback */}
               {!brandData.contentNuggets?.realStats?.length && 
@@ -1450,7 +1456,7 @@ ${enhancement}`);
               <label className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-3 block">Format</label>
               <div className="flex flex-wrap gap-2">
                 {TEMPLATES.map((template) => (
-                  <button
+                    <button
                     key={template.id}
                     onClick={() => {
                       setSelectedTemplate(template.id);
@@ -1465,7 +1471,7 @@ ${enhancement}`);
                   >
                     <span>{template.icon}</span>
                     <span className="text-xs font-medium">{template.name}</span>
-                  </button>
+                    </button>
                 ))}
               </div>
             </div>
@@ -1473,46 +1479,101 @@ ${enhancement}`);
             {/* Divider */}
             <div className="hidden md:block w-px bg-gray-100" />
             
-            {/* Sources */}
-            <div className="w-full md:w-64">
-              <div className="flex items-center justify-between mb-3">
-                <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">Sources</label>
-                <span className="text-xs text-gray-400">{uploadedImages.length}</span>
-              </div>
+            {/* Sources & Style */}
+            <div className="w-full md:w-72 flex flex-col gap-6">
               
-              {uploadedImages.length > 0 ? (
-                <div className="flex gap-1 flex-wrap mb-2">
-                  {uploadedImages.slice(0, 6).map((img, i) => (
-                    <div key={i} className="relative w-10 h-10 group">
-                      <img src={img} className="w-full h-full object-cover border border-gray-200" />
-                      <button
-                        onClick={() => handleRemoveImage(i)}
-                        className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white flex items-center justify-center text-[10px] opacity-0 group-hover:opacity-100 transition-opacity"
-                      >×</button>
-                    </div>
-                  ))}
-                  {uploadedImages.length > 6 && (
-                    <div className="w-10 h-10 bg-gray-100 flex items-center justify-center text-[10px] text-gray-500">
-                      +{uploadedImages.length - 6}
-                    </div>
-                  )}
+              {/* 1. STYLE REFERENCE ZONE */}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">Style à imiter</label>
+                  <span className="text-[10px] text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">Recommandé</span>
                 </div>
-              ) : (
-                <p className="text-xs text-gray-400 mb-2">Aucune image</p>
-              )}
-              
-              <button
-                onClick={() => setShowSourceManager(true)}
-                className="text-xs text-emerald-600 hover:text-emerald-700 flex items-center gap-1"
-              >
-                <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                
+                {!styleRefImage ? (
+                  <div 
+                    className="border-2 border-dashed border-gray-200 rounded-lg p-4 flex flex-col items-center justify-center text-center cursor-pointer hover:border-gray-400 hover:bg-gray-50 transition-all h-32"
+                    onClick={() => document.getElementById('style-ref-upload')?.click()}
+                  >
+                    <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center mb-2 text-gray-400">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                    </div>
+                    <span className="text-xs text-gray-500 font-medium">Déposer une inspiration</span>
+                    <span className="text-[9px] text-gray-400 mt-1">Image dont on copiera le look</span>
+                  </div>
+                ) : (
+                  <div className="relative h-32 group rounded-lg overflow-hidden border border-emerald-200 shadow-sm">
+                    <img src={styleRefImage} className="w-full h-full object-cover opacity-90 hover:opacity-100 transition-opacity" />
+                    <button
+                      onClick={() => setStyleRefImage(null)}
+                      className="absolute top-2 right-2 w-6 h-6 bg-black/50 text-white rounded-full flex items-center justify-center hover:bg-black transition-colors text-xs backdrop-blur-sm"
+                    >
+                      ×
+                    </button>
+                    <div className="absolute bottom-0 left-0 right-0 bg-black/60 backdrop-blur-sm p-2">
+                      <p className="text-[9px] text-white font-medium text-center uppercase tracking-wider">Référence active</p>
+                    </div>
+                  </div>
+                )}
+                <input 
+                  id="style-ref-upload" 
+                  type="file" 
+                  accept="image/*" 
+                  className="hidden" 
+                  onChange={(e) => {
+                    if (e.target.files?.[0]) {
+                      const reader = new FileReader();
+                      reader.onload = (ev) => {
+                        if (typeof ev.target?.result === 'string') setStyleRefImage(ev.target.result);
+                      };
+                      reader.readAsDataURL(e.target.files[0]);
+                    }
+                  }} 
+                />
+              </div>
+
+              {/* 2. BRAND ASSETS ZONE */}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">Assets de marque</label>
+                  <span className="text-[10px] text-gray-400">{uploadedImages.length}</span>
+                </div>
+                
+                {uploadedImages.length > 0 ? (
+                  <div className="grid grid-cols-4 gap-2 mb-3">
+                    {uploadedImages.slice(0, 8).map((img, i) => (
+                      <div key={i} className="relative aspect-square group rounded-md overflow-hidden border border-gray-100">
+                        <img src={img} className="w-full h-full object-cover" />
+                        <button
+                          onClick={() => handleRemoveImage(i)}
+                          className="absolute top-0.5 right-0.5 w-4 h-4 bg-black/50 text-white rounded-full flex items-center justify-center text-[10px] opacity-0 group-hover:opacity-100 transition-all hover:bg-red-500"
+                        >×</button>
+                  </div>
+                ))}
+                    {uploadedImages.length > 8 && (
+                      <div className="aspect-square bg-gray-50 rounded-md flex items-center justify-center text-[10px] text-gray-400 font-medium border border-gray-100">
+                        +{uploadedImages.length - 8}
+                  </div>
+                )}
+              </div>
+                ) : (
+                  <div className="bg-gray-50 border border-dashed border-gray-200 p-4 text-center rounded-lg mb-3">
+                    <span className="text-xs text-gray-400">Aucun asset (logo, produit...)</span>
+                  </div>
+                )}
+
+                <button
+                  onClick={() => setShowSourceManager(true)}
+                  className="w-full py-2 text-xs text-gray-600 border border-gray-200 rounded-md hover:border-gray-400 hover:text-gray-900 transition-colors flex items-center justify-center gap-2 bg-white"
+                >
+                  <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                   <path d="M12 4v16m8-8H4" />
                 </svg>
-                {uploadedImages.length === 0 ? 'Ajouter' : 'Gérer'}
-              </button>
-              <input ref={fileInputRef} type="file" multiple accept="image/*" className="hidden" onChange={handleImageUpload} />
+                  Gérer les assets
+                </button>
+                <input ref={fileInputRef} type="file" multiple accept="image/*" className="hidden" onChange={handleImageUpload} />
+              </div>
+              </div>
             </div>
-          </div>
 
           {/* Generate Button */}
           <div className="p-5 bg-gray-50 border-t border-gray-100">
@@ -1526,9 +1587,9 @@ ${enhancement}`);
               </div>
             )}
             
-            <button
-              onClick={() => handleGenerate()}
-              disabled={status !== 'idle' || !brief.trim() || uploadedImages.length === 0}
+              <button
+                onClick={() => handleGenerate()}
+                disabled={status !== 'idle' || !brief.trim() || uploadedImages.length === 0}
               className="w-full group bg-gray-900 text-white py-4 font-medium disabled:opacity-30 disabled:cursor-not-allowed transition-all hover:bg-black flex items-center justify-center gap-3"
             >
               {status === 'preparing' || status === 'running' ? (
@@ -1548,7 +1609,7 @@ ${enhancement}`);
                   </svg>
                 </>
               )}
-            </button>
+              </button>
             
             {/* Validation hints */}
             {(uploadedImages.length === 0 || !brief.trim()) && (
@@ -1557,8 +1618,8 @@ ${enhancement}`);
                 {uploadedImages.length === 0 && <span className="text-xs text-amber-600">⚠ Image requise</span>}
               </div>
             )}
+            </div>
           </div>
-        </div>
 
         {/* ═══════════════════════════════════════════════════════════════════════════
             RESULTS SECTION
@@ -1581,7 +1642,7 @@ ${enhancement}`);
                         <path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                       </svg>
                       <span className="text-xs text-gray-400">~30 secondes</span>
-                    </div>
+        </div>
                   </div>
                 </div>
               ))}
@@ -1604,66 +1665,66 @@ ${enhancement}`);
                 Effacer
               </button>
             </div>
-            
+
             <div className="grid grid-cols-2 gap-4">
               {generatedImages.map((img) => (
-                <div
-                  key={img.id}
+              <div
+                key={img.id}
                   className={`bg-gray-100 overflow-hidden relative group cursor-pointer border border-gray-200 hover:border-gray-400 transition-all hover:shadow-xl ${
-                    img.aspectRatio === '9:16' ? 'aspect-[9/16]' : 'aspect-square'
-                  }`}
-                >
-                  <img src={img.url} className="w-full h-full object-cover" />
+                  img.aspectRatio === '9:16' ? 'aspect-[9/16]' : 'aspect-square'
+                }`}
+              >
+                <img src={img.url} className="w-full h-full object-cover" />
                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all flex items-center justify-center gap-3 opacity-0 group-hover:opacity-100">
-                    <button
-                      onClick={() => setLightboxImage(img.url)}
+                  <button
+                    onClick={() => setLightboxImage(img.url)}
                       className="w-11 h-11 bg-white text-gray-900 flex items-center justify-center hover:bg-gray-100 transition-colors shadow-lg"
-                      title="Voir"
-                    >
+                    title="Voir"
+                  >
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                         <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
                       </svg>
-                    </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setEditingImage(img.url);
-                        setEditPrompt('');
-                      }}
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setEditingImage(img.url);
+                      setEditPrompt('');
+                    }}
                       className="w-11 h-11 bg-white text-gray-900 flex items-center justify-center hover:bg-gray-100 transition-colors shadow-lg"
-                      title="Modifier"
-                    >
+                    title="Modifier"
+                  >
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                         <path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                       </svg>
-                    </button>
-                    <button
-                      onClick={async (e) => {
-                        e.stopPropagation();
-                        try {
-                          const response = await fetch(img.url);
-                          const blob = await response.blob();
-                          const blobUrl = window.URL.createObjectURL(blob);
-                          const link = document.createElement('a');
-                          link.href = blobUrl;
+                  </button>
+                  <button
+                    onClick={async (e) => {
+                      e.stopPropagation();
+                      try {
+                        const response = await fetch(img.url);
+                        const blob = await response.blob();
+                        const blobUrl = window.URL.createObjectURL(blob);
+                        const link = document.createElement('a');
+                        link.href = blobUrl;
                           link.download = `briefbox-${Date.now()}.png`;
-                          document.body.appendChild(link);
-                          link.click();
-                          document.body.removeChild(link);
-                        } catch (err) {
-                          window.open(img.url, '_blank');
-                        }
-                      }}
+                        document.body.appendChild(link);
+                        link.click();
+                        document.body.removeChild(link);
+                      } catch (err) {
+                        window.open(img.url, '_blank');
+                      }
+                    }}
                       className="w-11 h-11 bg-white text-gray-900 flex items-center justify-center hover:bg-gray-100 transition-colors shadow-lg"
-                      title="Télécharger"
-                    >
+                    title="Télécharger"
+                  >
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                         <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                       </svg>
-                    </button>
-                  </div>
+                  </button>
                 </div>
-              ))}
+              </div>
+            ))}
             </div>
           </div>
         )}
