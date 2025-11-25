@@ -1144,13 +1144,11 @@ Be SPECIFIC with numbers. Attribute sources when clear from the excerpts.`;
     };
 
     // Merge: prioritize REAL data, then AI-generated as fallback
+    // STRICT MODE: For stats and testimonials, ONLY accept regex-verified extractions.
+    // AI has a tendency to "hallucinate" numbers or generic testimonials if not strictly bound.
     const mergedContentNuggets = {
-        realStats: realContentNuggets.realStats.length > 0 
-            ? realContentNuggets.realStats 
-            : (brandData.contentNuggets?.realStats || []),
-        testimonials: realContentNuggets.testimonials.length > 0
-            ? realContentNuggets.testimonials
-            : (brandData.contentNuggets?.testimonials || []),
+        realStats: realContentNuggets.realStats, // ONLY regex-verified stats
+        testimonials: realContentNuggets.testimonials, // ONLY regex-verified testimonials
         achievements: realContentNuggets.achievements.length > 0
             ? realContentNuggets.achievements
             : (brandData.contentNuggets?.achievements || []),

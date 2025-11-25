@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { TemplateId } from '@/lib/templates';
 
 // Template definitions for UI display
@@ -17,6 +17,11 @@ interface StrategyViewProps {
 }
 
 export default function StrategyView({ brandData, onUseIdea }: StrategyViewProps) {
+  // Scroll to top on mount
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   // Helper to get template icon
   const getTemplateIcon = (id: string) => TEMPLATES.find(t => t.id === id)?.icon || '📄';
 

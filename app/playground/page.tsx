@@ -696,7 +696,8 @@ ${enhancement}`);
     customPrompt?: string,
     useCurrentBrief = true,
     brandOverride?: any,
-    referenceOverride?: string[]
+    referenceOverride?: string[],
+    templateOverride?: TemplateId
   ) => {
     const finalPrompt = (customPrompt && customPrompt.trim()) || (useCurrentBrief ? brief.trim() : '');
     if (!finalPrompt) {
@@ -711,6 +712,8 @@ ${enhancement}`);
     }
 
     const targetBrand = brandOverride || brandData;
+    const targetTemplate = templateOverride || selectedTemplate;
+
     if (!targetBrand) {
       showToast('Analysez d\'abord une marque', 'error');
       return;
@@ -738,7 +741,7 @@ ${enhancement}`);
           body: JSON.stringify({
             brief: finalPrompt,
             brand: targetBrand,
-            templateId: selectedTemplate || undefined,
+            templateId: targetTemplate || undefined,
             language: contentLanguage,
             feedbackPatterns: feedbackPatterns.likedKeywords.length > 0 || feedbackPatterns.dislikedKeywords.length > 0 
               ? feedbackPatterns 
@@ -1134,6 +1137,11 @@ ${enhancement}`);
             setActiveTab('create');
             setSelectedTemplate(templateId);
             setBrief(brief);
+            // Auto-launch generation with the selected idea
+            showToast('Lancement de la création...', 'success');
+            setTimeout(() => {
+              handleGenerate(brief, false, undefined, undefined, templateId);
+            }, 500);
           }} 
         />
       );
