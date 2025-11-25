@@ -234,10 +234,10 @@ function getImagePriority(
 
 // Language-specific prompt additions
 const LANGUAGE_INSTRUCTIONS: Record<string, string> = {
-  fr: 'All text on the visual must be in FRENCH. Use proper French typography.',
-  en: 'All text on the visual must be in ENGLISH. Use proper English typography.',
-  es: 'All text on the visual must be in SPANISH. Use proper Spanish typography.',
-  de: 'All text on the visual must be in GERMAN. Use proper German typography.',
+  fr: 'PRIMARY LANGUAGE: FRENCH (Français). All text on the visual must be in native, idiomatic French. Use correct French typography (e.g., "« »" for quotes). Translate any English concepts into powerful French marketing copy.',
+  en: 'PRIMARY LANGUAGE: ENGLISH. All text on the visual must be in native, idiomatic English. Use punchy, direct marketing copy.',
+  es: 'PRIMARY LANGUAGE: SPANISH (Español). All text on the visual must be in native, idiomatic Spanish. Translate any concepts into powerful Spanish marketing copy.',
+  de: 'PRIMARY LANGUAGE: GERMAN (Deutsch). All text on the visual must be in native, idiomatic German. Translate any concepts into powerful German marketing copy.',
 };
 
 // Feedback patterns type (matching client-side)
@@ -399,13 +399,20 @@ IMPORTANT: Use each image according to its role. The order of images reflects th
     // This is the exact prompt structure that works well with Nano Banana Pro
     const buildStructuredPrompt = (variationEmphasis: string) => {
       return `
-ROLE: Expert Art Director & Graphic Designer.
+ROLE: Expert Art Director & Copywriter.
 
 TASK: Create a sophisticated social media visual based on the following brief.
 
 BRIEF: ${brief}.
 AESTHETIC: ${aesthetic} (but interpreted with high taste).
 VIBE: ${toneVoice}.
+
+COPYWRITING INSTRUCTIONS (CRITICAL):
+- TRANSFORM the brief into a powerful, short marketing headline in the target language (${language}).
+- DO NOT just copy-paste the brief. Make it punchy, engaging, and benefit-oriented.
+- Structure: Main Headline (3-6 words) + Optional Subheadline.
+- Tone: ${toneVoice}.
+- SPELLING: Check strictly for typos.
 
 BRAND IDENTITY (STRICTLY FOLLOW):
 
