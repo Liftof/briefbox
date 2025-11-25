@@ -66,6 +66,7 @@ export async function POST(request: NextRequest) {
       promptVariations, // NEW: Array of 4 different prompts for diversity
       negativePrompt = "", 
       imageUrls = [], 
+      referenceImages = [], // Style reference images (tagged as 'reference')
       numImages = 4, 
       aspectRatio = "1:1", 
       resolution = "1K", 
@@ -88,7 +89,41 @@ export async function POST(request: NextRequest) {
     // 1. Filter valid HTTP/HTTPS or data URI
     // 2. Convert unsupported formats (SVG, etc.) to PNG Data URI using sharp
     // 3. Filter out small or low-quality images if possible (optional, simplified here)
+    // 4. PRIORITIZE reference images (they define the style)
     const processedImageUrls: string[] = [];
+    const processedReferenceUrls: string[] = [];
+
+    // Process reference images FIRST - they define the style
+    for (const url of referenceImages) {
+        if (!url || typeof url !== 'string') continue;
+        
+        const trimmedUrl = url.trim();
+        if (!trimmedUrl.startsWith('http') && !trimmedUrl.startsWith('data:image')) continue;
+        if (trimmedUrl.includes('placehold.co') || trimmedUrl.includes('placeholder')) continue;
+
+        const isSvg = trimmedUrl.toLowerCase().endsWith('.svg');
+        
+        if (isSvg) {
+            try {
+                console.log(`🔄 Converting reference SVG to PNG: ${trimmedUrl}`);
+                const response = await fetch(trimmedUrl);
+                if (!response.ok) continue;
+                const arrayBuffer = await response.arrayBuffer();
+                const buffer = Buffer.from(arrayBuffer);
+                const pngBuffer = await sharp(buffer).png().toBuffer();
+                const base64 = pngBuffer.toString('base64');
+                processedReferenceUrls.push(`data:image/png;base64,${base64}`);
+            } catch (e) {
+                console.error(`Error converting reference image ${trimmedUrl}:`, e);
+            }
+        } else {
+            processedReferenceUrls.push(trimmedUrl);
+        }
+    }
+
+    if (processedReferenceUrls.length > 0) {
+        console.log(`🎨 Using ${processedReferenceUrls.length} reference images for style guidance`);
+    }
 
     for (const url of imageUrls) {
         if (!url || typeof url !== 'string') continue;
@@ -133,9 +168,16 @@ export async function POST(request: NextRequest) {
         }
     }
 
-    if (processedImageUrls.length === 0) {
+    // Combine reference images FIRST (they define style), then content images
+    // Reference images are prioritized to ensure the model picks up the style
+    const allImageUrls = [...processedReferenceUrls, ...processedImageUrls];
+    
+    if (allImageUrls.length === 0) {
          return NextResponse.json({ success: false, error: 'No valid or convertible image URLs provided' }, { status: 400 });
     }
+    
+    // Replace processedImageUrls with combined list for generation
+    const finalImageUrls = allImageUrls.slice(0, 5); // Max 5 images for Fal
 
     // Determine prompts to use
     // If we have variations, we'll generate each image with a different prompt
@@ -170,7 +212,7 @@ export async function POST(request: NextRequest) {
     console.log('🍌 Generating with Nano Banana Pro:');
     console.log('   📝 Prompts:', actualNumImages, hasVariations ? '(with variations)' : '(same prompt)');
     console.log('   🚫 Negative:', negativePrompt?.substring(0, 50) || 'none');
-    console.log('   🖼️ Reference images:', processedImageUrls.length);
+    console.log('   🖼️ Total images:', finalImageUrls.length, `(${processedReferenceUrls.length} reference, ${processedImageUrls.length} content)`);
 
     // Generate each image with its own prompt (for variations) or batch
     const generateSingleImage = async (singlePrompt: string, index: number) => {
@@ -185,7 +227,7 @@ export async function POST(request: NextRequest) {
         num_images: 1, // One at a time for variations
         aspect_ratio: aspectRatio === "1:1" ? "1:1" : "4:5", 
         output_format: "png",
-        image_urls: processedImageUrls,
+        image_urls: finalImageUrls,
         resolution: resolution 
       };
 

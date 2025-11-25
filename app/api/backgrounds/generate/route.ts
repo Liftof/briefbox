@@ -92,36 +92,36 @@ const buildPrompt = (brand: BrandContext | undefined, idea: string, index: numbe
   const secondaryColor = colors[1] || '#0066ff';
   const accentColor = colors[2] || '#00cc88';
   
-  // VARIED background styles - each uses DIFFERENT colors and styles
-  // NO solid single colors - always gradients, textures, or patterns
+  // SUBTLE, MINIMAL background styles - premium and understated
+  // Focus on texture and subtle gradients, NOT busy patterns
   const backgroundStyles = [
     {
-      // Style 1: Rich gradient with TWO brand colors
-      prompt: `Beautiful diagonal gradient flowing from ${primaryColor} to ${secondaryColor}. 
-Smooth color transition with subtle noise texture overlay. 
-Rich, vibrant, not flat. Like a premium app splash screen.
-Hint of lighter glow in the center. Depth and dimension.`
+      // Style 1: Subtle gradient - very smooth
+      prompt: `Minimal smooth gradient from ${primaryColor} to dark black. 
+Very subtle color transition, almost imperceptible. 
+Fine film grain texture. Cinematic, premium feel.
+Like a luxury brand background or high-end app.`
     },
     {
-      // Style 2: Soft blur with ACCENT color - dreamy
-      prompt: `Ethereal soft-focus abstract composition.
-Blurred shapes of ${secondaryColor} and ${accentColor} floating on dark background.
-Like bokeh lights or aurora borealis. Dreamy, premium, organic.
-NOT a solid color - visible color variations and soft gradients.`
+      // Style 2: Soft blur - gentle and organic
+      prompt: `Very soft out-of-focus color wash.
+Gentle blend of ${secondaryColor} fading into darkness.
+Extremely subtle, like a faint aurora or soft light leak.
+Minimal, elegant, understated. Almost monochrome.`
     },
     {
-      // Style 3: Geometric with ALL brand colors
-      prompt: `Modern geometric abstract composition.
-Overlapping translucent shapes in ${primaryColor}, ${secondaryColor}, and white.
-Shapes at different opacities creating depth. Clean lines, premium feel.
-Like a Stripe or Linear marketing visual. Sophisticated, not boring.`
+      // Style 3: Fine texture - paper or fabric
+      prompt: `Subtle paper texture background in dark ${primaryColor}.
+Very fine grain, like premium stationery or matte finish.
+Sophisticated and minimal. Almost solid but with depth.
+No patterns, no shapes, just texture.`
     },
     {
-      // Style 4: Gradient mesh - trendy
-      prompt: `Gradient mesh background with flowing color transitions.
-Colors: ${primaryColor}, ${secondaryColor}, touches of ${accentColor}.
-Organic flowing shapes like Apple's iOS wallpapers.
-Vibrant yet professional. NOT flat, NOT single color.`
+      // Style 4: Gradient with subtle noise
+      prompt: `Dark gradient background fading from ${primaryColor} to black.
+Subtle noise overlay for texture. Minimal and elegant.
+Like a premium app dark mode or luxury brand.
+No bright colors, no busy patterns.`
     }
   ];
   
@@ -129,14 +129,15 @@ Vibrant yet professional. NOT flat, NOT single color.`
 
   return `${style.prompt}
 
-CRITICAL RULES:
-- NEVER a solid single color (no plain black, no plain white)
-- ALWAYS has visible texture, gradient, or pattern
-- Must work with white text overlay
-- No objects, icons, logos, or text
-- 8K resolution, premium quality
+ABSOLUTE RULES - MUST FOLLOW:
+- NO TEXT whatsoever - no letters, no numbers, no words
+- NO logos, icons, symbols, or watermarks
+- NO busy patterns or complex shapes
+- ONLY subtle gradients and fine textures
+- Must be dark enough for white text overlay
+- Premium, minimal, understated aesthetic
 
-Style: Apple keynote, Stripe gradients, Linear aesthetics, Figma community.`;
+Think: Apple keynote backgrounds, Stripe dark gradients, luxury fashion brands.`;
 };
 
 const extractImageFromResult = (result: any) => {

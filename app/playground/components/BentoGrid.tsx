@@ -1023,10 +1023,61 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
             </div>
           </div>
 
-          {/* Backgrounds */}
+          {/* Reference Visuals - Style Guidelines */}
+          {(() => {
+            const referenceImages = localData.images?.filter((img: string) => {
+              const labelObj = localData.labeledImages?.find((li: any) => li.url === img);
+              return labelObj?.category === 'reference';
+            }) || [];
+            
+            if (referenceImages.length === 0) return null;
+            
+            return (
+              <div className="bg-gradient-to-br from-amber-50 to-orange-50 border-2 border-amber-300 p-4">
+                <div className="flex items-center gap-2 mb-4">
+                  <span className="text-lg">🎨</span>
+                  <span className="text-[10px] font-mono uppercase tracking-widest text-amber-700">Visuels de référence</span>
+                  <span className="ml-auto text-[9px] font-mono bg-amber-500 text-white px-1.5 py-0.5">{referenceImages.length}</span>
+                </div>
+                <p className="text-[10px] text-amber-600 mb-3 leading-relaxed">
+                  Ces visuels servent de guide pour la direction artistique. Le modèle s'en inspirera.
+                </p>
+                <div className="grid grid-cols-2 gap-2">
+                  {referenceImages.slice(0, 4).map((img: string, i: number) => (
+                    <div key={i} className="aspect-square overflow-hidden border-2 border-amber-300 group relative bg-white">
+                      <img src={img} className="w-full h-full object-cover" loading="lazy" />
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1">
+                        <button onClick={() => window.open(img, '_blank')} className="w-7 h-7 bg-white text-gray-900 flex items-center justify-center hover:scale-110 transition-transform text-xs">👁</button>
+                        <button 
+                          onClick={() => {
+                            // Remove from reference tag
+                            const newLabeledImages = localData.labeledImages?.map((li: any) => 
+                              li.url === img ? { ...li, category: 'other' } : li
+                            ) || [];
+                            handleChange('labeledImages', newLabeledImages);
+                          }}
+                          className="w-7 h-7 bg-amber-500 text-white flex items-center justify-center hover:scale-110 transition-transform text-xs"
+                          title="Retirer de la référence"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                {referenceImages.length > 4 && (
+                  <div className="text-[9px] text-amber-600 text-center mt-2">
+                    +{referenceImages.length - 4} autres visuels
+                  </div>
+                )}
+              </div>
+            );
+          })()}
+
+          {/* Backgrounds / Textures */}
           <div className="bg-gray-900 border border-gray-800 flex flex-col flex-1">
             <div className="px-5 py-4 border-b border-gray-800">
-              <span className="text-[10px] font-mono uppercase tracking-widest text-gray-500">Textures</span>
+              <span className="text-[10px] font-mono uppercase tracking-widest text-gray-500">Textures générées</span>
             </div>
             <div className="flex-1 overflow-y-auto p-4 no-scrollbar">
               {backgrounds && backgrounds.length > 0 ? (

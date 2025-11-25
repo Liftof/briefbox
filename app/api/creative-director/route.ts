@@ -64,16 +64,31 @@ function getStyleReferences(aesthetic: string): string {
 }
 
 // Smart image selection recommendations
-function getImagePriority(labeledImages: any[]): { priority: string[], excluded: string[], reasoning: string } {
+function getImagePriority(labeledImages: any[]): { 
+  priority: string[], 
+  excluded: string[], 
+  references: string[],
+  reasoning: string 
+} {
   if (!Array.isArray(labeledImages) || labeledImages.length === 0) {
-    return { priority: [], excluded: [], reasoning: 'No labeled images available' };
+    return { priority: [], excluded: [], references: [], reasoning: 'No labeled images available' };
   }
   
   const priority: string[] = [];
   const excluded: string[] = [];
+  const references: string[] = [];
   
-  // Priority order: logo > product > app_ui > texture > other
-  const priorityOrder = ['main_logo', 'product', 'app_ui', 'texture', 'person', 'other'];
+  // First, extract reference images separately - these are style guidelines
+  const referenceImages = labeledImages.filter(img => img.category === 'reference');
+  for (const img of referenceImages) {
+    if (img.url && !img.url.includes('placeholder')) {
+      references.push(img.url);
+    }
+  }
+  
+  // Priority order for content images: logo > product > app_ui > texture > other
+  // Reference images are separate - used for style guidance, not content
+  const priorityOrder = ['main_logo', 'product', 'app_ui', 'texture', 'person', 'lifestyle', 'team', 'other'];
   
   for (const category of priorityOrder) {
     const images = labeledImages.filter(img => img.category === category);
@@ -87,14 +102,21 @@ function getImagePriority(labeledImages: any[]): { priority: string[], excluded:
     }
   }
   
-  // Limit to best 4 images
+  // Limit to best 4 content images
   const selected = priority.slice(0, 4);
   const skipped = priority.slice(4);
+  
+  const reasoningParts = [`Selected ${selected.length} content images`];
+  if (references.length > 0) {
+    reasoningParts.push(`${references.length} reference visuals for style`);
+  }
+  reasoningParts.push('logo/product prioritized');
   
   return {
     priority: selected,
     excluded: [...excluded, ...skipped],
-    reasoning: `Selected ${selected.length} images: logo/product prioritized, small/placeholder excluded`
+    references: references.slice(0, 3), // Max 3 reference images
+    reasoning: reasoningParts.join(', ')
   };
 }
 
@@ -193,19 +215,28 @@ export async function POST(request: NextRequest) {
     // Smart image selection
     const imageSelection = getImagePriority(brand.labeledImages || []);
 
+    // If we have reference images, add them to the style context
+    let styleContext = styleRefs;
+    if (imageSelection.references.length > 0) {
+      styleContext += `\n\nIMPORTANT: Use the provided reference visuals as style inspiration. Match their aesthetic, color treatment, and visual language.`;
+    }
+
     console.log('🎨 Creative Director V3:');
     console.log('   Template:', result.templateUsed);
     console.log('   Style refs:', styleRefs.slice(0, 50) + '...');
     console.log('   Variations:', promptVariations.length);
     console.log('   Image selection:', imageSelection.reasoning);
+    console.log('   Reference visuals:', imageSelection.references.length);
 
     return NextResponse.json({
       success: true,
       concept: {
         // Base prompt (for display/debugging)
-        finalPrompt: result.prompt + '\n\n' + styleRefs,
+        finalPrompt: result.prompt + '\n\n' + styleContext,
         // 4 variations for generation
-        promptVariations,
+        promptVariations: promptVariations.map(p => p + (imageSelection.references.length > 0 
+          ? '\n\nMatch the style and aesthetic of the reference visuals provided.' 
+          : '')),
         negativePrompt: result.negativePrompt,
         templateUsed: result.templateUsed,
         params,

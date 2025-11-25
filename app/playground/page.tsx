@@ -587,6 +587,7 @@ ${enhancement}`);
       let finalGenerationPrompt: string;
       let negativePrompt: string = 'blurry, low quality, watermark, amateur, generic stock photo, clipart';
       let smartImageSelection: string[] | null = null;
+      let styleReferenceImages: string[] = [];
       
       try {
         const cdResponse = await fetch('/api/creative-director', {
@@ -610,6 +611,12 @@ ${enhancement}`);
           if (cdData.concept.imageSelection?.priority?.length > 0) {
             smartImageSelection = cdData.concept.imageSelection.priority;
             console.log('🎯 Smart image selection:', cdData.concept.imageSelection.priority.length, 'images');
+          }
+          
+          // Extract reference images for style guidance
+          if (cdData.concept.imageSelection?.references?.length > 0) {
+            styleReferenceImages = cdData.concept.imageSelection.references;
+            console.log('🎨 Reference visuals for style:', styleReferenceImages.length);
           }
           
           console.log('🎬 Creative Director:', promptVariations ? `${promptVariations.length} variations` : 'single prompt');
@@ -641,6 +648,7 @@ ${enhancement}`);
           promptVariations: promptVariations, // NEW: 4 different prompts
           negativePrompt: negativePrompt,
           imageUrls: imagesToUse,
+          referenceImages: styleReferenceImages, // Style reference images
           numImages: 4,
           aspectRatio: '1:1'
         })
