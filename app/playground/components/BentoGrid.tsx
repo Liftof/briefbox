@@ -391,12 +391,6 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
 
   const getTagColor = (tag: string) => TAG_OPTIONS.find(t => t.value === tag)?.color || 'bg-gray-200 text-gray-600';
 
-  // Get reference images
-  const referenceImages = localData.images?.filter((img: string) => {
-    const labelObj = localData.labeledImages?.find((li: any) => li.url === img);
-    return labelObj?.category === 'reference';
-  }) || [];
-
   // Get non-reference images for asset library
   const assetImages = localData.images?.filter((img: string) => {
     const labelObj = localData.labeledImages?.find((li: any) => li.url === img);
@@ -476,7 +470,7 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
         <div className="flex items-center gap-3 mb-6">
           <span className="w-2 h-2 bg-gray-900 rounded-full" />
           <h3 className="text-lg font-semibold text-gray-900">Identité & Direction Artistique</h3>
-      </div>
+        </div>
 
         <div className="grid grid-cols-12 gap-4">
           {/* Logo */}
@@ -495,7 +489,7 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
                 <span className="text-white text-xs font-medium flex items-center gap-1">
                   <span className="text-emerald-400">✎</span> Changer
                 </span>
-            </div>
+              </div>
             </button>
           </div>
 
@@ -524,10 +518,10 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
                   {i === 0 && <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full" />}
                   <span className={`text-sm ${i === 0 ? 'font-medium text-gray-900' : 'text-gray-500'}`}>{font}</span>
                   {i === 0 && <span className="text-[8px] text-emerald-600 font-mono uppercase ml-auto">principale</span>}
-        </div>
+                </div>
               )) || <span className="text-sm text-gray-400">Sans-serif</span>}
             </div>
-            </div>
+          </div>
             
           {/* Tagline */}
           <div className="col-span-3 bg-white border border-gray-200 p-4">
@@ -540,55 +534,47 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
               />
           </div>
 
-          {/* Brand DNA */}
+          {/* STRATEGIE DE MARQUE - New Block */}
           <div className="col-span-6 bg-white border border-gray-200 p-4">
             <div className="flex items-center gap-2 mb-4">
-              <span className="text-[10px] font-mono uppercase tracking-widest text-gray-400">Brand DNA</span>
+              <span className="text-[10px] font-mono uppercase tracking-widest text-gray-400">Stratégie & Cible</span>
             </div>
-            <div className="grid grid-cols-3 gap-4">
+            <div className="space-y-4">
               <div>
-                <span className="text-[9px] text-gray-400 uppercase tracking-wider block mb-2">Valeurs</span>
-                <div className="flex flex-wrap gap-1">
-                  {localData.values?.slice(0, 4).map((val: string, i: number) => (
-                    <span key={i} className="px-2 py-1 bg-gray-100 text-[10px] text-gray-700">{val}</span>
-                  ))}
-                </div>
+                <span className="text-[9px] text-emerald-600 font-bold uppercase tracking-wider block mb-1">🎯 Cible (Target Audience)</span>
+                <textarea 
+                  value={localData.targetAudience || ''}
+                  onChange={(e) => handleChange('targetAudience', e.target.value)}
+                  className="w-full bg-emerald-50/50 border-b border-emerald-100 p-2 outline-none text-sm text-gray-700 resize-none h-14 leading-relaxed placeholder:text-gray-300"
+                  placeholder="Qui sont vos clients idéaux ?"
+                />
               </div>
               <div>
-                <span className="text-[9px] text-gray-400 uppercase tracking-wider block mb-2">Esthétique</span>
-                <div className="flex flex-wrap gap-1">
-                  {(Array.isArray(localData.aesthetic) ? localData.aesthetic : localData.aesthetic?.split(',') || []).slice(0, 3).map((val: string, i: number) => (
-                    <span key={i} className="text-[10px] text-gray-600">{val.trim()}</span>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <span className="text-[9px] text-gray-400 uppercase tracking-wider block mb-2">Ton</span>
-                <div className="flex flex-wrap gap-1">
-                  {(Array.isArray(localData.toneVoice) ? localData.toneVoice : localData.toneVoice?.split(',') || []).slice(0, 3).map((val: string, i: number) => (
-                    <span key={i} className="text-[10px] text-gray-500 italic">#{val.trim()}</span>
-                  ))}
-                </div>
+                <span className="text-[9px] text-amber-600 font-bold uppercase tracking-wider block mb-1">⚡ Promesse (Unique Value Prop)</span>
+                <textarea 
+                  value={localData.uniqueValueProposition || ''}
+                  onChange={(e) => handleChange('uniqueValueProposition', e.target.value)}
+                  className="w-full bg-amber-50/50 border-b border-amber-100 p-2 outline-none text-sm text-gray-700 resize-none h-14 leading-relaxed placeholder:text-gray-300"
+                  placeholder="Quelle est votre promesse unique ?"
+                />
               </div>
             </div>
           </div>
 
-          {/* Description */}
+          {/* Storytelling */}
           <div className="col-span-6 bg-white border border-gray-200 p-4">
-            <span className="text-[10px] font-mono uppercase tracking-widest text-gray-400 block mb-3">Description</span>
-            <textarea 
-              value={localData.description || ''}
-              onChange={(e) => handleChange('description', e.target.value)}
-              className="w-full bg-transparent outline-none text-sm text-gray-700 resize-none h-12 leading-relaxed placeholder:text-gray-300"
-              placeholder="Description..."
-            />
-            {(localData.features?.length > 0 || localData.services?.length > 0) && (
-              <div className="flex flex-wrap gap-1 mt-2 pt-2 border-t border-gray-100">
-                {[...(localData.features || []), ...(localData.services || [])].slice(0, 4).map((feat: string, i: number) => (
-                  <span key={i} className="px-2 py-0.5 bg-emerald-50 text-emerald-700 text-[9px]">✓ {feat}</span>
-                ))}
-              </div>
-            )}
+            <div className="flex items-center gap-2 mb-4">
+              <span className="text-[10px] font-mono uppercase tracking-widest text-gray-400">Brand Story</span>
+            </div>
+            <div className="h-full">
+              <span className="text-[9px] text-purple-600 font-bold uppercase tracking-wider block mb-1">📖 Notre Histoire</span>
+              <textarea 
+                value={localData.brandStory || ''}
+                onChange={(e) => handleChange('brandStory', e.target.value)}
+                className="w-full bg-purple-50/50 border-b border-purple-100 p-2 outline-none text-sm text-gray-700 resize-none h-32 leading-relaxed placeholder:text-gray-300"
+                placeholder="Racontez l'histoire de votre marque..."
+              />
+            </div>
           </div>
         </div>
 
@@ -675,344 +661,6 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
               })()}
             </div>
           )}
-        </div>
-      </section>
-
-      {/* ═══════════════════════════════════════════════════════════════════════════
-          SECTION 2: IDÉES & ANGLES DE CONTENU
-          ═══════════════════════════════════════════════════════════════════════════ */}
-      <section className="mb-10">
-        <div className="flex items-center gap-3 mb-6">
-          <span className="w-2 h-2 bg-emerald-500 rounded-full" />
-          <h3 className="text-lg font-semibold text-gray-900">Idées & Angles de contenu</h3>
-        </div>
-
-        <div className="grid grid-cols-12 gap-4">
-          {/* Industry Insights */}
-          {localData.industryInsights && localData.industryInsights.length > 0 && (
-            <div className="col-span-6 bg-gradient-to-br from-amber-50 to-orange-50 border border-amber-200 p-4">
-              <div className="flex items-center gap-2 mb-3">
-                <span className="text-base">💡</span>
-                <span className="text-[10px] font-mono uppercase tracking-widest text-amber-700">Le saviez-vous ?</span>
-                {localData.industryInsights.some((i: any) => i.isRealData) && (
-                  <span className="ml-auto px-1.5 py-0.5 bg-emerald-100 text-emerald-700 text-[8px] font-mono uppercase rounded-full">✓ données réelles</span>
-                )}
-              </div>
-              <div className="space-y-2">
-                {localData.industryInsights.slice(0, 3).map((insight: any, i: number) => (
-                    <button 
-                      key={i} 
-                      onClick={() => {
-                        window.dispatchEvent(new CustomEvent('use-template', { 
-                        detail: { templateId: 'didyouknow', headline: insight.didYouKnow, subheadline: insight.source || 'Industry Report' }
-                        }));
-                      }}
-                    className="w-full text-left p-2 bg-white/70 hover:bg-white transition-all border border-amber-100 hover:border-amber-300 group text-xs"
-                  >
-                    <div className="text-gray-800 leading-snug">{insight.didYouKnow}</div>
-                    <div className="flex items-center justify-between mt-1">
-                      <span className="text-[8px] text-gray-400 font-mono">{insight.source}</span>
-                      <span className="text-[8px] text-amber-600 opacity-0 group-hover:opacity-100">Utiliser →</span>
-                      </div>
-                    </button>
-                ))}
-              </div>
-            </div>
-          )}
-          
-          {/* Suggested Posts - Only show if we have REAL data, otherwise ask user */}
-          {(() => {
-            const posts = localData.suggestedPosts || [];
-            const realPosts = posts.filter((p: any) => p.source === 'real_data' || p.source === 'industry_insight');
-            const hasRealData = localData.contentNuggets?._meta?.hasRealData || realPosts.length > 0;
-            
-            // If no real data at all, show prompt to add data
-            if (!hasRealData && posts.length > 0) {
-              return (
-                <div className="col-span-6 bg-gray-900 p-4 border border-gray-800">
-                  <div className="flex items-center gap-2 mb-3">
-                    <span className="w-1.5 h-1.5 bg-amber-500 rounded-full" />
-                    <span className="text-[10px] font-mono uppercase tracking-widest text-amber-400">Posts suggérés</span>
-                  </div>
-                  <div className="text-center py-4">
-                    <div className="text-2xl mb-2">⚠️</div>
-                    <p className="text-sm text-gray-300 mb-2">Ces idées sont générées, pas basées sur vos vraies données</p>
-                    <p className="text-[10px] text-gray-500 mb-3">Ajoutez vos stats et témoignages ci-dessus pour des suggestions pertinentes</p>
-                    <div className="grid grid-cols-2 gap-2 opacity-50">
-                      {posts.slice(0, 4).map((post: any, i: number) => {
-                        const icons: Record<string, string> = { stat: '📊', announcement: '📢', quote: '💬', event: '🎤', expert: '👤', product: '✨', didyouknow: '💡' };
-                        const displayText = post.headline || (post.metric ? `${post.metric} ${post.metricLabel || ''}` : 'Post');
-                        return (
-                          <div key={i} className="p-2 bg-white/5 text-left border border-gray-700">
-                            <div className="flex items-center gap-1.5 mb-1">
-                              <span className="text-sm">{icons[post.templateId] || '📝'}</span>
-                              <span className="text-[8px] uppercase text-gray-600 font-mono">{post.templateId}</span>
-                              <span className="w-1.5 h-1.5 rounded-full bg-gray-500 ml-auto" />
-                            </div>
-                            <div className="text-gray-400 text-[11px] line-clamp-2">{displayText}</div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-              </div>
-              );
-            }
-            
-            // Show real posts (prioritize real_data and industry_insight)
-            const sortedPosts = [...posts].sort((a: any, b: any) => {
-              const order: Record<string, number> = { real_data: 0, industry_insight: 1, generated: 2 };
-              return (order[a.source] || 2) - (order[b.source] || 2);
-            });
-            
-            return posts.length > 0 ? (
-              <div className="col-span-6 bg-gray-900 p-4 border border-gray-800">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full" />
-                    <span className="text-[10px] font-mono uppercase tracking-widest text-emerald-400">Posts suggérés</span>
-                    {realPosts.length > 0 && (
-                      <span className="px-1.5 py-0.5 bg-emerald-500/20 text-emerald-400 text-[8px]">
-                        {realPosts.length} basé{realPosts.length > 1 ? 's' : ''} sur vos données
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-2 text-[8px]">
-                    <span className="flex items-center gap-1 text-emerald-400">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />réel
-                    </span>
-                    <span className="flex items-center gap-1 text-amber-400">
-                      <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />industrie
-                    </span>
-                  </div>
-                      </div>
-                <div className="grid grid-cols-2 gap-2 max-h-[200px] overflow-y-auto no-scrollbar">
-                  {sortedPosts.slice(0, 6).map((post: any, i: number) => {
-                    const icons: Record<string, string> = { stat: '📊', announcement: '📢', quote: '💬', event: '🎤', expert: '👤', product: '✨', didyouknow: '💡' };
-                    const displayText = post.headline || (post.metric ? `${post.metric} ${post.metricLabel || ''}` : 'Post');
-                    const isReal = post.source === 'real_data';
-                    const isIndustry = post.source === 'industry_insight';
-                    const sourceColor = isReal ? 'bg-emerald-500' : isIndustry ? 'bg-amber-500' : 'bg-gray-600';
-                    const borderColor = isReal ? 'border-emerald-500/30 hover:border-emerald-500/60' : isIndustry ? 'border-amber-500/30 hover:border-amber-500/60' : 'border-gray-700 hover:border-gray-600';
-                    const bgColor = isReal ? 'bg-emerald-500/10' : isIndustry ? 'bg-amber-500/10' : 'bg-white/5';
-                    
-                    // Skip purely generated posts if we have real ones
-                    if (!isReal && !isIndustry && realPosts.length >= 4) return null;
-                    
-                    return (
-                      <button 
-                        key={i} 
-                        onClick={() => window.dispatchEvent(new CustomEvent('use-template', { detail: { templateId: post.templateId, ...post } }))}
-                        className={`p-2 ${bgColor} hover:bg-white/10 transition-all text-left border ${borderColor} group relative`}
-                      >
-                        <div className="flex items-center gap-1.5 mb-1">
-                          <span className="text-sm">{icons[post.templateId] || '📝'}</span>
-                          <span className="text-[8px] uppercase text-gray-500 font-mono">{post.templateId}</span>
-                          <span className={`w-1.5 h-1.5 rounded-full ${sourceColor} ml-auto`} title={post.source || 'generated'} />
-                        </div>
-                        <div className="text-white text-[11px] font-medium line-clamp-2">{displayText}</div>
-                        {post.intent && (
-                          <div className="text-[8px] text-gray-500 mt-1 line-clamp-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                            💡 {post.intent}
-                          </div>
-                        )}
-                      </button>
-                    );
-                  }).filter(Boolean)}
-                </div>
-              </div>
-            ) : null;
-          })()}
-          
-          {/* Extracted Data - REAL DATA FROM CRAWL */}
-          <div className="col-span-6 bg-gradient-to-br from-emerald-50 to-teal-50 border-2 border-emerald-200 p-4">
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <div className="w-6 h-6 bg-emerald-500 flex items-center justify-center text-white text-xs">✓</div>
-                <div>
-                  <span className="text-xs font-semibold text-emerald-900 block">Données réelles extraites</span>
-                  <span className="text-[9px] text-emerald-600">
-                    {localData._crawlStats?.pagesScraped || 1} page{(localData._crawlStats?.pagesScraped || 1) > 1 ? 's' : ''} analysée{(localData._crawlStats?.pagesScraped || 1) > 1 ? 's' : ''}
-                    {localData._crawlStats?.nuggetsExtracted ? ` · ${localData._crawlStats.nuggetsExtracted} éléments` : ''}
-                  </span>
-                </div>
-              </div>
-              {localData.contentNuggets?._meta?.hasRealData && (
-                <span className="px-2 py-0.5 bg-emerald-500 text-white text-[8px] font-medium">VÉRIFIÉ</span>
-              )}
-            </div>
-            
-            {/* Real Stats */}
-            {localData.contentNuggets?.realStats?.length > 0 ? (
-              <div className="mb-3">
-                <span className="text-[8px] font-mono text-emerald-700 uppercase block mb-1.5">📊 Stats trouvées sur le site</span>
-                <div className="flex flex-wrap gap-1.5">
-                  {localData.contentNuggets.realStats.slice(0, 6).map((stat: string, i: number) => (
-                    <button key={i} onClick={() => window.dispatchEvent(new CustomEvent('use-template', { detail: { templateId: 'stat', headline: stat } }))}
-                      className="px-2 py-1.5 bg-white border border-emerald-200 text-emerald-800 text-[9px] hover:bg-emerald-100 hover:border-emerald-300 transition-colors"
-                    >{stat}</button>
-                  ))}
-                    </div>
-                  </div>
-            ) : (
-              <div className="mb-3 p-2 bg-white/50 border border-dashed border-emerald-200 text-center">
-                <span className="text-[9px] text-emerald-600">Aucune stat trouvée sur le site</span>
-              </div>
-            )}
-            
-            {/* Testimonials */}
-            {localData.contentNuggets?.testimonials?.length > 0 && (
-              <div className="mb-3">
-                <span className="text-[8px] font-mono text-blue-700 uppercase block mb-1.5">💬 Témoignages clients</span>
-                {localData.contentNuggets.testimonials.slice(0, 2).map((t: any, i: number) => (
-                  <button key={i} onClick={() => window.dispatchEvent(new CustomEvent('use-template', { detail: { templateId: 'quote', headline: t.quote, subheadline: t.author } }))}
-                    className="w-full text-left p-2 bg-white border border-blue-100 hover:bg-blue-50 mb-1.5 text-[10px] transition-colors"
-                  >
-                    <div className="text-gray-700 italic line-clamp-2">"{t.quote}"</div>
-                    {t.author && <div className="text-gray-500 mt-0.5 text-[9px]">— {t.author}{t.company ? `, ${t.company}` : ''}</div>}
-                  </button>
-                ))}
-              </div>
-            )}
-            
-            {/* Achievements */}
-            {localData.contentNuggets?.achievements?.length > 0 && (
-              <div className="mb-3">
-                <span className="text-[8px] font-mono text-amber-700 uppercase block mb-1.5">🏆 Prix & Reconnaissances</span>
-                <div className="flex flex-wrap gap-1">
-                  {localData.contentNuggets.achievements.slice(0, 3).map((achievement: string, i: number) => (
-                    <span key={i} className="px-2 py-1 bg-amber-50 border border-amber-200 text-amber-800 text-[9px]">
-                      {achievement.length > 50 ? achievement.slice(0, 47) + '...' : achievement}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
-            
-            {/* Blog Topics */}
-            {localData.contentNuggets?.blogTopics?.length > 0 && (
-              <div>
-                <span className="text-[8px] font-mono text-purple-700 uppercase block mb-1.5">📝 Sujets du blog</span>
-                <div className="flex flex-wrap gap-1">
-                  {localData.contentNuggets.blogTopics.slice(0, 4).map((topic: string, i: number) => (
-                    <span key={i} className="px-2 py-1 bg-purple-50 border border-purple-200 text-purple-700 text-[9px]">
-                      {topic.length > 40 ? topic.slice(0, 37) + '...' : topic}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
-            
-            {/* No data at all - Ask user to provide */}
-            {(!localData.contentNuggets?.realStats?.length && !localData.contentNuggets?.testimonials?.length && !localData.contentNuggets?.achievements?.length) && (
-              <div className="bg-white border-2 border-dashed border-amber-300 p-4 text-center">
-                <div className="text-xl mb-2">📝</div>
-                <p className="text-sm font-medium text-gray-700 mb-1">Aucune donnée trouvée sur le site</p>
-                <p className="text-[10px] text-gray-500 mb-3">
-                  On n'a pas réussi à extraire de stats ou témoignages. Ajoutez-les manuellement !
-                </p>
-                <div className="flex flex-wrap gap-2 justify-center">
-                  <button 
-                    onClick={() => {
-                      const stat = prompt('Entrez une stat clé (ex: "10K+ clients actifs")');
-                      if (stat) {
-                        const currentStats = localData.contentNuggets?.realStats || [];
-                        handleChange('contentNuggets', {
-                          ...localData.contentNuggets,
-                          realStats: [...currentStats, stat],
-                          _meta: { ...localData.contentNuggets?._meta, hasRealData: true }
-                        });
-                      }
-                    }}
-                    className="px-3 py-1.5 bg-emerald-500 text-white text-[10px] font-medium hover:bg-emerald-600"
-                  >
-                    + Ajouter une stat
-                  </button>
-                  <button 
-                    onClick={() => {
-                      const quote = prompt('Citation client (ex: "Ce produit a changé notre façon de travailler")');
-                      const author = quote ? prompt('Auteur (ex: "Marie D., CEO de TechCorp")') : null;
-                      if (quote && author) {
-                        const currentTestimonials = localData.contentNuggets?.testimonials || [];
-                        handleChange('contentNuggets', {
-                          ...localData.contentNuggets,
-                          testimonials: [...currentTestimonials, { quote, author, company: '' }],
-                          _meta: { ...localData.contentNuggets?._meta, hasRealData: true }
-                        });
-                      }
-                    }}
-                    className="px-3 py-1.5 bg-blue-500 text-white text-[10px] font-medium hover:bg-blue-600"
-                  >
-                    + Ajouter un témoignage
-                  </button>
-              </div>
-            </div>
-          )}
-        </div>
-
-          {/* Reference Visuals (Inspirations) - PROMINENT SECTION - Full width since textures removed */}
-          <div className="col-span-10 bg-gradient-to-br from-violet-50 via-purple-50 to-fuchsia-50 border-2 border-purple-300 p-4 relative overflow-hidden">
-            {/* Decorative elements */}
-            <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-purple-200/30 to-transparent rounded-full -translate-y-1/2 translate-x-1/2" />
-            <div className="absolute bottom-0 left-0 w-16 h-16 bg-gradient-to-tr from-fuchsia-200/30 to-transparent rounded-full translate-y-1/2 -translate-x-1/2" />
-            
-            <div className="relative z-10">
-              <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-fuchsia-500 flex items-center justify-center text-white text-sm">
-                    🎨
-                  </div>
-                  <div>
-                    <span className="text-xs font-semibold text-purple-900 block">Visuels de référence</span>
-                    <span className="text-[9px] text-purple-500">Guident le style de génération</span>
-                  </div>
-              </div>
-              <button 
-                  onClick={() => openImportPopup(true)}
-                  className="px-3 py-1.5 bg-gradient-to-r from-purple-500 to-fuchsia-500 text-white text-[10px] font-medium hover:from-purple-600 hover:to-fuchsia-600 transition-all shadow-sm"
-              >
-                  + Ajouter
-              </button>
-            </div>
-            
-              {referenceImages.length > 0 ? (
-                <div className="space-y-2">
-                  <div className="grid grid-cols-4 gap-2">
-                    {referenceImages.slice(0, 4).map((img: string, i: number) => (
-                      <div key={i} className="aspect-square overflow-hidden border-2 border-purple-200 group relative bg-white shadow-sm">
-                        <img src={img} className="w-full h-full object-cover" loading="lazy" />
-                        <div className="absolute inset-0 bg-gradient-to-t from-purple-900/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                        <button 
-                          onClick={() => {
-                            const newLabeledImages = localData.labeledImages?.map((li: any) => li.url === img ? { ...li, category: 'other' } : li) || [];
-                            handleChange('labeledImages', newLabeledImages);
-                          }}
-                          className="absolute top-1 right-1 w-5 h-5 bg-white/90 text-[10px] opacity-0 group-hover:opacity-100 hover:bg-red-500 hover:text-white transition-all"
-                        >×</button>
-                      </div>
-                    ))}
-                      </div>
-                  <p className="text-[9px] text-purple-600 flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full" />
-                    Ces visuels guident le style, les couleurs et l'ambiance des générations
-                  </p>
-                    </div>
-              ) : (
-                <div className="bg-white/50 border border-purple-200 border-dashed p-4 text-center">
-                  <div className="text-2xl mb-2">🖼️</div>
-                  <p className="text-xs text-purple-600 font-medium">Aucune inspiration visuelle</p>
-                  <p className="text-[10px] text-purple-400 mt-1">
-                    Importez des visuels et ajoutez le tag <span className="bg-purple-100 px-1 py-0.5 rounded text-purple-700">"Visuel de référence"</span>
-                  </p>
-                  <p className="text-[9px] text-purple-400 mt-2">
-                    → Exemples : visuels de charte, posts LinkedIn inspirants, screenshots d'apps...
-                  </p>
-              </div>
-              )}
-            </div>
-          </div>
-
-          {/* Textures section removed for cost optimization */}
         </div>
       </section>
 
