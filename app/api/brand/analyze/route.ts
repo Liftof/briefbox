@@ -149,6 +149,42 @@ async function extractColorsFromImage(imageUrl: string): Promise<string[]> {
   }
 }
 
+// Helper: Map website to find all URLs using Firecrawl /map
+async function mapWebsite(url: string): Promise<string[]> {
+  try {
+    console.log('🗺️ Mapping website structure:', url);
+    const response = await fetch('https://api.firecrawl.dev/v1/map', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${process.env.FIRECRAWL_API_KEY}`
+      },
+      body: JSON.stringify({
+        url,
+        search: "about story mission team blog press careers values history",
+        ignoreSitemap: false,
+        includeSubdomains: false,
+        limit: 50
+      })
+    });
+
+    if (!response.ok) {
+      console.warn('Map API failed:', await response.text());
+      return [];
+    }
+
+    const data = await response.json();
+    if (data.success && Array.isArray(data.links)) {
+      console.log(`✅ Map found ${data.links.length} potential pages`);
+      return data.links;
+    }
+    return [];
+  } catch (e) {
+    console.warn('Map error:', e);
+    return [];
+  }
+}
+
 // Helper: Discover internal pages to crawl (blog, about, case studies, etc.)
 function discoverInternalPages(baseUrl: string, markdown: string): string[] {
   const url = new URL(baseUrl);
@@ -490,209 +526,96 @@ export async function POST(request: Request) {
     contentNuggets = extractContentNuggets(firecrawlMarkdown + '\n' + parallelContent);
     console.log(`📊 Found ${contentNuggets.length} content nuggets from main page`);
     
-    // Use Firecrawl's /crawl endpoint for recursive crawling
+    // 🚀 NEW STRATEGY: MAP & SELECT (Holistic Crawling)
+    // Instead of blindly crawling links, we MAP the site to find the high-value pages.
     try {
-        const baseUrl = new URL(url);
+        console.log('🗺️ Mapping site to find Story, About, and Team pages...');
+        let targetPages = await mapWebsite(url);
         
-        // Start recursive crawl job - NOW WITH SCREENSHOTS!
-        console.log('🚀 Launching Firecrawl recursive crawl (with images)...');
-        const crawlStartRes = await fetch('https://api.firecrawl.dev/v1/crawl', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${process.env.FIRECRAWL_API_KEY}`
-            },
-            body: JSON.stringify({
-                url: baseUrl.origin,
-                maxDepth: 2,
-                limit: 12, // Increased to get more pages
-                includePaths: [
-                    '/blog/*', '/articles/*', '/news/*', '/actualites/*',
-                    '/about*', '/a-propos*', '/qui-sommes-nous*',
-                    '/case-stud*', '/success-stor*', '/temoignages*', '/clients*',
-                    '/references*', '/services*', '/solutions*', '/products*',
-                    '/pricing*', '/tarifs*', '/features*', '/fonctionnalites*',
-                    '/team*', '/equipe*', '/careers*', '/jobs*',
-                    '/portfolio*', '/work*', '/projets*', '/realisations*'
-                ],
-                excludePaths: [
-                    '/cdn-cgi/*', '/api/*', '/*.pdf', '/*.zip',
-                    '/login*', '/signup*', '/register*', '/cart*', '/checkout*',
-                    '/terms*', '/privacy*', '/legal*', '/cookies*'
-                ],
-                scrapeOptions: {
-                    formats: ['markdown', 'html'], // Added HTML to get more image refs
-                    onlyMainContent: false, // Get full page for more images
-                    includeTags: ['img', 'picture', 'figure'], // Ensure images are captured
-                    waitFor: 2000 // Wait for lazy-loaded images
-                }
-            })
+        // Fallback if map fails or returns nothing (e.g. single page app or blocked)
+        if (targetPages.length === 0) {
+            console.log('⚠️ Map failed, falling back to link discovery');
+            targetPages = discoverInternalPages(url, firecrawlMarkdown);
+        }
+
+        // INTELLIGENT SELECTION: Pick the most valuable pages
+        const priorityKeywords = ['about', 'apropos', 'story', 'histoire', 'mission', 'team', 'equipe', 'valeurs', 'manifesto', 'presse'];
+        const secondaryKeywords = ['blog', 'news', 'actualites', 'services', 'solutions', 'produits', 'case-studies', 'clients'];
+        
+        const selectedPages = targetPages.filter(link => {
+            const lowerLink = link.toLowerCase();
+            if (lowerLink === url || lowerLink === url + '/') return false; // Skip home
+            return priorityKeywords.some(k => lowerLink.includes(k)) || 
+                   secondaryKeywords.some(k => lowerLink.includes(k));
         });
 
-        if (crawlStartRes.ok) {
-            const crawlJob = await crawlStartRes.json();
-            
-            if (crawlJob.success && crawlJob.id) {
-                console.log(`📋 Crawl job started: ${crawlJob.id}`);
+        // Fill up with other pages if we don't have enough, up to 15
+        const finalPagesToScrape = [...new Set([...selectedPages, ...targetPages])].slice(0, 15);
+        
+        console.log(`🎯 Selected ${finalPagesToScrape.length} high-value pages to scrape:`, finalPagesToScrape);
+
+        // BATCH SCRAPE: Scrape all selected pages in parallel
+        // We use Firecrawl /scrape for high quality markdown + metadata
+        const scrapePromises = finalPagesToScrape.map(async (pageUrl) => {
+            try {
+                const res = await fetch('https://api.firecrawl.dev/v1/scrape', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${process.env.FIRECRAWL_API_KEY}`
+                    },
+                    body: JSON.stringify({
+                        url: pageUrl,
+                        formats: ["markdown", "html"], // HTML helps finding images hidden in markup
+                        onlyMainContent: false
+                    })
+                });
                 
-                const maxWaitTime = 45000; // Increased timeout
-                const pollInterval = 2000;
-                const startTime = Date.now();
-                let crawlComplete = false;
-                let crawlResults: any[] = [];
-                
-                while (Date.now() - startTime < maxWaitTime && !crawlComplete) {
-                    await new Promise(resolve => setTimeout(resolve, pollInterval));
-                    
-                    const statusRes = await fetch(`https://api.firecrawl.dev/v1/crawl/${crawlJob.id}`, {
-                        headers: {
-                            'Authorization': `Bearer ${process.env.FIRECRAWL_API_KEY}`
-                        }
-                    });
-                    
-                    if (statusRes.ok) {
-                        const statusData = await statusRes.json();
-                        console.log(`   📊 Crawl status: ${statusData.status}, pages: ${statusData.completed || 0}/${statusData.total || '?'}`);
-                        
-                        if (statusData.status === 'completed') {
-                            crawlComplete = true;
-                            crawlResults = statusData.data || [];
-                        } else if (statusData.status === 'failed') {
-                            console.warn('❌ Crawl job failed');
-                            break;
-                        }
-                    }
-                }
-                
-                // Process ALL crawl results for images and content
-                if (crawlResults.length > 0) {
-                    console.log(`✅ Crawl complete: ${crawlResults.length} pages found`);
-                    
-                    for (const page of crawlResults) {
-                        const pageUrl = page.metadata?.sourceURL || 'unknown';
-                        const pageContent = page.markdown || '';
-                        const pageHtml = page.html || '';
-                        const isMainPage = pageUrl === url;
-                        
-                        // ══════════════════════════════════════════════════════════
-                        // EXTRACT IMAGES FROM EVERY PAGE
-                        // ══════════════════════════════════════════════════════════
-                        
-                        // 1. Images from markdown
-                        const markdownImages = extractImagesFromMarkdown(pageContent);
-                        
-                        // 2. Images from HTML (more comprehensive)
-                        const htmlImages = extractImagesFromMarkdown(pageHtml);
-                        
-                        // 3. Images from metadata
-                        const metaImages = [
-                            page.metadata?.ogImage,
-                            page.metadata?.image,
-                            page.metadata?.screenshot,
-                            page.metadata?.favicon,
-                        ].filter(Boolean);
-                        
-                        // 4. Structured data images (often contain product/hero images)
-                        if (page.metadata?.jsonLd) {
-                            try {
-                                const jsonLd = typeof page.metadata.jsonLd === 'string' 
-                                    ? JSON.parse(page.metadata.jsonLd) 
-                                    : page.metadata.jsonLd;
-                                if (jsonLd.image) {
-                                    const ldImages = Array.isArray(jsonLd.image) ? jsonLd.image : [jsonLd.image];
-                                    metaImages.push(...ldImages.map((img: any) => typeof img === 'string' ? img : img.url).filter(Boolean));
-                                }
-                                if (jsonLd.logo) {
-                                    metaImages.push(typeof jsonLd.logo === 'string' ? jsonLd.logo : jsonLd.logo?.url);
-                                }
-                            } catch {}
-                        }
-                        
-                        // Combine and filter
-                        const pageImages = [...markdownImages, ...htmlImages, ...metaImages]
-                            .filter(isValidImageUrl);
-                        
-                        deepCrawlImages.push(...pageImages);
-                        
-                        console.log(`   🖼️ ${pageUrl.replace(baseUrl.origin, '') || '/'}: ${pageImages.length} images found`);
-                        
-                        // ══════════════════════════════════════════════════════════
-                        // EXTRACT CONTENT (skip main page - we already have it)
-                        // ══════════════════════════════════════════════════════════
-                        if (!isMainPage && pageContent) {
-                            deepCrawlContent += `\n\n--- PAGE: ${pageUrl} ---\n${pageContent.substring(0, 5000)}`;
-                            
-                            const pageNuggets = extractContentNuggets(pageContent);
-                            contentNuggets = [...contentNuggets, ...pageNuggets];
-                            
-                            console.log(`   📄 ${pageUrl.replace(baseUrl.origin, '')} - ${pageNuggets.length} nuggets`);
-                        }
-                    }
-                    
-                    console.log(`📊 Total: ${crawlResults.length} pages, ${deepCrawlImages.length} images collected`);
-                }
-            }
-        } else {
-            console.warn('⚠️ Crawl API call failed, falling back to direct page scrape');
-            
-            // FALLBACK: Direct scrape of discovered pages
-            const internalPages = discoverInternalPages(url, firecrawlMarkdown);
-            console.log('🔗 Fallback - discovered internal pages:', internalPages);
-            
-            const deepCrawlPromises = internalPages.slice(0, 7).map(async (pageUrl) => {
-                try {
-                    const res = await fetch('https://api.firecrawl.dev/v1/scrape', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${process.env.FIRECRAWL_API_KEY}`
-                        },
-                        body: JSON.stringify({
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.success && data.data) {
+                        return {
                             url: pageUrl,
-                            formats: ["markdown", "html"],
-                            onlyMainContent: false
-                        })
-                    });
-                    
-                    if (res.ok) {
-                        const data = await res.json();
-                        if (data.success && data.data) {
-                            return { 
-                                url: pageUrl, 
-                                content: data.data.markdown || '',
-                                html: data.data.html || '',
-                                metadata: data.data.metadata || {}
-                            };
-                        }
+                            content: data.data.markdown || '',
+                            html: data.data.html || '',
+                            metadata: data.data.metadata || {}
+                        };
                     }
-                    return null;
-                } catch {
-                    return null;
                 }
-            });
-            
-            const deepResults = await Promise.all(deepCrawlPromises);
-            const validResults = deepResults.filter(Boolean) as { url: string; content: string; html: string; metadata: any }[];
-            
-            for (const result of validResults) {
-                deepCrawlContent += `\n\n--- PAGE: ${result.url} ---\n${result.content.substring(0, 4000)}`;
-                
-                // Extract images from fallback results too
-                const pageImages = [
-                    ...extractImagesFromMarkdown(result.content),
-                    ...extractImagesFromMarkdown(result.html),
-                    result.metadata?.ogImage,
-                    result.metadata?.image,
-                ].filter(isValidImageUrl);
-                
-                deepCrawlImages.push(...pageImages);
-                
-                const pageNuggets = extractContentNuggets(result.content);
-                contentNuggets = [...contentNuggets, ...pageNuggets];
+                return null;
+            } catch (err) {
+                console.warn(`Failed to scrape ${pageUrl}`, err);
+                return null;
             }
+        });
+
+        const scrapeResults = await Promise.all(scrapePromises);
+        const validResults = scrapeResults.filter(Boolean) as { url: string; content: string; html: string; metadata: any }[];
+
+        console.log(`✅ Successfully scraped ${validResults.length} deep pages`);
+
+        // PROCESS RESULTS
+        for (const result of validResults) {
+            // Aggregate content for the LLM
+            deepCrawlContent += `\n\n--- PAGE: ${result.url} ---\nTITLE: ${result.metadata.title || 'No Title'}\n${result.content.substring(0, 6000)}`;
             
-            console.log(`✅ Fallback deep crawl: ${validResults.length} pages, ${contentNuggets.length} nuggets, ${deepCrawlImages.length} images`);
+            // Extract Images
+            const pageImages = [
+                ...extractImagesFromMarkdown(result.content),
+                ...extractImagesFromMarkdown(result.html),
+                result.metadata?.ogImage,
+                result.metadata?.image,
+            ].filter(isValidImageUrl);
+            
+            deepCrawlImages.push(...pageImages);
+            
+            // Extract Nuggets
+            const pageNuggets = extractContentNuggets(result.content);
+            contentNuggets = [...contentNuggets, ...pageNuggets];
+            
+            console.log(`   📄 ${result.url}: ${pageNuggets.length} nuggets, ${pageImages.length} images`);
         }
+
     } catch (e) {
         console.warn('Deep crawl error:', e);
     }
