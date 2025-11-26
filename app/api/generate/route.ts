@@ -80,7 +80,8 @@ export async function POST(request: NextRequest) {
       numImages = 4, 
       aspectRatio = "1:1", 
       resolution = "1K", 
-      useAsync = false 
+      useAsync = false,
+      imageContextMap = {} // NEW: Map of URL -> Description (e.g. "logo", "product")
     } = body;
 
     // Basic Validation - accept either prompt or promptVariations
@@ -222,8 +223,32 @@ export async function POST(request: NextRequest) {
       
       if (processedImageUrls.length > 0) {
         const startIdx = processedReferenceUrls.length + 1;
-        const endIdx = startIdx + processedImageUrls.length - 1;
-        imageDescriptions.push(`Images ${startIdx}-${endIdx}: CONTENT ELEMENTS - Logo, product, or brand assets to incorporate into the design`);
+        // processedImageUrls contains the final content images. 
+        // We need to map them back to their roles if available.
+        
+        processedImageUrls.forEach((url, i) => {
+            const idx = startIdx + i;
+            // Check if we have specific context for this image (fuzzy match if needed)
+            let role = "CONTENT ELEMENT";
+            
+            // Try exact match first
+            if (imageContextMap[url]) {
+                role = imageContextMap[url];
+            } else {
+                // Try finding key that is part of the url or vice versa (for data uris vs original)
+                const matchingKey = Object.keys(imageContextMap).find(k => url.includes(k) || k.includes(url));
+                if (matchingKey) {
+                    role = imageContextMap[matchingKey];
+                }
+            }
+            
+            // If role mentions "LOGO", make it ALL CAPS and VERY EXPLICIT
+            if (role.toLowerCase().includes('logo')) {
+                imageDescriptions.push(`Image ${idx}: [CRITICAL] BRAND LOGO. ${role}. DO NOT MODIFY. DO NOT DISTORT.`);
+            } else {
+                imageDescriptions.push(`Image ${idx}: ${role}`);
+            }
+        });
       }
       
       imageContextPrefix = `[IMAGE CONTEXT]

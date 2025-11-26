@@ -734,6 +734,7 @@ ${enhancement}`);
       let negativePrompt: string = 'blurry, low quality, watermark, amateur, generic stock photo, clipart';
       let smartImageSelection: string[] | null = null;
       let styleReferenceImages: string[] = [];
+      let imageContextMap: Record<string, string> = {};
       
       try {
         // Load feedback patterns to personalize generation
@@ -763,6 +764,9 @@ ${enhancement}`);
           // Use smart image selection if provided
           if (cdData.concept.imageSelection?.priority?.length > 0) {
             smartImageSelection = cdData.concept.imageSelection.priority;
+            if (cdData.concept.imageSelection.imageRoles) {
+                imageContextMap = cdData.concept.imageSelection.imageRoles;
+            }
             console.log('🎯 Smart image selection:', cdData.concept.imageSelection.priority.length, 'images');
           }
           
@@ -792,6 +796,17 @@ ${enhancement}`);
         ? smartImageSelection 
         : references;
 
+      // If no specific roles were returned by CD (or we are using manual selection),
+      // try to identify the logo from brand data to protect it.
+      if (targetBrand?.logo) {
+          imagesToUse.forEach(url => {
+              // Check for exact match or fuzzy match
+              if (url === targetBrand.logo || url.includes(targetBrand.logo) || targetBrand.logo.includes(url)) {
+                  imageContextMap[url] = "BRAND_LOGO (CRITICAL): This is the official logo. Display it clearly. Do NOT distort.";
+              }
+          });
+      }
+
     // Add manual style references if present
     if (styleRefImages.length > 0) {
       styleReferenceImages = [...styleRefImages, ...styleReferenceImages];
@@ -807,6 +822,7 @@ ${enhancement}`);
           negativePrompt: negativePrompt,
           imageUrls: imagesToUse,
           referenceImages: styleReferenceImages, // Style reference images
+          imageContextMap: imageContextMap, // NEW: Pass explicit roles
           numImages: 2, // Reduced to 2 for cost optimization
           aspectRatio: '1:1'
         })
