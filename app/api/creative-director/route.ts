@@ -323,6 +323,15 @@ export async function POST(request: NextRequest) {
         brandKnowledge.push(`CORE VALUES: ${brand.values.join(', ')}`);
     }
 
+    // Inject Pain Points and Visual Motifs
+    if (brand.painPoints?.length > 0) {
+        brandKnowledge.push(`CUSTOMER PAIN POINTS: ${brand.painPoints.join(', ')}`);
+    }
+    
+    if (brand.visualMotifs?.length > 0) {
+        brandKnowledge.push(`BRAND VISUAL MOTIFS: ${brand.visualMotifs.join(', ')}`);
+    }
+
     const knowledgeContext = brandKnowledge.length > 0 
         ? `\n\nBRAND KNOWLEDGE & DATA (Use these facts/quotes if relevant to the brief):\n${brandKnowledge.join('\n')}`
         : '';
@@ -451,6 +460,7 @@ DESIGN GUIDELINES (AVOID GENERIC VISUALS):
 - STYLE: ${variationEmphasis} ${templateStyleEmphasis}
 - ASSETS: Use the provided image as the HERO element. Integrate it naturally into a scene or layout. Do NOT just crop the image.
 - COLOR: Use the brand palette with restraint. Specifically use ${primaryColor} as a primary accent.
+- BRAND VISUAL MOTIFS: Incorporate these elements subtlety if possible: ${brand.visualMotifs?.join(', ') || 'None'}.
 - LOGO PROTECTION (CRITICAL): A logo image is provided in the input. YOU MUST USE THIS EXACT LOGO. Do NOT generate a fake logo. Do NOT distort, warp, or modify the provided logo. It must remain perfectly legible.
 - STYLE REFERENCES: If style reference images are provided, capture their MOOD, LIGHTING, and COMPOSITION only. Do NOT copy the specific objects or content of the reference.
 - TYPOGRAPHY & TEXT: PERFECT SPELLING IS MANDATORY. Double-check all generated text for correctness. No typos, no gibberish. Use professional kerning and spacing.

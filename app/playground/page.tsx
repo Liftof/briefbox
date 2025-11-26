@@ -500,7 +500,7 @@ function PlaygroundContent() {
     return null;
   }, []);
 
-  const handleValidateBento = () => {
+  const handleValidateBento = async () => {
     if (!brandData) {
       showToast('Analysez ou chargez une marque avant de continuer', 'error');
       return;
@@ -522,6 +522,13 @@ function PlaygroundContent() {
     // ALWAYS sync with bento data (not conditional)
     setUploadedImages(allImages.slice(0, 8));
     
+    // Save brand state to DB to persist nuggets & edits
+    try {
+      await handleSaveBrand();
+    } catch (e) {
+      console.error("Auto-save failed", e);
+    }
+
     setStep('playground');
     setActiveTab('create');
     
