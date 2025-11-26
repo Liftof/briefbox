@@ -285,6 +285,55 @@ function TagEditor({ currentTag, onTagChange, position }: {
   );
 }
 
+// Simple inline add input
+function AddItemInput({ placeholder, onAdd }: { placeholder: string, onAdd: (value: string) => void }) {
+  const [value, setValue] = useState('');
+  const [isAdding, setIsAdding] = useState(false);
+
+  if (!isAdding) {
+    return (
+      <button 
+        onClick={() => setIsAdding(true)}
+        className="w-full py-2 mt-2 text-xs text-gray-400 hover:text-gray-600 border border-dashed border-gray-200 hover:border-gray-300 flex items-center justify-center gap-1 transition-all"
+      >
+        <span>+</span> Ajouter
+      </button>
+    );
+  }
+
+  return (
+    <div className="mt-2 flex gap-2">
+      <input
+        autoFocus
+        type="text"
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' && value.trim()) {
+            onAdd(value.trim());
+            setValue('');
+            setIsAdding(false);
+          } else if (e.key === 'Escape') {
+            setIsAdding(false);
+          }
+        }}
+        placeholder={placeholder}
+        className="flex-1 px-2 py-1 text-xs border border-gray-300 outline-none focus:border-gray-500"
+      />
+      <button 
+        onClick={() => {
+          if (value.trim()) onAdd(value.trim());
+          setValue('');
+          setIsAdding(false);
+        }}
+        className="px-2 py-1 bg-gray-900 text-white text-xs"
+      >
+        OK
+      </button>
+    </div>
+  );
+}
+
 export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBackgrounds = false, onUpdate, onValidate, onAddSource, onBack }: { 
   brandData: any, 
   backgrounds?: string[], 
@@ -618,6 +667,16 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
                    <div className="text-center py-8 text-gray-300 text-xs">Aucun chiffre trouvé</div>
                  )}
                </div>
+               <AddItemInput 
+                 placeholder="Ex: +40% de croissance" 
+                 onAdd={(val) => {
+                   const newNuggets = { 
+                     ...localData.contentNuggets, 
+                     realStats: [...(localData.contentNuggets?.realStats || []), val] 
+                   };
+                   handleChange('contentNuggets', newNuggets);
+                 }}
+               />
             </div>
 
             {/* Témoignages */}
@@ -651,6 +710,28 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
                    <div className="text-center py-8 text-gray-300 text-xs">Aucun témoignage trouvé</div>
                  )}
                </div>
+               <AddItemInput 
+                 placeholder="'Citation' - Auteur" 
+                 onAdd={(val) => {
+                   // Basic parsing: "Quote" - Author
+                   const lastDash = val.lastIndexOf('-');
+                   let quote, author;
+                   
+                   if (lastDash > 0) {
+                     quote = val.substring(0, lastDash).trim().replace(/^["']|["']$/g, '');
+                     author = val.substring(lastDash + 1).trim();
+                   } else {
+                     quote = val;
+                     author = 'Client';
+                   }
+                   
+                   const newNuggets = { 
+                     ...localData.contentNuggets, 
+                     testimonials: [...(localData.contentNuggets?.testimonials || []), { quote, author, company: '' }] 
+                   };
+                   handleChange('contentNuggets', newNuggets);
+                 }}
+               />
             </div>
 
             {/* Industry Insights */}
@@ -684,6 +765,13 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
                    <div className="text-center py-8 text-gray-300 text-xs">Aucune info marché</div>
                  )}
                </div>
+               <AddItemInput 
+                 placeholder="Fait marquant..." 
+                 onAdd={(val) => {
+                   const newInsights = [...(localData.industryInsights || []), { fact: val, didYouKnow: `Le saviez-vous ? ${val}`, source: 'Manuel' }];
+                   handleChange('industryInsights', newInsights);
+                 }}
+               />
             </div>
           </div>
         </section>

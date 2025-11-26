@@ -30,6 +30,30 @@ export const brands = pgTable('brands', {
   marketingAngles: jsonb('marketing_angles').$type<{title: string, hook?: string, concept: string, emotionalTension?: string, platform?: string}[]>(),
   backgroundPrompts: jsonb('background_prompts').$type<string[]>(),
   
+  // NOUVEAUX CHAMPS (Workflow V2)
+  contentNuggets: jsonb('content_nuggets').$type<{
+    realStats: string[],
+    testimonials: {quote: string, author: string, company: string}[],
+    achievements: string[],
+    blogTopics: string[]
+  }>(),
+  
+  industryInsights: jsonb('industry_insights').$type<{
+    fact: string,
+    didYouKnow: string,
+    source: string
+  }[]>(),
+  
+  suggestedPosts: jsonb('suggested_posts').$type<{
+    templateId: string,
+    headline: string,
+    subheadline?: string,
+    metric?: string,
+    metricLabel?: string,
+    source: string,
+    intent: string
+  }[]>(),
+
   // Assets (Images scrapées + Textures générées)
   // On stocke tout ici pour simplifier, ou on peut séparer
   labeledImages: jsonb('labeled_images').$type<{url: string, category: string, description: string}[]>(),

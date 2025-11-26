@@ -38,6 +38,12 @@ export async function POST(request: Request) {
       visualMotifs: brand.visualMotifs,
       marketingAngles: brand.marketingAngles,
       backgroundPrompts: brand.backgroundPrompts,
+      
+      // Save V2 extracted content
+      contentNuggets: brand.contentNuggets,
+      industryInsights: brand.industryInsights,
+      suggestedPosts: brand.suggestedPosts,
+
       labeledImages: brand.labeledImages,
       // Store extracted backgrounds in the 'backgrounds' column
       backgrounds: brand.backgrounds || [] 

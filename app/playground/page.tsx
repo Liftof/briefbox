@@ -1139,8 +1139,8 @@ ${enhancement}`);
           onValidate={handleValidateBento}
           onAddSource={() => setShowSourceManager(true)}
           onBack={() => {
-            setStep('playground');
-            setActiveTab('create');
+            // Go back to URL input to restart analysis or change URL
+            setStep('url');
           }}
         />
       );
