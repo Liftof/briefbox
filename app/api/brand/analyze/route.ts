@@ -254,11 +254,26 @@ function extractContentNuggets(text: string): ContentNugget[] {
     /(\d+(?:\s*\d+)*)\s+(clients?|users?|utilisateurs?|entreprises?|projets?|années?)/gi
   ];
   
+  // patterns to exclude (pricing, dates, common UI noise)
+  const excludePatterns = [
+    /€|\$|£|eur|usd/i, // Currency often implies pricing
+    /\/\s*(mois|month|an|year|user|utilisateur)/i, // Pricing intervals
+    /copyright|all rights reserved/i,
+    /jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec/i, // Dates
+    /version\s+\d/i,
+    /step\s+\d/i
+  ];
+
   for (const pattern of statPatterns) {
     let match;
     while ((match = pattern.exec(text)) !== null) {
       const stat = match[1];
       const context = match[2] || match[0];
+      const fullString = `${stat} ${context}`.toLowerCase();
+      
+      // Skip if matches exclusion patterns
+      if (excludePatterns.some(p => p.test(fullString))) continue;
+
       if (stat && context && context.length > 5) {
         nuggets.push({
           type: 'stat',
@@ -812,7 +827,7 @@ export async function POST(request: Request) {
          - { "templateId": "quote", "headline": "On a réduit nos coûts de 40% en 6 mois", "subheadline": "— Sophie Martin, DG @TechCorp", "source": "real_data", "intent": "Preuve sociale avec résultat chiffré" }
          
          RULES:
-         - PRIORITIZE real data from extracted nuggets when available
+         - PRIORITIZE real data from verified content nuggets
          - Include at least 2 "didyouknow" posts with industry macro insights
          - Each post MUST have an "intent" explaining WHY this post is strategic
          - Be SPECIFIC: not "amélioration" but "+47% en 3 mois"
@@ -820,7 +835,7 @@ export async function POST(request: Request) {
       8. **INDUSTRY INSIGHTS (CRITICAL):** Generate 3-4 relevant industry facts/stats.
          
          These should be:
-         - Macro-level statistics about the industry (market size, trends, pain points)
+         - Macro-level statistics about the SPECIFIC NICHE (not just "SaaS" or "Tech", but "Social Media Management" or "HR Payroll Software")
          - Written as "Le saviez-vous ?" hooks
          - Credible and specific (not vague claims)
          
@@ -828,11 +843,14 @@ export async function POST(request: Request) {
          - { "fact": "Le marché mondial du CRM atteindra 128Mds$ en 2028", "didYouKnow": "Le saviez-vous ? Le CRM est le logiciel d'entreprise #1 en croissance depuis 5 ans", "source": "Gartner 2024" }
          - { "fact": "67% des commerciaux n'atteignent pas leurs quotas", "didYouKnow": "Le saviez-vous ? 2 commerciaux sur 3 passent plus de temps sur l'admin que sur la vente", "source": "Salesforce State of Sales" }
          
-      9. **CONTENT NUGGETS:** Extract and structure REAL content found on the site.
-         - realStats: Any numbers, percentages, metrics mentioned
-         - testimonials: Client quotes with attribution
-         - achievements: Awards, certifications, recognitions
-         - blogTopics: Headlines/topics from blog or articles section
+      9. **CONTENT VALIDATION (INTELLIGENT AGENT TASK):** 
+         I have provided a raw list of "EXTRACTED CONTENT NUGGETS" above. Your job is to FILTER and CLEAN them.
+         - **realStats**: Keep only legitimate business metrics (users, growth, savings). DISCARD pricing ($19/mo), version numbers, or UI elements.
+         - **testimonials**: Keep only quotes with a SPECIFIC author name or company. DISCARD generic placeholders like "John Doe", "Client Satisfait", or "Lorem Ipsum".
+         - **achievements**: Keep real awards/certifications.
+         
+         If the provided nuggets are garbage, find better ones in the full text content provided.
+         
       10. **BACKGROUNDS:** 'backgroundPrompts' should generate high-quality, versatile backgrounds that match the brand aesthetic, suitable for overlays.
       
       If content is empty, INFER reasonable defaults based on the URL and domain name.
@@ -1112,8 +1130,7 @@ FORMAT: Return ONLY a valid JSON array:
         _pagesScraped: deepCrawlContent.split('--- PAGE:').length - 1
     };
 
-    // Merge: prioritize REAL data (regex), but accept AI data if it looks valid
-    // RELAXED MODE: We allow AI nuggets if they are not duplicates
+    // Helper functions for merging
     const normalize = (str: string) => str.toLowerCase().replace(/[^a-z0-9]/g, '');
     
     const mergeUnique = (real: string[], ai: string[]) => {
@@ -1127,16 +1144,27 @@ FORMAT: Return ONLY a valid JSON array:
                 seen.add(norm);
             }
         }
-        return merged.slice(0, 12); // Limit to 12 items
+        return merged.slice(0, 12);
     };
 
-    const mergeTestimonials = (real: any[], ai: any[]) => {
-        const seen = new Set(real.map((t: any) => normalize(t.quote)));
-        const merged = [...real];
+    // Merge: prioritize AI data (which acted as a filter), and only fallback to regex if AI missed things
+    // OR if AI returned very few items.
+    // The user specifically wants an "Intelligent Agent" to filter the scrap.
+    // So we trust the AI's curation over the raw regex.
+    
+    const mergePrioritizingAI = (regex: string[], ai: string[]) => {
+        // If AI returned a good list (>= 2 items), trust it completely to avoid re-introducing pricing garbage
+        if (ai && ai.length >= 2) {
+            return ai.slice(0, 8);
+        }
+        // Otherwise, mix them but prioritize AI
+        const seen = new Set((ai || []).map(normalize));
+        const merged = [...(ai || [])];
         
-        for (const item of ai || []) {
-            const norm = normalize(item.quote || '');
-            if (norm.length > 20 && !seen.has(norm)) {
+        for (const item of regex || []) {
+            const norm = normalize(item);
+            // Stricter length check for regex fallback
+            if (norm.length > 15 && !seen.has(norm)) {
                 merged.push(item);
                 seen.add(norm);
             }
@@ -1144,9 +1172,30 @@ FORMAT: Return ONLY a valid JSON array:
         return merged.slice(0, 8);
     };
 
+    const mergeTestimonialsPrioritizingAI = (regex: any[], ai: any[]) => {
+        // If AI found verified testimonials, use them
+        if (ai && ai.length >= 1) {
+            return ai.slice(0, 6);
+        }
+        
+        // Fallback to regex but be careful
+        const seen = new Set((ai || []).map((t: any) => normalize(t.quote)));
+        const merged = [...(ai || [])];
+        
+        for (const item of regex || []) {
+            const norm = normalize(item.quote || '');
+            // Only allow regex testimonials that look substantial
+            if (norm.length > 40 && !seen.has(norm)) {
+                merged.push(item);
+                seen.add(norm);
+            }
+        }
+        return merged.slice(0, 6);
+    };
+
     const mergedContentNuggets = {
-        realStats: mergeUnique(realContentNuggets.realStats, brandData.contentNuggets?.realStats),
-        testimonials: mergeTestimonials(realContentNuggets.testimonials, brandData.contentNuggets?.testimonials),
+        realStats: mergePrioritizingAI(realContentNuggets.realStats, brandData.contentNuggets?.realStats),
+        testimonials: mergeTestimonialsPrioritizingAI(realContentNuggets.testimonials, brandData.contentNuggets?.testimonials),
         achievements: mergeUnique(
             realContentNuggets.achievements, 
             brandData.contentNuggets?.achievements
