@@ -12,78 +12,133 @@ const CATEGORIES = [
   { id: 'creative', label: 'Créatif & Bold' },
 ];
 
-// Curated inspiration images (using Unsplash for demo purposes)
-// In a real app, these would be hosted assets optimized for style transfer
+// Curated inspiration images (scraped from Dribbble)
 const INSPIRATIONS = [
   {
-    id: 'min-1',
-    category: 'minimal',
-    url: 'https://images.unsplash.com/photo-1494438639946-1ebd1d20bf85?auto=format&fit=crop&w=600&q=80',
-    title: 'Soft Mineral',
-    desc: 'Tons neutres, lumière douce, composition aérée'
-  },
-  {
-    id: 'min-2',
-    category: 'minimal',
-    url: 'https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&fit=crop&w=600&q=80',
-    title: 'Swiss Clean',
-    desc: 'Grilles strictes, typographie forte, fond uni'
-  },
-  {
-    id: 'tech-1',
-    category: 'tech',
-    url: 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=600&q=80',
-    title: 'Cyber Dark',
-    desc: 'Néons, fonds sombres, gradients futuristes'
-  },
-  {
-    id: 'tech-2',
-    category: 'tech',
-    url: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&w=600&q=80',
-    title: 'Data Flow',
-    desc: 'Abstrait, connectivité, bleu technique'
-  },
-  {
-    id: 'lux-1',
-    category: 'fashion',
-    url: 'https://images.unsplash.com/photo-1542038784456-1ea8e935640e?auto=format&fit=crop&w=600&q=80',
-    title: 'Editorial',
-    desc: 'Grain argentique, flou artistique, haute couture'
-  },
-  {
-    id: 'lux-2',
-    category: 'fashion',
-    url: 'https://images.unsplash.com/photo-1618932260643-2b67265569f3?auto=format&fit=crop&w=600&q=80',
-    title: 'Modern Luxe',
-    desc: 'Épuré, matériaux nobles, serif élégant'
-  },
-  {
-    id: 'corp-1',
-    category: 'corporate',
-    url: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=600&q=80',
-    title: 'Glass Office',
-    desc: 'Professionnel, urbain, bleu confiance'
-  },
-  {
-    id: 'corp-2',
-    category: 'corporate',
-    url: 'https://images.unsplash.com/photo-1600880292203-757bb62b4baf?auto=format&fit=crop&w=600&q=80',
-    title: 'Team Success',
-    desc: 'Collaboration, humain, dynamique'
-  },
-  {
-    id: 'bold-1',
+    id: 'dribbble-fmlqoxkj3',
     category: 'creative',
-    url: 'https://images.unsplash.com/photo-1550684848-fac1c5b4e853?auto=format&fit=crop&w=600&q=80',
-    title: 'Retro Pop',
-    desc: 'Couleurs vives, collage, années 80/90'
+    url: 'https://cdn.dribbble.com/userupload/17346481/file/still-9818a1ac0393843a498db0c7a1def8b0.png?format=webp&resize=400x300&vertical=center',
+    title: 'Swiftmate : Digital Bank',
+    desc: 'Animation, brand design, digital bank graphic design'
   },
   {
-    id: 'bold-2',
+    id: 'dribbble-6k9f618ox',
+    category: 'minimal',
+    url: 'https://cdn.dribbble.com/userupload/15810940/file/original-1cfe42a229beedfd8a9a58c4abbf2ca8.png?format=webp&resize=400x300&vertical=center',
+    title: 'Vegetarian Website Branding',
+    desc: 'Clean colors, whitespace, organic feel'
+  },
+  {
+    id: 'dribbble-i13orgmhv',
     category: 'creative',
-    url: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=600&q=80',
-    title: 'Abstract Art',
-    desc: 'Formes organiques, peintures, textures riches'
+    url: 'https://cdn.dribbble.com/userupload/16834492/file/still-0e52651c763c61f9117c96b43e2b662f.png?format=webp&resize=400x300&vertical=center',
+    title: 'Dash Race : Running',
+    desc: 'Dynamic, motion, sport branding'
+  },
+  {
+    id: 'dribbble-9ntrm0afh',
+    category: 'creative',
+    url: 'https://cdn.dribbble.com/userupload/10973375/file/still-e9d72fd032a747ab2dc2243b5ff0e674.gif?format=webp&resize=400x300&vertical=center',
+    title: '8Luck Casino Brand',
+    desc: 'Bold, entertainment, vibrant colors'
+  },
+  {
+    id: 'dribbble-eiiwx1v7b',
+    category: 'tech',
+    url: 'https://cdn.dribbble.com/userupload/42885398/file/original-fb3c5d455d814b86bbdad2b4193eef3e.png?format=webp&resize=400x300&vertical=center',
+    title: 'Pragmatike – Assets',
+    desc: 'Tech branding, UI elements, clean layout'
+  },
+  {
+    id: 'dribbble-z1s2clj92',
+    category: 'creative',
+    url: 'https://cdn.dribbble.com/userupload/17332935/file/still-b668b251ea84178381fac75f8b51c4c0.png?format=webp&resize=400x300&vertical=center',
+    title: 'ChainGPT — Halloween',
+    desc: 'Thematic, illustration, dark mode'
+  },
+  {
+    id: 'dribbble-833qn8uld',
+    category: 'creative',
+    url: 'https://cdn.dribbble.com/userupload/18067496/file/original-1828a3d1d6f1b15b08ce355f5d79ec28.png?format=webp&resize=400x300&vertical=center',
+    title: 'Visualtap : Resources',
+    desc: 'Design resources, modern, bold typography'
+  },
+  {
+    id: 'dribbble-sidmp06ub',
+    category: 'tech',
+    url: 'https://cdn.dribbble.com/userupload/17663902/file/original-ff8d6bf12ac202d74456a3250616e8e9.png?format=webp&resize=400x300&vertical=center',
+    title: 'Happi Loop : Kids',
+    desc: 'Playful, colorful, rounded shapes'
+  },
+  {
+    id: 'dribbble-fsu2sa5vx',
+    category: 'creative',
+    url: 'https://cdn.dribbble.com/userupload/44933625/file/9141f81b5441e5a4d972968f66859619.png?format=webp&resize=400x300&vertical=center',
+    title: 'Design Exploration',
+    desc: 'Artistic, collage style, textured'
+  },
+  {
+    id: 'dribbble-zmwfib0bd',
+    category: 'creative',
+    url: 'https://cdn.dribbble.com/userupload/18230207/file/original-a2afce4ae7c1ccfbdaf9832f902246e5.jpg?crop=0x0-3201x2401&format=webp&resize=400x300&vertical=center',
+    title: 'Door7 Social Media',
+    desc: 'Modern 3D, isometric, vibrant'
+  },
+  {
+    id: 'dribbble-p2q6siae8',
+    category: 'minimal',
+    url: 'https://cdn.dribbble.com/userupload/16991874/file/original-bea84810e79d5c84e0b0581ceaceb5b3.png?format=webp&resize=400x300&vertical=center',
+    title: 'Architect Studio',
+    desc: 'Architectural, structured, minimal'
+  },
+  {
+    id: 'dribbble-luouoytje',
+    category: 'minimal',
+    url: 'https://cdn.dribbble.com/userupload/43262855/file/original-f73d7cfaf0f70f69e88becc07732c82c.png?format=webp&resize=400x300&vertical=center',
+    title: 'Hubspot Branding',
+    desc: 'SaaS, CRM, orange & white, clean'
+  },
+  {
+    id: 'dribbble-f50fpmeqj',
+    category: 'creative',
+    url: 'https://cdn.dribbble.com/userupload/17885322/file/still-b10232707fae1026f638f67e354dd373.png?format=webp&resize=400x300&vertical=center',
+    title: 'Bloomaroo Visuals',
+    desc: 'Organic, nature-inspired, soft colors'
+  },
+  {
+    id: 'dribbble-1qemm9jut',
+    category: 'creative',
+    url: 'https://cdn.dribbble.com/userupload/42815588/file/original-25d755232381898fd90118e4e6bf6ff7.png?format=webp&resize=400x300&vertical=center',
+    title: 'Travel Banner',
+    desc: 'Travel, photographic, adventurous'
+  },
+  {
+    id: 'dribbble-rw533w3z6',
+    category: 'creative',
+    url: 'https://cdn.dribbble.com/userupload/17444644/file/original-74d3a4d6cc9ad6b601d4be550b618dba.png?format=webp&resize=400x300&vertical=center',
+    title: 'Genova Supplements',
+    desc: 'Health, clean, product focus'
+  },
+  {
+    id: 'dribbble-hw9d2p255',
+    category: 'minimal',
+    url: 'https://cdn.dribbble.com/userupload/36163232/file/original-1c23ee62b7599ab688fa6903c26cbf58.png?format=webp&resize=400x300&vertical=center',
+    title: 'Sandow AI Fitness',
+    desc: 'Fitness app, dark mode, data viz'
+  },
+  {
+    id: 'dribbble-4clg14yi4',
+    category: 'tech',
+    url: 'https://cdn.dribbble.com/userupload/5204851/file/original-c27484a0c8f2842417482dafb0cef251.png?format=webp&resize=400x300&vertical=center',
+    title: 'Voltaire Booster',
+    desc: 'SaaS dashboard, analytics, blue'
+  },
+  {
+    id: 'dribbble-h2pbjr3h4',
+    category: 'creative',
+    url: 'https://cdn.dribbble.com/userupload/16874310/file/still-cb5abe8b197cb12b6a9e54b06b8447bf.png?format=webp&resize=400x300&vertical=center',
+    title: 'Infinity Production',
+    desc: 'Video production, kinetic typography'
   }
 ];
 
