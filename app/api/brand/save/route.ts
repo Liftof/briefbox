@@ -43,7 +43,10 @@ export async function POST(request: Request) {
       // Save V2 extracted content
       contentNuggets: brand.contentNuggets,
       industryInsights: brand.industryInsights,
-      suggestedPosts: brand.suggestedPosts,
+      suggestedPosts: brand.suggestedPosts || [], // Ensure array if undefined
+      
+      // New Editorial Angles (V2 Smart Agency)
+      editorialAngles: brand.editorialAngles || [], // Save new angles structure
 
       labeledImages: brand.labeledImages,
       backgrounds: brand.backgrounds || [] 
