@@ -244,99 +244,52 @@ function discoverInternalPages(baseUrl: string, markdown: string): string[] {
 }
 
 // Helper: Extract content nuggets (stats, quotes, facts) from text
-function extractContentNuggets(text: string): ContentNugget[] {
-  const nuggets: ContentNugget[] = [];
-  
-  // Extract statistics (numbers with context)
-  const statPatterns = [
-    /(\d+(?:[,\.]\d+)?(?:\s*[%xX×]|\s*(?:millions?|milliards?|K\+?|M\+?)))\s+([^.!?\n]{10,80})/gi,
-    /([+\-]?\d+(?:[,\.]\d+)?%)\s*(?:de\s+)?([^.!?\n]{10,60})/gi,
-    /(\d+(?:\s*\d+)*)\s+(clients?|users?|utilisateurs?|entreprises?|projets?|années?)/gi
-  ];
-  
-  // patterns to exclude (pricing, dates, common UI noise)
-  const excludePatterns = [
-    /€|\$|£|eur|usd/i, // Currency often implies pricing
-    /\/\s*(mois|month|an|year|user|utilisateur)/i, // Pricing intervals
-    /copyright|all rights reserved/i,
-    /jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec/i, // Dates
-    /version\s+\d/i,
-    /step\s+\d/i
-  ];
+// REFACTORED: Now using LLM primarily, removing Regex reliance
+async function extractContentNuggets(text: string, brandName: string): Promise<ContentNugget[]> {
+  const prompt = `
+    You are an expert Content Miner. Your goal is to extract specific, high-value "nuggets" from this raw website content for a brand called "${brandName}".
+    
+    Raw Content:
+    ${text.substring(0, 15000)}
 
-  for (const pattern of statPatterns) {
-    let match;
-    while ((match = pattern.exec(text)) !== null) {
-      const stat = match[1];
-      const context = match[2] || match[0];
-      const fullString = `${stat} ${context}`.toLowerCase();
-      
-      // Skip if matches exclusion patterns
-      if (excludePatterns.some(p => p.test(fullString))) continue;
+    TASK: Extract 4 types of content.
+    1. STATS: Actual numbers with context (e.g. "10k+ users", "50% faster"). IGNORE pricing ($19/mo) or dates (2024).
+    2. TESTIMONIALS: Real quotes from clients. Must have a name or company.
+    3. ACHIEVEMENTS: Awards, certifications, press mentions.
+    4. FOUNDER/STORY: Interesting facts about the origin or team.
 
-      if (stat && context && context.length > 5) {
-        nuggets.push({
-          type: 'stat',
-          content: `${stat} ${context}`.trim(),
-          context: context.trim()
-        });
-      }
-    }
+    OUTPUT FORMAT (JSON ONLY):
+    [
+      { "type": "stat", "content": "10,000+ happy customers", "source": "Homepage" },
+      { "type": "testimonial", "content": "Best tool ever", "source": "John Doe, CEO", "context": "TechCorp" }
+    ]
+    
+    RULES:
+    - If no real testimonials, return empty array for that type. DO NOT INVENT.
+    - Be strict: "50% off" is a promo, not a stat. Ignore it.
+  `;
+
+  try {
+    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        method: "POST",
+        headers: {
+            "Authorization": `Bearer ${process.env.OPENROUTER_API_KEY}`,
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            "model": "openai/gpt-4o-mini", // Fast & smart enough for extraction
+            "messages": [{"role": "user", "content": prompt}]
+        })
+    });
+
+    if (!response.ok) return [];
+    const data = await response.json();
+    const json = data.choices[0].message.content.replace(/```json\n?/g, '').replace(/```/g, '').trim();
+    return JSON.parse(json);
+  } catch (e) {
+    console.error('Content Extraction Error:', e);
+    return [];
   }
-  
-  // Extract testimonials/quotes
-  const quotePatterns = [
-    /"([^"]{30,200})"\s*[-–—]\s*([^,\n]+)/g,
-    /«([^»]{30,200})»\s*[-–—]\s*([^,\n]+)/g,
-    /"([^"]{30,200})"\s*[-–—]\s*([^,\n]+)/g
-  ];
-  
-  for (const pattern of quotePatterns) {
-    let match;
-    while ((match = pattern.exec(text)) !== null) {
-      nuggets.push({
-        type: 'testimonial',
-        content: match[1].trim(),
-        source: match[2]?.trim()
-      });
-    }
-  }
-  
-  // Extract achievements/certifications
-  const achievementPatterns = [
-    /(certifi[ée]|labelli[ée]|récompens[ée]|award|prix|distinction|best of|top \d+)/gi
-  ];
-  
-  for (const pattern of achievementPatterns) {
-    let match;
-    while ((match = pattern.exec(text)) !== null) {
-      // Get surrounding context (50 chars before and after)
-      const start = Math.max(0, match.index - 50);
-      const end = Math.min(text.length, match.index + match[0].length + 50);
-      const context = text.slice(start, end).replace(/\n/g, ' ').trim();
-      
-      if (context.length > 20) {
-        nuggets.push({
-          type: 'achievement',
-          content: context
-        });
-      }
-    }
-  }
-  
-  // Remove duplicates and limit
-  const uniqueNuggets: ContentNugget[] = [];
-  const seen = new Set<string>();
-  
-  for (const nugget of nuggets) {
-    const key = nugget.content.toLowerCase().slice(0, 50);
-    if (!seen.has(key)) {
-      seen.add(key);
-      uniqueNuggets.push(nugget);
-    }
-  }
-  
-  return uniqueNuggets.slice(0, 15);
 }
 
 // Helper: Merge AI colors with extracted colors, prioritizing extracted
@@ -546,8 +499,7 @@ export async function POST(request: Request) {
     };
     
     // Extract nuggets and images from main page first
-    contentNuggets = extractContentNuggets(firecrawlMarkdown + '\n' + parallelContent);
-    console.log(`📊 Found ${contentNuggets.length} content nuggets from main page`);
+    // contentNuggets = extractContentNuggets(firecrawlMarkdown + '\n' + parallelContent); // OLD REGEX WAY
     
     // 🚀 NEW STRATEGY: MAP & SELECT (Holistic Crawling)
     // Instead of blindly crawling links, we MAP the site to find the high-value pages.
@@ -639,26 +591,24 @@ export async function POST(request: Request) {
             
             deepCrawlImages.push(...pageImages);
             
-            // Extract Nuggets
-            const pageNuggets = extractContentNuggets(result.content);
-            contentNuggets = [...contentNuggets, ...pageNuggets];
+            // Extract Nuggets (USING LLM NOW) - Done later in batch or incrementally? 
+            // Let's do it later on the aggregated content to save tokens/requests, 
+            // or simpler: Just aggregate text.
             
-            console.log(`   📄 ${result.url}: ${pageNuggets.length} nuggets, ${pageImages.length} images`);
+            console.log(`   📄 ${result.url}: ${pageImages.length} images found`);
         }
 
     } catch (e) {
         console.warn('Deep crawl error:', e);
     }
     
-    // Deduplicate nuggets
-    const uniqueNuggetMap = new Map<string, ContentNugget>();
-    for (const nugget of contentNuggets) {
-        const key = nugget.content.toLowerCase().slice(0, 40);
-        if (!uniqueNuggetMap.has(key)) {
-            uniqueNuggetMap.set(key, nugget);
-        }
-    }
-    contentNuggets = Array.from(uniqueNuggetMap.values()).slice(0, 40); // Increased from 30 to 40
+    // 1.6. BATCH EXTRACTION OF NUGGETS (Intelligent Agent)
+    // Use the aggregated content from Deep Crawl + Main Page
+    const fullBrandText = firecrawlMarkdown + '\n' + parallelContent + '\n' + deepCrawlContent;
+    const brandNameForExtraction = firecrawlMetadata.title || 'the brand';
+    console.log('⛏️ Mining content nuggets with AI...');
+    contentNuggets = await extractContentNuggets(fullBrandText, brandNameForExtraction);
+    console.log(`💎 AI extracted ${contentNuggets.length} verified nuggets`);
 
     // ══════════════════════════════════════════════════════════════════════════════
     // COMPREHENSIVE IMAGE COLLECTION - Main page + Deep crawl + Metadata
@@ -750,15 +700,12 @@ export async function POST(request: Request) {
         "logo": "URL to the MAIN brand logo (prioritize clear, high-res, distinct from client logos)",
         "industry": "Specific industry (e.g. 'SaaS Fintech', 'Organic Skincare', 'Industrial Manufacturing')",
         "visualMotifs": ["Motif 1 (e.g. 'Data charts')", "Motif 2 (e.g. 'Abstract networks')", "Motif 3"],
-        "suggestedPosts": [
+        "editorialAngles": [
            {
-             "templateId": "stat | announcement | event | quote | expert | product | didyouknow",
-             "headline": "Le texte principal du post",
-             "subheadline": "Texte secondaire optionnel",
-             "metric": "Pour stat: le chiffre clé (ex: '87%', '10K+')",
-             "metricLabel": "Pour stat: le contexte du chiffre",
-             "source": "real_data | industry_insight | generated",
-             "intent": "Pourquoi ce post est pertinent pour cette marque (1 phrase)"
+             "type": "product_focus | infographic | pain_point | founder_story | event | social_proof | news_jack",
+             "title": "Catchy Title for this angle",
+             "content": "The core message or data point to visualize.",
+             "visual_idea": "Description of how it should look (e.g. 'Split screen with problem/solution', 'Timeline of growth')."
            }
         ],
         "industryInsights": [
@@ -808,37 +755,15 @@ export async function POST(request: Request) {
          
          ⚠️ CRITICAL: A microphone is ALWAYS 'product', NEVER 'person'. An object with a round top and a stand is NOT a person. Apply strict visual criteria.
       6. **MAPPING:** 'analyzedImages' must map the URLs from the 'DETECTED IMAGES' list provided above.
-      7. **SUGGESTED POSTS (CRITICAL - 6-8 suggestions):** Generate smart, contextual post ideas.
+      7. **EDITORIAL ANGLES (THE CREATIVE STRATEGY):** 
+         Instead of generic post templates, analyze the content to find **unique angles** for this brand.
+         - **Product Focus:** Deep dive into a specific feature found in the text.
+         - **Infographic:** If there's complex data or a "How it works" section, propose an infographic.
+         - **Founder Story:** If there is an "About Us" with history, use it.
+         - **Pain Point:** Identify a major customer problem mentioned and propose a solution post.
+         - **Social Proof:** If there are logos or big numbers, propose a "Trusted by" visual.
          
-         AVAILABLE TEMPLATE IDS:
-         - "stat": Big metric post (+47%, 10K+, 3x). REQUIRES: metric + metricLabel
-         - "announcement": News/launch post. REQUIRES: headline + subheadline
-         - "quote": Testimonial post. REQUIRES: headline (the quote text)
-         - "event": Webinar/event post. REQUIRES: headline (event name)
-         - "expert": Feature a speaker/expert. REQUIRES: headline + subheadline
-         - "product": Product showcase. REQUIRES: headline + subheadline
-         - "didyouknow": Industry insight/educational post. REQUIRES: headline (the fact) + subheadline (so what?)
-         
-         POST SOURCES (in priority order):
-         1. REAL DATA (source: "real_data"): Use stats, quotes, achievements from EXTRACTED CONTENT NUGGETS
-         2. INDUSTRY INSIGHTS (source: "industry_insight"): Use facts from industryInsights for "didyouknow" posts
-         3. GENERATED (source: "generated"): Only if no real data, create plausible specific content
-         
-         USER-CENTRIC RULES (MANDATORY):
-         - **STOP THE SCROLL:** Every headline must be a "hook". Avoid generic titles like "Nos services". Use "Comment doubler vos ventes" instead.
-         - **PAIN POINTS FIRST:** Address a specific user problem or desire. "Tired of manual data entry?" is better than "We offer automation".
-         - **BENEFIT ORIENTED:** Focus on what the user GETS, not just what the brand HAS.
-         
-         EXAMPLES WITH INTENT:
-         - { "templateId": "stat", "metric": "10K+", "metricLabel": "utilisateurs actifs", "source": "real_data", "intent": "Social Proof: Show mass adoption to build trust" }
-         - { "templateId": "didyouknow", "headline": "85% des équipes perdent 2h/jour", "subheadline": "Arrêtez de perdre du temps sur l'admin", "source": "industry_insight", "intent": "Agitate Pain: Highlight the problem (lost time) to introduce the solution" }
-         - { "templateId": "quote", "headline": "On a réduit nos coûts de 40%", "subheadline": "— Sophie, CEO", "source": "real_data", "intent": "Result-Driven: Show concrete ROI to attract decision makers" }
-         
-         RULES:
-         - PRIORITIZE real data from verified content nuggets
-         - Include at least 2 "didyouknow" posts with industry macro insights
-         - Each post MUST have an "intent" explaining WHY this post is strategic for the END USER
-         - Be SPECIFIC: not "amélioration" but "+47% en 3 mois"
+         Generate 4-6 DISTINCT angles.
          
       8. **INDUSTRY INSIGHTS (CRITICAL):** Generate 3-4 relevant industry facts/stats.
          
@@ -853,9 +778,14 @@ export async function POST(request: Request) {
          
       9. **CONTENT VALIDATION (INTELLIGENT AGENT TASK):** 
          I have provided a raw list of "EXTRACTED CONTENT NUGGETS" above. Your job is to FILTER and CLEAN them.
-         - **realStats**: Keep only legitimate business metrics (users, growth, savings). DISCARD pricing ($19/mo), version numbers, or UI elements.
+         - **realStats**: Keep only legitimate business metrics (users, growth, savings). DISCARD pricing ($19/mo, 249€), discounts (-50%), version numbers, or UI elements.
          - **testimonials**: Keep only quotes with a SPECIFIC author name or company. DISCARD generic placeholders like "John Doe", "Client Satisfait", or "Lorem Ipsum".
-         - **achievements**: Keep real awards/certifications.
+         - **achievements**: Keep real awards/certifications. DISCARD pricing tables or feature lists.
+         
+         **HALLUCINATION CHECK (CRITICAL):**
+         - DO NOT invent testimonials. If you see a client logo (e.g. LVMH), DO NOT assume they said "Great product". Only extract quotes that are EXPLICITLY written in the text.
+         - If no testimonials are found in the text, return an empty array. Better to have nothing than a lie.
+         - Verify every stat against the source text.
          
          IMPORTANT: The "EXTRACTED CONTENT NUGGETS" list provided above is just a starting point. 
          You MUST also scan the full text content (SOURCE 2, SOURCE 3, SOURCE 4) to find other nuggets that the regex might have missed.
@@ -1115,27 +1045,46 @@ FORMAT: Return ONLY a valid JSON array:
     // INJECT REAL EXTRACTED DATA - Don't trust AI to fill contentNuggets properly
     // ═══════════════════════════════════════════════════════════════════════════
     
+    // Helper to truncate strings that are too long (e.g. pricing tables)
+    const cleanAndTruncate = (str: string, maxLength = 150) => {
+        if (!str) return '';
+        let clean = str.trim();
+        // Check for pricing spam indicators
+        if (clean.match(/(\d+€|\/mois|inclus|illimité)/i) && clean.length > 50) {
+            // It's likely a pricing table row, discard or truncate heavily
+            return ''; 
+        }
+        if (clean.length > maxLength) {
+            return clean.substring(0, maxLength) + '...';
+        }
+        return clean;
+    };
+
     // Build REAL contentNuggets from our extraction (not AI-generated)
     const realContentNuggets = {
         realStats: contentNuggets
             .filter(n => n.type === 'stat')
-            .map(n => n.content)
+            .map(n => cleanAndTruncate(n.content))
+            .filter(s => s.length > 5 && s.length < 150) // Filter out empty or huge strings
             .slice(0, 8),
         testimonials: contentNuggets
             .filter(n => n.type === 'testimonial')
             .map(n => ({
-                quote: n.content,
-                author: n.source || 'Client',
-                company: n.context || ''
+                quote: cleanAndTruncate(n.content, 250),
+                author: cleanAndTruncate(n.source || 'Client', 50),
+                company: cleanAndTruncate(n.context || '', 50)
             }))
+            .filter(t => t.quote.length > 10)
             .slice(0, 5),
         achievements: contentNuggets
             .filter(n => n.type === 'achievement')
-            .map(n => n.content)
+            .map(n => cleanAndTruncate(n.content))
+            .filter(s => s.length > 5)
             .slice(0, 5),
         blogTopics: contentNuggets
             .filter(n => n.type === 'blog_topic')
-            .map(n => n.content)
+            .map(n => cleanAndTruncate(n.content))
+            .filter(s => s.length > 5)
             .slice(0, 5),
         // Keep track of extraction metadata
         _extractedCount: contentNuggets.length,
