@@ -266,7 +266,8 @@ async function extractContentNuggets(text: string, brandName: string): Promise<C
     
     RULES:
     - If no real testimonials, return empty array for that type. DO NOT INVENT.
-    - Be strict: "50% off" is a promo, not a stat. Ignore it.
+    - Be strict: "50% off", "promo", "réduction" are PROMOS, not stats. Ignore them.
+    - TONE ANALYSIS: Also extract the "toneOfVoice" (e.g. "Professional", "Playful") and "style" (e.g. "Minimal", "Bold").
   `;
 
   try {
@@ -693,6 +694,13 @@ export async function POST(request: Request) {
         "features": ["Specific Feature 1", "Specific Feature 2", "Specific Feature 3", "Specific Feature 4"],
         "painPoints": ["Customer Pain Point 1", "Pain Point 2", "Pain Point 3"],
         "vocabulary": ["Specific Term 1", "Specific Term 2", "Brand Keyword 1", "Brand Keyword 2"],
+        "toneOfVoiceDetails": {
+            "formality": "Tu (Informal) | Vous (Formal)",
+            "emojiUsage": "None | Moderate | High",
+            "sentenceLength": "Short/Punchy | Long/Detailed",
+            "bannedWords": ["Word1", "Word2"],
+            "preferredPhrasing": "Example of how they speak"
+        },
         "services": ["Service 1", "Service 2", "Service 3"],
         "keyPoints": ["Unique Selling Point 1", "USP 2", "USP 3"],
         "aesthetic": ["Adjective 1", "Adjective 2", "Adjective 3"],
@@ -737,7 +745,11 @@ export async function POST(request: Request) {
       
       IMPORTANT ANALYSIS RULES:
       1. **MAIN LOGO:** Identify the brand's OWN logo. Do NOT mistake 'Client' or 'Partner' logos for the main brand logo. Look for the logo usually found in the navbar or footer top.
-      2. **VOCABULARY & PAIN POINTS (NEW):**
+      2. **TONE OF VOICE (CRITICAL):**
+         - Analyze the text carefully to determine if they use "Tu" or "Vous".
+         - Check for emojis.
+         - Identify words they NEVER use (e.g. "cheap", "low cost" for a luxury brand).
+      3. **VOCABULARY & PAIN POINTS (NEW):**
          - 'vocabulary': Extract specific terms the brand uses. E.g. instead of "software", do they say "Platform", "OS", "Hub"? Extract 4-5 distinct terms.
          - 'painPoints': What problems do they solve? Extract 3-4 specific customer struggles (e.g. "Manual data entry", "Security compliance costs").
       3. **TARGET AUDIENCE & UVP (CRITICAL):**
