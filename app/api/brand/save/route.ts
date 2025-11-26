@@ -46,7 +46,9 @@ export async function POST(request: Request) {
       suggestedPosts: brand.suggestedPosts || [], // Ensure array if undefined
       
       // New Editorial Angles (V2 Smart Agency)
-      editorialAngles: brand.editorialAngles || [], // Save new angles structure
+      editorialAngles: brand.editorialAngles || [], 
+      painPoints: brand.painPoints || [],
+      vocabulary: brand.vocabulary || [],
 
       labeledImages: brand.labeledImages,
       backgrounds: brand.backgrounds || [] 
