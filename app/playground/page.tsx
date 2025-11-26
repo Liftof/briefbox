@@ -165,6 +165,7 @@ function PlaygroundContent() {
   const brandId = searchParams.get('brandId');
 
   const [showStyleGallery, setShowStyleGallery] = useState(false); // NEW
+  const [step, setStep] = useState<Step>('url');
   const [activeTab, setActiveTab] = useState('create');
   const [websiteUrl, setWebsiteUrl] = useState('');
   const [statusMessage, setStatusMessage] = useState('Nous analysons votre identité...');
