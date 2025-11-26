@@ -284,8 +284,12 @@ function PlaygroundContent() {
     const selection = Array.from(new Set([...prioritized, ...fallback].filter(Boolean)));
     setUploadedImages(selection.slice(0, 6));
 
-    // New: Use suggestedPosts (template-based) if available
-    if (brand.suggestedPosts?.length && !brief) {
+    // New: Use editorialAngles if available (Smart Agency Workflow)
+    if (brand.editorialAngles?.length > 0 && !brief) {
+        // Don't auto-set brief, let user choose from strategy view
+    }
+    // Fallback: Use suggestedPosts (template-based)
+    else if (brand.suggestedPosts?.length && !brief) {
       const firstPost = brand.suggestedPosts[0];
       if (firstPost) {
         // Set template and brief

@@ -111,12 +111,14 @@ export default function StrategyView({ brandData, onUseIdea, onOpenGallery }: St
                 </div>
               </div>
               <div className="flex items-center gap-3">
-                <button 
-                  onClick={onOpenGallery}
-                  className="whitespace-nowrap px-4 py-2 bg-white/10 text-white text-xs font-bold uppercase tracking-widest hover:bg-white/20 transition-all flex items-center gap-2 border border-white/10 rounded-lg backdrop-blur-md"
-                >
-                  ✨ Galerie
-                </button>
+                {onOpenGallery && (
+                  <button 
+                    onClick={onOpenGallery}
+                    className="whitespace-nowrap px-4 py-2 bg-white/10 text-white text-xs font-bold uppercase tracking-widest hover:bg-white/20 transition-all flex items-center gap-2 border border-white/10 rounded-lg backdrop-blur-md"
+                  >
+                    ✨ Galerie
+                  </button>
+                )}
                 <button 
                   onClick={() => document.getElementById('style-upload')?.click()}
                   className="group whitespace-nowrap px-4 py-2 bg-white text-gray-900 text-xs font-bold uppercase tracking-widest hover:bg-gray-100 transition-all flex items-center gap-2 rounded-lg shadow-lg shadow-black/20"
@@ -132,7 +134,15 @@ export default function StrategyView({ brandData, onUseIdea, onOpenGallery }: St
                 className="hidden" 
                 onChange={(e) => {
                   if (e.target.files?.[0]) {
-                    console.log("Style reference uploaded:", e.target.files[0]);
+                    const reader = new FileReader();
+                    reader.onload = (ev) => {
+                        if (typeof ev.target?.result === 'string') {
+                            // Trigger event to add this to style refs in parent
+                            const event = new CustomEvent('add-style-ref', { detail: ev.target.result });
+                            window.dispatchEvent(event);
+                        }
+                    };
+                    reader.readAsDataURL(e.target.files[0]);
                   }
                 }}
               />
