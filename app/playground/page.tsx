@@ -242,7 +242,7 @@ function PlaygroundContent() {
     };
     window.addEventListener('use-angle', handleUseAngle as EventListener);
     return () => window.removeEventListener('use-angle', handleUseAngle as EventListener);
-  }, [showToast]);
+  }, [showToast, setStep, setActiveTab]); // Add missing dependencies
 
   // Listen for "use-template" events from BentoGrid (new template system)
   useEffect(() => {
@@ -265,7 +265,7 @@ function PlaygroundContent() {
     };
     window.addEventListener('use-template', handleUseTemplate as EventListener);
     return () => window.removeEventListener('use-template', handleUseTemplate as EventListener);
-  }, [showToast]);
+  }, [showToast, setStep, setActiveTab]); // Add missing dependencies
 
   // generateBackgroundsForBrand removed - textures disabled for cost optimization
 
