@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { db } from '@/db';
 import { brands } from '@/db/schema';
+import { eq, and } from 'drizzle-orm';
 
 export async function POST(request: Request) {
   try {
@@ -18,8 +19,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Invalid brand data' }, { status: 400 });
     }
 
-    // Insert into DB
-    const result = await db.insert(brands).values({
+    // Common data object
+    const brandData = {
       userId: userId,
       name: brand.name,
       url: brand.url || '',
@@ -45,9 +46,32 @@ export async function POST(request: Request) {
       suggestedPosts: brand.suggestedPosts,
 
       labeledImages: brand.labeledImages,
-      // Store extracted backgrounds in the 'backgrounds' column
       backgrounds: brand.backgrounds || [] 
-    }).returning({ id: brands.id });
+    };
+
+    let result;
+    
+    // UPDATE if ID exists and belongs to user
+    if (brand.id) {
+      // Verify ownership first
+      const existing = await db.query.brands.findFirst({
+        where: and(eq(brands.id, brand.id), eq(brands.userId, userId))
+      });
+
+      if (existing) {
+        result = await db.update(brands)
+          .set({ ...brandData, updatedAt: new Date() })
+          .where(eq(brands.id, brand.id))
+          .returning({ id: brands.id });
+      } else {
+        // If ID provided but not found/owned, fall back to create (or could error)
+        // For safety in this MVP, we create new to avoid data loss
+        result = await db.insert(brands).values(brandData).returning({ id: brands.id });
+      }
+    } else {
+      // CREATE
+      result = await db.insert(brands).values(brandData).returning({ id: brands.id });
+    }
 
     return NextResponse.json({ success: true, brandId: result[0].id });
 
