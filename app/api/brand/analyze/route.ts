@@ -685,6 +685,9 @@ export async function POST(request: Request) {
     console.log(`   - From main page: ${extractImagesFromMarkdown(firecrawlMarkdown).length}`);
     console.log(`   - From deep crawl: ${deepCrawlImages.length}`);
     console.log(`   - From metadata: 5 (og, icon, logo, screenshot, image)`);
+    
+    // Log all collected images for debugging
+    console.log(`📝 Full Image List (${uniqueImages.length}):`, uniqueImages);
 
     // 2. Analyze with OpenRouter (Grok or other)
     console.log('🤖 Analyzing with OpenRouter...');
@@ -853,6 +856,10 @@ export async function POST(request: Request) {
          - **realStats**: Keep only legitimate business metrics (users, growth, savings). DISCARD pricing ($19/mo), version numbers, or UI elements.
          - **testimonials**: Keep only quotes with a SPECIFIC author name or company. DISCARD generic placeholders like "John Doe", "Client Satisfait", or "Lorem Ipsum".
          - **achievements**: Keep real awards/certifications.
+         
+         IMPORTANT: The "EXTRACTED CONTENT NUGGETS" list provided above is just a starting point. 
+         You MUST also scan the full text content (SOURCE 2, SOURCE 3, SOURCE 4) to find other nuggets that the regex might have missed.
+         If you find a great testimonial or stat in the text that isn't in the nuggets list, ADD IT.
          
          If the provided nuggets are garbage, find better ones in the full text content provided.
          
