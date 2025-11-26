@@ -1565,6 +1565,49 @@ ${enhancement}`);
             
             {/* Brand Assets */}
             <div className="flex-1 flex flex-col gap-6">
+              {/* 2. BRAND ASSETS ZONE */}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">Assets de marque</label>
+                  <span className="text-[10px] text-gray-400">{uploadedImages.length}</span>
+                </div>
+                
+                {uploadedImages.length > 0 ? (
+                  <div className="grid grid-cols-4 gap-2 mb-3">
+                    {uploadedImages.slice(0, 8).map((img, i) => (
+                      <div key={i} className="relative aspect-square group rounded-md overflow-hidden border border-gray-100">
+                        <img src={img} className="w-full h-full object-cover" />
+                        <button
+                          onClick={() => handleRemoveImage(i)}
+                          className="absolute top-0.5 right-0.5 w-4 h-4 bg-black/50 text-white rounded-full flex items-center justify-center text-[10px] opacity-0 group-hover:opacity-100 transition-all hover:bg-red-500"
+                        >×</button>
+                  </div>
+                ))}
+                    {uploadedImages.length > 8 && (
+                      <div className="aspect-square bg-gray-50 rounded-md flex items-center justify-center text-[10px] text-gray-400 font-medium border border-gray-100">
+                        +{uploadedImages.length - 8}
+                  </div>
+                )}
+              </div>
+                ) : (
+                  <div className="bg-gray-50 border border-dashed border-gray-200 p-4 text-center rounded-lg mb-3">
+                    <span className="text-xs text-gray-400">Aucun asset (logo, produit...)</span>
+                  </div>
+                )}
+
+                <button
+                  onClick={() => setShowSourceManager(true)}
+                  className="w-full py-2 text-xs text-gray-600 border border-gray-200 rounded-md hover:border-gray-400 hover:text-gray-900 transition-colors flex items-center justify-center gap-2 bg-white"
+                >
+                  <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path d="M12 4v16m8-8H4" />
+                </svg>
+                  Gérer les assets
+                </button>
+                <input ref={fileInputRef} type="file" multiple accept="image/*" className="hidden" onChange={handleImageUpload} />
+              </div>
+            </div>
+          </div>
 
           {/* Generate Button */}
           <div className="p-5 bg-gray-50 border-t border-gray-100">
