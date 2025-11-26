@@ -578,6 +578,116 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
           </div>
         </div>
 
+        {/* ═══════════════════════════════════════════════════════════════════════════
+            SECTION 2: DONNÉES & INSIGHTS (NEW)
+            ═══════════════════════════════════════════════════════════════════════════ */}
+        <section className="mt-6 mb-6">
+          <div className="flex items-center gap-3 mb-4">
+            <span className="w-2 h-2 bg-blue-500 rounded-full" />
+            <h3 className="text-lg font-semibold text-gray-900">Données & Insights</h3>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {/* Chiffres clés */}
+            <div className="bg-white border border-gray-200 p-4">
+               <div className="flex items-center justify-between mb-3">
+                 <span className="text-[10px] font-mono uppercase tracking-widest text-gray-400">Chiffres clés</span>
+                 <span className="bg-emerald-100 text-emerald-700 text-[9px] px-1.5 py-0.5 font-bold rounded">
+                   {localData.contentNuggets?.realStats?.length || 0}
+                 </span>
+               </div>
+               <div className="space-y-2 max-h-60 overflow-y-auto pr-1 custom-scrollbar">
+                 {localData.contentNuggets?.realStats?.length > 0 ? (
+                   localData.contentNuggets.realStats.map((stat: string, i: number) => (
+                     <div key={i} className="group relative p-2 bg-gray-50 hover:bg-emerald-50 border border-transparent hover:border-emerald-100 transition-all rounded">
+                       <p className="text-xs text-gray-700 leading-relaxed">{stat}</p>
+                       <button 
+                         onClick={() => {
+                            const newStats = [...localData.contentNuggets.realStats];
+                            newStats.splice(i, 1);
+                            const newNuggets = { ...localData.contentNuggets, realStats: newStats };
+                            handleChange('contentNuggets', newNuggets);
+                         }}
+                         className="absolute top-1 right-1 text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                       >
+                         <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeWidth="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                       </button>
+                     </div>
+                   ))
+                 ) : (
+                   <div className="text-center py-8 text-gray-300 text-xs">Aucun chiffre trouvé</div>
+                 )}
+               </div>
+            </div>
+
+            {/* Témoignages */}
+            <div className="bg-white border border-gray-200 p-4">
+               <div className="flex items-center justify-between mb-3">
+                 <span className="text-[10px] font-mono uppercase tracking-widest text-gray-400">Témoignages</span>
+                 <span className="bg-purple-100 text-purple-700 text-[9px] px-1.5 py-0.5 font-bold rounded">
+                   {localData.contentNuggets?.testimonials?.length || 0}
+                 </span>
+               </div>
+               <div className="space-y-2 max-h-60 overflow-y-auto pr-1 custom-scrollbar">
+                 {localData.contentNuggets?.testimonials?.length > 0 ? (
+                   localData.contentNuggets.testimonials.map((t: any, i: number) => (
+                     <div key={i} className="group relative p-2 bg-gray-50 hover:bg-purple-50 border border-transparent hover:border-purple-100 transition-all rounded">
+                       <p className="text-xs text-gray-600 italic mb-1">"{t.quote?.slice(0, 80)}{t.quote?.length > 80 ? '...' : ''}"</p>
+                       <p className="text-[10px] text-gray-900 font-medium">— {t.author || 'Anonyme'} {t.company ? `(${t.company})` : ''}</p>
+                       <button 
+                         onClick={() => {
+                            const newTestimonials = [...localData.contentNuggets.testimonials];
+                            newTestimonials.splice(i, 1);
+                            const newNuggets = { ...localData.contentNuggets, testimonials: newTestimonials };
+                            handleChange('contentNuggets', newNuggets);
+                         }}
+                         className="absolute top-1 right-1 text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                       >
+                         <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeWidth="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                       </button>
+                     </div>
+                   ))
+                 ) : (
+                   <div className="text-center py-8 text-gray-300 text-xs">Aucun témoignage trouvé</div>
+                 )}
+               </div>
+            </div>
+
+            {/* Industry Insights */}
+            <div className="bg-white border border-gray-200 p-4">
+               <div className="flex items-center justify-between mb-3">
+                 <span className="text-[10px] font-mono uppercase tracking-widest text-gray-400">Infos Marché</span>
+                 <span className="bg-amber-100 text-amber-700 text-[9px] px-1.5 py-0.5 font-bold rounded">
+                   {localData.industryInsights?.length || 0}
+                 </span>
+               </div>
+               <div className="space-y-2 max-h-60 overflow-y-auto pr-1 custom-scrollbar">
+                 {localData.industryInsights?.length > 0 ? (
+                   localData.industryInsights.map((insight: any, i: number) => (
+                     <div key={i} className="group relative p-2 bg-gray-50 hover:bg-amber-50 border border-transparent hover:border-amber-100 transition-all rounded">
+                       <p className="text-xs text-gray-800 font-medium mb-1">{insight.fact}</p>
+                       <p className="text-[10px] text-gray-500 leading-tight">{insight.didYouKnow}</p>
+                       {insight.source && <p className="text-[9px] text-amber-600 mt-1">Src: {insight.source}</p>}
+                       <button 
+                         onClick={() => {
+                            const newInsights = [...localData.industryInsights];
+                            newInsights.splice(i, 1);
+                            handleChange('industryInsights', newInsights);
+                         }}
+                         className="absolute top-1 right-1 text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                       >
+                         <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeWidth="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                       </button>
+                     </div>
+                   ))
+                 ) : (
+                   <div className="text-center py-8 text-gray-300 text-xs">Aucune info marché</div>
+                 )}
+               </div>
+            </div>
+          </div>
+        </section>
+
         {/* Asset Library - Expanded with grid view */}
         <div className="mt-4 bg-white border border-gray-200 p-4">
           <div className="flex items-center justify-between mb-3">

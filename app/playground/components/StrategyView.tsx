@@ -14,9 +14,10 @@ const TEMPLATES = [
 interface StrategyViewProps {
   brandData: any;
   onUseIdea: (templateId: TemplateId, brief: string) => void;
+  onOpenGallery?: () => void;
 }
 
-export default function StrategyView({ brandData, onUseIdea }: StrategyViewProps) {
+export default function StrategyView({ brandData, onUseIdea, onOpenGallery }: StrategyViewProps) {
   // Scroll to top on mount
   useEffect(() => {
     window.scrollTo(0, 0);

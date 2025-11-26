@@ -151,24 +151,32 @@ async function extractColorsFromImage(imageUrl: string): Promise<string[]> {
 
 // Helper: Map website to find all URLs using Firecrawl /map
 async function mapWebsite(url: string): Promise<string[]> {
-  try {
-    console.log('🗺️ Mapping website structure:', url);
-    const response = await fetch('https://api.firecrawl.dev/v1/map', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.FIRECRAWL_API_KEY}`
-      },
-      body: JSON.stringify({
-        url,
-        search: "about story mission team blog press careers values history",
-        ignoreSitemap: false,
-        includeSubdomains: false,
-        limit: 50
-      })
-    });
+    try {
+      console.log('🗺️ Mapping website structure:', url);
+      const controller = new AbortController();
+      // Increased timeout to 45s as Firecrawl mapping can take time for larger sites
+      // or when the service is under load.
+      const timeoutId = setTimeout(() => controller.abort(), 45000);
 
-    if (!response.ok) {
+      const response = await fetch('https://api.firecrawl.dev/v1/map', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${process.env.FIRECRAWL_API_KEY}`
+        },
+        body: JSON.stringify({
+          url,
+          search: "about story mission team blog press careers values history",
+          ignoreSitemap: false,
+          includeSubdomains: false,
+          limit: 50
+        }),
+        signal: controller.signal
+      });
+      
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
       console.warn('Map API failed:', await response.text());
       return [];
     }
@@ -558,6 +566,10 @@ export async function POST(request: Request) {
         // We use Firecrawl /scrape for high quality markdown + metadata
         const scrapePromises = finalPagesToScrape.map(async (pageUrl) => {
             try {
+                const controller = new AbortController();
+                // Increased to 30s per page to account for rendering, queue times, and heavier pages
+                const timeoutId = setTimeout(() => controller.abort(), 30000); 
+
                 const res = await fetch('https://api.firecrawl.dev/v1/scrape', {
                     method: 'POST',
                     headers: {
@@ -568,8 +580,11 @@ export async function POST(request: Request) {
                         url: pageUrl,
                         formats: ["markdown", "html"], // HTML helps finding images hidden in markup
                         onlyMainContent: false
-                    })
+                    }),
+                    signal: controller.signal
                 });
+                
+                clearTimeout(timeoutId);
                 
                 if (res.ok) {
                     const data = await res.json();
@@ -666,6 +681,9 @@ export async function POST(request: Request) {
           ).join('\n')}`
         : '';
     
+    // Limit images sent to AI to avoid token limits and ensure quality
+    const imagesForAnalysis = uniqueImages.slice(0, 40);
+
     const combinedContent = `
     SOURCE 1 (FIRECRAWL METADATA):
     Title: ${firecrawlMetadata.title || 'Unknown'}
@@ -681,8 +699,8 @@ export async function POST(request: Request) {
     ${deepCrawlContent.substring(0, 10000)}
     ${nuggetsFormatted}
     
-    DETECTED IMAGES:
-    ${uniqueImages.join('\n')}
+    DETECTED IMAGES (Analyze these):
+    ${imagesForAnalysis.join('\n')}
     `;
     
     const prompt = `
@@ -1047,7 +1065,15 @@ FORMAT: Return ONLY a valid JSON array:
     // Merge AI categories with final list
     // If AI didn't return analyzedImages, default to 'other'
     const labeledImages = uniqueFinalImages.map(url => {
-        const aiData = brandData.analyzedImages?.find((img: any) => img.url === url);
+        // Robust matching: try exact match, then fuzzy match
+        const aiData = brandData.analyzedImages?.find((img: any) => {
+            if (!img.url) return false;
+            if (img.url === url) return true;
+            // Fuzzy match: check if one contains the other (handles query params or minor variations)
+            if (url.includes(img.url) || img.url.includes(url)) return true;
+            return false;
+        });
+
         return {
             url,
             category: aiData?.category || (url === brandData.logo ? 'main_logo' : 'other'),
@@ -1086,18 +1112,49 @@ FORMAT: Return ONLY a valid JSON array:
         _pagesScraped: deepCrawlContent.split('--- PAGE:').length - 1
     };
 
-    // Merge: prioritize REAL data, then AI-generated as fallback
-    // STRICT MODE: For stats and testimonials, ONLY accept regex-verified extractions.
-    // AI has a tendency to "hallucinate" numbers or generic testimonials if not strictly bound.
+    // Merge: prioritize REAL data (regex), but accept AI data if it looks valid
+    // RELAXED MODE: We allow AI nuggets if they are not duplicates
+    const normalize = (str: string) => str.toLowerCase().replace(/[^a-z0-9]/g, '');
+    
+    const mergeUnique = (real: string[], ai: string[]) => {
+        const seen = new Set(real.map(normalize));
+        const merged = [...real];
+        
+        for (const item of ai || []) {
+            const norm = normalize(item);
+            if (norm.length > 10 && !seen.has(norm)) {
+                merged.push(item);
+                seen.add(norm);
+            }
+        }
+        return merged.slice(0, 12); // Limit to 12 items
+    };
+
+    const mergeTestimonials = (real: any[], ai: any[]) => {
+        const seen = new Set(real.map((t: any) => normalize(t.quote)));
+        const merged = [...real];
+        
+        for (const item of ai || []) {
+            const norm = normalize(item.quote || '');
+            if (norm.length > 20 && !seen.has(norm)) {
+                merged.push(item);
+                seen.add(norm);
+            }
+        }
+        return merged.slice(0, 8);
+    };
+
     const mergedContentNuggets = {
-        realStats: realContentNuggets.realStats, // ONLY regex-verified stats
-        testimonials: realContentNuggets.testimonials, // ONLY regex-verified testimonials
-        achievements: realContentNuggets.achievements.length > 0
-            ? realContentNuggets.achievements
-            : (brandData.contentNuggets?.achievements || []),
-        blogTopics: realContentNuggets.blogTopics.length > 0
-            ? realContentNuggets.blogTopics
-            : (brandData.contentNuggets?.blogTopics || []),
+        realStats: mergeUnique(realContentNuggets.realStats, brandData.contentNuggets?.realStats),
+        testimonials: mergeTestimonials(realContentNuggets.testimonials, brandData.contentNuggets?.testimonials),
+        achievements: mergeUnique(
+            realContentNuggets.achievements, 
+            brandData.contentNuggets?.achievements
+        ),
+        blogTopics: mergeUnique(
+            realContentNuggets.blogTopics,
+            brandData.contentNuggets?.blogTopics
+        ),
         _meta: {
             extractedNuggets: realContentNuggets._extractedCount,
             pagesScraped: realContentNuggets._pagesScraped,

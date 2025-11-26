@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, Suspense, ChangeEvent, useCallback } from 
 import { useSearchParams } from 'next/navigation';
 import Sidebar from './components/Sidebar';
 import BentoGrid from './components/BentoGrid';
+import StyleGallery from './components/StyleGallery'; // NEW
 import CalendarView from './components/CalendarView';
 import ProjectsView, { addGenerations, loadFeedbackPatterns } from './components/ProjectsView';
 import StrategyView from './components/StrategyView';
@@ -163,7 +164,7 @@ function PlaygroundContent() {
   const searchParams = useSearchParams();
   const brandId = searchParams.get('brandId');
 
-  const [step, setStep] = useState<Step>('url');
+  const [showStyleGallery, setShowStyleGallery] = useState(false); // NEW
   const [activeTab, setActiveTab] = useState('create');
   const [websiteUrl, setWebsiteUrl] = useState('');
   const [statusMessage, setStatusMessage] = useState('Nous analysons votre identité...');
@@ -195,6 +196,7 @@ function PlaygroundContent() {
   const [editingImage, setEditingImage] = useState<string | null>(null);
   const [styleRefImages, setStyleRefImages] = useState<string[]>([]); // Changed to array for multi-ref
   const [editPrompt, setEditPrompt] = useState('');
+  const [editAdditionalImages, setEditAdditionalImages] = useState<string[]>([]); // NEW: Additional images for editing
   const [visualIdeas, setVisualIdeas] = useState<string[]>([]);
   const [brief, setBrief] = useState('');
   const [generatedImages, setGeneratedImages] = useState<GeneratedImage[]>([]);
@@ -1139,6 +1141,7 @@ ${enhancement}`);
     return (
         <StrategyView 
           brandData={brandData} 
+          onOpenGallery={() => setShowStyleGallery(true)}
           onUseIdea={(templateId, brief) => {
             setActiveTab('create');
             setSelectedTemplate(templateId);
@@ -1513,15 +1516,22 @@ ${enhancement}`);
                     </button>
                   </div>
                 ))}
-                    {styleRefImages.length < 3 && (
+                  {styleRefImages.length < 3 && (
                       <div 
-                        onClick={() => document.getElementById('style-ref-upload')?.click()}
+                        onClick={() => setShowStyleGallery(true)}
                         className="h-24 border-2 border-dashed border-gray-200 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-gray-400 hover:bg-gray-50 transition-all"
                       >
-                        <span className="text-gray-400 text-xl">+</span>
-                        <span className="text-[9px] text-gray-400">Ajouter</span>
-                  </div>
-                )}
+                        <span className="text-gray-400 text-xl">✨</span>
+                        <span className="text-[9px] text-gray-400">Galerie</span>
+                      </div>
+                    )}
+                    <div 
+                      onClick={() => document.getElementById('style-ref-upload')?.click()}
+                      className="h-24 border-2 border-dashed border-gray-200 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-gray-400 hover:bg-gray-50 transition-all"
+                    >
+                      <span className="text-gray-400 text-xl">+</span>
+                      <span className="text-[9px] text-gray-400">Ajouter</span>
+                    </div>
                   </div>
                 )}
                 <input 
@@ -1774,6 +1784,17 @@ ${enhancement}`);
         ))}
       </div>
 
+      {/* Style Gallery Modal */}
+      <StyleGallery 
+        isOpen={showStyleGallery} 
+        onClose={() => setShowStyleGallery(false)}
+        onSelect={(url) => {
+          // Add selected inspiration to styleRefImages
+          setStyleRefImages(prev => [url, ...prev].slice(0, 3));
+          showToast('Style ajouté aux références', 'success');
+        }}
+      />
+
       {showSourceManager && (
         <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in">
           <div className="bg-white w-full max-w-3xl h-[80vh] flex flex-col relative border border-gray-200">
@@ -1950,7 +1971,10 @@ ${enhancement}`);
           <div className="bg-white w-full max-w-4xl flex flex-col md:flex-row relative border border-gray-200">
             {/* Close button */}
             <button
-              onClick={() => setEditingImage(null)}
+              onClick={() => {
+                setEditingImage(null);
+                setEditAdditionalImages([]);
+              }}
               className="absolute top-4 right-4 z-10 w-8 h-8 border border-gray-200 bg-white flex items-center justify-center text-gray-400 hover:text-gray-900 hover:border-gray-400 transition-colors"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
@@ -1976,15 +2000,67 @@ ${enhancement}`);
               <textarea
                 value={editPrompt}
                 onChange={(e) => setEditPrompt(e.target.value)}
-                className="w-full h-32 p-4 border border-gray-200 resize-none mb-4 bg-white focus:border-gray-400 outline-none transition-colors text-sm"
+                className="w-full h-24 p-4 border border-gray-200 resize-none mb-4 bg-white focus:border-gray-400 outline-none transition-colors text-sm"
                 placeholder="Ex: Change la couleur du fond en bleu nuit..."
               />
+
+              {/* Additional Images for Editing */}
+              <div className="mb-6">
+                <div className="flex items-center justify-between mb-2">
+                  <label className="text-[10px] font-mono uppercase tracking-widest text-gray-400">Images de référence (optionnel)</label>
+                  <span className="text-[10px] text-gray-400">{editAdditionalImages.length}/3</span>
+                </div>
+                
+                <div className="grid grid-cols-4 gap-2">
+                  {editAdditionalImages.map((img, i) => (
+                    <div key={i} className="relative aspect-square group rounded overflow-hidden border border-gray-200">
+                      <img src={img} className="w-full h-full object-cover" />
+                      <button
+                        onClick={() => setEditAdditionalImages(prev => prev.filter((_, idx) => idx !== i))}
+                        className="absolute top-0.5 right-0.5 w-4 h-4 bg-black/50 text-white rounded-full flex items-center justify-center text-[10px] hover:bg-red-500 transition-colors"
+                      >×</button>
+                    </div>
+                  ))}
+                  
+                  {editAdditionalImages.length < 3 && (
+                    <div 
+                      className="aspect-square border-2 border-dashed border-gray-200 rounded flex flex-col items-center justify-center cursor-pointer hover:border-gray-400 hover:bg-gray-50 transition-all"
+                      onClick={() => document.getElementById('edit-image-upload')?.click()}
+                    >
+                      <span className="text-gray-400 text-xl">+</span>
+                    </div>
+                  )}
+                </div>
+                <input 
+                  id="edit-image-upload" 
+                  type="file" 
+                  multiple 
+                  accept="image/*" 
+                  className="hidden" 
+                  onChange={(e) => {
+                    if (e.target.files) {
+                      Array.from(e.target.files).forEach(file => {
+                        const reader = new FileReader();
+                        reader.onload = (ev) => {
+                          if (typeof ev.target?.result === 'string') {
+                            setEditAdditionalImages(prev => [...prev, ev.target!.result as string].slice(0, 3));
+                          }
+                        };
+                        reader.readAsDataURL(file);
+                      });
+                    }
+                  }} 
+                />
+              </div>
 
               <button
                 onClick={() => {
                   if (!editPrompt.trim() || !editingImage) return;
-                  handleGenerate(editPrompt, false, brandData, [editingImage]);
+                  // Merge original image with additional reference images
+                  const allEditImages = [editingImage, ...editAdditionalImages];
+                  handleGenerate(editPrompt, false, brandData, allEditImages);
                   setEditingImage(null);
+                  setEditAdditionalImages([]);
                 }}
                 className="group bg-gray-900 text-white py-4 font-medium text-sm hover:bg-black transition-colors disabled:opacity-30 flex items-center justify-center gap-2"
                 disabled={!editPrompt.trim()}

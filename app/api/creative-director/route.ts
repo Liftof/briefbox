@@ -40,14 +40,14 @@ const STYLE_REFERENCE_MAP: Record<string, string[]> = {
   'default': ['Behance featured', 'Dribbble popular', 'Awwwards winner']
 };
 
-// Prompt variations for diversity (appended to base prompt)
-// Focus on TASTEFUL, EDITORIAL, and SOPHISTICATED styles
-const PROMPT_VARIATIONS = [
-  'Emphasis: Swiss Design Style. Use a grid-based layout, strong typography, and negative space. Clean, structured, and timeless. No decorative elements, just pure design.',
-  'Emphasis: Editorial Photography Vibe. The visual should feel like a spread in a high-end magazine (Kinfolk, Monocle). Minimalist, soft lighting, natural textures. Avoid "tech" graphics.',
-  'Emphasis: Minimalist Abstract. Use simple geometric shapes and a very restrained color palette. The composition should be airy and calm. Think "Museum of Modern Art" poster.',
-  'Emphasis: Typographic Focus. Make the text the hero. Use big, bold, beautiful typography. The background should be solid or a very subtle gradient. Extremely legible and impactful.'
-];
+    // Prompt variations for diversity (appended to base prompt)
+    // Focus on TASTEFUL, EDITORIAL, and SOPHISTICATED styles
+    const PROMPT_VARIATIONS = [
+      'Emphasis: Swiss Design Style. Use a grid-based layout, strong typography, and negative space. Clean, structured, and timeless. No decorative elements, just pure design.',
+      'Emphasis: Editorial Photography Vibe. The visual should feel like a spread in a high-end magazine (Kinfolk, Monocle). Minimalist, soft lighting, natural textures. Avoid "tech" graphics.',
+      'Emphasis: Minimalist Abstract. Use simple geometric shapes and a very restrained color palette. The composition should be airy and calm. Think "Museum of Modern Art" poster.',
+      'Emphasis: Typographic Focus. Make the text the hero. Use big, bold, beautiful typography. The background should be solid or a very subtle gradient. Extremely legible and impactful.'
+    ];
 
 // Get style references based on brand aesthetic
 function getStyleReferences(aesthetic: string): string {
@@ -307,6 +307,26 @@ export async function POST(request: NextRequest) {
     const aesthetic = Array.isArray(brand.aesthetic) ? brand.aesthetic.join(', ') : (brand.aesthetic || 'Modern, Professional');
     const toneVoice = Array.isArray(brand.toneVoice) ? brand.toneVoice.join(', ') : (brand.toneVoice || 'Confident, Clear');
 
+    // PREPARE BRAND KNOWLEDGE (Stats, Testimonials, Values)
+    // This allows the model to use real data even if not explicitly in the brief
+    const brandKnowledge = [];
+    
+    if (brand.contentNuggets?.realStats?.length > 0) {
+        brandKnowledge.push(`KEY STATS:\n${brand.contentNuggets.realStats.slice(0, 3).map((s: string) => `- ${s}`).join('\n')}`);
+    }
+    
+    if (brand.contentNuggets?.testimonials?.length > 0) {
+        brandKnowledge.push(`CLIENT TESTIMONIALS:\n${brand.contentNuggets.testimonials.slice(0, 2).map((t: any) => `- "${t.quote}" (${t.author})`).join('\n')}`);
+    }
+    
+    if (brand.values?.length > 0) {
+        brandKnowledge.push(`CORE VALUES: ${brand.values.join(', ')}`);
+    }
+
+    const knowledgeContext = brandKnowledge.length > 0 
+        ? `\n\nBRAND KNOWLEDGE & DATA (Use these facts/quotes if relevant to the brief):\n${brandKnowledge.join('\n')}`
+        : '';
+
     // Determine which template to use
     let templateId: TemplateId;
     
@@ -398,9 +418,9 @@ IMPORTANT: Use each image according to its role. The order of images reflects th
     // This is the exact prompt structure that works well with Nano Banana Pro
     const buildStructuredPrompt = (variationEmphasis: string) => {
       return `
-ROLE: Expert Art Director & Copywriter.
+ROLE: Expert Art Director & Copywriter for a Brand Agency.
 
-TASK: Create a sophisticated social media visual based on the following brief.
+TASK: Create a sophisticated social media visual based on the following brief. The goal is to create a "stopper" visual - something that immediately grabs attention in a feed.
 
 BRIEF: ${brief}.
 AESTHETIC: ${aesthetic} (but interpreted with high taste).
@@ -421,20 +441,31 @@ Tone: ${toneVoice}
 Colors: ${colors.join(', ')}
 Fonts: Sans-serif (modern), Helvetica Neue
 
-DESIGN GUIDELINES:
-- COMPOSITION: Clean, balanced, and airy. Use a grid system. Avoid clutter.
+DESIGN GUIDELINES (AVOID GENERIC VISUALS):
+- COMPOSITION: Use asymmetrical layouts, extreme close-ups, or bold negative space. Avoid standard "centered text on image" templates.
 - STYLE: ${variationEmphasis} ${templateStyleEmphasis}
 - ASSETS: Use the provided image as the HERO element. Integrate it naturally into a scene or layout. Do NOT just crop the image.
 - COLOR: Use the brand palette with restraint. Specifically use ${primaryColor} as a primary accent.
-- LOGO PROTECTION (CRITICAL): If a logo is provided, it must be treated as a sacred asset. DO NOT DISTORT, WARP, or MODIFY the logo. It must remain perfectly legible and respecting its original proportions. Place it on a high-contrast area.
+- LOGO PROTECTION (CRITICAL): A logo image is provided in the input. YOU MUST USE THIS EXACT LOGO. Do NOT generate a fake logo. Do NOT distort, warp, or modify the provided logo. It must remain perfectly legible.
+- STYLE REFERENCES: If style reference images are provided, capture their MOOD, LIGHTING, and COMPOSITION only. Do NOT copy the specific objects or content of the reference.
 - TYPOGRAPHY & TEXT: PERFECT SPELLING IS MANDATORY. Double-check all generated text for correctness. No typos, no gibberish. Use professional kerning and spacing.
 - QUALITY: Editorial quality, sharp details, professional lighting. Avoid "stock photo" look, avoid 3D render artifacts, avoid generic tech graphics.
 
+SPECIFIC AVOIDANCE LIST:
+- No "businessmen shaking hands"
+- No "generic team meeting around laptop"
+- No "abstract blue nodes network"
+- No "robot hand touching human hand"
+- No "rocket ship launching"
+- No "puzzle pieces"
+- No "busy backgrounds with too much text"
+
 ${feedbackGuidance ? feedbackGuidance : ''}
+${knowledgeContext ? knowledgeContext : ''}
 
 ${imageRoleInstructions ? imageRoleInstructions : ''}
 
-NEGATIVE PROMPT: distorted logo, warped logo, cut off logo, spelling mistakes, typos, gibberish text, bad grammar, messy, cluttered, ugly text, low resolution, blurry, weird cropping, amateur, wrong colors, cheap 3D effects, neon glow, matrix code, busy background.
+NEGATIVE PROMPT: stock photo, cheesy, low quality, blurry, distorted logo, fake logo, bad spelling, typos, gibberish, watermark, watermark, signature, cut off, ugly, amateur, template, generic business art, cluttered, messy, impossible geometry.
       `.trim();
     };
 
