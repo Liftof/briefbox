@@ -21,7 +21,8 @@ export async function POST(request: Request) {
     1. Keep the core intent of the user's request.
     2. Enhance it with descriptive details about lighting, composition, texture, and mood.
     3. Ensure it aligns with the Brand Context provided.
-    4. Output ONLY the enhanced prompt text. No conversational filler.
+    4. SOCIAL MEDIA IMPACT: The visual must be a "thumb-stopper". It should look premium, engaging, and designed to grab attention in a fast feed.
+    5. Output ONLY the enhanced prompt text. No conversational filler.
     `;
 
     const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {

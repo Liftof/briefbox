@@ -426,6 +426,11 @@ BRIEF: ${brief}.
 AESTHETIC: ${aesthetic} (but interpreted with high taste).
 VIBE: ${toneVoice}.
 
+USER-CENTRIC MINDSET (CRITICAL):
+- THINK LIKE THE USER: They are scrolling fast. They are bored. They have problems.
+- HOOK THEM: The visual must answer "What's in it for me?" immediately.
+- EMOTION: Even for B2B, trigger an emotion (relief, confidence, curiosity, ambition).
+
 COPYWRITING INSTRUCTIONS (CRITICAL):
 - TRANSFORM the brief into a powerful, short marketing headline in the target language (${language}).
 - DO NOT just copy-paste the brief. Make it punchy, engaging, and benefit-oriented.

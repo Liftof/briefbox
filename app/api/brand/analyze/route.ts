@@ -821,15 +821,20 @@ export async function POST(request: Request) {
          2. INDUSTRY INSIGHTS (source: "industry_insight"): Use facts from industryInsights for "didyouknow" posts
          3. GENERATED (source: "generated"): Only if no real data, create plausible specific content
          
+         USER-CENTRIC RULES (MANDATORY):
+         - **STOP THE SCROLL:** Every headline must be a "hook". Avoid generic titles like "Nos services". Use "Comment doubler vos ventes" instead.
+         - **PAIN POINTS FIRST:** Address a specific user problem or desire. "Tired of manual data entry?" is better than "We offer automation".
+         - **BENEFIT ORIENTED:** Focus on what the user GETS, not just what the brand HAS.
+         
          EXAMPLES WITH INTENT:
-         - { "templateId": "stat", "metric": "10K+", "metricLabel": "utilisateurs actifs", "source": "real_data", "intent": "Crédibilité sociale - chiffre trouvé sur leur page clients" }
-         - { "templateId": "didyouknow", "headline": "85% des équipes perdent 2h/jour sur des tâches répétitives", "subheadline": "L'automatisation change la donne", "source": "industry_insight", "intent": "Pain point industrie → positionnement solution" }
-         - { "templateId": "quote", "headline": "On a réduit nos coûts de 40% en 6 mois", "subheadline": "— Sophie Martin, DG @TechCorp", "source": "real_data", "intent": "Preuve sociale avec résultat chiffré" }
+         - { "templateId": "stat", "metric": "10K+", "metricLabel": "utilisateurs actifs", "source": "real_data", "intent": "Social Proof: Show mass adoption to build trust" }
+         - { "templateId": "didyouknow", "headline": "85% des équipes perdent 2h/jour", "subheadline": "Arrêtez de perdre du temps sur l'admin", "source": "industry_insight", "intent": "Agitate Pain: Highlight the problem (lost time) to introduce the solution" }
+         - { "templateId": "quote", "headline": "On a réduit nos coûts de 40%", "subheadline": "— Sophie, CEO", "source": "real_data", "intent": "Result-Driven: Show concrete ROI to attract decision makers" }
          
          RULES:
          - PRIORITIZE real data from verified content nuggets
          - Include at least 2 "didyouknow" posts with industry macro insights
-         - Each post MUST have an "intent" explaining WHY this post is strategic
+         - Each post MUST have an "intent" explaining WHY this post is strategic for the END USER
          - Be SPECIFIC: not "amélioration" but "+47% en 3 mois"
          
       8. **INDUSTRY INSIGHTS (CRITICAL):** Generate 3-4 relevant industry facts/stats.
