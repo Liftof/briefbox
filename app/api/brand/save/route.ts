@@ -19,39 +19,39 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Invalid brand data' }, { status: 400 });
     }
 
-    // Common data object
+    // Common data object - ensure all JSONB fields have defaults to avoid SQL errors
     const brandData = {
       userId: userId,
       name: brand.name,
       url: brand.url || '',
-      tagline: brand.tagline,
-      description: brand.description,
-      industry: brand.industry,
-      logo: brand.logo,
-      colors: brand.colors,
-      fonts: brand.fonts,
-      aesthetic: brand.aesthetic,
-      toneVoice: brand.toneVoice,
-      values: brand.values,
-      features: brand.features,
-      services: brand.services,
-      keyPoints: brand.keyPoints,
-      visualMotifs: brand.visualMotifs,
-      marketingAngles: brand.marketingAngles,
-      backgroundPrompts: brand.backgroundPrompts,
-      
+      tagline: brand.tagline || '',
+      description: brand.description || '',
+      industry: brand.industry || '',
+      logo: brand.logo || '',
+      colors: brand.colors || [],
+      fonts: brand.fonts || [],
+      aesthetic: brand.aesthetic || [],
+      toneVoice: brand.toneVoice || [],
+      values: brand.values || [],
+      features: brand.features || [],
+      services: brand.services || [],
+      keyPoints: brand.keyPoints || [],
+      visualMotifs: brand.visualMotifs || [],
+      marketingAngles: brand.marketingAngles || [],
+      backgroundPrompts: brand.backgroundPrompts || [],
+
       // Save V2 extracted content
-      contentNuggets: brand.contentNuggets,
-      industryInsights: brand.industryInsights,
-      suggestedPosts: brand.suggestedPosts || [], // Ensure array if undefined
-      
+      contentNuggets: brand.contentNuggets || null,
+      industryInsights: brand.industryInsights || [],
+      suggestedPosts: brand.suggestedPosts || [],
+
       // New Editorial Angles (V2 Smart Agency)
-      editorialAngles: brand.editorialAngles || [], 
+      editorialAngles: brand.editorialAngles || [],
       painPoints: brand.painPoints || [],
       vocabulary: brand.vocabulary || [],
 
-      labeledImages: brand.labeledImages,
-      backgrounds: brand.backgrounds || [] 
+      labeledImages: brand.labeledImages || [],
+      backgrounds: brand.backgrounds || []
     };
 
     let result;
