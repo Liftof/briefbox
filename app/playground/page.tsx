@@ -1534,25 +1534,50 @@ ${enhancement}`);
               </button>
             </div>
             
-            {/* Scrollable pills - 2 rows */}
+            {/* Scrollable pills - More engaging hooks */}
             <div className="space-y-2 overflow-x-auto pb-2 -mx-2 px-2" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-              {/* Row 1: Stats, Testimonials, Industry Insights */}
+              {/* Row 1: Pain Points (new format) + Stats + Testimonials */}
               <div className="flex gap-2 flex-nowrap">
-                {/* Real Stats */}
-                {brandData.contentNuggets?.realStats?.slice(0, 4).map((stat: string, i: number) => (
+                {/* NEW: Pain Points - priority display */}
+                {brandData.industryInsights?.slice(0, 3).map((insight: any, i: number) => {
+                  const text = insight.painPoint || insight.fact || insight.didYouKnow;
+                  const typeEmoji = insight.type === 'pain_point' ? '⚡' : insight.type === 'trend' ? '📈' : insight.type === 'cost_of_inaction' ? '⚠️' : '💡';
+                  return (
+                    <button
+                      key={`pain-${i}`}
+                      onClick={() => {
+                        setSelectedTemplate('stat');
+                        setBrief(text);
+                      }}
+                      className={`flex-shrink-0 px-3 py-2 border transition-all text-left max-w-[280px] ${
+                        brief === text 
+                          ? 'bg-rose-50 border-rose-400' 
+                          : 'bg-white border-gray-200 hover:border-rose-400 hover:bg-rose-50/50'
+                      }`}
+                    >
+                      <div className="flex items-start gap-2">
+                        <span className="text-sm flex-shrink-0">{typeEmoji}</span>
+                        <span className="text-xs text-gray-700 line-clamp-2">{text?.slice(0, 60)}{text?.length > 60 ? '...' : ''}</span>
+                      </div>
+                    </button>
+                  );
+                })}
+                
+                {/* Real Stats with better copy */}
+                {brandData.contentNuggets?.realStats?.slice(0, 2).map((stat: string, i: number) => (
                   <button
                     key={`stat-${i}`}
                     onClick={() => {
                       setSelectedTemplate('stat');
-                      setBrief(stat);
+                      setBrief(`${stat} — voici comment`);
                     }}
-                    className={`flex-shrink-0 px-3 py-2 border transition-all text-left group whitespace-nowrap max-w-[250px] ${
-                      brief === stat ? 'bg-emerald-50 border-emerald-400' : 'bg-white border-gray-200 hover:border-emerald-400 hover:bg-emerald-50/50'
+                    className={`flex-shrink-0 px-3 py-2 border transition-all text-left max-w-[220px] ${
+                      brief.includes(stat) ? 'bg-emerald-50 border-emerald-400' : 'bg-white border-gray-200 hover:border-emerald-400 hover:bg-emerald-50/50'
                     }`}
                   >
                     <div className="flex items-center gap-2">
                       <span className="text-sm">📊</span>
-                      <span className="text-xs text-gray-700 truncate">{stat.slice(0, 40)}{stat.length > 40 ? '...' : ''}</span>
+                      <span className="text-xs text-gray-700 truncate">{stat.slice(0, 35)}</span>
                     </div>
                   </button>
                 ))}
@@ -1563,97 +1588,68 @@ ${enhancement}`);
                     key={`quote-${i}`}
                     onClick={() => {
                       setSelectedTemplate('quote');
-                      setBrief(`"${t.quote}" — ${t.author}`);
+                      setBrief(`"${t.quote}" — ${t.author}${t.company ? `, ${t.company}` : ''}`);
                     }}
-                    className="flex-shrink-0 px-3 py-2 bg-white border border-gray-200 hover:border-blue-400 hover:bg-blue-50/50 transition-all text-left group whitespace-nowrap max-w-[200px]"
+                    className="flex-shrink-0 px-3 py-2 bg-white border border-gray-200 hover:border-blue-400 hover:bg-blue-50/50 transition-all text-left max-w-[200px]"
                   >
                     <div className="flex items-center gap-2">
                       <span className="text-sm">💬</span>
-                      <span className="text-xs text-gray-700 truncate">"{t.quote?.slice(0, 30)}..."</span>
-                    </div>
-                  </button>
-                ))}
-                
-                {/* Industry Insights */}
-                {brandData.industryInsights?.slice(0, 2).map((insight: any, i: number) => (
-                  <button
-                    key={`insight-${i}`}
-                    onClick={() => {
-                      setSelectedTemplate('stat');
-                      setBrief(insight.didYouKnow || insight.fact);
-                    }}
-                    className="flex-shrink-0 px-3 py-2 bg-white border border-gray-200 hover:border-amber-400 hover:bg-amber-50/50 transition-all text-left group whitespace-nowrap max-w-[220px]"
-                  >
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm">🔍</span>
-                      <span className="text-xs text-gray-700 truncate">{(insight.didYouKnow || insight.fact)?.slice(0, 35)}...</span>
+                      <span className="text-xs text-gray-700 truncate italic">"{t.quote?.slice(0, 25)}..."</span>
                     </div>
                   </button>
                 ))}
               </div>
               
-              {/* Row 2: Features, Values, Services, Quick actions */}
+              {/* Row 2: Features as hooks, not descriptions */}
               <div className="flex gap-2 flex-nowrap">
-                {/* Features */}
-                {brandData.features?.slice(0, 3).map((f: string, i: number) => (
-                  <button
-                    key={`feat-${i}`}
-                    onClick={() => {
-                      setSelectedTemplate('product');
-                      setBrief(`Découvrez ${f}`);
-                    }}
-                    className="flex-shrink-0 px-3 py-1.5 bg-purple-50/50 border border-purple-200 hover:border-purple-400 transition-all text-xs text-purple-700 hover:text-purple-900 whitespace-nowrap"
-                  >
-                    ✨ {f.slice(0, 25)}{f.length > 25 ? '...' : ''}
-                  </button>
-                ))}
-                
-                {/* Values */}
-                {brandData.values?.slice(0, 2).map((v: string, i: number) => (
-                  <button
-                    key={`val-${i}`}
-                    onClick={() => {
-                      setSelectedTemplate('expert');
-                      setBrief(`Pourquoi ${v.toLowerCase()} est au cœur de ${brandData.name}`);
-                    }}
-                    className="flex-shrink-0 px-3 py-1.5 bg-blue-50/50 border border-blue-200 hover:border-blue-400 transition-all text-xs text-blue-700 hover:text-blue-900 whitespace-nowrap"
-                  >
-                    💎 {v}
-                  </button>
-                ))}
-                
-                {/* Services */}
-                {brandData.services?.slice(0, 2).map((s: string, i: number) => (
-                  <button
-                    key={`serv-${i}`}
-                    onClick={() => {
-                      setSelectedTemplate('announcement');
-                      setBrief(`${s} : comment ça marche ?`);
-                    }}
-                    className="flex-shrink-0 px-3 py-1.5 bg-teal-50/50 border border-teal-200 hover:border-teal-400 transition-all text-xs text-teal-700 hover:text-teal-900 whitespace-nowrap"
-                  >
-                    🎯 {s.slice(0, 20)}{s.length > 20 ? '...' : ''}
-                  </button>
-                ))}
-                
-                {/* Suggested Posts */}
-                {brandData.suggestedPosts?.filter((p: any) => p.source === 'real_data' || p.source === 'industry_insight').slice(0, 2).map((post: any, i: number) => {
-                  const template = TEMPLATES.find(t => t.id === post.templateId);
-                  const headline = post.headline || `${post.metric || ''} ${post.metricLabel || ''}`.trim();
+                {/* Features as hooks */}
+                {brandData.features?.slice(0, 4).map((f: string, i: number) => {
+                  const hooks = [
+                    `Comment ${f.toLowerCase()} change tout`,
+                    `${f} : le secret des pros`,
+                    `Pourquoi ${f.toLowerCase()} fait la différence`,
+                    `${f} en 30 secondes`
+                  ];
                   return (
                     <button
-                      key={`post-${i}`}
+                      key={`feat-${i}`}
                       onClick={() => {
-                        setSelectedTemplate(post.templateId as TemplateId);
-                        setBrief(headline);
+                        setSelectedTemplate('product');
+                        setBrief(hooks[i % hooks.length]);
                       }}
-                      className="flex-shrink-0 px-3 py-1.5 bg-gray-50 border border-gray-200 hover:border-gray-400 transition-all text-xs text-gray-600 hover:text-gray-900 whitespace-nowrap flex items-center gap-1.5"
+                      className="flex-shrink-0 px-3 py-1.5 bg-purple-50/50 border border-purple-200 hover:border-purple-400 transition-all text-xs text-purple-700 hover:text-purple-900"
                     >
-                      <span>{template?.icon}</span>
-                      <span className="truncate max-w-[120px]">{headline}</span>
+                      ✨ {f.slice(0, 22)}{f.length > 22 ? '...' : ''}
                     </button>
                   );
                 })}
+                
+                {/* Key Points as "Why" questions */}
+                {brandData.keyPoints?.slice(0, 2).map((kp: string, i: number) => (
+                  <button
+                    key={`kp-${i}`}
+                    onClick={() => {
+                      setSelectedTemplate('expert');
+                      setBrief(`Pourquoi ${kp.toLowerCase()} ?`);
+                    }}
+                    className="flex-shrink-0 px-3 py-1.5 bg-amber-50/50 border border-amber-200 hover:border-amber-400 transition-all text-xs text-amber-700 hover:text-amber-900"
+                  >
+                    🎯 {kp.slice(0, 20)}{kp.length > 20 ? '...' : ''}
+                  </button>
+                ))}
+                
+                {/* Quick suggestion - "problem agitation" style */}
+                {brandData.targetAudience && (
+                  <button
+                    onClick={() => {
+                      setSelectedTemplate('stat');
+                      setBrief(`${brandData.targetAudience}, vous en avez marre de... ?`);
+                    }}
+                    className="flex-shrink-0 px-3 py-1.5 bg-rose-50/50 border border-rose-200 hover:border-rose-400 transition-all text-xs text-rose-700 hover:text-rose-900"
+                  >
+                    🎤 Interpeller votre cible
+                  </button>
+                )}
               </div>
             </div>
 
@@ -1695,89 +1691,68 @@ ${enhancement}`);
             />
           </div>
 
-          {/* Format + Sources Row */}
+          {/* Sources Row - Format section removed (not useful) */}
           <div className="p-5 flex flex-col md:flex-row gap-5">
-            
-            {/* Format Selection */}
-            <div className="flex-1">
-              <label className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-3 block">Format</label>
-              <div className="flex flex-wrap gap-2">
-                {TEMPLATES.map((template) => (
-                    <button
-                    key={template.id}
-                    onClick={() => {
-                      setSelectedTemplate(template.id);
-                      if (!brief) setBrief(template.placeholder);
-                    }}
-                    className={`px-3 py-2 text-sm transition-all border flex items-center gap-2 ${
-                      selectedTemplate === template.id
-                        ? 'bg-gray-900 text-white border-gray-900'
-                        : 'bg-white text-gray-600 border-gray-200 hover:border-gray-400'
-                    }`}
-                    title={template.desc}
-                  >
-                    <span>{template.icon}</span>
-                    <span className="text-xs font-medium">{template.name}</span>
-                    </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Divider */}
-            <div className="hidden md:block w-px bg-gray-100" />
             
             {/* Sources & Style */}
             <div className="w-full md:w-72 flex flex-col gap-6">
               
-              {/* 1. STYLE REFERENCE ZONE */}
+              {/* 1. STYLE REFERENCE ZONE - Enhanced with quick picks */}
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">Style à imiter</label>
-                  <span className="text-[10px] text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">Recommandé</span>
+                  <button 
+                    onClick={() => setShowStyleGallery(true)}
+                    className="text-[10px] text-emerald-600 hover:text-emerald-700 flex items-center gap-1"
+                  >
+                    <span>✨</span> Voir tout
+                  </button>
                 </div>
                 
-                {styleRefImages.length === 0 ? (
-                  <div 
-                    className="border-2 border-dashed border-gray-200 rounded-lg p-4 flex flex-col items-center justify-center text-center cursor-pointer hover:border-gray-400 hover:bg-gray-50 transition-all h-32"
-                    onClick={() => document.getElementById('style-ref-upload')?.click()}
-                  >
-                    <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center mb-2 text-gray-400">
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-                    </div>
-                    <span className="text-xs text-gray-500 font-medium">Déposer une inspiration</span>
-                    <span className="text-[9px] text-gray-400 mt-1">Image dont on copiera le look</span>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-3 gap-2">
+                {/* Selected styles */}
+                {styleRefImages.length > 0 && (
+                  <div className="grid grid-cols-3 gap-2 mb-3">
                     {styleRefImages.map((img, i) => (
-                      <div key={i} className="relative h-24 group rounded-lg overflow-hidden border border-emerald-200 shadow-sm">
-                        <img src={img} className="w-full h-full object-cover opacity-90 hover:opacity-100 transition-opacity" />
+                      <div key={i} className="relative h-20 group rounded-lg overflow-hidden border-2 border-emerald-400 shadow-sm">
+                        <img src={img} className="w-full h-full object-cover" />
                         <button
                           onClick={() => setStyleRefImages(prev => prev.filter((_, idx) => idx !== i))}
-                          className="absolute top-1 right-1 w-5 h-5 bg-black/50 text-white rounded-full flex items-center justify-center hover:bg-black transition-colors text-[10px] backdrop-blur-sm"
-                    >
-                      ×
-                    </button>
-                  </div>
-                ))}
-                  {styleRefImages.length < 3 && (
-                      <div 
-                        onClick={() => setShowStyleGallery(true)}
-                        className="h-24 border-2 border-dashed border-gray-200 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-gray-400 hover:bg-gray-50 transition-all"
-                      >
-                        <span className="text-gray-400 text-xl">✨</span>
-                        <span className="text-[9px] text-gray-400">Galerie</span>
+                          className="absolute top-1 right-1 w-5 h-5 bg-black/60 text-white rounded-full flex items-center justify-center hover:bg-red-500 transition-colors text-[10px] backdrop-blur-sm"
+                        >×</button>
                       </div>
-                    )}
-                    <div 
-                      onClick={() => document.getElementById('style-ref-upload')?.click()}
-                      className="h-24 border-2 border-dashed border-gray-200 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-gray-400 hover:bg-gray-50 transition-all"
-                    >
-                      <span className="text-gray-400 text-xl">+</span>
-                      <span className="text-[9px] text-gray-400">Ajouter</span>
-                    </div>
+                    ))}
                   </div>
                 )}
+
+                {/* Quick picks from gallery */}
+                <div className="grid grid-cols-4 gap-1.5">
+                  {[
+                    { url: 'https://images.unsplash.com/photo-1494438639946-1ebd1d20bf85?auto=format&fit=crop&w=200&q=80', label: 'Minimal' },
+                    { url: 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=200&q=80', label: 'Tech' },
+                    { url: 'https://images.unsplash.com/photo-1542038784456-1ea8e935640e?auto=format&fit=crop&w=200&q=80', label: 'Luxe' },
+                    { url: 'https://images.unsplash.com/photo-1550684848-fac1c5b4e853?auto=format&fit=crop&w=200&q=80', label: 'Bold' },
+                  ].filter(s => !styleRefImages.includes(s.url)).slice(0, styleRefImages.length > 0 ? 4 : 3).map((style, i) => (
+                    <div 
+                      key={i}
+                      onClick={() => setStyleRefImages(prev => [...prev, style.url].slice(0, 3))}
+                      className="relative h-14 rounded-md overflow-hidden cursor-pointer border border-gray-200 hover:border-gray-400 transition-all group"
+                    >
+                      <img src={style.url} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <span className="text-white text-[8px] font-medium">+</span>
+                      </div>
+                    </div>
+                  ))}
+                  {styleRefImages.length === 0 && (
+                    <div 
+                      onClick={() => document.getElementById('style-ref-upload')?.click()}
+                      className="h-14 border border-dashed border-gray-200 rounded-md flex items-center justify-center cursor-pointer hover:border-gray-400 hover:bg-gray-50 transition-all"
+                    >
+                      <span className="text-gray-400 text-sm">+</span>
+                    </div>
+                  )}
+                </div>
+                
                 <input 
                   id="style-ref-upload" 
                   type="file" 
