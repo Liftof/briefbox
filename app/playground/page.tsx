@@ -1474,7 +1474,7 @@ ${enhancement}`);
     // Strategy view merged into Create - angles carousel at top of the page
 
     return (
-      <div className="animate-fade-in max-w-3xl mx-auto">
+      <div className="animate-fade-in max-w-5xl mx-auto px-4">
         {/* ═══════════════════════════════════════════════════════════════════════════
             VERTICAL STACKED CREATIVE SPACE
             Clean top-to-bottom flow: Header → Ideas → Form → Results
@@ -1695,156 +1695,134 @@ ${enhancement}`);
           <div className="p-5">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               
-              {/* 1. STYLE REFERENCE ZONE */}
+              {/* 1. STYLE REFERENCE ZONE - With drop area */}
               <div>
-                <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center justify-between mb-2">
                   <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">Style à imiter</label>
                   <button 
                     onClick={() => setShowStyleGallery(true)}
                     className="text-[10px] text-emerald-600 hover:text-emerald-700 flex items-center gap-1"
                   >
-                    <span>✨</span> Voir tout
+                    ✨ Galerie
                   </button>
                 </div>
                 
-                {/* Selected styles */}
-                {styleRefImages.length > 0 && (
-                  <div className="flex gap-2 mb-3">
-                    {styleRefImages.map((img, i) => (
-                      <div key={i} className="relative h-20 w-20 group rounded-lg overflow-hidden border-2 border-emerald-400 shadow-sm flex-shrink-0">
-                        <img src={img} className="w-full h-full object-cover" />
-                        <button
-                          onClick={() => setStyleRefImages(prev => prev.filter((_, idx) => idx !== i))}
-                          className="absolute top-1 right-1 w-5 h-5 bg-black/60 text-white rounded-full flex items-center justify-center hover:bg-red-500 transition-colors text-[10px] backdrop-blur-sm"
-                        >×</button>
-                      </div>
-                    ))}
-                  </div>
-                )}
+                {/* Selected styles + Drop zone in one row */}
+                <div className="flex gap-2 mb-2">
+                  {/* Selected images */}
+                  {styleRefImages.map((img, i) => (
+                    <div key={i} className="relative h-16 w-16 group rounded-lg overflow-hidden border-2 border-emerald-400 flex-shrink-0">
+                      <img src={img} className="w-full h-full object-cover" />
+                      <button
+                        onClick={() => setStyleRefImages(prev => prev.filter((_, idx) => idx !== i))}
+                        className="absolute top-0.5 right-0.5 w-4 h-4 bg-black/60 text-white rounded-full flex items-center justify-center hover:bg-red-500 text-[9px]"
+                      >×</button>
+                    </div>
+                  ))}
+                  
+                  {/* Drop zone - always visible if less than 3 */}
+                  {styleRefImages.length < 3 && (
+                    <label className="h-16 flex-1 min-w-[60px] border-2 border-dashed border-gray-200 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-emerald-400 hover:bg-emerald-50/50 transition-all">
+                      <svg className="w-4 h-4 text-gray-300" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                        <path d="M12 4v16m8-8H4" />
+                      </svg>
+                      <span className="text-[8px] text-gray-400 mt-0.5">Drop inspi</span>
+                      <input 
+                        type="file" 
+                        accept="image/*" 
+                        className="hidden"
+                        onChange={(e) => {
+                          if (e.target.files?.[0]) {
+                            const reader = new FileReader();
+                            reader.onload = (ev) => {
+                              if (typeof ev.target?.result === 'string') {
+                                setStyleRefImages(prev => [...prev, ev.target!.result as string].slice(0, 3));
+                              }
+                            };
+                            reader.readAsDataURL(e.target.files[0]);
+                          }
+                        }}
+                      />
+                    </label>
+                  )}
+                </div>
 
-                {/* Quick picks from gallery - Better images */}
-                <div className="grid grid-cols-5 gap-2">
+                {/* Quick picks - compact */}
+                <div className="grid grid-cols-5 gap-1.5">
                   {[
-                    { url: 'https://images.unsplash.com/photo-1494438639946-1ebd1d20bf85?auto=format&fit=crop&w=300&q=80', label: 'Minimal', desc: 'Tons neutres' },
-                    { url: 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=300&q=80', label: 'Tech', desc: 'Néons & dark' },
-                    { url: 'https://images.unsplash.com/photo-1542038784456-1ea8e935640e?auto=format&fit=crop&w=300&q=80', label: 'Luxe', desc: 'Grain & élégance' },
-                    { url: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=300&q=80', label: 'Abstract', desc: 'Formes organiques' },
-                    { url: 'https://images.unsplash.com/photo-1550684848-fac1c5b4e853?auto=format&fit=crop&w=300&q=80', label: 'Bold', desc: 'Couleurs vives' },
+                    { url: 'https://images.unsplash.com/photo-1494438639946-1ebd1d20bf85?auto=format&fit=crop&w=300&q=80', label: 'Minimal' },
+                    { url: 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=300&q=80', label: 'Tech' },
+                    { url: 'https://images.unsplash.com/photo-1542038784456-1ea8e935640e?auto=format&fit=crop&w=300&q=80', label: 'Luxe' },
+                    { url: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=300&q=80', label: 'Abstract' },
+                    { url: 'https://images.unsplash.com/photo-1550684848-fac1c5b4e853?auto=format&fit=crop&w=300&q=80', label: 'Bold' },
                   ].filter(s => !styleRefImages.some(sel => sel.includes(s.url.split('?')[0]))).slice(0, 5).map((style, i) => (
                     <div 
                       key={i}
                       onClick={() => setStyleRefImages(prev => [...prev, style.url].slice(0, 3))}
-                      className="relative aspect-square rounded-lg overflow-hidden cursor-pointer border border-gray-200 hover:border-emerald-400 hover:shadow-md transition-all group"
+                      className="relative aspect-square rounded overflow-hidden cursor-pointer border border-gray-200 hover:border-emerald-400 transition-all group"
                     >
                       <img src={style.url} className="w-full h-full object-cover" />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-2">
-                        <span className="text-white text-[10px] font-medium">{style.label}</span>
+                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <span className="text-white text-[8px] font-medium">+</span>
                       </div>
                     </div>
                   ))}
                 </div>
-                
-                {/* Upload option */}
-                <div className="mt-3 flex items-center gap-2">
-                  <button 
-                    onClick={() => document.getElementById('style-ref-upload')?.click()}
-                    className="text-[10px] text-gray-500 hover:text-gray-700 flex items-center gap-1"
-                  >
-                    <span>📁</span> Uploader une inspi
-                  </button>
-                </div>
-                
-                <input 
-                  id="style-ref-upload" 
-                  type="file" 
-                  multiple
-                  accept="image/*" 
-                  className="hidden" 
-                  onChange={(e) => {
-                    if (e.target.files?.length) {
-                      Array.from(e.target.files).forEach(file => {
-                        const reader = new FileReader();
-                        reader.onload = (ev) => {
-                          if (typeof ev.target?.result === 'string') {
-                             setStyleRefImages(prev => [...prev, ev.target!.result as string].slice(0, 3));
-                          }
-                        };
-                        reader.readAsDataURL(file);
-                      });
-                    }
-                  }} 
-                />
               </div>
 
-              {/* 2. BRAND ASSETS ZONE - With logo distinction */}
+              {/* 2. BRAND ASSETS ZONE - Compact */}
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">Assets de marque</label>
-                  <span className="text-[10px] text-gray-400">{uploadedImages.length}</span>
+                  <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">Assets</label>
+                  <button
+                    onClick={() => setShowSourceManager(true)}
+                    className="text-[10px] text-gray-500 hover:text-gray-700"
+                  >+ Gérer</button>
                 </div>
                 
-                {/* THE Logo - Special display */}
-                {brandData?.logo && (
-                  <div className="mb-3 p-2 bg-emerald-50 border border-emerald-200 rounded-lg">
-                    <div className="flex items-center gap-2 mb-1.5">
-                      <span className="text-[9px] font-bold text-emerald-700 uppercase tracking-wider">✓ Logo protégé</span>
-                    </div>
-                    <div className="relative h-12 w-full rounded overflow-hidden bg-white flex items-center justify-center"
+                {/* Logo inline - compact */}
+                <div className="flex gap-2 flex-wrap">
+                  {brandData?.logo && (
+                    <div className="relative h-14 w-14 rounded border-2 border-emerald-300 overflow-hidden flex-shrink-0 group"
                       style={{
                         backgroundImage: `linear-gradient(45deg, #f0f0f0 25%, transparent 25%), linear-gradient(-45deg, #f0f0f0 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #f0f0f0 75%), linear-gradient(-45deg, transparent 75%, #f0f0f0 75%)`,
-                        backgroundSize: '8px 8px',
-                        backgroundPosition: '0 0, 0 4px, 4px -4px, -4px 0px'
+                        backgroundSize: '6px 6px',
+                        backgroundPosition: '0 0, 0 3px, 3px -3px, -3px 0px'
                       }}
                     >
-                      <img src={brandData.logo} className="max-h-10 max-w-full object-contain" alt="Logo" />
-                    </div>
-                  </div>
-                )}
-                
-                {/* Other assets */}
-                {uploadedImages.filter(img => img !== brandData?.logo).length > 0 ? (
-                  <div className="grid grid-cols-4 gap-2 mb-3">
-                    {uploadedImages.filter(img => img !== brandData?.logo).slice(0, 7).map((img, i) => {
-                      // Find category from labeledImages
-                      const labelObj = brandData?.labeledImages?.find((li: any) => li.url === img);
-                      const isClientLogo = labelObj?.category === 'client_logo';
-                      
-                      return (
-                        <div key={i} className={`relative aspect-square group rounded-md overflow-hidden border ${isClientLogo ? 'border-blue-200 bg-blue-50' : 'border-gray-100'}`}>
-                          <img src={img} className="w-full h-full object-cover" />
-                          {isClientLogo && (
-                            <div className="absolute bottom-0 left-0 right-0 bg-blue-600/80 text-white text-[7px] text-center py-0.5 font-medium">
-                              REF
-                            </div>
-                          )}
-                          <button
-                            onClick={() => handleRemoveImage(uploadedImages.indexOf(img))}
-                            className="absolute top-0.5 right-0.5 w-4 h-4 bg-black/50 text-white rounded-full flex items-center justify-center text-[10px] opacity-0 group-hover:opacity-100 transition-all hover:bg-red-500"
-                          >×</button>
-                        </div>
-                      );
-                    })}
-                    {uploadedImages.filter(img => img !== brandData?.logo).length > 7 && (
-                      <div className="aspect-square bg-gray-50 rounded-md flex items-center justify-center text-[10px] text-gray-400 font-medium border border-gray-100">
-                        +{uploadedImages.filter(img => img !== brandData?.logo).length - 7}
+                      <img src={brandData.logo} className="w-full h-full object-contain p-1" alt="Logo" />
+                      <div className="absolute bottom-0 left-0 right-0 bg-emerald-600 text-white text-[6px] text-center py-0.5 font-bold">
+                        LOGO
                       </div>
-                    )}
-                  </div>
-                ) : !brandData?.logo && (
-                  <div className="bg-gray-50 border border-dashed border-gray-200 p-4 text-center rounded-lg mb-3">
-                    <span className="text-xs text-gray-400">Aucun asset (logo, produit...)</span>
-                  </div>
-                )}
-
-                <button
-                  onClick={() => setShowSourceManager(true)}
-                  className="w-full py-2 text-xs text-gray-600 border border-gray-200 rounded-md hover:border-gray-400 hover:text-gray-900 transition-colors flex items-center justify-center gap-2 bg-white"
-                >
-                  <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                    <path d="M12 4v16m8-8H4" />
-                  </svg>
-                  Gérer les assets
-                </button>
+                    </div>
+                  )}
+                  
+                  {/* Other assets */}
+                  {uploadedImages.filter(img => img !== brandData?.logo).slice(0, 6).map((img, i) => {
+                    const labelObj = brandData?.labeledImages?.find((li: any) => li.url === img);
+                    const isClientLogo = labelObj?.category === 'client_logo';
+                    
+                    return (
+                      <div key={i} className={`relative h-14 w-14 group rounded overflow-hidden border ${isClientLogo ? 'border-blue-300' : 'border-gray-200'}`}>
+                        <img src={img} className="w-full h-full object-cover" />
+                        {isClientLogo && (
+                          <div className="absolute bottom-0 left-0 right-0 bg-blue-600 text-white text-[6px] text-center py-0.5">REF</div>
+                        )}
+                        <button
+                          onClick={() => handleRemoveImage(uploadedImages.indexOf(img))}
+                          className="absolute top-0.5 right-0.5 w-3.5 h-3.5 bg-black/50 text-white rounded-full flex items-center justify-center text-[8px] opacity-0 group-hover:opacity-100 hover:bg-red-500"
+                        >×</button>
+                      </div>
+                    );
+                  })}
+                  
+                  {uploadedImages.filter(img => img !== brandData?.logo).length > 6 && (
+                    <div className="h-14 w-14 bg-gray-100 rounded flex items-center justify-center text-[10px] text-gray-500 font-medium">
+                      +{uploadedImages.filter(img => img !== brandData?.logo).length - 6}
+                    </div>
+                  )}
+                </div>
+                
                 <input ref={fileInputRef} type="file" multiple accept="image/*" className="hidden" onChange={handleImageUpload} />
               </div>
             </div>

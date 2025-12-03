@@ -688,88 +688,97 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
               </div>
             </div>
 
-            {/* 2. Chiffres clés - Only if we have some, or compact add */}
-            <div className="bg-white border border-gray-200 p-4 rounded-lg">
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2">
-                  <span className="text-lg">📊</span>
-                  <span className="text-[10px] font-mono uppercase tracking-widest text-gray-400">Chiffres clés</span>
-                </div>
-                {(localData.contentNuggets?.realStats?.length || 0) > 0 && (
-                  <span className="bg-emerald-100 text-emerald-700 text-[9px] px-1.5 py-0.5 font-bold rounded">
-                    {localData.contentNuggets?.realStats?.length}
-                  </span>
+            {/* 2. Forces & USPs - Features + Key Points */}
+            <div className="bg-gradient-to-br from-emerald-50 to-teal-50 border border-emerald-100 p-4 rounded-lg">
+              <div className="flex items-center gap-2 mb-3">
+                <span className="text-lg">💎</span>
+                <span className="text-[10px] font-mono uppercase tracking-widest text-emerald-600">Forces & USPs</span>
+              </div>
+              
+              <div className="space-y-1.5 max-h-44 overflow-y-auto">
+                {/* Features */}
+                {localData.features?.map((f: string, i: number) => (
+                  <div key={`f-${i}`} className="group flex items-center gap-2 p-1.5 bg-white/70 rounded text-xs">
+                    <span className="text-emerald-500">✓</span>
+                    <span className="text-gray-700 flex-1">{f}</span>
+                    <button onClick={() => {
+                      const newFeatures = [...localData.features];
+                      newFeatures.splice(i, 1);
+                      handleChange('features', newFeatures);
+                    }} className="text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100">×</button>
+                  </div>
+                ))}
+                {/* Key Points */}
+                {localData.keyPoints?.map((kp: string, i: number) => (
+                  <div key={`kp-${i}`} className="group flex items-center gap-2 p-1.5 bg-teal-100/50 rounded text-xs">
+                    <span className="text-teal-600">★</span>
+                    <span className="text-gray-700 flex-1">{kp}</span>
+                    <button onClick={() => {
+                      const newKPs = [...localData.keyPoints];
+                      newKPs.splice(i, 1);
+                      handleChange('keyPoints', newKPs);
+                    }} className="text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100">×</button>
+                  </div>
+                ))}
+                {(!localData.features?.length && !localData.keyPoints?.length) && (
+                  <p className="text-[10px] text-gray-400 text-center py-2">Ajoutez vos forces et USPs</p>
                 )}
               </div>
               
-              <div className="space-y-2 max-h-40 overflow-y-auto">
-                {localData.contentNuggets?.realStats?.map((stat: string, i: number) => (
-                  <div key={i} className="group relative p-2 bg-emerald-50 border border-emerald-100 rounded text-xs text-gray-700 flex justify-between items-start">
-                    <span>{stat}</span>
-                    <button 
-                      onClick={() => {
-                        const newStats = [...localData.contentNuggets.realStats];
-                        newStats.splice(i, 1);
-                        handleChange('contentNuggets', { ...localData.contentNuggets, realStats: newStats });
-                      }}
-                      className="text-gray-400 hover:text-red-500 ml-2 flex-shrink-0"
-                    >×</button>
-                  </div>
-                ))}
-              </div>
-              
               <AddItemInput 
-                placeholder="Ex: +40% de croissance, 10K users" 
-                onAdd={(val) => {
-                  handleChange('contentNuggets', { 
-                    ...localData.contentNuggets, 
-                    realStats: [...(localData.contentNuggets?.realStats || []), val] 
-                  });
-                }}
+                placeholder="Ex: Gain de temps 10x, Support 24/7" 
+                onAdd={(val) => handleChange('features', [...(localData.features || []), val])}
               />
             </div>
 
-            {/* 3. Témoignages - Only if we have some, or compact add */}
-            <div className="bg-white border border-gray-200 p-4 rounded-lg">
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center gap-2">
-                  <span className="text-lg">💬</span>
-                  <span className="text-[10px] font-mono uppercase tracking-widest text-gray-400">Témoignages</span>
-                </div>
-                {(localData.contentNuggets?.testimonials?.length || 0) > 0 && (
-                  <span className="bg-purple-100 text-purple-700 text-[9px] px-1.5 py-0.5 font-bold rounded">
-                    {localData.contentNuggets?.testimonials?.length}
+            {/* 3. Ton & Langage - Tone of voice + Vocabulary */}
+            <div className="bg-gradient-to-br from-violet-50 to-purple-50 border border-violet-100 p-4 rounded-lg">
+              <div className="flex items-center gap-2 mb-3">
+                <span className="text-lg">🎤</span>
+                <span className="text-[10px] font-mono uppercase tracking-widest text-violet-600">Ton & Langage</span>
+              </div>
+              
+              {/* Tone pills */}
+              <div className="flex flex-wrap gap-1.5 mb-3">
+                {localData.toneVoice?.map((tone: string, i: number) => (
+                  <span key={i} className="group inline-flex items-center gap-1 px-2 py-1 bg-violet-100 text-violet-700 text-[10px] rounded-full">
+                    {tone}
+                    <button onClick={() => {
+                      const newTones = [...localData.toneVoice];
+                      newTones.splice(i, 1);
+                      handleChange('toneVoice', newTones);
+                    }} className="hover:text-red-500">×</button>
                   </span>
+                ))}
+                {!localData.toneVoice?.length && (
+                  <span className="text-[10px] text-gray-400">Aucun ton défini</span>
                 )}
               </div>
               
-              <div className="space-y-2 max-h-40 overflow-y-auto">
-                {localData.contentNuggets?.testimonials?.map((t: any, i: number) => (
-                  <div key={i} className="group relative p-2 bg-purple-50 border border-purple-100 rounded">
-                    <p className="text-xs text-gray-600 italic">"{t.quote?.slice(0, 60)}{t.quote?.length > 60 ? '...' : ''}"</p>
-                    <p className="text-[10px] text-gray-900 font-medium mt-1">— {t.author || 'Client'}</p>
-                    <button 
-                      onClick={() => {
-                        const newTestimonials = [...localData.contentNuggets.testimonials];
-                        newTestimonials.splice(i, 1);
-                        handleChange('contentNuggets', { ...localData.contentNuggets, testimonials: newTestimonials });
-                      }}
-                      className="absolute top-1 right-1 text-gray-400 hover:text-red-500"
-                    >×</button>
+              {/* Vocabulary */}
+              <div className="space-y-1.5 max-h-24 overflow-y-auto mb-2">
+                {localData.vocabulary?.map((term: string, i: number) => (
+                  <div key={i} className="group flex items-center gap-2 text-xs">
+                    <span className="text-purple-400 text-[10px]">›</span>
+                    <code className="text-purple-700 bg-purple-100/50 px-1 rounded">{term}</code>
+                    <button onClick={() => {
+                      const newVocab = [...localData.vocabulary];
+                      newVocab.splice(i, 1);
+                      handleChange('vocabulary', newVocab);
+                    }} className="text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 text-[10px]">×</button>
                   </div>
                 ))}
               </div>
               
               <AddItemInput 
-                placeholder="'Citation' - Auteur" 
+                placeholder="Ton (Pro, Fun) ou terme clé" 
                 onAdd={(val) => {
-                  const lastDash = val.lastIndexOf('-');
-                  const quote = lastDash > 0 ? val.substring(0, lastDash).trim().replace(/^["']|["']$/g, '') : val;
-                  const author = lastDash > 0 ? val.substring(lastDash + 1).trim() : 'Client';
-                  handleChange('contentNuggets', { 
-                    ...localData.contentNuggets, 
-                    testimonials: [...(localData.contentNuggets?.testimonials || []), { quote, author, company: '' }] 
-                  });
+                  // If it's a short word, add to tone, otherwise to vocabulary
+                  if (val.length < 15 && !val.includes(' ')) {
+                    handleChange('toneVoice', [...(localData.toneVoice || []), val]);
+                  } else {
+                    handleChange('vocabulary', [...(localData.vocabulary || []), val]);
+                  }
                 }}
               />
             </div>
