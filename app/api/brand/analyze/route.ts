@@ -24,6 +24,159 @@ interface ParallelSearchResult {
   excerpts: string[];
 }
 
+// Helper: Enrich with Firecrawl Search when main scrape is poor
+async function enrichWithFirecrawlSearch(
+  industry: string, 
+  brandName: string,
+  targetAudience?: string
+): Promise<{
+  painPoints: { point: string; source: string }[];
+  trends: { trend: string; source: string }[];
+  marketContext: string[];
+}> {
+  const FIRECRAWL_API_KEY = process.env.FIRECRAWL_API_KEY;
+  
+  if (!FIRECRAWL_API_KEY) {
+    console.warn('⚠️ FIRECRAWL_API_KEY not set, skipping enrichment search');
+    return { painPoints: [], trends: [], marketContext: [] };
+  }
+
+  const results = {
+    painPoints: [] as { point: string; source: string }[],
+    trends: [] as { trend: string; source: string }[],
+    marketContext: [] as string[]
+  };
+
+  try {
+    console.log(`🔥 Firecrawl Search enrichment for: ${industry} / ${brandName}`);
+    
+    // Search queries tailored for content creation
+    const searches = [
+      {
+        query: `"${industry}" challenges problems users face 2024`,
+        type: 'painPoints'
+      },
+      {
+        query: `"${industry}" trends growth statistics 2024 2025`,
+        type: 'trends'
+      }
+    ];
+
+    // Add audience-specific search if we have target audience
+    if (targetAudience) {
+      searches.push({
+        query: `"${targetAudience}" frustrations problems "${industry}"`,
+        type: 'painPoints'
+      });
+    }
+
+    // Execute searches in parallel
+    const searchPromises = searches.map(async (search) => {
+      try {
+        const response = await fetch('https://api.firecrawl.dev/v1/search', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${FIRECRAWL_API_KEY}`
+          },
+          body: JSON.stringify({
+            query: search.query,
+            limit: 5,
+            scrapeOptions: {
+              formats: ['markdown']
+            }
+          })
+        });
+
+        if (!response.ok) {
+          console.warn(`Firecrawl search failed for "${search.query}":`, response.status);
+          return { type: search.type, data: [] };
+        }
+
+        const data = await response.json();
+        return { type: search.type, data: data.data || [] };
+      } catch (e) {
+        console.warn(`Firecrawl search error for "${search.query}":`, e);
+        return { type: search.type, data: [] };
+      }
+    });
+
+    const searchResults = await Promise.all(searchPromises);
+
+    // Process results
+    for (const result of searchResults) {
+      for (const item of result.data) {
+        const content = item.markdown || item.description || '';
+        const source = item.url || 'web';
+        
+        if (result.type === 'painPoints' && content) {
+          // Extract pain point sentences
+          const painSentences = content
+            .split(/[.!?]/)
+            .filter((s: string) => 
+              s.length > 30 && 
+              s.length < 200 &&
+              (s.toLowerCase().includes('challenge') || 
+               s.toLowerCase().includes('problem') ||
+               s.toLowerCase().includes('struggle') ||
+               s.toLowerCase().includes('difficult') ||
+               s.toLowerCase().includes('pain') ||
+               s.toLowerCase().includes('frustrat'))
+            )
+            .slice(0, 2);
+          
+          for (const sentence of painSentences) {
+            results.painPoints.push({
+              point: sentence.trim(),
+              source: new URL(source).hostname
+            });
+          }
+        }
+        
+        if (result.type === 'trends' && content) {
+          // Extract trend/stat sentences
+          const trendSentences = content
+            .split(/[.!?]/)
+            .filter((s: string) => 
+              s.length > 30 && 
+              s.length < 200 &&
+              (s.match(/\d+%/) || // Has percentage
+               s.match(/\$\d+/) || // Has dollar amount
+               s.toLowerCase().includes('grow') ||
+               s.toLowerCase().includes('increase') ||
+               s.toLowerCase().includes('trend') ||
+               s.toLowerCase().includes('market'))
+            )
+            .slice(0, 2);
+          
+          for (const sentence of trendSentences) {
+            results.trends.push({
+              trend: sentence.trim(),
+              source: new URL(source).hostname
+            });
+          }
+        }
+      }
+    }
+
+    // Deduplicate
+    results.painPoints = results.painPoints
+      .filter((p, i, arr) => arr.findIndex(x => x.point.slice(0, 50) === p.point.slice(0, 50)) === i)
+      .slice(0, 5);
+    
+    results.trends = results.trends
+      .filter((t, i, arr) => arr.findIndex(x => x.trend.slice(0, 50) === t.trend.slice(0, 50)) === i)
+      .slice(0, 5);
+
+    console.log(`✅ Firecrawl enrichment: ${results.painPoints.length} pain points, ${results.trends.length} trends`);
+    
+    return results;
+  } catch (error) {
+    console.error('Firecrawl enrichment error:', error);
+    return results;
+  }
+}
+
 // Helper: Search for real industry insights using Parallel Search API
 async function searchIndustryInsights(industry: string, brandName: string): Promise<{
   rawExcerpts: string;
@@ -1300,6 +1453,71 @@ FORMAT: Return ONLY a valid JSON array:
     console.log(`   Achievements: ${mergedContentNuggets.achievements.length}`);
     console.log(`   Blog topics: ${mergedContentNuggets.blogTopics.length}`);
     console.log(`   Pages scraped: ${mergedContentNuggets._meta.pagesScraped}`);
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // FIRECRAWL SEARCH ENRICHMENT - When we have sparse data, search the web
+    // ═══════════════════════════════════════════════════════════════════════════
+    const hasMinimalData = 
+      (!brandData.industryInsights || brandData.industryInsights.length < 2) &&
+      (mergedContentNuggets.realStats.length < 2) &&
+      (!brandData.features || brandData.features.length < 3);
+
+    if (hasMinimalData && brandData.industry) {
+      console.log('⚠️ Sparse data detected, triggering Firecrawl Search enrichment...');
+      
+      try {
+        const enrichment = await enrichWithFirecrawlSearch(
+          brandData.industry,
+          brandData.name || 'the company',
+          brandData.targetAudience
+        );
+
+        // Convert pain points to industryInsights format (new pain point structure)
+        if (enrichment.painPoints.length > 0) {
+          const painPointInsights = enrichment.painPoints.map(pp => ({
+            painPoint: pp.point,
+            consequence: '',
+            solution: '',
+            type: 'pain_point' as const,
+            source: pp.source,
+            isEnriched: true
+          }));
+
+          brandData.industryInsights = [
+            ...(brandData.industryInsights || []),
+            ...painPointInsights
+          ].slice(0, 6);
+          
+          console.log(`✅ Added ${painPointInsights.length} pain points from web search`);
+        }
+
+        // Add trends as insights too
+        if (enrichment.trends.length > 0) {
+          const trendInsights = enrichment.trends.map(t => ({
+            painPoint: t.trend,
+            consequence: '',
+            solution: '',
+            type: 'trend' as const,
+            source: t.source,
+            isEnriched: true
+          }));
+
+          brandData.industryInsights = [
+            ...(brandData.industryInsights || []),
+            ...trendInsights
+          ].slice(0, 8);
+          
+          console.log(`✅ Added ${trendInsights.length} trends from web search`);
+        }
+
+        // Mark that we enriched from search
+        (mergedContentNuggets as any)._meta.enrichedFromSearch = true;
+        
+      } catch (enrichError) {
+        console.warn('Firecrawl enrichment failed:', enrichError);
+        // Continue without enrichment
+      }
+    }
 
     // Also validate suggestedPosts - mark which ones use real data
     if (Array.isArray(brandData.suggestedPosts)) {
