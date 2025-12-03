@@ -1661,7 +1661,6 @@ ${enhancement}`);
                   <p className="text-xs mt-1">Ajoutez des informations dans l'identité ou écrivez librement !</p>
                 </div>
               )}
-            </div>
           </div>
         )}
 
