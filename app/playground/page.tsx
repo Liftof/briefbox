@@ -1236,89 +1236,134 @@ ${enhancement}`);
       
       return (
         <div className="min-h-[85vh] flex items-center justify-center animate-fade-in relative">
-          {/* Subtle grid background */}
-          <div className="absolute inset-0 opacity-[0.02]" style={{
+          {/* Subtle grid background - matching URL step */}
+          <div className="absolute inset-0 opacity-[0.03]" style={{
             backgroundImage: `linear-gradient(#000 1px, transparent 1px), linear-gradient(90deg, #000 1px, transparent 1px)`,
-            backgroundSize: '32px 32px'
+            backgroundSize: '60px 60px'
           }} />
           
-          <div className="w-full max-w-lg mx-auto relative z-10">
-            {/* Logo Display Card */}
-            <div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
-              {/* Logo Container */}
-              <div className="aspect-[4/3] flex items-center justify-center p-12 bg-gradient-to-br from-gray-50 to-white border-b border-gray-100">
-                {currentLogo ? (
-                  <img 
-                    src={currentLogo} 
-                    alt={brandData?.name || 'Logo'} 
-                    className="max-w-full max-h-full object-contain"
-                    style={{ maxHeight: '180px' }}
-                  />
-                ) : (
-                  <div className="flex flex-col items-center gap-3 text-gray-400">
-                    <svg className="w-16 h-16" fill="none" stroke="currentColor" strokeWidth="1" viewBox="0 0 24 24">
-                      <path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                    <span className="text-sm">Aucun logo détecté</span>
-                  </div>
-                )}
+          {/* Floating accents - matching URL step */}
+          <div className="absolute top-20 right-20 w-64 h-64 bg-gradient-to-br from-emerald-200/20 to-teal-300/10 rounded-full blur-3xl" />
+          <div className="absolute bottom-32 left-16 w-48 h-48 bg-gradient-to-tr from-amber-200/15 to-orange-300/10 rounded-full blur-3xl" />
+
+          <div className="relative z-10 w-full max-w-xl mx-auto px-6">
+            {/* Header - matching URL step style */}
+            <div className="mb-10">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+                <span className="text-xs font-mono uppercase tracking-[0.2em] text-gray-400">Logo Check</span>
               </div>
               
-              {/* Confirmation Section */}
-              <div className="p-6 text-center">
-                <h2 className="text-xl font-semibold text-gray-900 mb-2">
-                  Le logo est-il correct ?
-                </h2>
-                <p className="text-sm text-gray-500 mb-6">
-                  Sinon, vous pouvez en uploader un nouveau.
-                </p>
+              <h1 className="text-3xl md:text-4xl font-light text-gray-900 leading-[1.1] mb-3" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+                C'est bien<br />
+                <span className="font-semibold">votre logo ?</span>
+              </h1>
+              
+              <p className="text-gray-400 text-base max-w-md leading-relaxed">
+                Ce logo sera utilisé dans tous vos visuels générés. Assurez-vous qu'il est correct.
+              </p>
+            </div>
+
+            {/* Logo Display Card - matching app design */}
+            <div className="relative">
+              {/* Decorative corners */}
+              <div className="absolute -top-3 -left-3 w-6 h-6 border-l-2 border-t-2 border-gray-200" />
+              <div className="absolute -bottom-3 -right-3 w-6 h-6 border-r-2 border-b-2 border-gray-200" />
+              
+              <div className="bg-white border border-gray-200">
+                {/* Logo Container with checker pattern for transparent/white logos */}
+                <div 
+                  className="aspect-[16/9] flex items-center justify-center p-8 relative overflow-hidden"
+                  style={{
+                    backgroundImage: `
+                      linear-gradient(45deg, #f0f0f0 25%, transparent 25%),
+                      linear-gradient(-45deg, #f0f0f0 25%, transparent 25%),
+                      linear-gradient(45deg, transparent 75%, #f0f0f0 75%),
+                      linear-gradient(-45deg, transparent 75%, #f0f0f0 75%)
+                    `,
+                    backgroundSize: '20px 20px',
+                    backgroundPosition: '0 0, 0 10px, 10px -10px, -10px 0px',
+                    backgroundColor: '#fafafa'
+                  }}
+                >
+                  {currentLogo ? (
+                    <img 
+                      src={currentLogo} 
+                      alt={brandData?.name || 'Logo'} 
+                      className="max-w-full max-h-full object-contain relative z-10"
+                      style={{ maxHeight: '160px' }}
+                    />
+                  ) : (
+                    <div className="flex flex-col items-center gap-3 text-gray-400">
+                      <svg className="w-12 h-12" fill="none" stroke="currentColor" strokeWidth="1" viewBox="0 0 24 24">
+                        <path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                      <span className="text-sm font-mono">Aucun logo détecté</span>
+                    </div>
+                  )}
+                </div>
                 
-                {/* Hidden file input for logo upload */}
-                <input
-                  ref={logoUploadRef}
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={handleLogoUpload}
-                />
-                
-                {/* Action Buttons */}
-                <div className="flex gap-3">
-                  <button
-                    onClick={() => logoUploadRef.current?.click()}
-                    disabled={isUploadingLogo}
-                    className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 hover:border-gray-400 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {isUploadingLogo ? (
-                      <span className="flex items-center justify-center gap-2">
-                        <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                        </svg>
-                        Chargement...
-                      </span>
-                    ) : (
-                      'Changer de logo'
-                    )}
-                  </button>
+                {/* Action Section */}
+                <div className="p-6 border-t border-gray-100 bg-gray-50/50">
+                  {/* Hidden file input for logo upload */}
+                  <input
+                    ref={logoUploadRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={handleLogoUpload}
+                  />
                   
-                  <button
-                    onClick={handleConfirmLogo}
-                    disabled={isUploadingLogo}
-                    className="flex-1 px-6 py-3 bg-purple-600 text-white font-medium rounded-lg hover:bg-purple-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
-                  >
-                    C'est le bon !
-                  </button>
+                  {/* Action Buttons */}
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => logoUploadRef.current?.click()}
+                      disabled={isUploadingLogo}
+                      className="flex-1 px-5 py-3 border border-gray-300 text-gray-600 text-sm font-medium hover:bg-white hover:border-gray-400 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {isUploadingLogo ? (
+                        <span className="flex items-center justify-center gap-2">
+                          <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                          </svg>
+                          Chargement...
+                        </span>
+                      ) : (
+                        <span className="flex items-center justify-center gap-2">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                            <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" strokeLinecap="round" strokeLinejoin="round" />
+                          </svg>
+                          Uploader un autre
+                        </span>
+                      )}
+                    </button>
+                    
+                    <button
+                      onClick={handleConfirmLogo}
+                      disabled={isUploadingLogo}
+                      className="flex-1 px-5 py-3 bg-gray-900 text-white text-sm font-medium hover:bg-black transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <span className="flex items-center justify-center gap-2">
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                          <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                        C'est le bon
+                      </span>
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
             
             {/* Brand name indicator */}
             {brandData?.name && (
-              <div className="mt-4 text-center">
-                <span className="text-xs text-gray-400 font-mono uppercase tracking-wider">
+              <div className="mt-6 flex items-center justify-center gap-2">
+                <div className="w-1 h-1 bg-gray-300 rounded-full" />
+                <span className="text-[10px] text-gray-400 font-mono uppercase tracking-[0.15em]">
                   {brandData.name}
                 </span>
+                <div className="w-1 h-1 bg-gray-300 rounded-full" />
               </div>
             )}
           </div>
