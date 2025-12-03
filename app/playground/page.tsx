@@ -10,7 +10,7 @@ import ProjectsView, { addGenerations, loadFeedbackPatterns } from './components
 import StrategyView from './components/StrategyView';
 import { TemplateId } from '@/lib/templates';
 
-type Step = 'url' | 'analyzing' | 'bento' | 'playground';
+type Step = 'url' | 'analyzing' | 'logo-confirm' | 'bento' | 'playground';
 
 // Template definitions for the UI
 const TEMPLATES = [
@@ -194,6 +194,10 @@ function PlaygroundContent() {
   const [otherLinks, setOtherLinks] = useState<string>('');
   const [isAddingSource, setIsAddingSource] = useState(false);
 
+  // Logo confirmation step state
+  const [isUploadingLogo, setIsUploadingLogo] = useState(false);
+  const logoUploadRef = useRef<HTMLInputElement>(null);
+
   const [editingImage, setEditingImage] = useState<string | null>(null);
   const [styleRefImages, setStyleRefImages] = useState<string[]>([]); // Changed to array for multi-ref
   const [editPrompt, setEditPrompt] = useState('');
@@ -284,12 +288,8 @@ function PlaygroundContent() {
     const selection = Array.from(new Set([...prioritized, ...fallback].filter(Boolean)));
     setUploadedImages(selection.slice(0, 6));
 
-    // New: Use editorialAngles if available (Smart Agency Workflow)
-    if (brand.editorialAngles?.length > 0 && !brief) {
-        // Don't auto-set brief, let user choose from strategy view
-    }
-    // Fallback: Use suggestedPosts (template-based)
-    else if (brand.suggestedPosts?.length && !brief) {
+    // New: Use suggestedPosts (template-based) if available
+    if (brand.suggestedPosts?.length && !brief) {
       const firstPost = brand.suggestedPosts[0];
       if (firstPost) {
         // Set template and brief
@@ -400,9 +400,9 @@ function PlaygroundContent() {
       setStatus('idle');
       
       setTimeout(() => {
-          setStep('bento');
-          setActiveTab('create');
-          showToast('Marque analysée', 'success');
+          // New brands go to logo confirmation step first
+          setStep('logo-confirm');
+          showToast('Logo détecté !', 'success');
       }, 500);
 
     } catch (error: any) {
@@ -635,6 +635,97 @@ function PlaygroundContent() {
   const handleSourceUpload = (event: ChangeEvent<HTMLInputElement>) => {
     processFiles(event.target.files, newUploadLabel);
     event.target.value = '';
+  };
+
+  // Handle logo upload from the confirmation step
+  const handleLogoUpload = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    
+    setIsUploadingLogo(true);
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const logoDataUrl = e.target?.result as string;
+      if (logoDataUrl) {
+        // Update brandData with the new logo
+        setBrandData((prev: any) => {
+          if (!prev) return prev;
+          
+          // Update labeledImages: remove old main_logo entries, add new one
+          const existingLabeled = Array.isArray(prev.labeledImages) ? prev.labeledImages : [];
+          const filteredLabeled = existingLabeled.filter((img: any) => img.category !== 'main_logo');
+          
+          return {
+            ...prev,
+            logo: logoDataUrl,
+            labeledImages: [
+              { url: logoDataUrl, category: 'main_logo', description: 'Brand logo (confirmed by user)' },
+              ...filteredLabeled
+            ]
+          };
+        });
+        
+        showToast('Logo mis à jour !', 'success');
+      }
+      setIsUploadingLogo(false);
+    };
+    reader.onerror = () => {
+      showToast('Erreur lors du chargement du logo', 'error');
+      setIsUploadingLogo(false);
+    };
+    reader.readAsDataURL(file);
+    event.target.value = '';
+  };
+
+  // Confirm logo and proceed to bento
+  const handleConfirmLogo = async () => {
+    if (!brandData) return;
+    
+    // Mark logo as confirmed in labeledImages
+    setBrandData((prev: any) => {
+      if (!prev) return prev;
+      
+      const existingLabeled = Array.isArray(prev.labeledImages) ? prev.labeledImages : [];
+      const updatedLabeled = existingLabeled.map((img: any) => {
+        if (img.category === 'main_logo') {
+          return { ...img, confirmed: true };
+        }
+        return img;
+      });
+      
+      // If no main_logo exists but we have a logo URL, add it
+      if (!updatedLabeled.some((img: any) => img.category === 'main_logo') && prev.logo) {
+        updatedLabeled.unshift({
+          url: prev.logo,
+          category: 'main_logo',
+          description: 'Brand logo (confirmed by user)',
+          confirmed: true
+        });
+      }
+      
+      return { ...prev, labeledImages: updatedLabeled };
+    });
+    
+    // Save the brand with the confirmed logo
+    try {
+      const response = await fetch('/api/brand/save', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ brand: { ...brandData, logoConfirmed: true } })
+      });
+      
+      const data = await response.json();
+      if (data.success && data.brandId) {
+        setBrandData((prev: any) => ({ ...prev, id: data.brandId }));
+        showToast('Marque sauvegardée !', 'success');
+      }
+    } catch (error) {
+      console.error('Error saving brand:', error);
+      // Continue anyway - we'll try to save later
+    }
+    
+    // Proceed to bento grid
+    setStep('bento');
   };
 
   const fetchAndMergeSource = async (url: string) => {
@@ -1140,6 +1231,101 @@ ${enhancement}`);
       );
     }
 
+    if (step === 'logo-confirm') {
+      const currentLogo = brandData?.logo || brandData?.labeledImages?.find((img: any) => img.category === 'main_logo')?.url;
+      
+      return (
+        <div className="min-h-[85vh] flex items-center justify-center animate-fade-in relative">
+          {/* Subtle grid background */}
+          <div className="absolute inset-0 opacity-[0.02]" style={{
+            backgroundImage: `linear-gradient(#000 1px, transparent 1px), linear-gradient(90deg, #000 1px, transparent 1px)`,
+            backgroundSize: '32px 32px'
+          }} />
+          
+          <div className="w-full max-w-lg mx-auto relative z-10">
+            {/* Logo Display Card */}
+            <div className="bg-white border border-gray-200 rounded-2xl shadow-sm overflow-hidden">
+              {/* Logo Container */}
+              <div className="aspect-[4/3] flex items-center justify-center p-12 bg-gradient-to-br from-gray-50 to-white border-b border-gray-100">
+                {currentLogo ? (
+                  <img 
+                    src={currentLogo} 
+                    alt={brandData?.name || 'Logo'} 
+                    className="max-w-full max-h-full object-contain"
+                    style={{ maxHeight: '180px' }}
+                  />
+                ) : (
+                  <div className="flex flex-col items-center gap-3 text-gray-400">
+                    <svg className="w-16 h-16" fill="none" stroke="currentColor" strokeWidth="1" viewBox="0 0 24 24">
+                      <path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                    <span className="text-sm">Aucun logo détecté</span>
+                  </div>
+                )}
+              </div>
+              
+              {/* Confirmation Section */}
+              <div className="p-6 text-center">
+                <h2 className="text-xl font-semibold text-gray-900 mb-2">
+                  Le logo est-il correct ?
+                </h2>
+                <p className="text-sm text-gray-500 mb-6">
+                  Sinon, vous pouvez en uploader un nouveau.
+                </p>
+                
+                {/* Hidden file input for logo upload */}
+                <input
+                  ref={logoUploadRef}
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleLogoUpload}
+                />
+                
+                {/* Action Buttons */}
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => logoUploadRef.current?.click()}
+                    disabled={isUploadingLogo}
+                    className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 hover:border-gray-400 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isUploadingLogo ? (
+                      <span className="flex items-center justify-center gap-2">
+                        <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                        </svg>
+                        Chargement...
+                      </span>
+                    ) : (
+                      'Changer de logo'
+                    )}
+                  </button>
+                  
+                  <button
+                    onClick={handleConfirmLogo}
+                    disabled={isUploadingLogo}
+                    className="flex-1 px-6 py-3 bg-purple-600 text-white font-medium rounded-lg hover:bg-purple-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
+                  >
+                    C'est le bon !
+                  </button>
+                </div>
+              </div>
+            </div>
+            
+            {/* Brand name indicator */}
+            {brandData?.name && (
+              <div className="mt-4 text-center">
+                <span className="text-xs text-gray-400 font-mono uppercase tracking-wider">
+                  {brandData.name}
+                </span>
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    }
+
     if (step === 'bento') {
       return (
         <BentoGrid
@@ -1482,89 +1668,108 @@ ${enhancement}`);
           {/* Format + Sources Row */}
           <div className="p-5 flex flex-col md:flex-row gap-5">
             
-            {/* Style to imitate (Gallery) */}
+            {/* Format Selection */}
             <div className="flex-1">
-              <div className="flex items-center justify-between mb-3">
-                <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">Style à imiter</label>
-                {styleRefImages.length === 0 && (
-                  <button 
-                    onClick={() => setShowStyleGallery(true)}
-                    className="text-[10px] text-emerald-600 hover:text-emerald-700 font-medium flex items-center gap-1"
+              <label className="text-xs font-medium text-gray-500 uppercase tracking-wider mb-3 block">Format</label>
+              <div className="flex flex-wrap gap-2">
+                {TEMPLATES.map((template) => (
+                    <button
+                    key={template.id}
+                    onClick={() => {
+                      setSelectedTemplate(template.id);
+                      if (!brief) setBrief(template.placeholder);
+                    }}
+                    className={`px-3 py-2 text-sm transition-all border flex items-center gap-2 ${
+                      selectedTemplate === template.id
+                        ? 'bg-gray-900 text-white border-gray-900'
+                        : 'bg-white text-gray-600 border-gray-200 hover:border-gray-400'
+                    }`}
+                    title={template.desc}
                   >
-                    <span>✨</span> Ouvrir la galerie
-                  </button>
-                )}
+                    <span>{template.icon}</span>
+                    <span className="text-xs font-medium">{template.name}</span>
+                    </button>
+                ))}
               </div>
-              
-              {styleRefImages.length === 0 ? (
-                <div 
-                  className="border-2 border-dashed border-gray-200 rounded-lg p-4 flex flex-col items-center justify-center text-center cursor-pointer hover:border-gray-400 hover:bg-gray-50 transition-all h-32"
-                  onClick={() => setShowStyleGallery(true)}
-                >
-                  <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center mb-2 text-gray-400">
-                    <span className="text-lg">🎨</span>
-                  </div>
-                  <span className="text-xs text-gray-500 font-medium">Choisir une inspiration</span>
-                  <span className="text-[9px] text-gray-400 mt-1">Galerie ou import</span>
-                </div>
-              ) : (
-                <div className="grid grid-cols-3 gap-2">
-                  {styleRefImages.map((img, i) => (
-                    <div key={i} className="relative h-32 group rounded-lg overflow-hidden border border-emerald-200 shadow-sm">
-                      <img src={img} className="w-full h-full object-cover opacity-90 hover:opacity-100 transition-opacity" />
-                      <button
-                        onClick={() => setStyleRefImages(prev => prev.filter((_, idx) => idx !== i))}
-                        className="absolute top-1 right-1 w-5 h-5 bg-black/50 text-white rounded-full flex items-center justify-center hover:bg-black transition-colors text-[10px] backdrop-blur-sm"
-                      >
-                        ×
-                      </button>
-                    </div>
-                  ))}
-                  {styleRefImages.length < 3 && (
-                    <div 
-                      onClick={() => setShowStyleGallery(true)}
-                      className="h-32 border-2 border-dashed border-gray-200 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-gray-400 hover:bg-gray-50 transition-all"
-                    >
-                      <span className="text-gray-400 text-xl">✨</span>
-                      <span className="text-[9px] text-gray-400">Galerie</span>
-                    </div>
-                  )}
-                  <div 
-                    onClick={() => document.getElementById('style-ref-upload')?.click()}
-                    className="h-32 border-2 border-dashed border-gray-200 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-gray-400 hover:bg-gray-50 transition-all"
-                  >
-                    <span className="text-gray-400 text-xl">+</span>
-                    <span className="text-[9px] text-gray-400">Importer</span>
-                  </div>
-                </div>
-              )}
-              <input 
-                id="style-ref-upload" 
-                type="file" 
-                multiple
-                accept="image/*" 
-                className="hidden" 
-                onChange={(e) => {
-                  if (e.target.files?.length) {
-                    Array.from(e.target.files).forEach(file => {
-                      const reader = new FileReader();
-                      reader.onload = (ev) => {
-                        if (typeof ev.target?.result === 'string') {
-                           setStyleRefImages(prev => [...prev, ev.target!.result as string].slice(0, 3));
-                        }
-                      };
-                      reader.readAsDataURL(file);
-                    });
-                  }
-                }} 
-              />
             </div>
 
             {/* Divider */}
             <div className="hidden md:block w-px bg-gray-100" />
             
-            {/* Brand Assets */}
-            <div className="flex-1 flex flex-col gap-6">
+            {/* Sources & Style */}
+            <div className="w-full md:w-72 flex flex-col gap-6">
+              
+              {/* 1. STYLE REFERENCE ZONE */}
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">Style à imiter</label>
+                  <span className="text-[10px] text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">Recommandé</span>
+                </div>
+                
+                {styleRefImages.length === 0 ? (
+                  <div 
+                    className="border-2 border-dashed border-gray-200 rounded-lg p-4 flex flex-col items-center justify-center text-center cursor-pointer hover:border-gray-400 hover:bg-gray-50 transition-all h-32"
+                    onClick={() => document.getElementById('style-ref-upload')?.click()}
+                  >
+                    <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center mb-2 text-gray-400">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                    </div>
+                    <span className="text-xs text-gray-500 font-medium">Déposer une inspiration</span>
+                    <span className="text-[9px] text-gray-400 mt-1">Image dont on copiera le look</span>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-3 gap-2">
+                    {styleRefImages.map((img, i) => (
+                      <div key={i} className="relative h-24 group rounded-lg overflow-hidden border border-emerald-200 shadow-sm">
+                        <img src={img} className="w-full h-full object-cover opacity-90 hover:opacity-100 transition-opacity" />
+                        <button
+                          onClick={() => setStyleRefImages(prev => prev.filter((_, idx) => idx !== i))}
+                          className="absolute top-1 right-1 w-5 h-5 bg-black/50 text-white rounded-full flex items-center justify-center hover:bg-black transition-colors text-[10px] backdrop-blur-sm"
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+                  {styleRefImages.length < 3 && (
+                      <div 
+                        onClick={() => setShowStyleGallery(true)}
+                        className="h-24 border-2 border-dashed border-gray-200 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-gray-400 hover:bg-gray-50 transition-all"
+                      >
+                        <span className="text-gray-400 text-xl">✨</span>
+                        <span className="text-[9px] text-gray-400">Galerie</span>
+                      </div>
+                    )}
+                    <div 
+                      onClick={() => document.getElementById('style-ref-upload')?.click()}
+                      className="h-24 border-2 border-dashed border-gray-200 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-gray-400 hover:bg-gray-50 transition-all"
+                    >
+                      <span className="text-gray-400 text-xl">+</span>
+                      <span className="text-[9px] text-gray-400">Ajouter</span>
+                    </div>
+                  </div>
+                )}
+                <input 
+                  id="style-ref-upload" 
+                  type="file" 
+                  multiple
+                  accept="image/*" 
+                  className="hidden" 
+                  onChange={(e) => {
+                    if (e.target.files?.length) {
+                      Array.from(e.target.files).forEach(file => {
+                        const reader = new FileReader();
+                        reader.onload = (ev) => {
+                          if (typeof ev.target?.result === 'string') {
+                             setStyleRefImages(prev => [...prev, ev.target!.result as string].slice(0, 3));
+                          }
+                        };
+                        reader.readAsDataURL(file);
+                      });
+                    }
+                  }} 
+                />
+              </div>
+
               {/* 2. BRAND ASSETS ZONE */}
               <div>
                 <div className="flex items-center justify-between mb-2">
@@ -1606,8 +1811,8 @@ ${enhancement}`);
                 </button>
                 <input ref={fileInputRef} type="file" multiple accept="image/*" className="hidden" onChange={handleImageUpload} />
               </div>
+              </div>
             </div>
-          </div>
 
           {/* Generate Button */}
           <div className="p-5 bg-gray-50 border-t border-gray-100">

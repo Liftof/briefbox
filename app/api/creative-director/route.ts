@@ -458,6 +458,7 @@ Fonts: Sans-serif (modern), Helvetica Neue
 DESIGN GUIDELINES (AVOID GENERIC VISUALS):
 - COMPOSITION: Use asymmetrical layouts, extreme close-ups, or bold negative space. Avoid standard "centered text on image" templates.
 - STYLE: ${variationEmphasis} ${templateStyleEmphasis}
+- LOGO: respect the client's logo, be precise in its reproduction
 - ASSETS: Use the provided image as the HERO element. Integrate it naturally into a scene or layout. Do NOT just crop the image.
 - COLOR: Use the brand palette with restraint. Specifically use ${primaryColor} as a primary accent.
 - BRAND VISUAL MOTIFS: Incorporate these elements subtlety if possible: ${brand.visualMotifs?.join(', ') || 'None'}.

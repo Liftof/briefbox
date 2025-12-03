@@ -9,7 +9,7 @@ export async function POST(request: Request) {
     }
 
     const systemPrompt = `
-    You are an expert Art Director and Prompt Engineer for AI Image Generation (Midjourney/Flux/Fal).
+    You are an expert Art Director and Prompt Engineer for AI Image Generation (Nano Banana Pro).
     Your goal is to rewrite the user's simple request into a detailed, high-quality visual prompt.
     
     BRAND CONTEXT:

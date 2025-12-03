@@ -53,15 +53,13 @@ export const brands = pgTable('brands', {
     source: string,
     intent: string
   }[]>(),
-
-  // NOUVEAU (V2 Smart Agency)
-  editorialAngles: jsonb('editorial_angles').$type<{
-    type: string,
-    title: string,
-    content: string,
-    visual_idea: string
-  }[]>(),
   
+  // Editorial Intelligence (V2 Smart Agency)
+  editorialAngles: jsonb('editorial_angles').$type<{
+    angle: string,
+    hook: string,
+    targetEmotion: string
+  }[]>(),
   painPoints: jsonb('pain_points').$type<string[]>(),
   vocabulary: jsonb('vocabulary').$type<string[]>(),
 
