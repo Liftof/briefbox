@@ -13,6 +13,19 @@ const TAG_OPTIONS = [
   { value: 'other', label: 'Autre', color: 'bg-gray-200 text-gray-600' },
 ];
 
+// Checker pattern style for transparent/white images (like Photoshop)
+const CHECKER_PATTERN_STYLE: React.CSSProperties = {
+  backgroundImage: `
+    linear-gradient(45deg, #e5e5e5 25%, transparent 25%),
+    linear-gradient(-45deg, #e5e5e5 25%, transparent 25%),
+    linear-gradient(45deg, transparent 75%, #e5e5e5 75%),
+    linear-gradient(-45deg, transparent 75%, #e5e5e5 75%)
+  `,
+  backgroundSize: '16px 16px',
+  backgroundPosition: '0 0, 0 8px, 8px -8px, -8px 0px',
+  backgroundColor: '#fafafa'
+};
+
 // Edit button component for consistency
 function EditButton({ onClick, title }: { onClick: () => void; title?: string }) {
   return (
@@ -142,9 +155,12 @@ function ImportPopup({ isOpen, onClose, onImport, forReferences = false }: {
           <div className="flex-1 overflow-y-auto px-6 pb-4">
             <div className="grid grid-cols-3 gap-3">
               {pendingFiles.map((item, index) => (
-                <div key={index} className={`relative group border bg-gray-50 ${forReferences ? 'border-purple-200' : 'border-gray-200'}`}>
-                  <div className="aspect-square overflow-hidden">
-                    <img src={item.preview} alt="" className="w-full h-full object-cover" />
+                <div key={index} className={`relative group border ${forReferences ? 'border-purple-200' : 'border-gray-200'}`}>
+                  <div 
+                    className="aspect-square overflow-hidden"
+                    style={CHECKER_PATTERN_STYLE}
+                  >
+                    <img src={item.preview} alt="" className="w-full h-full object-contain relative z-10" />
                   </div>
                   {/* Hide tag selector if importing for references (auto-tagged) */}
                   {!forReferences && (
@@ -479,8 +495,9 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
                     key={i}
                     onClick={() => handleLogoChange(img)}
                     className={`aspect-square border-2 overflow-hidden transition-all hover:border-emerald-500 ${img === localData.logo ? 'border-emerald-500 ring-2 ring-emerald-200' : 'border-gray-200'}`}
+                    style={CHECKER_PATTERN_STYLE}
                   >
-                    <img src={img} className="w-full h-full object-contain bg-gray-50" loading="lazy" />
+                    <img src={img} className="w-full h-full object-contain relative z-10" loading="lazy" />
                   </button>
                 ))}
               </div>
@@ -526,15 +543,15 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
           <div className="col-span-3">
             <button 
               onClick={() => setLogoSelectorOpen(true)}
-              className="w-full aspect-square p-4 flex items-center justify-center border border-gray-200 transition-all hover:border-emerald-500 relative group"
-              style={{ backgroundColor: finalLogoBg }}
+              className="w-full aspect-square p-4 flex items-center justify-center border border-gray-200 transition-all hover:border-emerald-500 relative group overflow-hidden"
+              style={CHECKER_PATTERN_STYLE}
             >
               {localData.logo ? (
-                <img src={localData.logo} alt="Logo" className="w-full h-full object-contain" />
+                <img src={localData.logo} alt="Logo" className="w-full h-full object-contain relative z-10" />
               ) : (
-                <span className="text-3xl text-gray-300">LOGO</span>
+                <span className="text-3xl text-gray-300 relative z-10">LOGO</span>
               )}
-              <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+              <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center z-20">
                 <span className="text-white text-xs font-medium flex items-center gap-1">
                   <span className="text-emerald-400">✎</span> Changer
                 </span>
@@ -808,10 +825,10 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
               const label = labelObj?.category || 'other';
               const originalIndex = localData.images?.indexOf(img);
               return (
-                <div key={i} className="relative aspect-square group">
+                <div key={i} className="relative aspect-square group" style={CHECKER_PATTERN_STYLE}>
                   <img 
                     src={img} 
-                    className="w-full h-full object-cover border border-gray-200 hover:border-emerald-400 transition-colors" 
+                    className="w-full h-full object-contain border border-gray-200 hover:border-emerald-400 transition-colors relative z-10" 
                     loading="lazy" 
                     onError={(e) => {
                       // Hide broken images
