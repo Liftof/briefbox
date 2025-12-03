@@ -1691,15 +1691,13 @@ ${enhancement}`);
             />
           </div>
 
-          {/* Sources Row - Format section removed (not useful) */}
-          <div className="p-5 flex flex-col md:flex-row gap-5">
-            
-            {/* Sources & Style */}
-            <div className="w-full md:w-72 flex flex-col gap-6">
+          {/* Sources Row - Side by side layout */}
+          <div className="p-5">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               
-              {/* 1. STYLE REFERENCE ZONE - Enhanced with quick picks */}
+              {/* 1. STYLE REFERENCE ZONE */}
               <div>
-                <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center justify-between mb-3">
                   <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">Style à imiter</label>
                   <button 
                     onClick={() => setShowStyleGallery(true)}
@@ -1711,9 +1709,9 @@ ${enhancement}`);
                 
                 {/* Selected styles */}
                 {styleRefImages.length > 0 && (
-                  <div className="grid grid-cols-3 gap-2 mb-3">
+                  <div className="flex gap-2 mb-3">
                     {styleRefImages.map((img, i) => (
-                      <div key={i} className="relative h-20 group rounded-lg overflow-hidden border-2 border-emerald-400 shadow-sm">
+                      <div key={i} className="relative h-20 w-20 group rounded-lg overflow-hidden border-2 border-emerald-400 shadow-sm flex-shrink-0">
                         <img src={img} className="w-full h-full object-cover" />
                         <button
                           onClick={() => setStyleRefImages(prev => prev.filter((_, idx) => idx !== i))}
@@ -1724,33 +1722,36 @@ ${enhancement}`);
                   </div>
                 )}
 
-                {/* Quick picks from gallery */}
-                <div className="grid grid-cols-4 gap-1.5">
+                {/* Quick picks from gallery - Better images */}
+                <div className="grid grid-cols-5 gap-2">
                   {[
-                    { url: 'https://images.unsplash.com/photo-1494438639946-1ebd1d20bf85?auto=format&fit=crop&w=200&q=80', label: 'Minimal' },
-                    { url: 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=200&q=80', label: 'Tech' },
-                    { url: 'https://images.unsplash.com/photo-1542038784456-1ea8e935640e?auto=format&fit=crop&w=200&q=80', label: 'Luxe' },
-                    { url: 'https://images.unsplash.com/photo-1550684848-fac1c5b4e853?auto=format&fit=crop&w=200&q=80', label: 'Bold' },
-                  ].filter(s => !styleRefImages.includes(s.url)).slice(0, styleRefImages.length > 0 ? 4 : 3).map((style, i) => (
+                    { url: 'https://images.unsplash.com/photo-1494438639946-1ebd1d20bf85?auto=format&fit=crop&w=300&q=80', label: 'Minimal', desc: 'Tons neutres' },
+                    { url: 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=300&q=80', label: 'Tech', desc: 'Néons & dark' },
+                    { url: 'https://images.unsplash.com/photo-1542038784456-1ea8e935640e?auto=format&fit=crop&w=300&q=80', label: 'Luxe', desc: 'Grain & élégance' },
+                    { url: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=300&q=80', label: 'Abstract', desc: 'Formes organiques' },
+                    { url: 'https://images.unsplash.com/photo-1550684848-fac1c5b4e853?auto=format&fit=crop&w=300&q=80', label: 'Bold', desc: 'Couleurs vives' },
+                  ].filter(s => !styleRefImages.some(sel => sel.includes(s.url.split('?')[0]))).slice(0, 5).map((style, i) => (
                     <div 
                       key={i}
                       onClick={() => setStyleRefImages(prev => [...prev, style.url].slice(0, 3))}
-                      className="relative h-14 rounded-md overflow-hidden cursor-pointer border border-gray-200 hover:border-gray-400 transition-all group"
+                      className="relative aspect-square rounded-lg overflow-hidden cursor-pointer border border-gray-200 hover:border-emerald-400 hover:shadow-md transition-all group"
                     >
-                      <img src={style.url} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
-                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                        <span className="text-white text-[8px] font-medium">+</span>
+                      <img src={style.url} className="w-full h-full object-cover" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-2">
+                        <span className="text-white text-[10px] font-medium">{style.label}</span>
                       </div>
                     </div>
                   ))}
-                  {styleRefImages.length === 0 && (
-                    <div 
-                      onClick={() => document.getElementById('style-ref-upload')?.click()}
-                      className="h-14 border border-dashed border-gray-200 rounded-md flex items-center justify-center cursor-pointer hover:border-gray-400 hover:bg-gray-50 transition-all"
-                    >
-                      <span className="text-gray-400 text-sm">+</span>
-                    </div>
-                  )}
+                </div>
+                
+                {/* Upload option */}
+                <div className="mt-3 flex items-center gap-2">
+                  <button 
+                    onClick={() => document.getElementById('style-ref-upload')?.click()}
+                    className="text-[10px] text-gray-500 hover:text-gray-700 flex items-center gap-1"
+                  >
+                    <span>📁</span> Uploader une inspi
+                  </button>
                 </div>
                 
                 <input 
@@ -1846,8 +1847,8 @@ ${enhancement}`);
                 </button>
                 <input ref={fileInputRef} type="file" multiple accept="image/*" className="hidden" onChange={handleImageUpload} />
               </div>
-              </div>
             </div>
+          </div>
 
           {/* Generate Button */}
           <div className="p-5 bg-gray-50 border-t border-gray-100">
