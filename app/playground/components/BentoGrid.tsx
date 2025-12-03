@@ -645,182 +645,189 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
         </div>
 
         {/* ═══════════════════════════════════════════════════════════════════════════
-            SECTION 2: DONNÉES & INSIGHTS (NEW)
+            SECTION 2: INTELLIGENCE CONTENT - Dynamic cards based on available data
             ═══════════════════════════════════════════════════════════════════════════ */}
         <section className="mt-6 mb-6">
           <div className="flex items-center gap-3 mb-4">
             <span className="w-2 h-2 bg-blue-500 rounded-full" />
-            <h3 className="text-lg font-semibold text-gray-900">Données & Insights</h3>
+            <h3 className="text-lg font-semibold text-gray-900">Intelligence Content</h3>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {/* Chiffres clés */}
-            <div className="bg-white border border-gray-200 p-4">
-               <div className="flex items-center justify-between mb-3">
-                 <span className="text-[10px] font-mono uppercase tracking-widest text-gray-400">Chiffres clés</span>
-                 <span className="bg-emerald-100 text-emerald-700 text-[9px] px-1.5 py-0.5 font-bold rounded">
-                   {localData.contentNuggets?.realStats?.length || 0}
-                 </span>
-               </div>
-               <div className="space-y-2 max-h-60 overflow-y-auto pr-1 custom-scrollbar">
-                 {localData.contentNuggets?.realStats?.length > 0 ? (
-                   localData.contentNuggets.realStats.map((stat: string, i: number) => (
-                     <div key={i} className="group relative p-2 bg-gray-50 hover:bg-emerald-50 border border-transparent hover:border-emerald-100 transition-all rounded">
-                       <p className="text-xs text-gray-700 leading-relaxed">{stat}</p>
-                       <button 
-                         onClick={() => {
-                            const newStats = [...localData.contentNuggets.realStats];
-                            newStats.splice(i, 1);
-                            const newNuggets = { ...localData.contentNuggets, realStats: newStats };
-                            handleChange('contentNuggets', newNuggets);
-                         }}
-                         className="absolute top-1 right-1 text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
-                       >
-                         <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeWidth="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                       </button>
-                     </div>
-                   ))
-                 ) : (
-                   <div className="text-center py-8 text-gray-300 text-xs">Aucun chiffre trouvé</div>
-                 )}
-               </div>
-               <AddItemInput 
-                 placeholder="Ex: +40% de croissance" 
-                 onAdd={(val) => {
-                   const newNuggets = { 
-                     ...localData.contentNuggets, 
-                     realStats: [...(localData.contentNuggets?.realStats || []), val] 
-                   };
-                   handleChange('contentNuggets', newNuggets);
-                 }}
-               />
+          {/* Dynamic grid - only show cards with content + useful alternatives */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            
+            {/* 1. Target Audience & UVP - Always useful */}
+            <div className="bg-gradient-to-br from-indigo-50 to-purple-50 border border-indigo-100 p-4 rounded-lg">
+              <div className="flex items-center gap-2 mb-3">
+                <span className="text-lg">🎯</span>
+                <span className="text-[10px] font-mono uppercase tracking-widest text-indigo-600">Cible & Promesse</span>
+              </div>
+              
+              {/* Target Audience */}
+              <div className="mb-3">
+                <label className="text-[9px] text-gray-500 uppercase mb-1 block">Audience cible</label>
+                <input
+                  type="text"
+                  value={localData.targetAudience || ''}
+                  onChange={(e) => handleChange('targetAudience', e.target.value)}
+                  placeholder="Ex: Directeurs Marketing B2B"
+                  className="w-full text-sm bg-white/70 border border-indigo-200 rounded px-2 py-1.5 outline-none focus:border-indigo-400 placeholder:text-gray-300"
+                />
+              </div>
+              
+              {/* UVP */}
+              <div>
+                <label className="text-[9px] text-gray-500 uppercase mb-1 block">Promesse unique (UVP)</label>
+                <textarea
+                  value={localData.uniqueValueProposition || ''}
+                  onChange={(e) => handleChange('uniqueValueProposition', e.target.value)}
+                  placeholder="Ex: Gagnez 10h/semaine sur votre gestion de contenu"
+                  rows={2}
+                  className="w-full text-sm bg-white/70 border border-indigo-200 rounded px-2 py-1.5 outline-none focus:border-indigo-400 placeholder:text-gray-300 resize-none"
+                />
+              </div>
             </div>
 
-            {/* Témoignages */}
-            <div className="bg-white border border-gray-200 p-4">
-               <div className="flex items-center justify-between mb-3">
-                 <span className="text-[10px] font-mono uppercase tracking-widest text-gray-400">Témoignages</span>
-                 <span className="bg-purple-100 text-purple-700 text-[9px] px-1.5 py-0.5 font-bold rounded">
-                   {localData.contentNuggets?.testimonials?.length || 0}
-                 </span>
-               </div>
-               <div className="space-y-2 max-h-60 overflow-y-auto pr-1 custom-scrollbar">
-                 {localData.contentNuggets?.testimonials?.length > 0 ? (
-                   localData.contentNuggets.testimonials.map((t: any, i: number) => (
-                     <div key={i} className="group relative p-2 bg-gray-50 hover:bg-purple-50 border border-transparent hover:border-purple-100 transition-all rounded">
-                       <p className="text-xs text-gray-600 italic mb-1">"{t.quote?.slice(0, 80)}{t.quote?.length > 80 ? '...' : ''}"</p>
-                       <p className="text-[10px] text-gray-900 font-medium">— {t.author || 'Anonyme'} {t.company ? `(${t.company})` : ''}</p>
-                       <button 
-                         onClick={() => {
-                            const newTestimonials = [...localData.contentNuggets.testimonials];
-                            newTestimonials.splice(i, 1);
-                            const newNuggets = { ...localData.contentNuggets, testimonials: newTestimonials };
-                            handleChange('contentNuggets', newNuggets);
-                         }}
-                         className="absolute top-1 right-1 text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
-                       >
-                         <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeWidth="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                       </button>
-                     </div>
-                   ))
-                 ) : (
-                   <div className="text-center py-8 text-gray-300 text-xs">Aucun témoignage trouvé</div>
-                 )}
-               </div>
-               <AddItemInput 
-                 placeholder="'Citation' - Auteur" 
-                 onAdd={(val) => {
-                   // Basic parsing: "Quote" - Author
-                   const lastDash = val.lastIndexOf('-');
-                   let quote, author;
-                   
-                   if (lastDash > 0) {
-                     quote = val.substring(0, lastDash).trim().replace(/^["']|["']$/g, '');
-                     author = val.substring(lastDash + 1).trim();
-                   } else {
-                     quote = val;
-                     author = 'Client';
-                   }
-                   
-                   const newNuggets = { 
-                     ...localData.contentNuggets, 
-                     testimonials: [...(localData.contentNuggets?.testimonials || []), { quote, author, company: '' }] 
-                   };
-                   handleChange('contentNuggets', newNuggets);
-                 }}
-               />
+            {/* 2. Chiffres clés - Only if we have some, or compact add */}
+            <div className="bg-white border border-gray-200 p-4 rounded-lg">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-lg">📊</span>
+                  <span className="text-[10px] font-mono uppercase tracking-widest text-gray-400">Chiffres clés</span>
+                </div>
+                {(localData.contentNuggets?.realStats?.length || 0) > 0 && (
+                  <span className="bg-emerald-100 text-emerald-700 text-[9px] px-1.5 py-0.5 font-bold rounded">
+                    {localData.contentNuggets?.realStats?.length}
+                  </span>
+                )}
+              </div>
+              
+              <div className="space-y-2 max-h-40 overflow-y-auto">
+                {localData.contentNuggets?.realStats?.map((stat: string, i: number) => (
+                  <div key={i} className="group relative p-2 bg-emerald-50 border border-emerald-100 rounded text-xs text-gray-700 flex justify-between items-start">
+                    <span>{stat}</span>
+                    <button 
+                      onClick={() => {
+                        const newStats = [...localData.contentNuggets.realStats];
+                        newStats.splice(i, 1);
+                        handleChange('contentNuggets', { ...localData.contentNuggets, realStats: newStats });
+                      }}
+                      className="text-gray-400 hover:text-red-500 ml-2 flex-shrink-0"
+                    >×</button>
+                  </div>
+                ))}
+              </div>
+              
+              <AddItemInput 
+                placeholder="Ex: +40% de croissance, 10K users" 
+                onAdd={(val) => {
+                  handleChange('contentNuggets', { 
+                    ...localData.contentNuggets, 
+                    realStats: [...(localData.contentNuggets?.realStats || []), val] 
+                  });
+                }}
+              />
             </div>
 
-            {/* Pain Points & Context */}
-            <div className="bg-white border border-gray-200 p-4">
-               <div className="flex items-center justify-between mb-3">
-                 <span className="text-[10px] font-mono uppercase tracking-widest text-gray-400">Pain Points</span>
-                 <span className="bg-rose-100 text-rose-700 text-[9px] px-1.5 py-0.5 font-bold rounded">
-                   {localData.industryInsights?.length || 0}
-                 </span>
-               </div>
-               <div className="space-y-2 max-h-60 overflow-y-auto pr-1 custom-scrollbar">
-                 {localData.industryInsights?.length > 0 ? (
-                   localData.industryInsights.map((insight: any, i: number) => (
-                     <div key={i} className="group relative p-3 bg-gray-50 hover:bg-rose-50 border border-transparent hover:border-rose-100 transition-all rounded">
-                       {/* Type badge */}
-                       {insight.type && (
-                         <span className={`inline-block text-[8px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded mb-2 ${
-                           insight.type === 'pain_point' ? 'bg-rose-100 text-rose-600' :
-                           insight.type === 'trend' ? 'bg-blue-100 text-blue-600' :
-                           insight.type === 'cost_of_inaction' ? 'bg-amber-100 text-amber-600' :
-                           'bg-gray-100 text-gray-600'
-                         }`}>
-                           {insight.type === 'pain_point' ? '⚡ Problème' :
-                            insight.type === 'trend' ? '📈 Tendance' :
-                            insight.type === 'cost_of_inaction' ? '⚠️ Risque' :
-                            insight.type || 'Insight'}
-                         </span>
-                       )}
-                       {/* Pain Point (new format) or Fact (legacy format) */}
-                       <p className="text-xs text-gray-800 font-medium mb-1">
-                         {insight.painPoint || insight.fact}
-                       </p>
-                       {/* Consequence or didYouKnow */}
-                       {(insight.consequence || insight.didYouKnow) && (
-                         <p className="text-[10px] text-rose-600 leading-tight mb-1">
-                           → {insight.consequence || insight.didYouKnow}
-                         </p>
-                       )}
-                       {/* Solution */}
-                       {insight.solution && (
-                         <p className="text-[10px] text-emerald-600 leading-tight">
-                           ✓ {insight.solution}
-                         </p>
-                       )}
-                       {/* Legacy source */}
-                       {insight.source && !insight.solution && (
-                         <p className="text-[9px] text-gray-400 mt-1">Src: {insight.source}</p>
-                       )}
-                       <button 
-                         onClick={() => {
-                            const newInsights = [...localData.industryInsights];
-                            newInsights.splice(i, 1);
-                            handleChange('industryInsights', newInsights);
-                         }}
-                         className="absolute top-1 right-1 text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity"
-                       >
-                         <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeWidth="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                       </button>
-                     </div>
-                   ))
-                 ) : (
-                   <div className="text-center py-8 text-gray-300 text-xs">Aucun pain point détecté</div>
-                 )}
-               </div>
-               <AddItemInput 
-                 placeholder="Ajouter un pain point..." 
-                 onAdd={(val) => {
-                   const newInsights = [...(localData.industryInsights || []), { painPoint: val, consequence: '', solution: '', type: 'pain_point' }];
-                   handleChange('industryInsights', newInsights);
-                 }}
-               />
+            {/* 3. Témoignages - Only if we have some, or compact add */}
+            <div className="bg-white border border-gray-200 p-4 rounded-lg">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-lg">💬</span>
+                  <span className="text-[10px] font-mono uppercase tracking-widest text-gray-400">Témoignages</span>
+                </div>
+                {(localData.contentNuggets?.testimonials?.length || 0) > 0 && (
+                  <span className="bg-purple-100 text-purple-700 text-[9px] px-1.5 py-0.5 font-bold rounded">
+                    {localData.contentNuggets?.testimonials?.length}
+                  </span>
+                )}
+              </div>
+              
+              <div className="space-y-2 max-h-40 overflow-y-auto">
+                {localData.contentNuggets?.testimonials?.map((t: any, i: number) => (
+                  <div key={i} className="group relative p-2 bg-purple-50 border border-purple-100 rounded">
+                    <p className="text-xs text-gray-600 italic">"{t.quote?.slice(0, 60)}{t.quote?.length > 60 ? '...' : ''}"</p>
+                    <p className="text-[10px] text-gray-900 font-medium mt-1">— {t.author || 'Client'}</p>
+                    <button 
+                      onClick={() => {
+                        const newTestimonials = [...localData.contentNuggets.testimonials];
+                        newTestimonials.splice(i, 1);
+                        handleChange('contentNuggets', { ...localData.contentNuggets, testimonials: newTestimonials });
+                      }}
+                      className="absolute top-1 right-1 text-gray-400 hover:text-red-500"
+                    >×</button>
+                  </div>
+                ))}
+              </div>
+              
+              <AddItemInput 
+                placeholder="'Citation' - Auteur" 
+                onAdd={(val) => {
+                  const lastDash = val.lastIndexOf('-');
+                  const quote = lastDash > 0 ? val.substring(0, lastDash).trim().replace(/^["']|["']$/g, '') : val;
+                  const author = lastDash > 0 ? val.substring(lastDash + 1).trim() : 'Client';
+                  handleChange('contentNuggets', { 
+                    ...localData.contentNuggets, 
+                    testimonials: [...(localData.contentNuggets?.testimonials || []), { quote, author, company: '' }] 
+                  });
+                }}
+              />
             </div>
+
+            {/* 4. Pain Points - Full width if we have content */}
+            {(localData.industryInsights?.length > 0 || true) && (
+              <div className="bg-gradient-to-br from-rose-50 to-amber-50 border border-rose-100 p-4 rounded-lg md:col-span-2 lg:col-span-3">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg">⚡</span>
+                    <span className="text-[10px] font-mono uppercase tracking-widest text-rose-600">Pain Points & Contexte Marché</span>
+                  </div>
+                  {(localData.industryInsights?.length || 0) > 0 && (
+                    <span className="bg-rose-100 text-rose-700 text-[9px] px-1.5 py-0.5 font-bold rounded">
+                      {localData.industryInsights?.length}
+                    </span>
+                  )}
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
+                  {localData.industryInsights?.slice(0, 6).map((insight: any, i: number) => (
+                    <div key={i} className="group relative p-3 bg-white/80 border border-rose-100 rounded-lg hover:shadow-sm transition-all">
+                      {insight.type && (
+                        <span className={`inline-block text-[8px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded mb-2 ${
+                          insight.type === 'pain_point' ? 'bg-rose-100 text-rose-600' :
+                          insight.type === 'trend' ? 'bg-blue-100 text-blue-600' :
+                          insight.type === 'cost_of_inaction' ? 'bg-amber-100 text-amber-600' :
+                          'bg-gray-100 text-gray-600'
+                        }`}>
+                          {insight.type === 'pain_point' ? '⚡ Problème' :
+                           insight.type === 'trend' ? '📈 Tendance' :
+                           insight.type === 'cost_of_inaction' ? '⚠️ Risque' : 'Insight'}
+                        </span>
+                      )}
+                      <p className="text-xs text-gray-800 font-medium">{insight.painPoint || insight.fact}</p>
+                      {insight.consequence && <p className="text-[10px] text-rose-600 mt-1">→ {insight.consequence}</p>}
+                      {insight.solution && <p className="text-[10px] text-emerald-600 mt-1">✓ {insight.solution}</p>}
+                      <button 
+                        onClick={() => {
+                          const newInsights = [...localData.industryInsights];
+                          newInsights.splice(i, 1);
+                          handleChange('industryInsights', newInsights);
+                        }}
+                        className="absolute top-1 right-1 text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100"
+                      >×</button>
+                    </div>
+                  ))}
+                </div>
+                
+                <AddItemInput 
+                  placeholder="Ajouter un pain point ou tendance marché..." 
+                  onAdd={(val) => {
+                    handleChange('industryInsights', [...(localData.industryInsights || []), { painPoint: val, type: 'pain_point' }]);
+                  }}
+                />
+              </div>
+            )}
+
           </div>
         </section>
 
