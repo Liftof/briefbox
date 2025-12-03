@@ -764,9 +764,10 @@ export async function POST(request: Request) {
         ],
         "industryInsights": [
            {
-             "fact": "Un fait macro sur l'industrie avec un chiffre (ex: 'Le marché du SaaS atteindra 232Mds$ en 2024')",
-             "didYouKnow": "Le saviez-vous ? Version vulgarisée et engageante du fait",
-             "source": "Source probable ou 'Industry Report 2024'"
+             "painPoint": "Le problème concret que les utilisateurs subissent (ex: '68% des CM passent +3h/jour sur des tâches répétitives')",
+             "consequence": "Ce que ça leur coûte en temps/argent/stress (ex: 'Soit 15h/semaine perdues par équipe')",
+             "solution": "Comment le produit/service résout ce problème (ex: 'Automatisation du planning = 2h gagnées/jour')",
+             "type": "pain_point | trend | cost_of_inaction | social_proof"
            }
         ],
         "contentNuggets": {
@@ -841,16 +842,28 @@ export async function POST(request: Request) {
          - Each post MUST have an "intent" explaining WHY this post is strategic for the END USER
          - Be SPECIFIC: not "amélioration" but "+47% en 3 mois"
          
-      8. **INDUSTRY INSIGHTS (CRITICAL):** Generate 3-4 relevant industry facts/stats.
+      8. **PAIN POINTS & MARKET CONTEXT (CRITICAL - RETHINK THIS):** Generate 4-5 actionable insights.
          
-         These should be:
-         - Macro-level statistics about the SPECIFIC NICHE (not just "SaaS" or "Tech", but "Social Media Management" or "HR Payroll Software")
-         - Written as "Le saviez-vous ?" hooks
-         - Credible and specific (not vague claims)
+         STOP generating generic market size stats like "Le marché atteindra X Mds$". Nobody cares.
          
-         EXAMPLES for a CRM SaaS:
-         - { "fact": "Le marché mondial du CRM atteindra 128Mds$ en 2028", "didYouKnow": "Le saviez-vous ? Le CRM est le logiciel d'entreprise #1 en croissance depuis 5 ans", "source": "Gartner 2024" }
-         - { "fact": "67% des commerciaux n'atteignent pas leurs quotas", "didYouKnow": "Le saviez-vous ? 2 commerciaux sur 3 passent plus de temps sur l'admin que sur la vente", "source": "Salesforce State of Sales" }
+         Instead, focus on:
+         - **pain_point**: What frustrates the target users RIGHT NOW? Quantify with time/money lost.
+         - **trend**: What's changing in their world that makes this solution timely?
+         - **cost_of_inaction**: What happens if they DON'T solve this? Show the risk.
+         - **social_proof**: What are others like them doing? Peer pressure stats.
+         
+         FORMULA: [Specific Audience] + [Specific Problem] + [Quantified Impact]
+         
+         EXAMPLES for a Social Media Management SaaS:
+         - { "painPoint": "73% des CM jonglent entre 5+ outils différents chaque jour", "consequence": "Perte moyenne de 12h/semaine en copier-coller entre plateformes", "solution": "Centralisation = 1 seul dashboard pour tout gérer", "type": "pain_point" }
+         - { "painPoint": "Sans planning éditorial, 62% des posts sont publiés 'quand on y pense'", "consequence": "Engagement 3x inférieur vs marques avec calendrier structuré", "solution": "Calendrier visuel + rappels automatiques", "type": "cost_of_inaction" }
+         - { "painPoint": "Les équipes marketing passent 40% de leur temps sur du reporting manuel", "consequence": "Moins de temps pour la créativité et la stratégie", "solution": "Analytics automatisés = focus sur ce qui compte", "type": "pain_point" }
+         - { "painPoint": "78% des entreprises prévoient d'augmenter leur budget social media en 2025", "consequence": "Ceux qui n'investissent pas seront distancés", "solution": "Positionnement early adopter", "type": "trend" }
+         
+         BAD EXAMPLES (DO NOT GENERATE):
+         - "Le marché du social media management atteindra 41Mds$ en 2025" (generic, useless)
+         - "Les réseaux sociaux sont importants" (obvious, no insight)
+         - "Industry Report 2024" as source (lazy, fake-sounding)
          
       9. **CONTENT VALIDATION (INTELLIGENT AGENT TASK):** 
          I have provided a raw list of "EXTRACTED CONTENT NUGGETS" above. Your job is to FILTER and CLEAN them.

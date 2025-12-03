@@ -751,21 +751,52 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
                />
             </div>
 
-            {/* Industry Insights */}
+            {/* Pain Points & Context */}
             <div className="bg-white border border-gray-200 p-4">
                <div className="flex items-center justify-between mb-3">
-                 <span className="text-[10px] font-mono uppercase tracking-widest text-gray-400">Infos Marché</span>
-                 <span className="bg-amber-100 text-amber-700 text-[9px] px-1.5 py-0.5 font-bold rounded">
+                 <span className="text-[10px] font-mono uppercase tracking-widest text-gray-400">Pain Points</span>
+                 <span className="bg-rose-100 text-rose-700 text-[9px] px-1.5 py-0.5 font-bold rounded">
                    {localData.industryInsights?.length || 0}
                  </span>
                </div>
                <div className="space-y-2 max-h-60 overflow-y-auto pr-1 custom-scrollbar">
                  {localData.industryInsights?.length > 0 ? (
                    localData.industryInsights.map((insight: any, i: number) => (
-                     <div key={i} className="group relative p-2 bg-gray-50 hover:bg-amber-50 border border-transparent hover:border-amber-100 transition-all rounded">
-                       <p className="text-xs text-gray-800 font-medium mb-1">{insight.fact}</p>
-                       <p className="text-[10px] text-gray-500 leading-tight">{insight.didYouKnow}</p>
-                       {insight.source && <p className="text-[9px] text-amber-600 mt-1">Src: {insight.source}</p>}
+                     <div key={i} className="group relative p-3 bg-gray-50 hover:bg-rose-50 border border-transparent hover:border-rose-100 transition-all rounded">
+                       {/* Type badge */}
+                       {insight.type && (
+                         <span className={`inline-block text-[8px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded mb-2 ${
+                           insight.type === 'pain_point' ? 'bg-rose-100 text-rose-600' :
+                           insight.type === 'trend' ? 'bg-blue-100 text-blue-600' :
+                           insight.type === 'cost_of_inaction' ? 'bg-amber-100 text-amber-600' :
+                           'bg-gray-100 text-gray-600'
+                         }`}>
+                           {insight.type === 'pain_point' ? '⚡ Problème' :
+                            insight.type === 'trend' ? '📈 Tendance' :
+                            insight.type === 'cost_of_inaction' ? '⚠️ Risque' :
+                            insight.type || 'Insight'}
+                         </span>
+                       )}
+                       {/* Pain Point (new format) or Fact (legacy format) */}
+                       <p className="text-xs text-gray-800 font-medium mb-1">
+                         {insight.painPoint || insight.fact}
+                       </p>
+                       {/* Consequence or didYouKnow */}
+                       {(insight.consequence || insight.didYouKnow) && (
+                         <p className="text-[10px] text-rose-600 leading-tight mb-1">
+                           → {insight.consequence || insight.didYouKnow}
+                         </p>
+                       )}
+                       {/* Solution */}
+                       {insight.solution && (
+                         <p className="text-[10px] text-emerald-600 leading-tight">
+                           ✓ {insight.solution}
+                         </p>
+                       )}
+                       {/* Legacy source */}
+                       {insight.source && !insight.solution && (
+                         <p className="text-[9px] text-gray-400 mt-1">Src: {insight.source}</p>
+                       )}
                        <button 
                          onClick={() => {
                             const newInsights = [...localData.industryInsights];
@@ -779,13 +810,13 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
                      </div>
                    ))
                  ) : (
-                   <div className="text-center py-8 text-gray-300 text-xs">Aucune info marché</div>
+                   <div className="text-center py-8 text-gray-300 text-xs">Aucun pain point détecté</div>
                  )}
                </div>
                <AddItemInput 
-                 placeholder="Fait marquant..." 
+                 placeholder="Ajouter un pain point..." 
                  onAdd={(val) => {
-                   const newInsights = [...(localData.industryInsights || []), { fact: val, didYouKnow: `Le saviez-vous ? ${val}`, source: 'Manuel' }];
+                   const newInsights = [...(localData.industryInsights || []), { painPoint: val, consequence: '', solution: '', type: 'pain_point' }];
                    handleChange('industryInsights', newInsights);
                  }}
                />
