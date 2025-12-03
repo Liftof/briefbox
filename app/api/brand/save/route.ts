@@ -45,10 +45,11 @@ export async function POST(request: Request) {
       industryInsights: brand.industryInsights || [],
       suggestedPosts: brand.suggestedPosts || [],
 
-      // New Editorial Angles (V2 Smart Agency)
-      editorialAngles: brand.editorialAngles || [],
-      painPoints: brand.painPoints || [],
-      vocabulary: brand.vocabulary || [],
+      // NOTE: editorialAngles, painPoints, vocabulary columns need migration first
+      // Uncomment after running: drizzle/0002_add_editorial_columns.sql
+      // editorialAngles: brand.editorialAngles || [],
+      // painPoints: brand.painPoints || [],
+      // vocabulary: brand.vocabulary || [],
 
       labeledImages: brand.labeledImages || [],
       backgrounds: brand.backgrounds || []
