@@ -163,9 +163,10 @@ AVOID: Flat backgrounds, distorted logos, cluttered layout, amateur design, 3D r
 function PlaygroundContent() {
   const searchParams = useSearchParams();
   const brandId = searchParams.get('brandId');
+  const analyzeUrl = searchParams.get('analyzeUrl'); // From Hero input
 
   const [showStyleGallery, setShowStyleGallery] = useState(false); // NEW
-  const [step, setStep] = useState<Step>('url');
+  const [step, setStep] = useState<Step>(analyzeUrl ? 'analyzing' : 'url');
   const [activeTab, setActiveTab] = useState('create');
   const [websiteUrl, setWebsiteUrl] = useState('');
   const [statusMessage, setStatusMessage] = useState('Nous analysons votre identité...');
@@ -359,6 +360,74 @@ function PlaygroundContent() {
       cancelled = true;
     };
   }, [brandId, showToast]);
+
+  // Auto-analyze if URL came from Hero
+  useEffect(() => {
+    if (analyzeUrl && !brandId) {
+      setWebsiteUrl(analyzeUrl);
+      // Small delay to ensure state is set, then trigger analysis
+      const timer = setTimeout(() => {
+        handleAnalyzeBrandWithUrl(analyzeUrl);
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [analyzeUrl, brandId]);
+
+  const handleAnalyzeBrandWithUrl = async (urlToAnalyze: string) => {
+    let url = urlToAnalyze.trim();
+    if (!url) return;
+
+    if (!url.startsWith('http')) {
+      url = 'https://' + url;
+    }
+
+    setStep('analyzing');
+    setStatus('preparing');
+    setStatusMessage('Nous scannons votre site...');
+    
+    setProgress(5);
+    const timer = setInterval(() => {
+      setProgress((prev) => {
+        if (prev >= 90) return prev;
+        const increment = prev < 50 ? Math.random() * 5 : Math.random() * 2;
+        return prev + increment;
+      });
+    }, 800);
+
+    try {
+      const response = await fetch('/api/brand/analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+            url,
+            socialLinks: [],
+            otherLinks: []
+        })
+      });
+      const data = await response.json();
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || 'Analyse impossible');
+      }
+
+      clearInterval(timer);
+      setProgress(100);
+      hydrateBrand(data.brand);
+      setStatus('idle');
+      
+      setTimeout(() => {
+          setStep('logo-confirm');
+          showToast('Logo détecté !', 'success');
+      }, 500);
+
+    } catch (error: any) {
+      clearInterval(timer);
+      console.error('Analyze error', error);
+      setStatus('error');
+      setStep('url');
+      showToast(error.message || 'Impossible d\'analyser ce site', 'error');
+    }
+  };
 
   const handleAnalyzeBrand = async () => {
     const url = websiteUrl.trim();
@@ -1396,24 +1465,7 @@ ${enhancement}`);
       return <ProjectsView />;
     }
 
-    if (activeTab === 'strategy') {
-    return (
-        <StrategyView 
-          brandData={brandData} 
-          onOpenGallery={() => setShowStyleGallery(true)}
-          onUseIdea={(templateId, brief) => {
-            setActiveTab('create');
-            setSelectedTemplate(templateId);
-            setBrief(brief);
-            // Auto-launch generation with the selected idea
-            showToast('Lancement de la création...', 'success');
-            setTimeout(() => {
-              handleGenerate(brief, false, undefined, undefined, templateId);
-            }, 500);
-          }} 
-        />
-      );
-    }
+    // Strategy view merged into Create - angles carousel at top of the page
 
     return (
       <div className="animate-fade-in max-w-3xl mx-auto">
@@ -1457,225 +1509,153 @@ ${enhancement}`);
         </div>
 
         {/* ═══════════════════════════════════════════════════════════════════════════
-            INSPIRATION PANEL - Shows all available content to create from
+            ANGLES CAROUSEL - Scrollable horizontal pills, always visible
             ═══════════════════════════════════════════════════════════════════════════ */}
-        {!brief && brandData && (
-          <div className="mb-6 bg-gradient-to-br from-gray-50 to-white border border-gray-200 p-5">
-            <div className="flex items-center justify-between mb-4">
+        {brandData && (
+          <div className="mb-6">
+            {/* Section header */}
+            <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
-                <span className="text-xl">💡</span>
-                <div>
-                  <h3 className="text-sm font-semibold text-gray-900">Idées de contenu</h3>
-                  <p className="text-[10px] text-gray-400">Basées sur l'analyse de {brandData.name}</p>
-                </div>
+                <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full" />
+                <span className="text-[10px] font-mono uppercase tracking-widest text-gray-400">Angles de contenu</span>
               </div>
+              <button 
+                onClick={() => setShowStyleGallery(true)}
+                className="text-[10px] font-medium text-gray-400 hover:text-gray-900 transition-colors flex items-center gap-1"
+              >
+                <span>🎨</span>
+                <span>Style ref</span>
+              </button>
             </div>
             
-            <div className="space-y-4">
-              {/* ROW 1: Real Stats & Testimonials */}
-              {(brandData.contentNuggets?.realStats?.length > 0 || brandData.contentNuggets?.testimonials?.length > 0) && (
-                <div>
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full" />
-                    <span className="text-[10px] font-medium text-emerald-700 uppercase tracking-wider">Données réelles trouvées</span>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {/* Stats */}
-                    {brandData.contentNuggets?.realStats?.slice(0, 3).map((stat: string, i: number) => (
-              <button
-                        key={`stat-${i}`}
-              onClick={() => {
-                          setSelectedTemplate('stat');
-                          setBrief(stat);
-                        }}
-                        className="px-3 py-2 bg-white border border-emerald-200 hover:border-emerald-400 hover:bg-emerald-50 transition-all text-left group"
-                      >
-                        <div className="flex items-center gap-2">
-                          <span className="text-base">📊</span>
-                          <span className="text-xs text-gray-700 group-hover:text-gray-900">{stat.slice(0, 50)}{stat.length > 50 ? '...' : ''}</span>
-                        </div>
-              </button>
-            ))}
-                    {/* Testimonials */}
-                    {brandData.contentNuggets?.testimonials?.slice(0, 2).map((t: any, i: number) => (
-                      <button
-                        key={`quote-${i}`}
-                        onClick={() => {
-                          setSelectedTemplate('quote');
-                          setBrief(`"${t.quote}" — ${t.author}`);
-                        }}
-                        className="px-3 py-2 bg-white border border-emerald-200 hover:border-emerald-400 hover:bg-emerald-50 transition-all text-left group"
-                      >
-                        <div className="flex items-center gap-2">
-                          <span className="text-base">💬</span>
-                          <span className="text-xs text-gray-700 group-hover:text-gray-900 line-clamp-1">"{t.quote?.slice(0, 40)}..."</span>
-        </div>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* ROW 2: Industry Insights */}
-              {brandData.industryInsights?.length > 0 && (
-                <div>
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="w-1.5 h-1.5 bg-amber-500 rounded-full" />
-                    <span className="text-[10px] font-medium text-amber-700 uppercase tracking-wider">Le saviez-vous ? (industrie)</span>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {brandData.industryInsights.slice(0, 3).map((insight: any, i: number) => (
-                      <button
-                        key={`insight-${i}`}
-                        onClick={() => {
-                          setSelectedTemplate('stat');
-                          setBrief(insight.didYouKnow || insight.fact);
-                        }}
-                        className="px-3 py-2 bg-white border border-amber-200 hover:border-amber-400 hover:bg-amber-50 transition-all text-left group max-w-xs"
-                      >
-                        <div className="flex items-start gap-2">
-                          <span className="text-base flex-shrink-0">🔍</span>
-                          <span className="text-xs text-gray-700 group-hover:text-gray-900 line-clamp-2">{insight.didYouKnow || insight.fact}</span>
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-          </div>
-        )}
-
-              {/* ROW 3: Brand Elements (Features, Values, Services) */}
-              {(brandData.features?.length > 0 || brandData.values?.length > 0 || brandData.services?.length > 0) && (
-                <div>
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="w-1.5 h-1.5 bg-purple-500 rounded-full" />
-                    <span className="text-[10px] font-medium text-purple-700 uppercase tracking-wider">Points forts à mettre en avant</span>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {/* Features */}
-                    {brandData.features?.slice(0, 2).map((f: string, i: number) => (
-                      <button
-                        key={`feat-${i}`}
-                        onClick={() => {
-                          setSelectedTemplate('product');
-                          setBrief(`Découvrez ${f}`);
-                        }}
-                        className="px-3 py-1.5 bg-purple-50 border border-purple-200 hover:border-purple-400 transition-all text-xs text-purple-700 hover:text-purple-900"
-                      >
-                        ✨ {f}
-                      </button>
-                    ))}
-                    {/* Values */}
-                    {brandData.values?.slice(0, 2).map((v: string, i: number) => (
-                      <button
-                        key={`val-${i}`}
-                        onClick={() => {
-                          setSelectedTemplate('expert');
-                          setBrief(`Pourquoi ${v.toLowerCase()} est au cœur de ${brandData.name}`);
-                        }}
-                        className="px-3 py-1.5 bg-blue-50 border border-blue-200 hover:border-blue-400 transition-all text-xs text-blue-700 hover:text-blue-900"
-                      >
-                        💎 {v}
-                      </button>
-                    ))}
-                    {/* Services */}
-                    {brandData.services?.slice(0, 2).map((s: string, i: number) => (
-                      <button
-                        key={`serv-${i}`}
-                        onClick={() => {
-                          setSelectedTemplate('announcement');
-                          setBrief(`${s} : comment ça marche ?`);
-                        }}
-                        className="px-3 py-1.5 bg-teal-50 border border-teal-200 hover:border-teal-400 transition-all text-xs text-teal-700 hover:text-teal-900"
-                      >
-                        🎯 {s}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* ROW 4: Image-based suggestions */}
-              {brandData.labeledImages?.length > 0 && (
-                <div>
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="w-1.5 h-1.5 bg-gray-500 rounded-full" />
-                    <span className="text-[10px] font-medium text-gray-600 uppercase tracking-wider">Visuels disponibles</span>
-                  </div>
-                  <div className="flex flex-wrap gap-2 items-center">
-                    {(() => {
-                      const categories = brandData.labeledImages.reduce((acc: any, img: any) => {
-                        const cat = img.category || 'other';
-                        if (!acc[cat]) acc[cat] = 0;
-                        acc[cat]++;
-                        return acc;
-                      }, {});
-                      
-                      const suggestions: { cat: string; label: string; icon: string; template: TemplateId; brief: string }[] = [];
-                      
-                      if (categories.product > 0) suggestions.push({ cat: 'product', label: `${categories.product} produit(s)`, icon: '📦', template: 'product', brief: `Découvrez notre produit phare` });
-                      if (categories.app_ui > 0) suggestions.push({ cat: 'app_ui', label: `${categories.app_ui} screenshot(s)`, icon: '📱', template: 'product', brief: `Notre interface en action` });
-                      if (categories.team > 0 || categories.person > 0) suggestions.push({ cat: 'team', label: `${(categories.team || 0) + (categories.person || 0)} personne(s)`, icon: '👤', template: 'expert', brief: `Rencontrez notre équipe` });
-                      if (categories.main_logo) suggestions.push({ cat: 'logo', label: `Logo`, icon: '🏷️', template: 'announcement', brief: `${brandData.name} : qui sommes-nous ?` });
-                      
-                      return suggestions.map((s, i) => (
-                        <button
-                          key={i}
-                          onClick={() => {
-                            setSelectedTemplate(s.template);
-                            setBrief(s.brief);
-                          }}
-                          className="px-3 py-1.5 bg-gray-100 border border-gray-200 hover:border-gray-400 hover:bg-gray-50 transition-all text-xs text-gray-600 hover:text-gray-900 flex items-center gap-1.5"
-                        >
-                          <span>{s.icon}</span>
-                          <span>{s.label}</span>
-                        </button>
-                      ));
-                    })()}
-                  </div>
-                </div>
-              )}
-
-              {/* Quick suggested posts if we have them */}
-              {brandData.suggestedPosts?.filter((p: any) => p.source === 'real_data').length > 0 && (
-                <div className="pt-3 border-t border-gray-100">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="text-base">⚡</span>
-                    <span className="text-[10px] font-medium text-gray-600 uppercase tracking-wider">Posts suggérés (prêts à l'emploi)</span>
-                  </div>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                    {brandData.suggestedPosts.filter((p: any) => p.source === 'real_data' || p.source === 'industry_insight').slice(0, 3).map((post: any, i: number) => {
+            {/* Scrollable pills - 2 rows */}
+            <div className="space-y-2 overflow-x-auto pb-2 -mx-2 px-2" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+              {/* Row 1: Stats, Testimonials, Industry Insights */}
+              <div className="flex gap-2 flex-nowrap">
+                {/* Real Stats */}
+                {brandData.contentNuggets?.realStats?.slice(0, 4).map((stat: string, i: number) => (
+                  <button
+                    key={`stat-${i}`}
+                    onClick={() => {
+                      setSelectedTemplate('stat');
+                      setBrief(stat);
+                    }}
+                    className={`flex-shrink-0 px-3 py-2 border transition-all text-left group whitespace-nowrap max-w-[250px] ${
+                      brief === stat ? 'bg-emerald-50 border-emerald-400' : 'bg-white border-gray-200 hover:border-emerald-400 hover:bg-emerald-50/50'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm">📊</span>
+                      <span className="text-xs text-gray-700 truncate">{stat.slice(0, 40)}{stat.length > 40 ? '...' : ''}</span>
+                    </div>
+                  </button>
+                ))}
+                
+                {/* Testimonials */}
+                {brandData.contentNuggets?.testimonials?.slice(0, 2).map((t: any, i: number) => (
+                  <button
+                    key={`quote-${i}`}
+                    onClick={() => {
+                      setSelectedTemplate('quote');
+                      setBrief(`"${t.quote}" — ${t.author}`);
+                    }}
+                    className="flex-shrink-0 px-3 py-2 bg-white border border-gray-200 hover:border-blue-400 hover:bg-blue-50/50 transition-all text-left group whitespace-nowrap max-w-[200px]"
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm">💬</span>
+                      <span className="text-xs text-gray-700 truncate">"{t.quote?.slice(0, 30)}..."</span>
+                    </div>
+                  </button>
+                ))}
+                
+                {/* Industry Insights */}
+                {brandData.industryInsights?.slice(0, 2).map((insight: any, i: number) => (
+                  <button
+                    key={`insight-${i}`}
+                    onClick={() => {
+                      setSelectedTemplate('stat');
+                      setBrief(insight.didYouKnow || insight.fact);
+                    }}
+                    className="flex-shrink-0 px-3 py-2 bg-white border border-gray-200 hover:border-amber-400 hover:bg-amber-50/50 transition-all text-left group whitespace-nowrap max-w-[220px]"
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm">🔍</span>
+                      <span className="text-xs text-gray-700 truncate">{(insight.didYouKnow || insight.fact)?.slice(0, 35)}...</span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+              
+              {/* Row 2: Features, Values, Services, Quick actions */}
+              <div className="flex gap-2 flex-nowrap">
+                {/* Features */}
+                {brandData.features?.slice(0, 3).map((f: string, i: number) => (
+                  <button
+                    key={`feat-${i}`}
+                    onClick={() => {
+                      setSelectedTemplate('product');
+                      setBrief(`Découvrez ${f}`);
+                    }}
+                    className="flex-shrink-0 px-3 py-1.5 bg-purple-50/50 border border-purple-200 hover:border-purple-400 transition-all text-xs text-purple-700 hover:text-purple-900 whitespace-nowrap"
+                  >
+                    ✨ {f.slice(0, 25)}{f.length > 25 ? '...' : ''}
+                  </button>
+                ))}
+                
+                {/* Values */}
+                {brandData.values?.slice(0, 2).map((v: string, i: number) => (
+                  <button
+                    key={`val-${i}`}
+                    onClick={() => {
+                      setSelectedTemplate('expert');
+                      setBrief(`Pourquoi ${v.toLowerCase()} est au cœur de ${brandData.name}`);
+                    }}
+                    className="flex-shrink-0 px-3 py-1.5 bg-blue-50/50 border border-blue-200 hover:border-blue-400 transition-all text-xs text-blue-700 hover:text-blue-900 whitespace-nowrap"
+                  >
+                    💎 {v}
+                  </button>
+                ))}
+                
+                {/* Services */}
+                {brandData.services?.slice(0, 2).map((s: string, i: number) => (
+                  <button
+                    key={`serv-${i}`}
+                    onClick={() => {
+                      setSelectedTemplate('announcement');
+                      setBrief(`${s} : comment ça marche ?`);
+                    }}
+                    className="flex-shrink-0 px-3 py-1.5 bg-teal-50/50 border border-teal-200 hover:border-teal-400 transition-all text-xs text-teal-700 hover:text-teal-900 whitespace-nowrap"
+                  >
+                    🎯 {s.slice(0, 20)}{s.length > 20 ? '...' : ''}
+                  </button>
+                ))}
+                
+                {/* Suggested Posts */}
+                {brandData.suggestedPosts?.filter((p: any) => p.source === 'real_data' || p.source === 'industry_insight').slice(0, 2).map((post: any, i: number) => {
                   const template = TEMPLATES.find(t => t.id === post.templateId);
-                      const headline = post.headline || `${post.metric || ''} ${post.metricLabel || ''}`.trim();
-                      
+                  const headline = post.headline || `${post.metric || ''} ${post.metricLabel || ''}`.trim();
                   return (
                     <button
-                      key={i}
+                      key={`post-${i}`}
                       onClick={() => {
                         setSelectedTemplate(post.templateId as TemplateId);
-                            setBrief(headline);
-                          }}
-                          className="p-3 bg-white border border-gray-200 hover:border-gray-400 hover:shadow-sm transition-all text-left group"
-                        >
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className="text-lg">{template?.icon}</span>
-                            <span className="text-[9px] font-mono text-gray-400 uppercase">{template?.name}</span>
-                          </div>
-                          <p className="text-xs text-gray-600 line-clamp-2 group-hover:text-gray-900">{headline}</p>
-                          {post.intent && (
-                            <p className="text-[9px] text-gray-400 mt-1 italic line-clamp-1">{post.intent}</p>
-                          )}
+                        setBrief(headline);
+                      }}
+                      className="flex-shrink-0 px-3 py-1.5 bg-gray-50 border border-gray-200 hover:border-gray-400 transition-all text-xs text-gray-600 hover:text-gray-900 whitespace-nowrap flex items-center gap-1.5"
+                    >
+                      <span>{template?.icon}</span>
+                      <span className="truncate max-w-[120px]">{headline}</span>
                     </button>
                   );
                 })}
-                  </div>
               </div>
-            )}
+            </div>
 
-              {/* No data fallback */}
-              {!brandData.contentNuggets?.realStats?.length && 
-               !brandData.contentNuggets?.testimonials?.length && 
-               !brandData.industryInsights?.length &&
-               !brandData.features?.length && (
+            {/* No data fallback - minimal */}
+            {!brandData.contentNuggets?.realStats?.length && 
+             !brandData.contentNuggets?.testimonials?.length && 
+             !brandData.industryInsights?.length &&
+             !brandData.features?.length && (
                 <div className="text-center py-4 text-gray-400">
                   <p className="text-sm">Aucune donnée exploitable trouvée</p>
                   <p className="text-xs mt-1">Ajoutez des informations dans l'identité ou écrivez librement !</p>

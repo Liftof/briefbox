@@ -1,6 +1,33 @@
-import Link from 'next/link';
+'use client';
+
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth, SignInButton } from '@clerk/nextjs';
 
 export default function Hero() {
+  const [url, setUrl] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const { isSignedIn, isLoaded } = useAuth();
+  const router = useRouter();
+
+  const handleAnalyze = async () => {
+    const trimmedUrl = url.trim();
+    if (!trimmedUrl) return;
+
+    // If not signed in, the SignInButton wrapper will handle it
+    if (!isSignedIn) return;
+
+    setIsLoading(true);
+    // Redirect to playground with URL as query param
+    router.push(`/playground?analyzeUrl=${encodeURIComponent(trimmedUrl)}`);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && url.trim() && isSignedIn) {
+      handleAnalyze();
+    }
+  };
+
   return (
     <section className="min-h-screen flex items-center relative overflow-hidden">
       {/* Subtle grid background */}
@@ -28,51 +55,88 @@ export default function Hero() {
             {/* Headline */}
             <h1 className="mb-8" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
               <span className="block text-5xl md:text-6xl font-light text-gray-900 leading-[1.1] mb-2">
-                Décrivez.
-              </span>
-              <span className="block text-5xl md:text-6xl font-light text-gray-900 leading-[1.1] mb-2">
-                Importez.
+                Entrez votre site.
               </span>
               <span className="block text-5xl md:text-6xl font-semibold text-gray-900 leading-[1.1]">
-                L'IA génère.
+                L'IA crée vos visuels.
               </span>
             </h1>
 
             {/* Subheadline */}
-            <p className="text-lg text-gray-400 leading-relaxed max-w-md mb-12">
-              Vous décrivez le visuel que vous voulez. L'IA utilise <span className="text-gray-900 font-medium">vos assets</span> et <span className="text-gray-900 font-medium">votre charte</span> pour créer un résultat unique.
+            <p className="text-lg text-gray-400 leading-relaxed max-w-md mb-10">
+              On analyse votre marque en 60 secondes. Ensuite, générez des visuels <span className="text-gray-900 font-medium">100% on-brand</span> en un clic.
             </p>
 
-            {/* CTAs */}
-            <div className="flex flex-col sm:flex-row gap-4 mb-16">
-              <Link
-                href="/playground"
-                className="group relative bg-gray-900 text-white px-8 py-4 font-medium text-sm transition-all hover:bg-black inline-flex items-center justify-center gap-3"
-              >
-                <span>Commencer gratuitement</span>
-                <svg className="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                  <path d="M5 12h14M12 5l7 7-7 7" />
-                </svg>
-                {/* Hover gradient */}
-                <div className="absolute inset-0 bg-gradient-to-r from-emerald-600 to-teal-600 opacity-0 group-hover:opacity-100 transition-opacity -z-10" />
-              </Link>
-
-              <Link
-                href="#fonctionnement"
-                className="px-8 py-4 font-medium text-sm text-gray-500 hover:text-gray-900 transition-colors inline-flex items-center justify-center gap-2"
-              >
-                <span>Comment ça marche</span>
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                  <path d="M19 9l-7 7-7-7" />
-                </svg>
-              </Link>
+            {/* URL Input */}
+            <div className="relative mb-8">
+              {/* Decorative corners */}
+              <div className="absolute -top-2 -left-2 w-4 h-4 border-l-2 border-t-2 border-gray-300" />
+              <div className="absolute -bottom-2 -right-2 w-4 h-4 border-r-2 border-b-2 border-gray-300" />
+              
+              <div className="bg-white border border-gray-200 p-2 flex items-center gap-2">
+                <div className="flex-1 flex items-center gap-3 px-4">
+                  <svg className="w-5 h-5 text-gray-300 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="10" />
+                    <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+                  </svg>
+                  <input
+                    type="text"
+                    placeholder="votresite.com"
+                    value={url}
+                    onChange={(e) => setUrl(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    className="flex-1 py-3 text-lg font-light outline-none placeholder:text-gray-300"
+                  />
+                </div>
+                
+                {isLoaded && isSignedIn ? (
+                  <button
+                    onClick={handleAnalyze}
+                    disabled={!url.trim() || isLoading}
+                    className="bg-gray-900 text-white px-6 py-3 font-medium text-sm hover:bg-black transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                  >
+                    {isLoading ? (
+                      <>
+                        <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                        </svg>
+                        <span>Analyse...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>Analyser</span>
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                          <path d="M5 12h14M12 5l7 7-7 7" />
+                        </svg>
+                      </>
+                    )}
+                  </button>
+                ) : (
+                  <SignInButton mode="modal" forceRedirectUrl={url.trim() ? `/playground?analyzeUrl=${encodeURIComponent(url.trim())}` : '/playground'}>
+                    <button
+                      disabled={!url.trim()}
+                      className="bg-gray-900 text-white px-6 py-3 font-medium text-sm hover:bg-black transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                    >
+                      <span>Analyser</span>
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                        <path d="M5 12h14M12 5l7 7-7 7" />
+                      </svg>
+                    </button>
+                  </SignInButton>
+                )}
+              </div>
+              
+              <p className="mt-3 text-xs text-gray-400 pl-1">
+                Gratuit • Aucune CB requise • Résultats en 60 secondes
+              </p>
             </div>
 
             {/* Stats */}
             <div className="flex items-center gap-12 pt-8 border-t border-gray-200">
               <div>
-                <div className="text-2xl font-semibold text-gray-900 mb-1">2 min</div>
-                <div className="text-xs font-mono uppercase tracking-wider text-gray-400">pour générer</div>
+                <div className="text-2xl font-semibold text-gray-900 mb-1">60s</div>
+                <div className="text-xs font-mono uppercase tracking-wider text-gray-400">d'analyse</div>
               </div>
               <div className="w-px h-10 bg-gray-200" />
               <div>

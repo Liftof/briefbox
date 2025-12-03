@@ -47,7 +47,7 @@ export default function Sidebar({
 
   const menuItems = [
     { id: 'create', icon: '✦', label: 'Créer', disabled: false },
-    { id: 'strategy', icon: '💡', label: 'Stratégie', disabled: false },
+    // Strategy merged into Create view - angles carousel at top
     { id: 'projects', icon: '◫', label: 'Projets', disabled: false },
     { id: 'calendar', icon: '▤', label: 'Calendrier', disabled: true },
     { id: 'stats', icon: '◔', label: 'Statistiques', disabled: true },
