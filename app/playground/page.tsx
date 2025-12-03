@@ -1775,31 +1775,61 @@ ${enhancement}`);
                 />
               </div>
 
-              {/* 2. BRAND ASSETS ZONE */}
+              {/* 2. BRAND ASSETS ZONE - With logo distinction */}
               <div>
                 <div className="flex items-center justify-between mb-2">
                   <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">Assets de marque</label>
                   <span className="text-[10px] text-gray-400">{uploadedImages.length}</span>
                 </div>
                 
-                {uploadedImages.length > 0 ? (
-                  <div className="grid grid-cols-4 gap-2 mb-3">
-                    {uploadedImages.slice(0, 8).map((img, i) => (
-                      <div key={i} className="relative aspect-square group rounded-md overflow-hidden border border-gray-100">
-                        <img src={img} className="w-full h-full object-cover" />
-                        <button
-                          onClick={() => handleRemoveImage(i)}
-                          className="absolute top-0.5 right-0.5 w-4 h-4 bg-black/50 text-white rounded-full flex items-center justify-center text-[10px] opacity-0 group-hover:opacity-100 transition-all hover:bg-red-500"
-                        >×</button>
-                  </div>
-                ))}
-                    {uploadedImages.length > 8 && (
-                      <div className="aspect-square bg-gray-50 rounded-md flex items-center justify-center text-[10px] text-gray-400 font-medium border border-gray-100">
-                        +{uploadedImages.length - 8}
+                {/* THE Logo - Special display */}
+                {brandData?.logo && (
+                  <div className="mb-3 p-2 bg-emerald-50 border border-emerald-200 rounded-lg">
+                    <div className="flex items-center gap-2 mb-1.5">
+                      <span className="text-[9px] font-bold text-emerald-700 uppercase tracking-wider">✓ Logo protégé</span>
+                    </div>
+                    <div className="relative h-12 w-full rounded overflow-hidden bg-white flex items-center justify-center"
+                      style={{
+                        backgroundImage: `linear-gradient(45deg, #f0f0f0 25%, transparent 25%), linear-gradient(-45deg, #f0f0f0 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #f0f0f0 75%), linear-gradient(-45deg, transparent 75%, #f0f0f0 75%)`,
+                        backgroundSize: '8px 8px',
+                        backgroundPosition: '0 0, 0 4px, 4px -4px, -4px 0px'
+                      }}
+                    >
+                      <img src={brandData.logo} className="max-h-10 max-w-full object-contain" alt="Logo" />
+                    </div>
                   </div>
                 )}
-              </div>
-                ) : (
+                
+                {/* Other assets */}
+                {uploadedImages.filter(img => img !== brandData?.logo).length > 0 ? (
+                  <div className="grid grid-cols-4 gap-2 mb-3">
+                    {uploadedImages.filter(img => img !== brandData?.logo).slice(0, 7).map((img, i) => {
+                      // Find category from labeledImages
+                      const labelObj = brandData?.labeledImages?.find((li: any) => li.url === img);
+                      const isClientLogo = labelObj?.category === 'client_logo';
+                      
+                      return (
+                        <div key={i} className={`relative aspect-square group rounded-md overflow-hidden border ${isClientLogo ? 'border-blue-200 bg-blue-50' : 'border-gray-100'}`}>
+                          <img src={img} className="w-full h-full object-cover" />
+                          {isClientLogo && (
+                            <div className="absolute bottom-0 left-0 right-0 bg-blue-600/80 text-white text-[7px] text-center py-0.5 font-medium">
+                              REF
+                            </div>
+                          )}
+                          <button
+                            onClick={() => handleRemoveImage(uploadedImages.indexOf(img))}
+                            className="absolute top-0.5 right-0.5 w-4 h-4 bg-black/50 text-white rounded-full flex items-center justify-center text-[10px] opacity-0 group-hover:opacity-100 transition-all hover:bg-red-500"
+                          >×</button>
+                        </div>
+                      );
+                    })}
+                    {uploadedImages.filter(img => img !== brandData?.logo).length > 7 && (
+                      <div className="aspect-square bg-gray-50 rounded-md flex items-center justify-center text-[10px] text-gray-400 font-medium border border-gray-100">
+                        +{uploadedImages.filter(img => img !== brandData?.logo).length - 7}
+                      </div>
+                    )}
+                  </div>
+                ) : !brandData?.logo && (
                   <div className="bg-gray-50 border border-dashed border-gray-200 p-4 text-center rounded-lg mb-3">
                     <span className="text-xs text-gray-400">Aucun asset (logo, produit...)</span>
                   </div>
@@ -1810,8 +1840,8 @@ ${enhancement}`);
                   className="w-full py-2 text-xs text-gray-600 border border-gray-200 rounded-md hover:border-gray-400 hover:text-gray-900 transition-colors flex items-center justify-center gap-2 bg-white"
                 >
                   <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                  <path d="M12 4v16m8-8H4" />
-                </svg>
+                    <path d="M12 4v16m8-8H4" />
+                  </svg>
                   Gérer les assets
                 </button>
                 <input ref={fileInputRef} type="file" multiple accept="image/*" className="hidden" onChange={handleImageUpload} />
