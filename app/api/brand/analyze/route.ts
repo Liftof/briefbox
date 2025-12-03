@@ -109,20 +109,50 @@ async function extractColorsFromImage(imageUrl: string): Promise<string[]> {
   try {
     console.log('🎨 Extracting colors from:', imageUrl);
     
-    // Fetch the image
-    const response = await fetch(imageUrl);
+    // Skip SVGs - they often have parsing issues and Sharp can't always handle them
+    const isSvg = imageUrl.toLowerCase().includes('.svg') || imageUrl.includes('image/svg');
+    if (isSvg) {
+      console.log('⚠️ Skipping SVG for color extraction (not supported reliably)');
+      return [];
+    }
+    
+    // Fetch the image with timeout
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 10000); // 10s timeout
+    
+    const response = await fetch(imageUrl, { 
+      signal: controller.signal,
+      headers: { 'Accept': 'image/*' }
+    });
+    clearTimeout(timeout);
+    
     if (!response.ok) {
-      console.warn('Failed to fetch image for color extraction');
+      console.warn('Failed to fetch image for color extraction:', response.status);
+      return [];
+    }
+    
+    const contentType = response.headers.get('content-type') || '';
+    
+    // Double-check for SVG in content-type
+    if (contentType.includes('svg')) {
+      console.log('⚠️ Detected SVG via content-type, skipping color extraction');
       return [];
     }
     
     const arrayBuffer = await response.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
     
-    // Convert to PNG using sharp (handles SVG, WEBP, etc.)
+    // Check if buffer looks like SVG (starts with < or <?xml)
+    const bufferStart = buffer.slice(0, 100).toString('utf8').trim();
+    if (bufferStart.startsWith('<') || bufferStart.startsWith('<?xml')) {
+      console.log('⚠️ Buffer appears to be SVG/XML, skipping');
+      return [];
+    }
+    
+    // Convert to PNG using sharp (handles WEBP, etc.)
     const pngBuffer = await sharp(buffer)
       .png()
-      .resize(200, 200, { fit: 'inside' }) // Resize for faster processing
+      .resize(200, 200, { fit: 'inside' })
       .toBuffer();
     
     // Extract colors using get-image-colors
@@ -132,19 +162,22 @@ async function extractColorsFromImage(imageUrl: string): Promise<string[]> {
     const hexColors = colors
       .map((color: any) => color.hex())
       .filter((hex: string) => {
-        // Filter out very light colors (likely background)
         const r = parseInt(hex.slice(1, 3), 16);
         const g = parseInt(hex.slice(3, 5), 16);
         const b = parseInt(hex.slice(5, 7), 16);
         const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
-        // Keep colors that are not too light (>0.95) or too dark (<0.05)
         return luminance > 0.05 && luminance < 0.95;
       });
     
     console.log('🎨 Extracted colors:', hexColors);
-    return hexColors.slice(0, 5); // Return top 5 colors
-  } catch (error) {
-    console.error('Color extraction error:', error);
+    return hexColors.slice(0, 5);
+  } catch (error: any) {
+    // Don't log full error for expected SVG issues
+    if (error.message?.includes('XML') || error.message?.includes('SVG')) {
+      console.warn('⚠️ SVG processing skipped');
+    } else {
+      console.error('Color extraction error:', error.message || error);
+    }
     return [];
   }
 }
