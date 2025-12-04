@@ -1437,7 +1437,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                 <span className="tabular-nums">{Math.round(progress)}%</span>
               </div>
               
-              {/* Chunky progress bar */}
+              {/* Progress bar */}
               <div className="relative h-2 bg-gray-100 rounded-full overflow-hidden">
                 <div 
                   className="absolute left-0 top-0 h-full bg-gradient-to-r from-emerald-500 to-teal-400 transition-all duration-700 ease-out rounded-full"
@@ -1452,23 +1452,9 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                   }}
                 />
               </div>
-
-              {/* Stage indicators */}
-              <div className="flex justify-between mt-4 gap-1">
-                {LOADING_STAGES.map((stage, i) => (
-                  <div 
-                    key={i}
-                    className={`flex-1 h-1 rounded-full transition-all duration-500 ${
-                      i <= loadingStage 
-                        ? 'bg-emerald-500' 
-                        : 'bg-gray-200'
-                    }`}
-                  />
-                ))}
-              </div>
               
               {/* Stage labels */}
-              <div className="flex justify-between mt-2">
+              <div className="flex justify-between mt-3">
                 <span className={`text-[9px] font-mono uppercase ${loadingStage >= 0 ? 'text-emerald-600' : 'text-gray-300'}`}>
                   Scraping
                 </span>
