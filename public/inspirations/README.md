@@ -1,32 +1,12 @@
 # Style Inspirations
 
-Place your App Store screenshot images here with these filenames:
+Place your App Store screenshot images here:
 
-## Playful & Fun
-- bitepal-1.jpg
-- bitepal-2.jpg  
-- bitepal-3.jpg
-- reading-1.jpg
-
-## Clean & Pro
-- fitness-1.jpg
-- fitness-2.jpg
-- golf-1.jpg
-
-## Bold & Vibrant
-- paired-1.jpg
-- paired-2.jpg
-- map-1.jpg
-- map-2.jpg
-
-## Dark Mode
-- jammable-1.jpg
-- jammable-2.jpg
-- fitness-3.jpg
-- golf-2.jpg
-
-## Lifestyle
-- earth-1.jpg
-- earth-2.jpg
-- earth-3.jpg
-
+- ref.jpeg
+- ref-2.jpeg
+- ref-3.jpeg
+- ref-4.jpeg
+- ref-5.jpeg
+- ref-6.jpeg
+- ref-7.jpeg
+- ref-8.jpeg

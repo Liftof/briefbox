@@ -13,160 +13,80 @@ const CATEGORIES = [
 ];
 
 // Curated App Store style inspirations
-// These are real-world app marketing examples for style reference
+// Real-world app marketing examples for style reference
 const INSPIRATIONS = [
   // PLAYFUL & FUN
   {
-    id: 'bitepal-1',
+    id: 'ref-7',
     category: 'playful',
-    url: '/inspirations/bitepal-1.jpg',
-    title: 'Bitepal - Track',
-    desc: 'Mascotte mignonne, couleurs douces, badges flottants',
-    tags: ['mascot', 'badges', 'light-blue', 'gamification']
+    url: '/inspirations/ref-7.jpeg',
+    title: 'App Playful',
+    desc: 'Couleurs vives, mascotte, gamification',
+    tags: ['colorful', 'fun', 'mascot', 'engaging']
   },
   {
-    id: 'bitepal-2',
+    id: 'ref-6',
     category: 'playful',
-    url: '/inspirations/bitepal-2.jpg',
-    title: 'Bitepal - Scan',
-    desc: 'Mockup device, scan UI, labels ingredients',
-    tags: ['device-mockup', 'scan', 'food', 'ui-overlay']
-  },
-  {
-    id: 'bitepal-3',
-    category: 'playful',
-    url: '/inspirations/bitepal-3.jpg',
-    title: 'Bitepal - Pet',
-    desc: 'Virtual pet, gamification, progression visuelle',
-    tags: ['gamification', 'pet', 'stats', 'green']
-  },
-  {
-    id: 'reading-1',
-    category: 'playful',
-    url: '/inspirations/reading-1.jpg',
-    title: 'Reading App',
-    desc: 'Enfants, mascotte dragon, fond bleu doux',
-    tags: ['kids', 'mascot', 'soft-colors', 'educational']
+    url: '/inspirations/ref-6.jpeg',
+    title: 'Nature & Calm',
+    desc: 'Tons verts/jaunes, lifestyle, zen',
+    tags: ['nature', 'calm', 'lifestyle', 'soft']
   },
   
   // CLEAN & PROFESSIONAL
   {
-    id: 'fitness-1',
+    id: 'ref-2',
     category: 'clean',
-    url: '/inspirations/fitness-1.jpg',
-    title: 'AI Fitness - Hero',
-    desc: 'Fond clair, body scan, badges anatomiques',
-    tags: ['body', 'ai', 'minimal', 'tech-overlay']
+    url: '/inspirations/ref-2.jpeg',
+    title: 'Clean Pro',
+    desc: 'Minimaliste, mockups devices, pro',
+    tags: ['minimal', 'device', 'professional', 'clean']
   },
   {
-    id: 'fitness-2',
+    id: 'ref-4',
     category: 'clean',
-    url: '/inspirations/fitness-2.jpg',
-    title: 'Fitness - Social Proof',
-    desc: 'Grid photos, transformations, credibility badges',
-    tags: ['social-proof', 'grid', 'testimonials', 'badges']
-  },
-  {
-    id: 'golf-1',
-    category: 'clean',
-    url: '/inspirations/golf-1.jpg',
-    title: 'Scratch AI - Golf',
-    desc: 'Sport premium, dark overlay, trajectoire visuelle',
-    tags: ['sport', 'trajectory', 'premium', 'green']
+    url: '/inspirations/ref-4.jpeg',
+    title: 'Features Grid',
+    desc: 'Grid layout, features, badges',
+    tags: ['grid', 'features', 'organized', 'badges']
   },
   
   // BOLD & VIBRANT
   {
-    id: 'paired-1',
+    id: 'ref-5',
     category: 'bold',
-    url: '/inspirations/paired-1.jpg',
-    title: 'Paired - Couples',
-    desc: 'Violet bold, grid photos, stat hero',
-    tags: ['purple', 'couples', 'photos-grid', 'stat']
+    url: '/inspirations/ref-5.jpeg',
+    title: 'Bold Colors',
+    desc: 'Couleurs saturées, contrastes forts',
+    tags: ['saturated', 'contrast', 'bold', 'vibrant']
   },
   {
-    id: 'paired-2',
+    id: 'ref-3',
     category: 'bold',
-    url: '/inspirations/paired-2.jpg',
-    title: 'Paired - Features',
-    desc: 'Mockups centrés, fond violet uni, features list',
-    tags: ['device-centered', 'solid-bg', 'features']
-  },
-  {
-    id: 'map-1',
-    category: 'bold',
-    url: '/inspirations/map-1.jpg',
-    title: 'Social Map - Hero',
-    desc: 'Bleu électrique, 3D elements, social badges',
-    tags: ['3d', 'electric-blue', 'social', 'badges']
-  },
-  {
-    id: 'map-2',
-    category: 'bold',
-    url: '/inspirations/map-2.jpg',
-    title: 'Social Map - Features',
-    desc: 'Bento grid coloré, multi-cards, playful',
-    tags: ['bento', 'multicolor', 'cards', 'fun']
+    url: '/inspirations/ref-3.jpeg',
+    title: 'Multi-Cards',
+    desc: 'Bento grid, multi-éléments, dynamique',
+    tags: ['bento', 'cards', 'dynamic', 'colorful']
   },
   
   // DARK MODE
   {
-    id: 'jammable-1',
+    id: 'ref-8',
     category: 'dark',
-    url: '/inspirations/jammable-1.jpg',
-    title: 'Jammable - Create',
-    desc: 'Neon glow, main 3D, mockup sombre',
-    tags: ['neon', '3d-hand', 'dark', 'music']
-  },
-  {
-    id: 'jammable-2',
-    category: 'dark',
-    url: '/inspirations/jammable-2.jpg',
-    title: 'Jammable - Tune',
-    desc: 'UI focus, doigt interaction, gradient purple',
-    tags: ['interaction', 'finger', 'gradient', 'ui-detail']
-  },
-  {
-    id: 'fitness-3',
-    category: 'dark',
-    url: '/inspirations/fitness-3.jpg',
-    title: 'Fitness - Dark UI',
-    desc: 'Dashboard dark, stats, progression charts',
-    tags: ['dark-ui', 'stats', 'charts', 'progress']
-  },
-  {
-    id: 'golf-2',
-    category: 'dark',
-    url: '/inspirations/golf-2.jpg',
-    title: 'Golf - AI Caddy',
-    desc: 'Analyse overlay, fond nature, tech meets outdoor',
-    tags: ['overlay', 'nature', 'analysis', 'premium']
+    url: '/inspirations/ref-8.jpeg',
+    title: 'Dark Mode',
+    desc: 'Fond sombre, néons, premium',
+    tags: ['dark', 'neon', 'premium', 'modern']
   },
   
   // LIFESTYLE
   {
-    id: 'earth-1',
+    id: 'ref',
     category: 'lifestyle',
-    url: '/inspirations/earth-1.jpg',
-    title: 'Earth.fm - Calm',
-    desc: 'Portrait humain, couleurs nature, casque audio',
-    tags: ['human', 'nature-colors', 'calm', 'headphones']
-  },
-  {
-    id: 'earth-2',
-    category: 'lifestyle',
-    url: '/inspirations/earth-2.jpg',
-    title: 'Earth.fm - Features',
-    desc: 'Split vert/jaune, mockup device, nature vibes',
-    tags: ['split-color', 'nature', 'device', 'minimal']
-  },
-  {
-    id: 'earth-3',
-    category: 'lifestyle',
-    url: '/inspirations/earth-3.jpg',
-    title: 'Earth.fm - Browse',
-    desc: 'Jaune doux, multiple devices, bird illustration',
-    tags: ['yellow', 'illustration', 'multi-device', 'cozy']
+    url: '/inspirations/ref.jpeg',
+    title: 'Lifestyle Mix',
+    desc: 'Photos réelles, humain, authentique',
+    tags: ['human', 'authentic', 'lifestyle', 'real']
   }
 ];
 
