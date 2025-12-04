@@ -85,6 +85,14 @@ body {
 .animate-float-1 { animation: float-1 12s ease-in-out infinite; }
 .animate-float-2 { animation: float-2 15s ease-in-out infinite; }
 .animate-float-3 { animation: float-3 18s ease-in-out infinite; }
+.animate-shimmer { animation: shimmer 2s ease-in-out infinite; }
+
+/* Fade in animation for loading states */
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in { animation: fade-in 0.4s ease-out forwards; }
 
 /* Smooth transitions */
 * {

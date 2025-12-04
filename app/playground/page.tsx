@@ -172,6 +172,18 @@ function PlaygroundContent() {
   const [statusMessage, setStatusMessage] = useState('Nous analysons votre identité...');
   const [progress, setProgress] = useState(0);
   const [status, setStatus] = useState<'idle' | 'preparing' | 'running' | 'complete' | 'error'>('idle');
+  const [loadingStage, setLoadingStage] = useState(0);
+  
+  // Fun loading messages that cycle through
+  const LOADING_STAGES = [
+    { emoji: '🔍', message: 'Exploration du site...', sub: 'On scrape les pages clés' },
+    { emoji: '🎨', message: 'Extraction des couleurs...', sub: 'Palette & identité visuelle' },
+    { emoji: '📸', message: 'Analyse des images...', sub: 'Logo, produits, visuels' },
+    { emoji: '🧠', message: 'L\'IA réfléchit...', sub: 'GPT-4 analyse tout ça' },
+    { emoji: '🔥', message: 'Enrichissement web...', sub: 'Firecrawl trouve les tendances' },
+    { emoji: '📊', message: 'Compilation des insights...', sub: 'Pain points & concurrents' },
+    { emoji: '✨', message: 'Finalisation...', sub: 'On prépare votre brief' },
+  ];
   
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true); // Collapsed by default
 
@@ -373,6 +385,28 @@ function PlaygroundContent() {
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [analyzeUrl, brandId]);
+
+  // Cycle through loading stages during analysis
+  useEffect(() => {
+    if (step !== 'analyzing') {
+      setLoadingStage(0);
+      return;
+    }
+    
+    const interval = setInterval(() => {
+      setLoadingStage((prev) => {
+        // Cycle through stages based on progress
+        const targetStage = Math.min(
+          Math.floor((progress / 100) * LOADING_STAGES.length),
+          LOADING_STAGES.length - 1
+        );
+        // Smooth transition: only go forward, never backward
+        return Math.max(prev, targetStage);
+      });
+    }, 2500); // Change stage every 2.5s
+    
+    return () => clearInterval(interval);
+  }, [step, progress, LOADING_STAGES.length]);
 
   const handleAnalyzeBrandWithUrl = async (urlToAnalyze: string) => {
     let url = urlToAnalyze.trim();
@@ -950,7 +984,7 @@ ${enhancement}`);
           console.log('🎬 Creative Director:', promptVariations ? `${promptVariations.length} variations` : 'single prompt');
           console.log('🚫 Negative prompt:', negativePrompt.substring(0, 50) + '...');
           setProgress(30);
-          setStatusMessage('✨ 4 variations créatives préparées...');
+          setStatusMessage('✨ 2 créations en cours, veuillez patienter');
         } else {
           console.warn('Creative Director fallback:', cdData.error);
           finalGenerationPrompt = buildFallbackPrompt(finalPrompt, targetBrand);
@@ -1240,61 +1274,93 @@ ${enhancement}`);
 
           <div className="relative z-10 flex flex-col items-center max-w-lg w-full px-6">
             {/* Status label */}
-            <div className="flex items-center gap-2 mb-8">
+            <div className="flex items-center gap-2 mb-6">
               <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
               <span className="text-[10px] font-mono uppercase tracking-widest text-gray-400">
                 Analyse en cours
               </span>
             </div>
 
-            {/* Main heading */}
-            <h2 className="text-3xl md:text-4xl text-center mb-4">
-              <span className="font-light text-gray-400">{statusMessage.split(' ')[0]}</span>
-              <br />
-              <span className="font-semibold text-gray-900">{statusMessage.split(' ').slice(1).join(' ')}</span>
-            </h2>
+            {/* Animated emoji + message */}
+            <div className="mb-8 text-center">
+              <div 
+                key={loadingStage} 
+                className="animate-fade-in"
+              >
+                <span className="text-5xl mb-4 block animate-bounce" style={{ animationDuration: '2s' }}>
+                  {LOADING_STAGES[loadingStage]?.emoji || '🔍'}
+                </span>
+                <h2 className="text-2xl md:text-3xl font-semibold text-gray-900 mb-2">
+                  {LOADING_STAGES[loadingStage]?.message || 'Analyse...'}
+                </h2>
+                <p className="text-sm text-gray-400">
+                  {LOADING_STAGES[loadingStage]?.sub || ''}
+                </p>
+              </div>
+            </div>
 
-            {/* Progress section */}
-            <div className="w-full max-w-sm mt-8 mb-6">
-              <div className="flex justify-between text-[10px] font-mono uppercase tracking-widest text-gray-400 mb-3">
+            {/* Progress bar - modern style */}
+            <div className="w-full max-w-md mb-6">
+              <div className="flex justify-between text-[10px] font-mono uppercase tracking-widest text-gray-400 mb-2">
                 <span>Progression</span>
-                <span>{Math.round(progress)}%</span>
+                <span className="tabular-nums">{Math.round(progress)}%</span>
               </div>
               
-              {/* Progress bar - editorial style */}
-              <div className="relative h-px bg-gray-200 w-full">
+              {/* Chunky progress bar */}
+              <div className="relative h-2 bg-gray-100 rounded-full overflow-hidden">
                 <div 
-                  className="absolute left-0 top-0 h-px bg-gray-900 transition-all duration-1000 ease-out" 
+                  className="absolute left-0 top-0 h-full bg-gradient-to-r from-emerald-500 to-teal-400 transition-all duration-700 ease-out rounded-full"
                   style={{ width: `${progress}%` }}
                 />
-                {/* Progress indicator dot */}
+                {/* Shimmer effect */}
                 <div 
-                  className="absolute top-1/2 -translate-y-1/2 w-3 h-3 bg-gray-900 rounded-full transition-all duration-1000 ease-out shadow-sm"
-                  style={{ left: `calc(${progress}% - 6px)` }}
+                  className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer"
+                  style={{ 
+                    transform: 'skewX(-20deg)',
+                    animation: 'shimmer 2s infinite'
+                  }}
                 />
               </div>
 
-              {/* Progress stages */}
-              <div className="flex justify-between mt-4">
-                {['Scraping', 'Analyse', 'Synthèse'].map((stage, i) => (
+              {/* Stage indicators */}
+              <div className="flex justify-between mt-4 gap-1">
+                {LOADING_STAGES.map((stage, i) => (
                   <div 
-                    key={stage}
-                    className={`text-[10px] font-mono uppercase tracking-widest transition-colors ${
-                      progress >= (i + 1) * 33 ? 'text-gray-900' : 'text-gray-300'
+                    key={i}
+                    className={`flex-1 h-1 rounded-full transition-all duration-500 ${
+                      i <= loadingStage 
+                        ? 'bg-emerald-500' 
+                        : 'bg-gray-200'
                     }`}
-                  >
-                    {stage}
-              </div>
+                  />
                 ))}
+              </div>
+              
+              {/* Stage labels */}
+              <div className="flex justify-between mt-2">
+                <span className={`text-[9px] font-mono uppercase ${loadingStage >= 0 ? 'text-emerald-600' : 'text-gray-300'}`}>
+                  Scraping
+                </span>
+                <span className={`text-[9px] font-mono uppercase ${loadingStage >= 3 ? 'text-emerald-600' : 'text-gray-300'}`}>
+                  IA
+                </span>
+                <span className={`text-[9px] font-mono uppercase ${loadingStage >= 5 ? 'text-emerald-600' : 'text-gray-300'}`}>
+                  Enrichissement
+                </span>
+              </div>
             </div>
+
+            {/* Fun facts / tips */}
+            <div className="mt-6 px-6 py-4 bg-gradient-to-r from-gray-50 to-white border border-gray-100 rounded-lg max-w-md">
+              <p className="text-xs text-gray-500 text-center">
+                💡 <span className="text-gray-700">Le saviez-vous ?</span> On analyse jusqu'à 10 pages de votre site pour extraire le maximum d'insights.
+              </p>
             </div>
 
             {/* Time estimate */}
-            <div className="mt-8 border border-gray-200 px-6 py-4 bg-white/50">
-              <p className="text-sm text-gray-500 text-center">
-                Estimation : <span className="font-semibold text-gray-900">60–90 secondes</span>
-              </p>
-            </div>
+            <p className="mt-4 text-[10px] font-mono text-gray-400 uppercase tracking-widest">
+              ~60-90 secondes
+            </p>
           </div>
         </div>
       );
