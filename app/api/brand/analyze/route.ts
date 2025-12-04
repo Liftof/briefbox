@@ -1750,7 +1750,7 @@ FORMAT: Return ONLY a valid JSON array:
           brandData.newsHighlights = searchEnrichment.newsHighlights;
           
           // Add to market context
-          mergedContentNuggets.newsAngles = searchEnrichment.newsHighlights.map(n => ({
+          (mergedContentNuggets as any).newsAngles = searchEnrichment.newsHighlights.map(n => ({
             headline: n.headline,
             date: n.date,
             url: n.url
@@ -1808,8 +1808,8 @@ FORMAT: Return ONLY a valid JSON array:
         if (extractEnrichment.competitorInsights.length > 0) {
           console.log(`✅ Got ${extractEnrichment.competitorInsights.length} competitor insights`);
           // Store as market context in contentNuggets
-          mergedContentNuggets.marketContext = [
-            ...(mergedContentNuggets.marketContext || []),
+          (mergedContentNuggets as any).marketContext = [
+            ...((mergedContentNuggets as any).marketContext || []),
             ...extractEnrichment.competitorInsights
           ];
         }
