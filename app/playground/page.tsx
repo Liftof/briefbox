@@ -1127,26 +1127,70 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
 
       setProgress(40);
 
-      // Use smart image selection or fall back to user selection
-      const imagesToUse = smartImageSelection && smartImageSelection.length > 0 
-        ? smartImageSelection 
-        : references;
-
-      // If no specific roles were returned by CD (or we are using manual selection),
-      // try to identify the logo from brand data to protect it.
+      // ========================================
+      // IMAGE SELECTION PRIORITY (UPDATED)
+      // 1. Logo ALWAYS first (protected)
+      // 2. User selection is PRIORITY (not overridden by CD)
+      // 3. Labels from brandData for proper context
+      // ========================================
+      
+      const imagesToUse: string[] = [];
+      
+      // 1. LOGO FIRST - Always include and protect it
       if (targetBrand?.logo) {
-          imagesToUse.forEach(url => {
-              // Check for exact match or fuzzy match
-              if (url === targetBrand.logo || url.includes(targetBrand.logo) || targetBrand.logo.includes(url)) {
-                  imageContextMap[url] = "BRAND_LOGO (CRITICAL): This is the official logo. Display it clearly. Do NOT distort.";
-              }
-          });
+        imagesToUse.push(targetBrand.logo);
+        imageContextMap[targetBrand.logo] = "BRAND_LOGO (CRITICAL): This is the official brand logo. Display it clearly and prominently. DO NOT distort, warp, or modify it in any way. It must remain perfectly legible.";
+        console.log('🏷️ Logo added first:', targetBrand.logo.slice(0, 50));
       }
+      
+      // 2. USER SELECTION IS PRIORITY - Add all user-selected images (except logo already added)
+      for (const img of references) {
+        if (!imagesToUse.includes(img)) {
+          imagesToUse.push(img);
+          
+          // Find label from brandData to give Fal context
+          const labelObj = targetBrand?.labeledImages?.find((li: any) => li.url === img);
+          const category = labelObj?.category || 'other';
+          
+          // Assign context based on label
+          if (!imageContextMap[img]) {
+            switch (category) {
+              case 'main_logo':
+                imageContextMap[img] = "BRAND_LOGO (CRITICAL): Official logo. DO NOT distort.";
+                break;
+              case 'product':
+                imageContextMap[img] = "PRODUCT_IMAGE: Hero product visual. Feature prominently.";
+                break;
+              case 'app_ui':
+                imageContextMap[img] = "APP_SCREENSHOT: Product interface. Use as visual element.";
+                break;
+              case 'person':
+              case 'team':
+                imageContextMap[img] = "PERSON_IMAGE: Human element for authenticity.";
+                break;
+              case 'client_logo':
+                imageContextMap[img] = "CLIENT_LOGO: Customer/partner logo. Can be shown smaller.";
+                break;
+              case 'texture':
+                imageContextMap[img] = "TEXTURE: Background or visual texture element.";
+                break;
+              case 'reference':
+                imageContextMap[img] = "STYLE_REFERENCE: Match this visual style and aesthetic.";
+                break;
+              default:
+                imageContextMap[img] = "SUPPORTING_VISUAL: Secondary visual element.";
+            }
+          }
+        }
+      }
+      
+      console.log('📸 Images to use (user priority):', imagesToUse.length, 'images');
+      console.log('   Labels:', Object.entries(imageContextMap).map(([k, v]) => `${k.slice(-20)}: ${v.slice(0, 30)}`).slice(0, 4));
 
-    // Add manual style references if present
-    if (styleRefImages.length > 0) {
-      styleReferenceImages = [...styleRefImages, ...styleReferenceImages];
-    }
+      // Add manual style references if present
+      if (styleRefImages.length > 0) {
+        styleReferenceImages = [...styleRefImages, ...styleReferenceImages];
+      }
 
       // STEP 2: Generate with Fal using variations (or single prompt)
       const response = await fetch('/api/generate', {
