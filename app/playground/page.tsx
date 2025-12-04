@@ -221,6 +221,17 @@ function PlaygroundContent() {
   const [lightboxImage, setLightboxImage] = useState<string | null>(null);
   const [isThinking, setIsThinking] = useState(false);
   const [contentLanguage, setContentLanguage] = useState<'fr' | 'en' | 'es' | 'de'>('fr');
+  const [aspectRatio, setAspectRatio] = useState<string>('1:1');
+  
+  // Aspect ratio options
+  const ASPECT_RATIOS = [
+    { value: '1:1', label: '1:1', desc: 'Carré', icon: '◻️' },
+    { value: '4:5', label: '4:5', desc: 'Portrait', icon: '📱' },
+    { value: '9:16', label: '9:16', desc: 'Story/Reel', icon: '📲' },
+    { value: '16:9', label: '16:9', desc: 'Paysage', icon: '🖥️' },
+    { value: '3:2', label: '3:2', desc: 'Photo', icon: '📷' },
+    { value: '21:9', label: '21:9', desc: 'Cinéma', icon: '🎬' },
+  ];
   
   // Language options
   const LANGUAGES = [
@@ -978,7 +989,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
           imageUrls: allImages, // Base image first, then style refs
           referenceImages: styleReferences, // Also mark them as style refs
           numImages: 2,
-          aspectRatio: '1:1'
+          aspectRatio
         })
       });
 
@@ -997,7 +1008,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
           return {
             id: `edit-${createId()}-${index}`,
             url,
-            aspectRatio: img?.aspect_ratio || '1:1'
+            aspectRatio: img?.aspect_ratio || aspectRatio
           };
         })
         .filter(Boolean) as GeneratedImage[];
@@ -1204,7 +1215,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
           referenceImages: styleReferenceImages, // Style reference images
           imageContextMap: imageContextMap, // NEW: Pass explicit roles
           numImages: 2, // Reduced to 2 for cost optimization
-          aspectRatio: '1:1'
+          aspectRatio
         })
       });
       const payload = await response.json();
@@ -1219,7 +1230,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
           return {
             id: `${createId()}-${index}`,
             url,
-            aspectRatio: img?.aspect_ratio || img?.metadata?.aspect_ratio || '1:1'
+            aspectRatio: img?.aspect_ratio || img?.metadata?.aspect_ratio || aspectRatio
           };
         })
         .filter(Boolean) as GeneratedImage[];
@@ -1719,6 +1730,17 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
             </div>
           </div>
           <div className="flex items-center gap-2">
+            {/* Aspect Ratio Toggle */}
+            <select
+              value={aspectRatio}
+              onChange={(e) => setAspectRatio(e.target.value)}
+              className="text-xs bg-white border border-gray-200 px-3 py-2 outline-none cursor-pointer text-gray-600 hover:border-gray-300"
+            >
+              {ASPECT_RATIOS.map(ratio => (
+                <option key={ratio.value} value={ratio.value}>{ratio.icon} {ratio.label}</option>
+              ))}
+            </select>
+            {/* Language Toggle */}
             <select
               value={contentLanguage}
               onChange={(e) => setContentLanguage(e.target.value as 'fr' | 'en' | 'es' | 'de')}

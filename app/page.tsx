@@ -87,8 +87,8 @@ export default function Home() {
                   <div className="flex items-start gap-4">
                     <div className="w-8 h-8 bg-emerald-500/20 rounded-full flex items-center justify-center text-emerald-400 text-sm flex-shrink-0">✓</div>
                     <div>
-                      <div className="font-medium text-white mb-1">29€/mois illimité</div>
-                      <div className="text-sm text-gray-400 leading-relaxed">Plus jamais de factures surprises.</div>
+                      <div className="font-medium text-white mb-1">Dès 19€/mois</div>
+                      <div className="text-sm text-gray-400 leading-relaxed">Visuels 2K haute résolution inclus.</div>
                     </div>
                   </div>
                   <div className="flex items-start gap-4">
@@ -169,7 +169,7 @@ export default function Home() {
 
         <div className="max-w-5xl mx-auto px-6 relative z-10">
           {/* Section header */}
-          <div className="text-center mb-20">
+          <div className="text-center mb-12">
             <div className="inline-flex items-center gap-3 mb-6">
               <div className="w-2 h-2 bg-gray-900 rounded-full" />
               <span className="text-xs font-mono uppercase tracking-[0.2em] text-gray-400">Tarifs</span>
@@ -180,90 +180,109 @@ export default function Home() {
             </h2>
           </div>
 
+          {/* Resolution badge */}
+          <div className="text-center mb-12">
+            <span className="inline-flex items-center gap-2 text-xs font-mono uppercase tracking-widest text-gray-500 bg-gray-100 px-4 py-2">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+                <rect x="3" y="3" width="18" height="18" rx="2" />
+                <path d="M3 9h18M9 21V9" />
+              </svg>
+              Tous les visuels en 2K haute résolution
+            </span>
+          </div>
+
           <div className="grid lg:grid-cols-3 gap-6 items-start">
-            {/* Free */}
+            {/* Starter */}
             <div className="bg-white border border-gray-200 p-8">
-              <div className="text-xs font-mono uppercase tracking-widest text-gray-400 mb-4">Free</div>
-              <div className="text-4xl font-light text-gray-900 mb-2">0€</div>
-              <p className="text-sm text-gray-400 mb-8">Pour tester l'outil</p>
+              <div className="text-xs font-mono uppercase tracking-widest text-gray-400 mb-4">Starter</div>
+              <div className="text-4xl font-light text-gray-900 mb-2">Gratuit</div>
+              <p className="text-sm text-gray-400 mb-8">Pour découvrir l'outil</p>
               
               <ul className="space-y-3 mb-8">
                 <li className="flex items-center gap-3 text-sm text-gray-600">
                   <span className="text-emerald-500">✓</span>
-                  10 générations/mois
+                  3 générations offertes
                 </li>
                 <li className="flex items-center gap-3 text-sm text-gray-600">
                   <span className="text-emerald-500">✓</span>
-                  Tous les templates
+                  Analyse de marque complète
+                </li>
+                <li className="flex items-center gap-3 text-sm text-gray-600">
+                  <span className="text-emerald-500">✓</span>
+                  Export 2K haute résolution
                 </li>
                 <li className="flex items-center gap-3 text-sm text-gray-300">
                   <span>×</span>
-                  Charte graphique
+                  Galerie d'inspirations
                 </li>
               </ul>
               
               <Link href="/playground" className="block w-full py-3 text-center text-sm font-medium text-gray-900 border border-gray-200 hover:border-gray-900 transition-colors">
-                Commencer
+                Commencer gratuitement
               </Link>
             </div>
 
             {/* Pro - Featured */}
             <div className="relative bg-gray-900 text-white p-8 lg:-mt-4 lg:-mb-4">
               <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-emerald-500 text-white text-[10px] font-mono uppercase tracking-widest px-3 py-1">
-                Recommandé
+                Populaire
               </div>
               
               <div className="text-xs font-mono uppercase tracking-widest text-emerald-400 mb-4">Pro</div>
-              <div className="text-4xl font-light text-white mb-2">29€<span className="text-lg text-gray-500">/mois</span></div>
-              <p className="text-sm text-gray-400 mb-8">Pour les freelances</p>
+              <div className="text-4xl font-light text-white mb-2">19€<span className="text-lg text-gray-500">/mois</span></div>
+              <p className="text-sm text-gray-400 mb-8">50 crédits • Idéal pour freelances</p>
               
               <ul className="space-y-3 mb-8">
                 <li className="flex items-center gap-3 text-sm text-gray-300">
                   <span className="text-emerald-400">✓</span>
-                  Générations illimitées
+                  50 générations/mois
                 </li>
                 <li className="flex items-center gap-3 text-sm text-gray-300">
                   <span className="text-emerald-400">✓</span>
-                  Tous les templates
+                  Galerie d'inspirations complète
                 </li>
                 <li className="flex items-center gap-3 text-sm text-gray-300">
                   <span className="text-emerald-400">✓</span>
-                  Charte graphique illimitée
+                  Tous les ratios et formats
                 </li>
                 <li className="flex items-center gap-3 text-sm text-gray-300">
                   <span className="text-emerald-400">✓</span>
-                  Exports HD
+                  Historique illimité
                 </li>
               </ul>
               
               <button className="w-full py-3 text-center text-sm font-medium bg-white text-gray-900 hover:bg-gray-100 transition-colors">
-                Essai gratuit 14j
+                Essai gratuit 7 jours
               </button>
             </div>
 
-            {/* Agency */}
+            {/* Business */}
             <div className="bg-white border border-gray-200 p-8">
-              <div className="text-xs font-mono uppercase tracking-widest text-gray-400 mb-4">Agency</div>
-              <div className="text-4xl font-light text-gray-900 mb-2">99€<span className="text-lg text-gray-400">/mois</span></div>
-              <p className="text-sm text-gray-400 mb-8">Pour les équipes</p>
+              <div className="text-xs font-mono uppercase tracking-widest text-gray-400 mb-4">Business</div>
+              <div className="text-4xl font-light text-gray-900 mb-2">49€<span className="text-lg text-gray-400">/mois</span></div>
+              <p className="text-sm text-gray-400 mb-8">150 crédits • Pour les équipes</p>
               
               <ul className="space-y-3 mb-8">
+                <li className="flex items-center gap-3 text-sm text-gray-600">
+                  <span className="text-emerald-500">✓</span>
+                  150 générations/mois
+                </li>
                 <li className="flex items-center gap-3 text-sm text-gray-600">
                   <span className="text-emerald-500">✓</span>
                   Tout du plan Pro
                 </li>
                 <li className="flex items-center gap-3 text-sm text-gray-600">
                   <span className="text-emerald-500">✓</span>
-                  5 sièges inclus
+                  3 membres d'équipe
                 </li>
                 <li className="flex items-center gap-3 text-sm text-gray-600">
                   <span className="text-emerald-500">✓</span>
-                  API access
+                  Support prioritaire
                 </li>
               </ul>
               
               <button className="block w-full py-3 text-center text-sm font-medium text-gray-900 border border-gray-200 hover:border-gray-900 transition-colors">
-                Réserver une démo
+                Contacter les ventes
               </button>
             </div>
           </div>

@@ -64,7 +64,7 @@ export default function Hero() {
 
             {/* Subheadline */}
             <p className="text-lg text-gray-400 leading-relaxed max-w-md mb-10">
-              On analyse votre marque en 60 secondes. Ensuite, générez des visuels <span className="text-gray-900 font-medium">100% on-brand</span> en un clic.
+              On analyse votre marque en 60 secondes. Ensuite, générez des visuels <span className="text-gray-900 font-medium">haute résolution</span>, <span className="text-gray-900 font-medium">100% on-brand</span> en un clic.
             </p>
 
             {/* URL Input */}
