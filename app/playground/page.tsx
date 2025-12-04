@@ -901,6 +901,108 @@ ${enhancement}`);
 
   const [selectedTemplate, setSelectedTemplate] = useState<TemplateId | null>(null);
 
+  // DEDICATED IMAGE EDIT FUNCTION - bypasses Creative Director for direct edits
+  const handleEditImage = async (
+    imageToEdit: string,
+    editInstruction: string,
+    styleReferences: string[] = []
+  ) => {
+    if (!editInstruction.trim()) {
+      showToast('Ajoutez une instruction de modification', 'error');
+      return;
+    }
+
+    setStatus('preparing');
+    setStatusMessage('✏️ Modification en cours...');
+    setProgress(20);
+
+    try {
+      // Build a simple, direct edit prompt
+      // The image to edit goes FIRST, then style refs
+      const allImages = [imageToEdit, ...styleReferences];
+      
+      // Construct edit prompt with clear instructions
+      const editPrompt = `[IMAGE EDIT REQUEST]
+Image 1: The base image to modify. Keep its core composition.
+${styleReferences.length > 0 ? `Images 2-${styleReferences.length + 1}: Style references to match.` : ''}
+
+EDIT INSTRUCTION: ${editInstruction}
+
+Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Focus on the specific change requested.`;
+
+      console.log('✏️ Direct image edit:', {
+        baseImage: imageToEdit.slice(0, 50) + '...',
+        styleRefs: styleReferences.length,
+        instruction: editInstruction
+      });
+
+      setProgress(40);
+      setStatusMessage('🎨 Génération de la variante...');
+
+      // Send directly to generate API - NO Creative Director
+      const response = await fetch('/api/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          prompt: editPrompt,
+          negativePrompt: 'blurry, low quality, watermark, distorted',
+          imageUrls: allImages, // Base image first, then style refs
+          referenceImages: styleReferences, // Also mark them as style refs
+          numImages: 2,
+          aspectRatio: '1:1'
+        })
+      });
+
+      const payload = await response.json();
+      
+      if (!response.ok || !payload.success) {
+        throw new Error(payload.error || 'Échec de la modification');
+      }
+
+      setProgress(80);
+
+      const normalized: GeneratedImage[] = (payload.images || [])
+        .map((img: any, index: number) => {
+          const url = typeof img === 'string' ? img : img?.url || img?.image;
+          if (!url) return null;
+          return {
+            id: `edit-${createId()}-${index}`,
+            url,
+            aspectRatio: img?.aspect_ratio || '1:1'
+          };
+        })
+        .filter(Boolean) as GeneratedImage[];
+
+      if (!normalized.length) {
+        throw new Error('Aucune image modifiée retournée');
+      }
+
+      // Save to local generations
+      const generationsToSave = normalized.map(img => ({
+        url: img.url,
+        prompt: `[EDIT] ${editInstruction}`,
+        brandName: brandData?.name,
+      }));
+      addGenerations(generationsToSave);
+      window.dispatchEvent(new Event('generations-updated'));
+
+      setGeneratedImages((prev) => [...normalized, ...prev].slice(0, 16));
+      setStatus('complete');
+      setProgress(100);
+      showToast('Variante générée !', 'success');
+      
+    } catch (error: any) {
+      console.error('Edit error:', error);
+      setStatus('error');
+      showToast(error.message || 'Erreur pendant la modification', 'error');
+    } finally {
+      setTimeout(() => {
+        setStatus('idle');
+        setProgress(0);
+      }, 1200);
+    }
+  };
+
   const handleGenerate = async (
     customPrompt?: string,
     useCurrentBrief = true,
@@ -2283,19 +2385,19 @@ ${enhancement}`);
 
             {/* Edit form */}
             <div className="flex-1 flex flex-col justify-center p-8">
-              <div className="text-[10px] font-mono uppercase tracking-widest text-gray-400 mb-2">
-                Modification
+              <div className="text-[10px] font-mono uppercase tracking-widest text-emerald-600 mb-2">
+                ✏️ Mode édition directe
               </div>
-              <h3 className="text-xl font-semibold mb-2">Créer une variante</h3>
+              <h3 className="text-xl font-semibold mb-2">Modifier cette image</h3>
               <p className="text-sm text-gray-500 mb-6">
-                Décrivez les changements. L'IA va régénérer une version modifiée.
+                Décrivez précisément ce que vous voulez changer. L'IA modifiera l'image en gardant le reste intact.
               </p>
 
               <textarea
                 value={editPrompt}
                 onChange={(e) => setEditPrompt(e.target.value)}
-                className="w-full h-24 p-4 border border-gray-200 resize-none mb-4 bg-white focus:border-gray-400 outline-none transition-colors text-sm"
-                placeholder="Ex: Change la couleur du fond en bleu nuit..."
+                className="w-full h-28 p-4 border border-gray-200 resize-none mb-4 bg-white focus:border-emerald-400 focus:ring-1 focus:ring-emerald-100 outline-none transition-all text-sm"
+                placeholder="Ex: Change le fond en bleu nuit, ajoute un effet de lumière sur le produit, mets le logo en blanc..."
               />
 
               {/* Additional Images for Editing */}
@@ -2350,17 +2452,17 @@ ${enhancement}`);
               <button
                 onClick={() => {
                   if (!editPrompt.trim() || !editingImage) return;
-                  // Merge original image with additional reference images
-                  const allEditImages = [editingImage, ...editAdditionalImages];
-                  handleGenerate(editPrompt, false, brandData, allEditImages);
+                  // Use dedicated edit function - bypasses Creative Director
+                  handleEditImage(editingImage, editPrompt, editAdditionalImages);
                   setEditingImage(null);
+                  setEditPrompt('');
                   setEditAdditionalImages([]);
                 }}
                 className="group bg-gray-900 text-white py-4 font-medium text-sm hover:bg-black transition-colors disabled:opacity-30 flex items-center justify-center gap-2"
                 disabled={!editPrompt.trim()}
               >
-                <span className="text-emerald-400">✦</span>
-                Générer la variante
+                <span className="text-emerald-400">✏️</span>
+                Appliquer la modification
                 <svg className="w-4 h-4 transition-transform group-hover:translate-x-0.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                   <path d="M5 12h14M12 5l7 7-7 7" />
                 </svg>
