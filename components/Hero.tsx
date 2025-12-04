@@ -94,7 +94,7 @@ export default function Hero() {
                     onClick={handleAnalyze}
                     disabled={!url.trim() || isLoading}
                     className="bg-gray-900 text-white px-6 py-3 font-medium text-sm hover:bg-black transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-              >
+                  >
                     {isLoading ? (
                       <>
                         <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
@@ -107,8 +107,8 @@ export default function Hero() {
                       <>
                         <span>Analyser</span>
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                  <path d="M5 12h14M12 5l7 7-7 7" />
-                </svg>
+                          <path d="M5 12h14M12 5l7 7-7 7" />
+                        </svg>
                       </>
                     )}
                   </button>
@@ -117,11 +117,11 @@ export default function Hero() {
                     <button
                       disabled={!url.trim()}
                       className="bg-gray-900 text-white px-6 py-3 font-medium text-sm hover:bg-black transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-              >
+                    >
                       <span>Analyser</span>
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                         <path d="M5 12h14M12 5l7 7-7 7" />
-                </svg>
+                      </svg>
                     </button>
                   </SignInButton>
                 )}

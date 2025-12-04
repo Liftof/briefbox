@@ -592,12 +592,8 @@ export async function POST(request: Request) {
         parallelHeaders['x-api-key'] = PARALLEL_API_KEY;
     }
 
-    // Store branding data from Firecrawl
-    let firecrawlBranding: any = null;
-    
     try {
         // Firecrawl mainly for the primary website to get structure
-        // NOW WITH BRANDING FORMAT for native color/font extraction!
         const firecrawlPromise = fetch('https://api.firecrawl.dev/v1/scrape', {
             method: 'POST',
             headers: {
@@ -606,9 +602,8 @@ export async function POST(request: Request) {
             },
             body: JSON.stringify({
                 url, // Primary URL only for detailed structure
-                formats: ["markdown", "html", "screenshot", "branding"], // Added branding!
-                onlyMainContent: false,
-                proxy: "auto" // Auto-retry with stealth if basic fails
+                formats: ["markdown", "html", "screenshot"],
+                onlyMainContent: false
             })
         });
 
@@ -635,18 +630,6 @@ export async function POST(request: Request) {
                     ...(scrapeData.data?.metadata || {}), 
                     screenshot: scrapeData.data?.screenshot 
                 };
-                
-                // NEW: Extract branding data from Firecrawl native extraction
-                if (scrapeData.data?.branding) {
-                    firecrawlBranding = scrapeData.data.branding;
-                    console.log('✅ Firecrawl branding extracted:', {
-                        hasColors: !!firecrawlBranding.colors,
-                        hasFonts: !!firecrawlBranding.fonts,
-                        hasLogo: !!firecrawlBranding.logo,
-                        colorScheme: firecrawlBranding.colorScheme
-                    });
-                }
-                
                 console.log('✅ Firecrawl success');
             } else {
                 console.warn('Firecrawl returned success:false', scrapeData);
@@ -897,70 +880,198 @@ export async function POST(request: Request) {
     console.log('🤖 Analyzing with OpenRouter...');
     
     // Format content nuggets for the AI
-    // SHORTENED: Reduce content to avoid "prompt too long" errors
     const nuggetsFormatted = contentNuggets.length > 0 
-        ? `\nNUGGETS:\n${contentNuggets.slice(0, 15).map(n => `[${n.type}] ${n.content.slice(0, 100)}`).join('\n')}`
+        ? `\n\nEXTRACTED CONTENT NUGGETS (USE THESE FOR POSTS):\n${contentNuggets.map(n => 
+            `- [${n.type.toUpperCase()}] ${n.content}${n.source ? ` (Source: ${n.source})` : ''}`
+          ).join('\n')}`
         : '';
     
-    // Limit images to 25 max
-    const imagesForAnalysis = uniqueImages.slice(0, 25);
+    // Limit images sent to AI to avoid token limits and ensure quality
+    const imagesForAnalysis = uniqueImages.slice(0, 40);
 
-    // SHORTENED combinedContent - reduced from ~30K to ~15K chars max
     const combinedContent = `
-TITLE: ${firecrawlMetadata.title || 'Unknown'}
-DESC: ${firecrawlMetadata.description || ''}
-
-MAIN PAGE:
-${firecrawlMarkdown.substring(0, 6000)}
-
-EXTRA PAGES:
-${deepCrawlContent.substring(0, 4000)}
-${nuggetsFormatted}
-
-IMAGES:
-${imagesForAnalysis.join('\n')}
-`;
+    SOURCE 1 (FIRECRAWL METADATA):
+    Title: ${firecrawlMetadata.title || 'Unknown'}
+    Description: ${firecrawlMetadata.description || 'Unknown'}
     
-    // ====== SHORTENED PROMPT - Fixed "prompt too long" error ======
-    const prompt = `Extract brand identity from: ${url}
+    SOURCE 2 (FIRECRAWL CONTENT - MAIN PAGE):
+    ${firecrawlMarkdown.substring(0, 12000)}
 
-${combinedContent}
-
-Return ONLY valid JSON with this structure:
-{
-  "name": "Brand Name",
-  "tagline": "Slogan",
-  "description": "200 char summary",
-  "brandStory": "2-3 sentence origin/mission",
-  "targetAudience": "Specific audience (e.g. 'Remote CTOs')",
-  "uniqueValueProposition": "Main benefit they offer",
-  "colors": ["#hex1", "#hex2", "#hex3"],
-  "fonts": ["Font 1", "Font 2"],
-  "values": ["Value 1", "Value 2"],
-  "features": ["Feature 1", "Feature 2", "Feature 3"],
-  "painPoints": ["User Pain 1", "Pain 2"],
-  "vocabulary": ["Brand Term 1", "Term 2"],
-  "services": ["Service 1", "Service 2"],
-  "keyPoints": ["USP 1", "USP 2"],
-  "aesthetic": ["Adj 1", "Adj 2"],
-  "toneVoice": ["Adj 1", "Adj 2"],
-  "logo": "URL to brand's OWN logo",
-  "industry": "Specific sector",
-  "visualMotifs": ["Motif 1", "Motif 2"],
-  "suggestedPosts": [{"templateId":"stat|announcement|quote|product|didyouknow","headline":"Hook","subheadline":"Context","metric":"Number","metricLabel":"Label","source":"real_data|generated","intent":"Why"}],
-  "industryInsights": [{"painPoint":"Problem with numbers","consequence":"Cost","solution":"How brand solves it","type":"pain_point|trend|cost_of_inaction"}],
-  "contentNuggets": {"realStats":[],"testimonials":[{"quote":"","author":"","company":""}],"achievements":[],"blogTopics":[]},
-  "analyzedImages": [{"url":"img_url","category":"main_logo|client_logo|product|app_ui|person|icon|texture|other","description":"Brief desc"}],
-  "backgroundPrompts": ["Gradient prompt", "Abstract prompt", "Pattern prompt"]
-}
-
-RULES:
-1. LOGO: Brand's OWN logo only (navbar/footer). Client/partner logos = client_logo category.
-2. IMAGES: Categorize ALL images. person = CLEAR human face only. Microphone = product.
-3. POSTS: 6-8 posts. Be specific ("+47%" not "amélioration"). Templates: stat, announcement, quote, product, didyouknow.
-4. INSIGHTS: User pain points with NUMBERS. NO generic market size stats like "Le marché atteindra X Mds$".
-5. TESTIMONIALS: Only if explicitly quoted with author name. Don't invent. Empty array if none found.
-6. If content sparse, infer from URL/domain.`;
+    SOURCE 3 (PARALLEL AI EXTRACT):
+    ${parallelContent.substring(0, 4000)}
+    
+    SOURCE 4 (DEEP CRAWL - BLOG/ABOUT/CASE STUDIES - UP TO 7 PAGES):
+    ${deepCrawlContent.substring(0, 10000)}
+    ${nuggetsFormatted}
+    
+    DETECTED IMAGES (Analyze these):
+    ${imagesForAnalysis.join('\n')}
+    `;
+    
+    const prompt = `
+      Analyze this website content to extract brand identity information.
+      
+      Website URL: ${url}
+      
+      Content:
+      ${combinedContent}
+      
+      Return ONLY a valid JSON object with the following structure:
+      {
+        "name": "Brand Name",
+        "tagline": "Brand Tagline or Slogan",
+        "description": "A short summary paragraph (max 200 chars)",
+        "brandStory": "A compelling 2-3 sentence summary of the brand's origin, mission, or founding story found in the content.",
+        "targetAudience": "Specific description of who this brand targets (e.g. 'Busy HR Managers', 'Eco-conscious students', 'Small Business Owners').",
+        "uniqueValueProposition": "The single most important promise or benefit they offer (e.g. 'Saves 10h/week', 'Provides clean water to villages').",
+        "colors": ["#hex1", "#hex2", "#hex3", "#hex4"], 
+        "fonts": ["Font Name 1", "Font Name 2"],
+        "values": ["Value 1", "Value 2", "Value 3"],
+        "features": ["Specific Feature 1", "Specific Feature 2", "Specific Feature 3", "Specific Feature 4"],
+        "painPoints": ["Customer Pain Point 1", "Pain Point 2", "Pain Point 3"],
+        "vocabulary": ["Specific Term 1", "Specific Term 2", "Brand Keyword 1", "Brand Keyword 2"],
+        "services": ["Service 1", "Service 2", "Service 3"],
+        "keyPoints": ["Unique Selling Point 1", "USP 2", "USP 3"],
+        "aesthetic": ["Adjective 1", "Adjective 2", "Adjective 3"],
+        "toneVoice": ["Adjective 1", "Adjective 2", "Adjective 3"],
+        "logo": "URL to the MAIN brand logo (prioritize clear, high-res, distinct from client logos)",
+        "industry": "Specific industry (e.g. 'SaaS Fintech', 'Organic Skincare', 'Industrial Manufacturing')",
+        "visualMotifs": ["Motif 1 (e.g. 'Data charts')", "Motif 2 (e.g. 'Abstract networks')", "Motif 3"],
+        "suggestedPosts": [
+           {
+             "templateId": "stat | announcement | event | quote | expert | product | didyouknow",
+             "headline": "Le texte principal du post",
+             "subheadline": "Texte secondaire optionnel",
+             "metric": "Pour stat: le chiffre clé (ex: '87%', '10K+')",
+             "metricLabel": "Pour stat: le contexte du chiffre",
+             "source": "real_data | industry_insight | generated",
+             "intent": "Pourquoi ce post est pertinent pour cette marque (1 phrase)"
+           }
+        ],
+        "industryInsights": [
+           {
+             "painPoint": "Le problème concret que les utilisateurs subissent (ex: '68% des CM passent +3h/jour sur des tâches répétitives')",
+             "consequence": "Ce que ça leur coûte en temps/argent/stress (ex: 'Soit 15h/semaine perdues par équipe')",
+             "solution": "Comment le produit/service résout ce problème (ex: 'Automatisation du planning = 2h gagnées/jour')",
+             "type": "pain_point | trend | cost_of_inaction | social_proof"
+           }
+        ],
+        "contentNuggets": {
+           "realStats": ["Statistiques réelles trouvées sur le site"],
+           "testimonials": [{"quote": "Citation client", "author": "Nom", "company": "Entreprise"}],
+           "achievements": ["Prix, certifications, reconnaissances trouvées"],
+           "blogTopics": ["Sujets de blog/articles trouvés sur le site"]
+        },
+        "analyzedImages": [
+           { 
+             "url": "url_from_detected_list", 
+             "category": "main_logo" | "client_logo" | "product" | "app_ui" | "person" | "icon" | "texture" | "other",
+             "description": "Short visual description (e.g. 'Dashboard on laptop', 'Man holding coffee cup')"
+           }
+        ],
+        "backgroundPrompts": [
+           "Smooth gradient from [couleur primaire] to black, subtle grain texture, minimal",
+           "Soft blurred color wash in [couleur primaire], dreamy and ethereal",
+           "Fine geometric grid pattern in [couleur primaire] on dark background, very subtle"
+        ]
+      }
+      
+      IMPORTANT ANALYSIS RULES:
+      1. **MAIN LOGO:** Identify the brand's OWN logo. Do NOT mistake 'Client' or 'Partner' logos for the main brand logo. Look for the logo usually found in the navbar or footer top.
+      2. **VOCABULARY & PAIN POINTS (NEW):**
+         - 'vocabulary': Extract specific terms the brand uses. E.g. instead of "software", do they say "Platform", "OS", "Hub"? Extract 4-5 distinct terms.
+         - 'painPoints': What problems do they solve? Extract 3-4 specific customer struggles (e.g. "Manual data entry", "Security compliance costs").
+      3. **TARGET AUDIENCE & UVP (CRITICAL):**
+         - 'targetAudience': Be precise. Not just "Everyone", but "Remote-first CTOs" or "Parents of toddlers".
+         - 'uniqueValueProposition': What is the #1 Benefit? If it's a non-profit, it's the Impact (e.g. "Saving oceans"). If service, it's the Outcome (e.g. "Doubling revenue"). If product, it's the Utility.
+      4. **INDUSTRY & MOTIFS:** Identify the specific sector. List 3 visual elements typical of this industry (e.g. for Cybersec: 'Locks', 'Shields', 'Code').
+      5. **IMAGE CATEGORIZATION (STRICT RULES):** 
+         - 'main_logo': The brand's logo.
+         - 'client_logo': Logos of customers, partners, or 'featured in' sections.
+         - 'product': Physical items, packaging, devices, equipment, or direct representations of what they sell. This includes: microphones, headphones, electronics, tools, furniture, food, clothing, etc.
+         - 'app_ui': Screenshots of software, dashboards, or mobile app interfaces.
+         - 'person': ONLY classify as 'person' if there is a CLEARLY VISIBLE human face, human body, or human hands. Do NOT classify objects that vaguely resemble humans (like microphones, mannequins, or abstract shapes). If in doubt, choose 'product' or 'other'.
+         - 'icon': Small functional icons or illustrations.
+         - 'texture': Abstract backgrounds, patterns, gradients, or zoomed-in details suitable for design backgrounds.
+         
+         ⚠️ CRITICAL: A microphone is ALWAYS 'product', NEVER 'person'. An object with a round top and a stand is NOT a person. Apply strict visual criteria.
+      6. **MAPPING:** 'analyzedImages' must map the URLs from the 'DETECTED IMAGES' list provided above.
+      7. **SUGGESTED POSTS (CRITICAL - 6-8 suggestions):** Generate smart, contextual post ideas.
+         
+         AVAILABLE TEMPLATE IDS:
+         - "stat": Big metric post (+47%, 10K+, 3x). REQUIRES: metric + metricLabel
+         - "announcement": News/launch post. REQUIRES: headline + subheadline
+         - "quote": Testimonial post. REQUIRES: headline (the quote text)
+         - "event": Webinar/event post. REQUIRES: headline (event name)
+         - "expert": Feature a speaker/expert. REQUIRES: headline + subheadline
+         - "product": Product showcase. REQUIRES: headline + subheadline
+         - "didyouknow": Industry insight/educational post. REQUIRES: headline (the fact) + subheadline (so what?)
+         
+         POST SOURCES (in priority order):
+         1. REAL DATA (source: "real_data"): Use stats, quotes, achievements from EXTRACTED CONTENT NUGGETS
+         2. INDUSTRY INSIGHTS (source: "industry_insight"): Use facts from industryInsights for "didyouknow" posts
+         3. GENERATED (source: "generated"): Only if no real data, create plausible specific content
+         
+         USER-CENTRIC RULES (MANDATORY):
+         - **STOP THE SCROLL:** Every headline must be a "hook". Avoid generic titles like "Nos services". Use "Comment doubler vos ventes" instead.
+         - **PAIN POINTS FIRST:** Address a specific user problem or desire. "Tired of manual data entry?" is better than "We offer automation".
+         - **BENEFIT ORIENTED:** Focus on what the user GETS, not just what the brand HAS.
+         
+         EXAMPLES WITH INTENT:
+         - { "templateId": "stat", "metric": "10K+", "metricLabel": "utilisateurs actifs", "source": "real_data", "intent": "Social Proof: Show mass adoption to build trust" }
+         - { "templateId": "didyouknow", "headline": "85% des équipes perdent 2h/jour", "subheadline": "Arrêtez de perdre du temps sur l'admin", "source": "industry_insight", "intent": "Agitate Pain: Highlight the problem (lost time) to introduce the solution" }
+         - { "templateId": "quote", "headline": "On a réduit nos coûts de 40%", "subheadline": "— Sophie, CEO", "source": "real_data", "intent": "Result-Driven: Show concrete ROI to attract decision makers" }
+         
+         RULES:
+         - PRIORITIZE real data from verified content nuggets
+         - Include at least 2 "didyouknow" posts with industry macro insights
+         - Each post MUST have an "intent" explaining WHY this post is strategic for the END USER
+         - Be SPECIFIC: not "amélioration" but "+47% en 3 mois"
+         
+      8. **PAIN POINTS & MARKET CONTEXT (CRITICAL - RETHINK THIS):** Generate 4-5 actionable insights.
+         
+         STOP generating generic market size stats like "Le marché atteindra X Mds$". Nobody cares.
+         
+         Instead, focus on:
+         - **pain_point**: What frustrates the target users RIGHT NOW? Quantify with time/money lost.
+         - **trend**: What's changing in their world that makes this solution timely?
+         - **cost_of_inaction**: What happens if they DON'T solve this? Show the risk.
+         - **social_proof**: What are others like them doing? Peer pressure stats.
+         
+         FORMULA: [Specific Audience] + [Specific Problem] + [Quantified Impact]
+         
+         EXAMPLES for a Social Media Management SaaS:
+         - { "painPoint": "73% des CM jonglent entre 5+ outils différents chaque jour", "consequence": "Perte moyenne de 12h/semaine en copier-coller entre plateformes", "solution": "Centralisation = 1 seul dashboard pour tout gérer", "type": "pain_point" }
+         - { "painPoint": "Sans planning éditorial, 62% des posts sont publiés 'quand on y pense'", "consequence": "Engagement 3x inférieur vs marques avec calendrier structuré", "solution": "Calendrier visuel + rappels automatiques", "type": "cost_of_inaction" }
+         - { "painPoint": "Les équipes marketing passent 40% de leur temps sur du reporting manuel", "consequence": "Moins de temps pour la créativité et la stratégie", "solution": "Analytics automatisés = focus sur ce qui compte", "type": "pain_point" }
+         - { "painPoint": "78% des entreprises prévoient d'augmenter leur budget social media en 2025", "consequence": "Ceux qui n'investissent pas seront distancés", "solution": "Positionnement early adopter", "type": "trend" }
+         
+         BAD EXAMPLES (DO NOT GENERATE):
+         - "Le marché du social media management atteindra 41Mds$ en 2025" (generic, useless)
+         - "Les réseaux sociaux sont importants" (obvious, no insight)
+         - "Industry Report 2024" as source (lazy, fake-sounding)
+         
+      9. **CONTENT VALIDATION (INTELLIGENT AGENT TASK):** 
+         I have provided a raw list of "EXTRACTED CONTENT NUGGETS" above. Your job is to FILTER and CLEAN them.
+         - **realStats**: Keep only legitimate business metrics (users, growth, savings). DISCARD pricing ($19/mo, 249€), discounts (-50%), version numbers, or UI elements.
+         - **testimonials**: Keep only quotes with a SPECIFIC author name or company. DISCARD generic placeholders like "John Doe", "Client Satisfait", or "Lorem Ipsum".
+         - **achievements**: Keep real awards/certifications. DISCARD pricing tables or feature lists.
+         
+         **HALLUCINATION CHECK (CRITICAL):**
+         - DO NOT invent testimonials. If you see a client logo (e.g. LVMH), DO NOT assume they said "Great product". Only extract quotes that are EXPLICITLY written in the text.
+         - If no testimonials are found in the text, return an empty array. Better to have nothing than a lie.
+         - Verify every stat against the source text.
+         
+         IMPORTANT: The "EXTRACTED CONTENT NUGGETS" list provided above is just a starting point. 
+         You MUST also scan the full text content (SOURCE 2, SOURCE 3, SOURCE 4) to find other nuggets that the regex might have missed.
+         If you find a great testimonial or stat in the text that isn't in the nuggets list, ADD IT.
+         
+         If the provided nuggets are garbage, find better ones in the full text content provided.
+         
+      10. **BACKGROUNDS:** 'backgroundPrompts' should generate high-quality, versatile backgrounds that match the brand aesthetic, suitable for overlays.
+      
+      If content is empty, INFER reasonable defaults based on the URL and domain name.
+    `;
 
     // Prepare message content for GPT-4o (Vision or Text)
     const userMessageContent: any[] = [
@@ -1048,76 +1159,25 @@ RULES:
         };
     }
 
-    // 3. COLORS & FONTS - Prioritize Firecrawl native branding extraction
-    if (firecrawlBranding) {
-        console.log('🎨 Using Firecrawl native branding extraction...');
-        
-        // Extract colors from branding (more reliable than Sharp!)
-        if (firecrawlBranding.colors) {
-            const brandingColors: string[] = [];
-            const colors = firecrawlBranding.colors;
-            
-            // Add colors in priority order
-            if (colors.primary) brandingColors.push(colors.primary);
-            if (colors.secondary) brandingColors.push(colors.secondary);
-            if (colors.accent) brandingColors.push(colors.accent);
-            if (colors.background && colors.background !== '#FFFFFF' && colors.background !== '#ffffff') {
-                brandingColors.push(colors.background);
-            }
-            if (colors.textPrimary && colors.textPrimary !== '#000000' && colors.textPrimary !== '#FFFFFF') {
-                brandingColors.push(colors.textPrimary);
-            }
-            
-            if (brandingColors.length > 0) {
-                console.log('✅ Firecrawl colors:', brandingColors);
-                // Merge with AI colors, prioritizing Firecrawl's extraction
-                const aiColors = Array.isArray(brandData.colors) ? brandData.colors : [];
-                brandData.colors = mergeColorPalettes(aiColors, brandingColors);
-            }
-        }
-        
-        // Extract fonts from branding
-        if (firecrawlBranding.fonts && firecrawlBranding.fonts.length > 0) {
-            const brandingFonts = firecrawlBranding.fonts
-                .map((f: any) => f.family || f)
-                .filter((f: string) => f && f.length > 0);
-            
-            if (brandingFonts.length > 0) {
-                console.log('✅ Firecrawl fonts:', brandingFonts);
-                brandData.fonts = brandingFonts;
-            }
-        }
-        
-        // Use branding logo if AI didn't find one
-        if (!brandData.logo && firecrawlBranding.logo) {
-            brandData.logo = firecrawlBranding.logo;
-            console.log('✅ Using Firecrawl logo:', firecrawlBranding.logo);
-        }
-        
-        // Store color scheme (light/dark)
-        if (firecrawlBranding.colorScheme) {
-            brandData._colorScheme = firecrawlBranding.colorScheme;
-        }
-    }
+    // 3. Extract Colors from Logo (if available) - REAL EXTRACTION
+    let extractedColors: string[] = [];
+    const logoUrl = brandData.logo || firecrawlMetadata.ogImage || firecrawlMetadata.icon;
     
-    // Fallback: Extract Colors from Logo using Sharp (if Firecrawl branding failed)
-    if (!brandData.colors || brandData.colors.length < 2) {
-        let extractedColors: string[] = [];
-        const logoUrl = brandData.logo || firecrawlMetadata.ogImage || firecrawlMetadata.icon;
-        
-        if (logoUrl && logoUrl.startsWith('http')) {
-            try {
-                console.log('🎨 Fallback: Extracting colors from logo with Sharp:', logoUrl);
-                extractedColors = await extractColorsFromImage(logoUrl);
-                
-                if (extractedColors.length > 0) {
-                    console.log('✅ Sharp colors extracted:', extractedColors);
-                    const aiColors = Array.isArray(brandData.colors) ? brandData.colors : [];
-                    brandData.colors = mergeColorPalettes(aiColors, extractedColors);
-                }
-            } catch (e) {
-                console.warn("Sharp color extraction failed (expected for SVG):", (e as Error).message);
+    if (logoUrl && logoUrl.startsWith('http')) {
+        try {
+            console.log('🎨 Extracting REAL colors from logo:', logoUrl);
+            extractedColors = await extractColorsFromImage(logoUrl);
+            
+            if (extractedColors.length > 0) {
+                console.log('✅ Real colors extracted:', extractedColors);
+                // Merge with AI-guessed colors, prioritizing extracted
+                const aiColors = Array.isArray(brandData.colors) ? brandData.colors : [];
+                brandData.colors = mergeColorPalettes(aiColors, extractedColors);
+                console.log('🎨 Final merged palette:', brandData.colors);
             }
+        } catch (e) {
+            console.error("Color extraction failed:", e);
+            // Keep AI colors if extraction fails
         }
     }
 
@@ -1127,8 +1187,6 @@ RULES:
         brandData.logo = aiIdentifiedLogo;
     } else if (!brandData.logo && firecrawlMetadata.ogImage) {
         brandData.logo = firecrawlMetadata.ogImage;
-    } else if (!brandData.logo && firecrawlBranding?.images?.logo) {
-        brandData.logo = firecrawlBranding.images.logo;
     }
 
     // 4. Search for REAL industry insights using Parallel Search API
