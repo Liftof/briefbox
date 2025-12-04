@@ -79,7 +79,7 @@ export async function POST(request: NextRequest) {
       referenceImages = [], // Style reference images (tagged as 'reference')
       numImages = 4, 
       aspectRatio = "1:1", 
-      resolution = "1K", 
+      resolution = "2K", // Same price as 1K, better quality 
       useAsync = false,
       imageContextMap = {} // NEW: Map of URL -> Description (e.g. "logo", "product")
     } = body;
