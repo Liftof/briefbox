@@ -921,19 +921,48 @@ ${enhancement}`);
       // The image to edit goes FIRST, then style refs
       const allImages = [imageToEdit, ...styleReferences];
       
+      // Detect if user is asking to replace/fix the logo and has uploaded one
+      const isLogoReplacement = styleReferences.length > 0 && 
+        (editInstruction.toLowerCase().includes('logo') || 
+         editInstruction.toLowerCase().includes('remplace') ||
+         editInstruction.toLowerCase().includes('utilise') ||
+         editInstruction.toLowerCase().includes('mets ce') ||
+         editInstruction.toLowerCase().includes('met ce'));
+      
       // Construct edit prompt with clear instructions
-      const editPrompt = `[IMAGE EDIT REQUEST]
+      let editPrompt: string;
+      
+      if (isLogoReplacement) {
+        // SPECIAL CASE: User wants to replace logo with their uploaded image
+        editPrompt = `[IMAGE EDIT - LOGO REPLACEMENT]
+Image 1: The base image. This contains a logo that needs to be REPLACED.
+Image 2: THIS IS THE CORRECT LOGO TO USE. Copy it EXACTLY as shown - same colors, same proportions, same design.
+
+CRITICAL INSTRUCTION: ${editInstruction}
+
+Replace the logo in Image 1 with the EXACT logo from Image 2. The new logo must be:
+- Identical to Image 2 (no distortions, no color changes)
+- Positioned in the same location as the original logo
+- Properly sized to fit the composition
+- Sharp and clear
+
+Keep EVERYTHING else in Image 1 unchanged (background, products, text, layout).`;
+      } else {
+        // STANDARD EDIT: General modifications
+        editPrompt = `[IMAGE EDIT REQUEST]
 Image 1: The base image to modify. Keep its core composition.
-${styleReferences.length > 0 ? `Images 2-${styleReferences.length + 1}: Style references to match.` : ''}
+${styleReferences.length > 0 ? `Images 2-${styleReferences.length + 1}: Visual references - use their style/elements as guidance.` : ''}
 
 EDIT INSTRUCTION: ${editInstruction}
 
 Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Focus on the specific change requested.`;
+      }
 
       console.log('✏️ Direct image edit:', {
         baseImage: imageToEdit.slice(0, 50) + '...',
         styleRefs: styleReferences.length,
-        instruction: editInstruction
+        instruction: editInstruction,
+        isLogoReplacement: isLogoReplacement
       });
 
       setProgress(40);
@@ -2406,6 +2435,9 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                   <label className="text-[10px] font-mono uppercase tracking-widest text-gray-400">Images de référence (optionnel)</label>
                   <span className="text-[10px] text-gray-400">{editAdditionalImages.length}/3</span>
                 </div>
+                <p className="text-[10px] text-gray-400 mb-2">
+                  💡 Pour remplacer le logo : uploadez votre logo ici et écrivez "remplace le logo"
+                </p>
                 
                 <div className="grid grid-cols-4 gap-2">
                   {editAdditionalImages.map((img, i) => (
