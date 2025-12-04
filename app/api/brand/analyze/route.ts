@@ -24,6 +24,115 @@ interface ParallelSearchResult {
   excerpts: string[];
 }
 
+// Helper: Use Firecrawl Extract for structured data with web search enrichment
+// Docs: https://docs.firecrawl.dev/features/extract
+async function extractWithFirecrawl(
+  url: string,
+  industry: string,
+  brandName: string
+): Promise<{
+  painPoints: { problem: string; impact: string; source?: string }[];
+  trends: { trend: string; relevance: string; source?: string }[];
+  competitorInsights: string[];
+}> {
+  const FIRECRAWL_API_KEY = process.env.FIRECRAWL_API_KEY;
+  
+  if (!FIRECRAWL_API_KEY) {
+    console.warn('⚠️ FIRECRAWL_API_KEY not set, skipping Extract');
+    return { painPoints: [], trends: [], competitorInsights: [] };
+  }
+
+  try {
+    console.log(`🔥 Firecrawl Extract with web search for: ${industry}`);
+    
+    // Use Extract with enableWebSearch to find external data
+    const response = await fetch('https://api.firecrawl.dev/v1/extract', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${FIRECRAWL_API_KEY}`
+      },
+      body: JSON.stringify({
+        urls: [url],
+        prompt: `For a ${industry} company called "${brandName}", extract:
+1. Pain points their target users face (with specific impact/cost)
+2. Current industry trends (2024-2025)
+3. Competitive landscape insights
+
+Focus on actionable marketing angles. Be specific with numbers when available.`,
+        schema: {
+          type: 'object',
+          properties: {
+            painPoints: {
+              type: 'array',
+              items: {
+                type: 'object',
+                properties: {
+                  problem: { type: 'string', description: 'The specific user problem' },
+                  impact: { type: 'string', description: 'Quantified impact (time/money lost)' }
+                },
+                required: ['problem', 'impact']
+              }
+            },
+            trends: {
+              type: 'array',
+              items: {
+                type: 'object',
+                properties: {
+                  trend: { type: 'string', description: 'The industry trend' },
+                  relevance: { type: 'string', description: 'Why it matters for this brand' }
+                },
+                required: ['trend', 'relevance']
+              }
+            },
+            competitorInsights: {
+              type: 'array',
+              items: { type: 'string' },
+              description: 'Key competitor positioning or market gaps'
+            }
+          },
+          required: ['painPoints', 'trends', 'competitorInsights']
+        },
+        enableWebSearch: true // KEY: This expands search beyond the URL!
+      })
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.warn('Firecrawl Extract API error:', errorText);
+      return { painPoints: [], trends: [], competitorInsights: [] };
+    }
+
+    const data = await response.json();
+    
+    // Handle async job (Extract can return a job ID)
+    if (data.jobId || data.id) {
+      console.log(`🔄 Firecrawl Extract job started: ${data.jobId || data.id}`);
+      // For now, we won't wait - return empty and let the other enrichments handle it
+      // In V2, we could poll for completion
+      return { painPoints: [], trends: [], competitorInsights: [] };
+    }
+
+    if (data.success && data.data) {
+      console.log(`✅ Firecrawl Extract success:`, {
+        painPoints: data.data.painPoints?.length || 0,
+        trends: data.data.trends?.length || 0,
+        competitorInsights: data.data.competitorInsights?.length || 0
+      });
+      return {
+        painPoints: data.data.painPoints || [],
+        trends: data.data.trends || [],
+        competitorInsights: data.data.competitorInsights || []
+      };
+    }
+
+    return { painPoints: [], trends: [], competitorInsights: [] };
+  } catch (error) {
+    console.error('Firecrawl Extract error:', error);
+    return { painPoints: [], trends: [], competitorInsights: [] };
+  }
+}
+
 // Helper: Enrich with Firecrawl Search when main scrape is poor
 async function enrichWithFirecrawlSearch(
   industry: string, 
@@ -1463,18 +1572,26 @@ FORMAT: Return ONLY a valid JSON array:
       (!brandData.features || brandData.features.length < 3);
 
     if (hasMinimalData && brandData.industry) {
-      console.log('⚠️ Sparse data detected, triggering Firecrawl Search enrichment...');
+      console.log('⚠️ Sparse data detected, triggering Firecrawl enrichment (Search + Extract)...');
       
       try {
-        const enrichment = await enrichWithFirecrawlSearch(
-          brandData.industry,
-          brandData.name || 'the company',
-          brandData.targetAudience
-        );
+        // Run BOTH Search and Extract in parallel for maximum enrichment
+        const [searchEnrichment, extractEnrichment] = await Promise.all([
+          enrichWithFirecrawlSearch(
+            brandData.industry,
+            brandData.name || 'the company',
+            brandData.targetAudience
+          ),
+          extractWithFirecrawl(
+            url,
+            brandData.industry,
+            brandData.name || 'the company'
+          )
+        ]);
 
-        // Convert pain points to industryInsights format (new pain point structure)
-        if (enrichment.painPoints.length > 0) {
-          const painPointInsights = enrichment.painPoints.map(pp => ({
+        // === Process SEARCH results ===
+        if (searchEnrichment.painPoints.length > 0) {
+          const painPointInsights = searchEnrichment.painPoints.map(pp => ({
             painPoint: pp.point,
             consequence: '',
             solution: '',
@@ -1488,12 +1605,11 @@ FORMAT: Return ONLY a valid JSON array:
             ...painPointInsights
           ].slice(0, 6);
           
-          console.log(`✅ Added ${painPointInsights.length} pain points from web search`);
+          console.log(`✅ Added ${painPointInsights.length} pain points from Search`);
         }
 
-        // Add trends as insights too
-        if (enrichment.trends.length > 0) {
-          const trendInsights = enrichment.trends.map(t => ({
+        if (searchEnrichment.trends.length > 0) {
+          const trendInsights = searchEnrichment.trends.map(t => ({
             painPoint: t.trend,
             consequence: '',
             solution: '',
@@ -1507,11 +1623,69 @@ FORMAT: Return ONLY a valid JSON array:
             ...trendInsights
           ].slice(0, 8);
           
-          console.log(`✅ Added ${trendInsights.length} trends from web search`);
+          console.log(`✅ Added ${trendInsights.length} trends from Search`);
         }
 
-        // Mark that we enriched from search
+        // === Process EXTRACT results (structured data with web search) ===
+        if (extractEnrichment.painPoints.length > 0) {
+          const extractPainPoints = extractEnrichment.painPoints.map(pp => ({
+            painPoint: pp.problem,
+            consequence: pp.impact,
+            solution: '',
+            type: 'pain_point' as const,
+            source: pp.source || 'firecrawl-extract',
+            isEnriched: true
+          }));
+
+          // Merge with existing, avoiding duplicates
+          const existingPains = new Set(
+            (brandData.industryInsights || [])
+              .map((i: any) => i.painPoint?.toLowerCase().slice(0, 30))
+          );
+          
+          const newPains = extractPainPoints.filter(
+            pp => !existingPains.has(pp.painPoint.toLowerCase().slice(0, 30))
+          );
+
+          brandData.industryInsights = [
+            ...(brandData.industryInsights || []),
+            ...newPains
+          ].slice(0, 10);
+          
+          console.log(`✅ Added ${newPains.length} pain points from Extract`);
+        }
+
+        if (extractEnrichment.trends.length > 0) {
+          const extractTrends = extractEnrichment.trends.map(t => ({
+            painPoint: t.trend,
+            consequence: t.relevance,
+            solution: '',
+            type: 'trend' as const,
+            source: t.source || 'firecrawl-extract',
+            isEnriched: true
+          }));
+
+          brandData.industryInsights = [
+            ...(brandData.industryInsights || []),
+            ...extractTrends
+          ].slice(0, 12);
+          
+          console.log(`✅ Added ${extractTrends.length} trends from Extract`);
+        }
+
+        // Add competitor insights to features/keyPoints
+        if (extractEnrichment.competitorInsights.length > 0) {
+          console.log(`✅ Got ${extractEnrichment.competitorInsights.length} competitor insights`);
+          // Store as market context in contentNuggets
+          mergedContentNuggets.marketContext = [
+            ...(mergedContentNuggets.marketContext || []),
+            ...extractEnrichment.competitorInsights
+          ];
+        }
+
+        // Mark that we enriched
         (mergedContentNuggets as any)._meta.enrichedFromSearch = true;
+        (mergedContentNuggets as any)._meta.enrichedFromExtract = extractEnrichment.painPoints.length > 0 || extractEnrichment.trends.length > 0;
         
       } catch (enrichError) {
         console.warn('Firecrawl enrichment failed:', enrichError);
