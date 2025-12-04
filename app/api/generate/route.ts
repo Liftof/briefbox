@@ -135,6 +135,7 @@ export async function POST(request: NextRequest) {
 
     if (processedReferenceUrls.length > 0) {
         console.log(`🎨 Using ${processedReferenceUrls.length} reference images for style guidance`);
+        console.log('   Style refs:', processedReferenceUrls.map(u => u.startsWith('data:') ? 'data:image...' : u.slice(0, 80)));
     }
 
     for (const url of imageUrls) {
@@ -218,7 +219,12 @@ export async function POST(request: NextRequest) {
       const imageDescriptions: string[] = [];
       
       if (processedReferenceUrls.length > 0) {
-        imageDescriptions.push(`Images 1-${processedReferenceUrls.length}: STYLE REFERENCES - Match their aesthetic, color palette, and visual style exactly`);
+        imageDescriptions.push(`[CRITICAL STYLE INSTRUCTION] Images 1-${processedReferenceUrls.length} are STYLE REFERENCES. You MUST:
+- Copy the exact visual style, layout composition, and aesthetic
+- Match the color palette exactly
+- Use the same typography style and placement
+- Replicate the mood, lighting, and artistic direction
+These reference images define how your output should LOOK.`);
       }
       
       if (processedImageUrls.length > 0) {
@@ -304,10 +310,14 @@ ${imageDescriptions.join('\n')}
       
       // NANO BANANA PRO CONFIGURATION
       // As requested: Google SOTA / Flagship model
+      // Supported ratios: auto, 21:9, 16:9, 3:2, 4:3, 5:4, 1:1, 4:5, 3:4, 2:3, 9:16
+      const validRatios = ['auto', '21:9', '16:9', '3:2', '4:3', '5:4', '1:1', '4:5', '3:4', '2:3', '9:16'];
+      const finalAspectRatio = validRatios.includes(aspectRatio) ? aspectRatio : '1:1';
+      
       const input: Record<string, any> = {
         prompt: singlePrompt.trim(),
         num_images: 1, // One at a time for variations
-        aspect_ratio: aspectRatio === "1:1" ? "1:1" : "4:5", 
+        aspect_ratio: finalAspectRatio,
         output_format: "png",
         image_urls: finalImageUrls, // CRITICAL: We restore image inputs
         resolution: resolution 

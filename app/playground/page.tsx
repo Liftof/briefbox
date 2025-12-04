@@ -1201,7 +1201,11 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
       // Add manual style references if present
       if (styleRefImages.length > 0) {
         styleReferenceImages = [...styleRefImages, ...styleReferenceImages];
+        console.log('🎨 User style refs added:', styleRefImages.length, 'images');
+        console.log('   URLs:', styleRefImages.map(u => u.slice(0, 50) + '...'));
       }
+      
+      console.log('📤 Final style reference images:', styleReferenceImages.length);
 
       // STEP 2: Generate with Fal using variations (or single prompt)
       const response = await fetch('/api/generate', {
@@ -2266,8 +2270,13 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
         isOpen={showStyleGallery} 
         onClose={() => setShowStyleGallery(false)}
         onSelect={(url) => {
+          // Convert relative URL to absolute URL for Fal API
+          const absoluteUrl = url.startsWith('/') 
+            ? `${window.location.origin}${url}` 
+            : url;
+          console.log('🎨 Style ref selected:', absoluteUrl);
           // Add selected inspiration to styleRefImages
-          setStyleRefImages(prev => [url, ...prev].slice(0, 3));
+          setStyleRefImages(prev => [absoluteUrl, ...prev].slice(0, 3));
           showToast('Style ajouté aux références', 'success');
         }}
       />
