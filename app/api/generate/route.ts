@@ -219,12 +219,18 @@ export async function POST(request: NextRequest) {
       const imageDescriptions: string[] = [];
       
       if (processedReferenceUrls.length > 0) {
-        imageDescriptions.push(`[CRITICAL STYLE INSTRUCTION] Images 1-${processedReferenceUrls.length} are STYLE REFERENCES. You MUST:
-- Copy the exact visual style, layout composition, and aesthetic
-- Match the color palette exactly
-- Use the same typography style and placement
-- Replicate the mood, lighting, and artistic direction
-These reference images define how your output should LOOK.`);
+        imageDescriptions.push(`[STYLE INSPIRATION] Images 1-${processedReferenceUrls.length} are STYLE REFERENCES for artistic direction. Use them for:
+- Layout composition and visual hierarchy
+- Overall mood and artistic intention
+- Element placement and spacing
+- Visual storytelling approach
+
+⚠️ DO NOT copy from these references:
+- Colors (use the BRAND colors from the prompt instead)
+- Typography (use the BRAND fonts from the prompt instead)  
+- Logo or brand elements (use the USER'S brand assets)
+
+The references show HOW to compose, not WHAT colors/fonts to use.`);
       }
       
       if (processedImageUrls.length > 0) {
