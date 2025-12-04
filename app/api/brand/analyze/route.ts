@@ -133,53 +133,85 @@ Focus on actionable marketing angles. Be specific with numbers when available.`,
   }
 }
 
-// Helper: Enrich with Firecrawl Search when main scrape is poor
+// Helper: Smart Firecrawl Search for competitive intelligence & market insights
+// Uses: sources (news), categories (research), tbs (time filter) per docs.firecrawl.dev/features/search
 async function enrichWithFirecrawlSearch(
   industry: string, 
   brandName: string,
   targetAudience?: string
 ): Promise<{
   painPoints: { point: string; source: string }[];
-  trends: { trend: string; source: string }[];
+  trends: { trend: string; source: string; isRecent?: boolean }[];
   marketContext: string[];
+  competitors: { name: string; weakness?: string; source: string }[];
+  newsHighlights: { headline: string; date?: string; url: string }[];
 }> {
   const FIRECRAWL_API_KEY = process.env.FIRECRAWL_API_KEY;
   
   if (!FIRECRAWL_API_KEY) {
     console.warn('⚠️ FIRECRAWL_API_KEY not set, skipping enrichment search');
-    return { painPoints: [], trends: [], marketContext: [] };
+    return { painPoints: [], trends: [], marketContext: [], competitors: [], newsHighlights: [] };
   }
 
   const results = {
     painPoints: [] as { point: string; source: string }[],
-    trends: [] as { trend: string; source: string }[],
-    marketContext: [] as string[]
+    trends: [] as { trend: string; source: string; isRecent?: boolean }[],
+    marketContext: [] as string[],
+    competitors: [] as { name: string; weakness?: string; source: string }[],
+    newsHighlights: [] as { headline: string; date?: string; url: string }[]
   };
 
   try {
-    console.log(`🔥 Firecrawl Search enrichment for: ${industry} / ${brandName}`);
+    console.log(`🔥 Smart Firecrawl Search for: ${industry} / ${brandName}`);
     
-    // Search queries tailored for content creation
+    // STRATEGIC SEARCH MATRIX - Different sources for different insights
     const searches = [
+      // 1. PAIN POINTS - User frustrations (scrape content for details)
       {
-        query: `"${industry}" challenges problems users face 2024`,
-        type: 'painPoints'
+        query: `"${industry}" user frustrations complaints problems 2024`,
+        type: 'painPoints',
+        config: { limit: 5, scrapeOptions: { formats: ['markdown'] } }
       },
+      
+      // 2. FRESH TRENDS - Last month only (tbs filter)
       {
-        query: `"${industry}" trends growth statistics 2024 2025`,
-        type: 'trends'
+        query: `${industry} trends growth 2025`,
+        type: 'trends',
+        config: { limit: 5, tbs: 'qdr:m' } // Past month only!
+      },
+      
+      // 3. INDUSTRY NEWS - Recent headlines for content angles
+      {
+        query: `${industry} ${brandName}`,
+        type: 'news',
+        config: { limit: 5, sources: ['news'] } // News source!
+      },
+      
+      // 4. COMPETITOR ANALYSIS - Find alternatives & their weaknesses
+      {
+        query: `"${brandName}" alternatives OR competitors OR "better than"`,
+        type: 'competitors',
+        config: { limit: 5, scrapeOptions: { formats: ['markdown'] } }
+      },
+      
+      // 5. RESEARCH/STATS - Academic backing for credibility
+      {
+        query: `${industry} statistics research study 2024`,
+        type: 'research',
+        config: { limit: 3, categories: ['research'] } // Research category!
       }
     ];
 
-    // Add audience-specific search if we have target audience
-    if (targetAudience) {
+    // Add audience-specific pain point search
+    if (targetAudience && targetAudience.length > 3) {
       searches.push({
-        query: `"${targetAudience}" frustrations problems "${industry}"`,
-        type: 'painPoints'
+        query: `"${targetAudience}" challenges "${industry}" problems`,
+        type: 'painPoints',
+        config: { limit: 3, scrapeOptions: { formats: ['markdown'] } }
       });
     }
 
-    // Execute searches in parallel
+    // Execute ALL searches in parallel for speed
     const searchPromises = searches.map(async (search) => {
       try {
         const response = await fetch('https://api.firecrawl.dev/v1/search', {
@@ -190,94 +222,148 @@ async function enrichWithFirecrawlSearch(
           },
           body: JSON.stringify({
             query: search.query,
-            limit: 5,
-            scrapeOptions: {
-              formats: ['markdown']
-            }
+            ...search.config
           })
         });
 
         if (!response.ok) {
-          console.warn(`Firecrawl search failed for "${search.query}":`, response.status);
-          return { type: search.type, data: [] };
+          console.warn(`Search failed for "${search.type}":`, response.status);
+          return { type: search.type, data: null, rawResponse: null };
         }
 
         const data = await response.json();
-        return { type: search.type, data: data.data || [] };
+        return { type: search.type, data: data.data, rawResponse: data };
       } catch (e) {
-        console.warn(`Firecrawl search error for "${search.query}":`, e);
-        return { type: search.type, data: [] };
+        console.warn(`Search error for "${search.type}":`, e);
+        return { type: search.type, data: null, rawResponse: null };
       }
     });
 
     const searchResults = await Promise.all(searchPromises);
 
-    // Process results
+    // PROCESS EACH RESULT TYPE DIFFERENTLY
     for (const result of searchResults) {
-      for (const item of result.data) {
-        const content = item.markdown || item.description || '';
-        const source = item.url || 'web';
-        
-        if (result.type === 'painPoints' && content) {
-          // Extract pain point sentences
-          const painSentences = content
-            .split(/[.!?]/)
-            .filter((s: string) => 
-              s.length > 30 && 
-              s.length < 200 &&
-              (s.toLowerCase().includes('challenge') || 
-               s.toLowerCase().includes('problem') ||
-               s.toLowerCase().includes('struggle') ||
-               s.toLowerCase().includes('difficult') ||
-               s.toLowerCase().includes('pain') ||
-               s.toLowerCase().includes('frustrat'))
-            )
-            .slice(0, 2);
-          
-          for (const sentence of painSentences) {
-            results.painPoints.push({
-              point: sentence.trim(),
-              source: new URL(source).hostname
-            });
-          }
+      if (!result.data) continue;
+
+      // Handle different response structures
+      const webResults = Array.isArray(result.data) ? result.data : (result.data.web || []);
+      const newsResults = result.data.news || [];
+      
+      // === PAIN POINTS: Extract frustration sentences ===
+      if (result.type === 'painPoints') {
+        for (const item of webResults) {
+          const content = item.markdown || item.description || '';
+          try {
+            const hostname = new URL(item.url || '').hostname;
+            const painSentences = content
+              .split(/[.!?]/)
+              .filter((s: string) => 
+                s.length > 40 && s.length < 250 &&
+                (s.toLowerCase().includes('challenge') || 
+                 s.toLowerCase().includes('struggle') ||
+                 s.toLowerCase().includes('frustrat') ||
+                 s.toLowerCase().includes('difficult') ||
+                 s.toLowerCase().includes('pain point') ||
+                 s.toLowerCase().includes('problem'))
+              )
+              .slice(0, 2);
+            
+            for (const sentence of painSentences) {
+              results.painPoints.push({ point: sentence.trim(), source: hostname });
+            }
+          } catch (e) { /* skip invalid URLs */ }
         }
-        
-        if (result.type === 'trends' && content) {
-          // Extract trend/stat sentences
-          const trendSentences = content
-            .split(/[.!?]/)
-            .filter((s: string) => 
-              s.length > 30 && 
-              s.length < 200 &&
-              (s.match(/\d+%/) || // Has percentage
-               s.match(/\$\d+/) || // Has dollar amount
-               s.toLowerCase().includes('grow') ||
-               s.toLowerCase().includes('increase') ||
-               s.toLowerCase().includes('trend') ||
-               s.toLowerCase().includes('market'))
-            )
-            .slice(0, 2);
+      }
+      
+      // === TRENDS: Extract with stats/numbers ===
+      if (result.type === 'trends' || result.type === 'research') {
+        for (const item of webResults) {
+          const content = item.markdown || item.description || item.snippet || '';
+          try {
+            const hostname = new URL(item.url || '').hostname;
+            const trendSentences = content
+              .split(/[.!?]/)
+              .filter((s: string) => 
+                s.length > 40 && s.length < 250 &&
+                (s.match(/\d+%/) || s.match(/\$[\d,]+/) || s.match(/\d+x/) ||
+                 s.toLowerCase().includes('grow') ||
+                 s.toLowerCase().includes('increase') ||
+                 s.toLowerCase().includes('rise') ||
+                 s.toLowerCase().includes('market') ||
+                 s.toLowerCase().includes('trend'))
+              )
+              .slice(0, 2);
+            
+            for (const sentence of trendSentences) {
+              results.trends.push({ 
+                trend: sentence.trim(), 
+                source: hostname,
+                isRecent: result.type === 'trends' // tbs filtered = recent
+              });
+            }
+          } catch (e) { /* skip */ }
+        }
+      }
+      
+      // === NEWS: Headlines for content inspiration ===
+      if (result.type === 'news' && newsResults.length > 0) {
+        for (const news of newsResults.slice(0, 4)) {
+          results.newsHighlights.push({
+            headline: news.title || news.snippet || '',
+            date: news.date,
+            url: news.url
+          });
+        }
+        console.log(`📰 Found ${newsResults.length} news items`);
+      }
+      
+      // === COMPETITORS: Extract names and potential weaknesses ===
+      if (result.type === 'competitors') {
+        for (const item of webResults) {
+          const content = item.markdown || item.description || '';
+          const title = item.title || '';
           
-          for (const sentence of trendSentences) {
-            results.trends.push({
-              trend: sentence.trim(),
-              source: new URL(source).hostname
-            });
+          // Extract competitor names from "X vs Y" or "alternatives to X" patterns
+          const vsMatch = title.match(/(\w+)\s+vs\s+(\w+)/i);
+          const altMatch = content.match(/alternatives?(?:\s+to)?\s+(\w+)/i);
+          
+          if (vsMatch) {
+            const comp = vsMatch[1] !== brandName ? vsMatch[1] : vsMatch[2];
+            if (comp && comp.toLowerCase() !== brandName.toLowerCase()) {
+              // Look for weakness mentions
+              const weaknessMatch = content.match(new RegExp(`${comp}[^.]*(?:lacks?|missing|doesn't|no |without)[^.]*`, 'i'));
+              try {
+                results.competitors.push({
+                  name: comp,
+                  weakness: weaknessMatch ? weaknessMatch[0].slice(0, 100) : undefined,
+                  source: new URL(item.url || '').hostname
+                });
+              } catch (e) { /* skip */ }
+            }
           }
         }
       }
     }
 
-    // Deduplicate
+    // DEDUPLICATE all results
     results.painPoints = results.painPoints
       .filter((p, i, arr) => arr.findIndex(x => x.point.slice(0, 50) === p.point.slice(0, 50)) === i)
-      .slice(0, 5);
+      .slice(0, 6);
     
     results.trends = results.trends
       .filter((t, i, arr) => arr.findIndex(x => x.trend.slice(0, 50) === t.trend.slice(0, 50)) === i)
+      .slice(0, 6);
+    
+    results.competitors = results.competitors
+      .filter((c, i, arr) => arr.findIndex(x => x.name.toLowerCase() === c.name.toLowerCase()) === i)
       .slice(0, 5);
 
-    console.log(`✅ Firecrawl enrichment: ${results.painPoints.length} pain points, ${results.trends.length} trends`);
+    console.log(`✅ Smart Search results:`, {
+      painPoints: results.painPoints.length,
+      trends: results.trends.length,
+      news: results.newsHighlights.length,
+      competitors: results.competitors.length
+    });
     
     return results;
   } catch (error) {
@@ -1611,7 +1697,7 @@ FORMAT: Return ONLY a valid JSON array:
         if (searchEnrichment.trends.length > 0) {
           const trendInsights = searchEnrichment.trends.map(t => ({
             painPoint: t.trend,
-            consequence: '',
+            consequence: t.isRecent ? '🔥 Tendance récente' : '',
             solution: '',
             type: 'trend' as const,
             source: t.source,
@@ -1624,6 +1710,51 @@ FORMAT: Return ONLY a valid JSON array:
           ].slice(0, 8);
           
           console.log(`✅ Added ${trendInsights.length} trends from Search`);
+        }
+
+        // === NEW: Process COMPETITORS for market positioning ===
+        if (searchEnrichment.competitors && searchEnrichment.competitors.length > 0) {
+          console.log(`🎯 Found ${searchEnrichment.competitors.length} competitors:`, 
+            searchEnrichment.competitors.map(c => c.name));
+          
+          // Store competitors in brand data for content angles
+          brandData.competitors = searchEnrichment.competitors.map(c => ({
+            name: c.name,
+            weakness: c.weakness,
+            source: c.source
+          }));
+          
+          // Also add competitor-based insights for content angles
+          for (const comp of searchEnrichment.competitors.slice(0, 2)) {
+            if (comp.weakness) {
+              brandData.industryInsights = [
+                ...(brandData.industryInsights || []),
+                {
+                  painPoint: `Utilisateurs de ${comp.name} se plaignent: ${comp.weakness}`,
+                  consequence: `Opportunité de positionnement vs ${comp.name}`,
+                  solution: '',
+                  type: 'competitive' as const,
+                  source: comp.source,
+                  isEnriched: true
+                }
+              ];
+            }
+          }
+        }
+
+        // === NEW: Process NEWS for fresh content angles ===
+        if (searchEnrichment.newsHighlights && searchEnrichment.newsHighlights.length > 0) {
+          console.log(`📰 Found ${searchEnrichment.newsHighlights.length} news highlights`);
+          
+          // Store news for content inspiration
+          brandData.newsHighlights = searchEnrichment.newsHighlights;
+          
+          // Add to market context
+          mergedContentNuggets.newsAngles = searchEnrichment.newsHighlights.map(n => ({
+            headline: n.headline,
+            date: n.date,
+            url: n.url
+          }));
         }
 
         // === Process EXTRACT results (structured data with web search) ===

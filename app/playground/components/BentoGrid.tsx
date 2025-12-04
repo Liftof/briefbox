@@ -806,11 +806,13 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
                           insight.type === 'pain_point' ? 'bg-rose-100 text-rose-600' :
                           insight.type === 'trend' ? 'bg-blue-100 text-blue-600' :
                           insight.type === 'cost_of_inaction' ? 'bg-amber-100 text-amber-600' :
+                          insight.type === 'competitive' ? 'bg-violet-100 text-violet-600' :
                           'bg-gray-100 text-gray-600'
                         }`}>
                           {insight.type === 'pain_point' ? '⚡ Problème' :
                            insight.type === 'trend' ? '📈 Tendance' :
-                           insight.type === 'cost_of_inaction' ? '⚠️ Risque' : 'Insight'}
+                           insight.type === 'cost_of_inaction' ? '⚠️ Risque' :
+                           insight.type === 'competitive' ? '🎯 Concurrence' : 'Insight'}
                         </span>
                       )}
                       <p className="text-xs text-gray-800 font-medium">{insight.painPoint || insight.fact}</p>
@@ -834,6 +836,61 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
                     handleChange('industryInsights', [...(localData.industryInsights || []), { painPoint: val, type: 'pain_point' }]);
                   }}
                 />
+              </div>
+            )}
+
+            {/* 5. Competitors - Only show if we have data */}
+            {localData.competitors?.length > 0 && (
+              <div className="bg-gradient-to-br from-violet-50 to-indigo-50 border border-violet-100 p-4 rounded-lg">
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="text-lg">🎯</span>
+                  <span className="text-[10px] font-mono uppercase tracking-widest text-violet-600">Concurrents identifiés</span>
+                  <span className="bg-violet-100 text-violet-700 text-[9px] px-1.5 py-0.5 font-bold rounded ml-auto">
+                    {localData.competitors.length}
+                  </span>
+                </div>
+                <div className="space-y-2">
+                  {localData.competitors.slice(0, 4).map((comp: any, i: number) => (
+                    <div key={i} className="p-2 bg-white/80 border border-violet-100 rounded">
+                      <p className="text-xs font-semibold text-violet-900">{comp.name}</p>
+                      {comp.weakness && (
+                        <p className="text-[10px] text-violet-600 mt-1">💡 {comp.weakness}</p>
+                      )}
+                      {comp.source && (
+                        <p className="text-[9px] text-gray-400 mt-1">via {comp.source}</p>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* 6. News Highlights - Only show if we have data */}
+            {localData.newsHighlights?.length > 0 && (
+              <div className="bg-gradient-to-br from-cyan-50 to-sky-50 border border-cyan-100 p-4 rounded-lg">
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="text-lg">📰</span>
+                  <span className="text-[10px] font-mono uppercase tracking-widest text-cyan-600">Actualités récentes</span>
+                  <span className="bg-cyan-100 text-cyan-700 text-[9px] px-1.5 py-0.5 font-bold rounded ml-auto">
+                    {localData.newsHighlights.length}
+                  </span>
+                </div>
+                <div className="space-y-2">
+                  {localData.newsHighlights.slice(0, 4).map((news: any, i: number) => (
+                    <a 
+                      key={i} 
+                      href={news.url} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="block p-2 bg-white/80 border border-cyan-100 rounded hover:border-cyan-300 transition-colors"
+                    >
+                      <p className="text-xs font-medium text-cyan-900 line-clamp-2">{news.headline}</p>
+                      {news.date && (
+                        <p className="text-[9px] text-gray-400 mt-1">{news.date}</p>
+                      )}
+                    </a>
+                  ))}
+                </div>
               </div>
             )}
 
