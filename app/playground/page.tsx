@@ -2000,19 +2000,21 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                   )}
                 </div>
 
-                {/* Quick picks - compact */}
-                <div className="grid grid-cols-5 gap-1.5">
+                {/* Quick picks from curated gallery */}
+                <div className="flex gap-1.5">
                   {[
-                    { url: 'https://images.unsplash.com/photo-1494438639946-1ebd1d20bf85?auto=format&fit=crop&w=300&q=80', label: 'Minimal' },
-                    { url: 'https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=300&q=80', label: 'Tech' },
-                    { url: 'https://images.unsplash.com/photo-1542038784456-1ea8e935640e?auto=format&fit=crop&w=300&q=80', label: 'Luxe' },
-                    { url: 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&w=300&q=80', label: 'Abstract' },
-                    { url: 'https://images.unsplash.com/photo-1550684848-fac1c5b4e853?auto=format&fit=crop&w=300&q=80', label: 'Bold' },
-                  ].filter(s => !styleRefImages.some(sel => sel.includes(s.url.split('?')[0]))).slice(0, 5).map((style, i) => (
+                    { url: '/inspirations/ref-7.jpeg', label: 'Playful' },
+                    { url: '/inspirations/ref-2.jpeg', label: 'Clean' },
+                    { url: '/inspirations/ref-5.jpeg', label: 'Bold' },
+                    { url: '/inspirations/ref-8.jpeg', label: 'Dark' },
+                  ].filter(s => !styleRefImages.some(sel => sel.includes(s.url))).slice(0, 4).map((style, i) => (
                     <div 
                       key={i}
-                      onClick={() => setStyleRefImages(prev => [...prev, style.url].slice(0, 3))}
-                      className="relative aspect-square rounded overflow-hidden cursor-pointer border border-gray-200 hover:border-emerald-400 transition-all group"
+                      onClick={() => {
+                        const absoluteUrl = `${window.location.origin}${style.url}`;
+                        setStyleRefImages(prev => [...prev, absoluteUrl].slice(0, 3));
+                      }}
+                      className="relative h-12 w-12 rounded overflow-hidden cursor-pointer border border-gray-200 hover:border-emerald-400 transition-all group flex-shrink-0"
                     >
                       <img src={style.url} className="w-full h-full object-cover" />
                       <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
@@ -2020,6 +2022,13 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                       </div>
                     </div>
                   ))}
+                  {/* More button */}
+                  <button
+                    onClick={() => setShowStyleGallery(true)}
+                    className="h-12 w-12 rounded border border-dashed border-gray-300 flex items-center justify-center text-gray-400 hover:border-emerald-400 hover:text-emerald-500 transition-all flex-shrink-0"
+                  >
+                    <span className="text-xs">+</span>
+                  </button>
                 </div>
               </div>
 
