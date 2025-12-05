@@ -202,6 +202,8 @@ function PlaygroundContent() {
   const [newUploadLabel, setNewUploadLabel] = useState('product');
 
   const [uploadedImages, setUploadedImages] = useState<string[]>([]);
+  // Asset reproduction modes: 'exact' = copy exactly (screenshots, UI), 'inspire' = can reinterpret (diagrams, illustrations)
+  const [assetModes, setAssetModes] = useState<Record<string, 'exact' | 'inspire'>>({});
   const [sourceUrl, setSourceUrl] = useState('');
   const [socialLinks, setSocialLinks] = useState<string[]>(['', '']);
   const [otherLinks, setOtherLinks] = useState<string>('');
@@ -1171,33 +1173,39 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
           const labelObj = targetBrand?.labeledImages?.find((li: any) => li.url === img);
           const category = labelObj?.category || 'other';
           
-          // Assign context based on label
+          // Get reproduction mode for this asset (default: app_ui = exact, others = inspire)
+          const mode = assetModes[img] || (category === 'app_ui' ? 'exact' : 'inspire');
+          const modeInstruction = mode === 'exact' 
+            ? '[REPRODUCE EXACTLY - Copy this image as-is, do not modify or reinterpret]'
+            : '[CAN REINTERPRET - Use as inspiration, feel free to recreate in the brand style]';
+          
+          // Assign context based on label + reproduction mode
           if (!imageContextMap[img]) {
             switch (category) {
               case 'main_logo':
                 imageContextMap[img] = "BRAND_LOGO (CRITICAL): Official logo. DO NOT distort.";
                 break;
               case 'product':
-                imageContextMap[img] = "PRODUCT_IMAGE: Hero product visual. Feature prominently.";
+                imageContextMap[img] = `PRODUCT_IMAGE: Hero product visual. ${modeInstruction}`;
                 break;
               case 'app_ui':
-                imageContextMap[img] = "APP_SCREENSHOT: Product interface. Use as visual element.";
+                imageContextMap[img] = `APP_SCREENSHOT: Product interface. ${modeInstruction}`;
                 break;
               case 'person':
               case 'team':
-                imageContextMap[img] = "PERSON_IMAGE: Human element for authenticity.";
+                imageContextMap[img] = `PERSON_IMAGE: Human element. ${modeInstruction}`;
                 break;
               case 'client_logo':
                 imageContextMap[img] = "CLIENT_LOGO: Customer/partner logo. Can be shown smaller.";
                 break;
               case 'texture':
-                imageContextMap[img] = "TEXTURE: Background or visual texture element.";
+                imageContextMap[img] = `TEXTURE: Background element. ${modeInstruction}`;
                 break;
               case 'reference':
                 imageContextMap[img] = "STYLE_REFERENCE: Match this visual style and aesthetic.";
                 break;
               default:
-                imageContextMap[img] = "SUPPORTING_VISUAL: Secondary visual element.";
+                imageContextMap[img] = `SUPPORTING_VISUAL: ${modeInstruction}`;
             }
           }
         }
@@ -2111,10 +2119,12 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                   </div>
                 )}
 
-                  {/* Other available assets from labeledImages - click to toggle */}
+                  {/* Other available assets from labeledImages - click to toggle selection, double-click to toggle mode */}
                   {brandData?.labeledImages?.filter((li: any) => li.url !== brandData?.logo && li.category !== 'icon').slice(0, 8).map((labeledImg: any, i: number) => {
                     const isSelected = uploadedImages.includes(labeledImg.url);
                     const isClientLogo = labeledImg.category === 'client_logo';
+                    const mode = assetModes[labeledImg.url] || (labeledImg.category === 'app_ui' ? 'exact' : 'inspire');
+                    const isExact = mode === 'exact';
                     
                     return (
                       <div 
@@ -2126,7 +2136,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                             setUploadedImages(prev => [...prev, labeledImg.url]);
                           }
                         }}
-                        className={`relative h-14 w-14 rounded overflow-hidden cursor-pointer transition-all ${
+                        className={`relative h-14 w-14 rounded overflow-hidden cursor-pointer transition-all group ${
                           isSelected 
                             ? 'border-2 border-emerald-500 ring-2 ring-emerald-200' 
                             : 'border border-gray-200 opacity-50 hover:opacity-100 hover:border-gray-400'
@@ -2138,7 +2148,27 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                           <div className="absolute bottom-0 left-0 right-0 bg-blue-600 text-white text-[6px] text-center py-0.5">REF</div>
                         )}
                         {isSelected && (
-                          <div className="absolute top-0.5 right-0.5 w-4 h-4 bg-emerald-500 text-white rounded-full flex items-center justify-center text-[10px]">✓</div>
+                          <>
+                            <div className="absolute top-0.5 right-0.5 w-4 h-4 bg-emerald-500 text-white rounded-full flex items-center justify-center text-[10px]">✓</div>
+                            {/* Mode toggle - appears on hover */}
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setAssetModes(prev => ({
+                                  ...prev,
+                                  [labeledImg.url]: isExact ? 'inspire' : 'exact'
+                                }));
+                              }}
+                              className={`absolute bottom-0 left-0 right-0 text-[6px] text-center py-0.5 font-medium transition-all ${
+                                isExact 
+                                  ? 'bg-orange-500 text-white' 
+                                  : 'bg-purple-500 text-white'
+                              }`}
+                              title={isExact ? 'Copie exacte - cliquez pour permettre réinterprétation' : 'Réinterprétable - cliquez pour copie exacte'}
+                            >
+                              {isExact ? '📋 EXACT' : '✨ LIBRE'}
+                            </button>
+                          </>
                         )}
                       </div>
                     );
