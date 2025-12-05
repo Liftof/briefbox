@@ -584,62 +584,80 @@ function PlaygroundContent() {
     }
   }, []);
 
-  // Build a smart prompt from the best available brand data
+  // Build a smart prompt from the RICH bento data (pain points, competitors, trends)
   const buildSmartWelcomePrompt = useCallback((brand: any): { brief: string; templateId: TemplateId } | null => {
-    // Priority 1: Industry insights with real data
     const insights = Array.isArray(brand.industryInsights) ? brand.industryInsights : [];
-    const insightWithFact = insights.find((i: any) => i.fact && i.fact.length > 20);
-    if (insightWithFact) {
+    const contentNuggets = brand.contentNuggets || {};
+    const features = brand.features || [];
+    const brandName = brand.name || 'nous';
+    
+    // Priority 1: Pain point with emotional hook (most engaging!)
+    const painPoint = insights.find((i: any) => i.type === 'pain_point' && i.painPoint);
+    if (painPoint?.painPoint) {
+      const hooks = [
+        `Vous aussi vous en avez marre de ${painPoint.painPoint.toLowerCase()} ?`,
+        `Stop à ${painPoint.painPoint.toLowerCase()}. Voici la solution.`,
+        `${painPoint.painPoint} ? On a la réponse.`,
+      ];
       return {
-        brief: `Le saviez-vous ? ${insightWithFact.fact}`,
+        brief: hooks[Math.floor(Math.random() * hooks.length)],
         templateId: 'stat'
       };
     }
 
-    // Priority 2: Real testimonial or quote
-    const posts = Array.isArray(brand.suggestedPosts) ? brand.suggestedPosts : [];
-    const quotePost = posts.find((p: any) => p.templateId === 'quote' && p.source === 'real_data');
-    if (quotePost?.headline) {
+    // Priority 2: Trend with urgency (timely content)
+    const trend = insights.find((i: any) => i.type === 'trend' && i.painPoint);
+    if (trend?.painPoint) {
       return {
-        brief: quotePost.headline,
+        brief: `📈 ${trend.painPoint} — Comment ${brandName} vous aide à en profiter`,
+        templateId: 'announcement'
+      };
+    }
+
+    // Priority 3: Competitor positioning (differentiator)
+    const competitor = insights.find((i: any) => i.type === 'competitive');
+    if (competitor?.painPoint) {
+        return {
+        brief: competitor.painPoint,
+        templateId: 'expert'
+      };
+    }
+
+    // Priority 4: Real stat with impact
+    const realStats = contentNuggets.realStats || [];
+    if (realStats.length > 0) {
+      const stat = realStats[0];
+      return {
+        brief: `${stat} — Voici comment on y arrive`,
+          templateId: 'stat'
+        };
+    }
+
+    // Priority 5: Real testimonial
+    const testimonials = contentNuggets.testimonials || [];
+    if (testimonials.length > 0 && testimonials[0].quote) {
+      const t = testimonials[0];
+      return {
+        brief: `"${t.quote}" — ${t.author || 'Un client satisfait'}`,
         templateId: 'quote'
       };
     }
 
-    // Priority 3: Real stat from the website
-    const statPost = posts.find((p: any) => p.templateId === 'stat' && (p.source === 'real_data' || p.source === 'industry_insight'));
-    if (statPost) {
-      const metricText = statPost.metric && statPost.metricLabel 
-        ? `${statPost.metric} ${statPost.metricLabel}` 
-        : statPost.headline;
-      if (metricText && metricText.length > 5) {
-        return {
-          brief: metricText,
-          templateId: 'stat'
-        };
-      }
-    }
-
-    // Priority 4: Any post with real data source
-    const realDataPost = posts.find((p: any) => p.source === 'real_data' && p.headline);
-    if (realDataPost) {
+    // Priority 6: Feature as benefit (transform feature into hook)
+    if (features.length > 0) {
+      const feature = features[0];
+      const hooks = [
+        `Comment ${feature.toLowerCase()} change tout pour nos clients`,
+        `${feature} : le game-changer que vous attendiez`,
+        `Pourquoi ${feature.toLowerCase()} fait la différence`,
+      ];
       return {
-        brief: realDataPost.headline,
-        templateId: realDataPost.templateId as TemplateId || 'announcement'
-      };
-    }
-
-    // Priority 5: Product announcement if we have product images
-    const labeledImages = Array.isArray(brand.labeledImages) ? brand.labeledImages : [];
-    const hasProduct = labeledImages.some((img: any) => img.category === 'product');
-    if (hasProduct && brand.name) {
-      return {
-        brief: `Découvrez ${brand.name} : ${brand.tagline || brand.description?.substring(0, 60) || 'une nouvelle façon de travailler'}`,
+        brief: hooks[Math.floor(Math.random() * hooks.length)],
         templateId: 'product'
       };
     }
 
-    // Priority 6: Brand announcement with tagline
+    // Priority 7: Tagline or description
     if (brand.tagline && brand.tagline.length > 10) {
       return {
         brief: brand.tagline,
@@ -647,18 +665,14 @@ function PlaygroundContent() {
       };
     }
 
-    // Priority 7: Use brand description if meaningful
-    if (brand.description && brand.description.length > 30) {
-      const shortDesc = brand.description.length > 80 
-        ? brand.description.substring(0, 77) + '...' 
-        : brand.description;
+    // Fallback: Generic but branded
+    if (brandName && brandName !== 'nous') {
       return {
-        brief: shortDesc,
+        brief: `Découvrez ce que ${brandName} peut faire pour vous`,
         templateId: 'announcement'
       };
     }
 
-    // No good data found - return null to skip auto-generation
     return null;
   }, []);
 
@@ -694,30 +708,22 @@ function PlaygroundContent() {
     setStep('playground');
     setActiveTab('create');
     
-    // For new users: auto-generate 4 visuals if we have smart content
-    const userIsNew = isNewUser();
-    if (userIsNew && allImages.length > 0) {
+    // Auto-generate visuals based on smart bento data
       const smartPrompt = buildSmartWelcomePrompt(brandData);
       
-      if (smartPrompt) {
-        // We have good data - auto-generate!
+    if (smartPrompt && allImages.length > 0) {
+      // We have good data from bento - auto-generate!
         setBrief(smartPrompt.brief);
         setSelectedTemplate(smartPrompt.templateId);
-        showToast('Bienvenue ! Génération de vos premiers visuels...', 'success');
+      showToast('🚀 Génération automatique lancée...', 'success');
         
         // Small delay to let UI update
       setTimeout(() => {
           handleGenerate(smartPrompt.brief, false, brandData, allImages.slice(0, 6));
-        }, 600);
+      }, 800);
       } else {
-        // No good data - redirect to strategy for manual selection
-        setActiveTab('strategy');
-        showToast('Découvrez vos opportunités de contenu', 'info');
-      }
-    } else {
-      // Existing user - redirect to strategy
-      setActiveTab('strategy');
-      showToast('Découvrez vos opportunités de contenu', 'info');
+      // No good data - show helpful message
+      showToast('Décrivez ce que vous voulez communiquer', 'info');
     }
   };
 
@@ -1607,13 +1613,13 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                     <span className="text-sm">{item.emoji}</span>
                     <span className="text-gray-600">{item.text}</span>
                     <span className="text-emerald-500 text-[10px]">✓</span>
-                  </div>
+              </div>
                 ))}
                 {progress < 90 && (
                   <div className="flex items-center gap-2 text-xs text-gray-300">
                     <span className="animate-pulse">⏳</span>
                     <span>En cours...</span>
-                  </div>
+            </div>
                 )}
               </div>
             </div>
@@ -1631,8 +1637,8 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
             {/* Time estimate */}
             <p className="mt-4 text-[10px] font-mono text-gray-400 uppercase tracking-widest">
               ~60-90 secondes
-            </p>
-          </div>
+              </p>
+            </div>
         </div>
       );
     }
@@ -1926,32 +1932,61 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
             
             {/* Scrollable pills - More engaging hooks */}
             <div className="space-y-2 overflow-x-auto pb-2 -mx-2 px-2" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-              {/* Row 1: Pain Points (new format) + Stats + Testimonials */}
+              {/* Row 1: Pain Points transformed into engaging hooks */}
               <div className="flex gap-2 flex-nowrap">
-                {/* NEW: Pain Points - priority display */}
-                {brandData.industryInsights?.slice(0, 3).map((insight: any, i: number) => {
-                  const text = insight.painPoint || insight.fact || insight.didYouKnow;
-                  const typeEmoji = insight.type === 'pain_point' ? '⚡' : insight.type === 'trend' ? '📈' : insight.type === 'cost_of_inaction' ? '⚠️' : '💡';
+                {/* Pain Points with emotional hooks */}
+                {brandData.industryInsights?.slice(0, 4).map((insight: any, i: number) => {
+                  const rawText = insight.painPoint || insight.fact || insight.didYouKnow;
+                  if (!rawText) return null;
+                  
+                  // Transform raw pain point into engaging hook
+                  const typeConfig: Record<string, { emoji: string; hooks: string[]; color: string }> = {
+                    'pain_point': { 
+                      emoji: '⚡', 
+                      hooks: [
+                        `Stop à "${rawText.slice(0, 30)}..." — voici la solution`,
+                        `Vous aussi, marre de ${rawText.toLowerCase().slice(0, 25)}... ?`,
+                        `${rawText.slice(0, 35)}... On règle ça.`
+                      ],
+                      color: 'rose'
+                    },
+                    'trend': { 
+                      emoji: '📈', 
+                      hooks: [
+                        `📈 Tendance : ${rawText.slice(0, 35)}...`,
+                        `${rawText.slice(0, 35)}... — En profitez-vous ?`
+                      ],
+                      color: 'blue'
+                    },
+                    'competitive': { 
+                      emoji: '🎯', 
+                      hooks: [
+                        `Ce que nos concurrents ne font pas : ${rawText.slice(0, 25)}...`,
+                        `Notre différence ? ${rawText.slice(0, 30)}...`
+                      ],
+                      color: 'purple'
+                    },
+                  };
+                  
+                  const config = typeConfig[insight.type] || { emoji: '💡', hooks: [rawText], color: 'gray' };
+                  const hook = config.hooks[i % config.hooks.length];
+                  
                   return (
                     <button
-                      key={`pain-${i}`}
+                      key={`insight-${i}`}
                       onClick={() => {
-                        setSelectedTemplate('stat');
-                        setBrief(text);
+                        setSelectedTemplate(insight.type === 'trend' ? 'announcement' : 'stat');
+                        setBrief(hook);
                       }}
-                      className={`flex-shrink-0 px-3 py-2 border transition-all text-left max-w-[280px] ${
-                        brief === text 
-                          ? 'bg-rose-50 border-rose-400' 
-                          : 'bg-white border-gray-200 hover:border-rose-400 hover:bg-rose-50/50'
-                      }`}
+                      className={`flex-shrink-0 px-3 py-2 border transition-all text-left max-w-[260px] bg-${config.color}-50/30 border-${config.color}-200 hover:border-${config.color}-400 hover:bg-${config.color}-50`}
                     >
                       <div className="flex items-start gap-2">
-                        <span className="text-sm flex-shrink-0">{typeEmoji}</span>
-                        <span className="text-xs text-gray-700 line-clamp-2">{text?.slice(0, 60)}{text?.length > 60 ? '...' : ''}</span>
+                        <span className="text-sm flex-shrink-0">{config.emoji}</span>
+                        <span className="text-xs text-gray-700 line-clamp-2">{hook.slice(0, 55)}{hook.length > 55 ? '...' : ''}</span>
                   </div>
                     </button>
                   );
-                })}
+                }).filter(Boolean)}
                 
                 {/* Real Stats with better copy */}
                 {brandData.contentNuggets?.realStats?.slice(0, 2).map((stat: string, i: number) => (
