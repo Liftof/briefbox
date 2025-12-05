@@ -1198,12 +1198,12 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
       console.log('📸 Images to use (user priority):', imagesToUse.length, 'images');
       console.log('   Labels:', Object.entries(imageContextMap).map(([k, v]) => `${k.slice(-20)}: ${v.slice(0, 30)}`).slice(0, 4));
 
-      // Add manual style references if present
-      if (styleRefImages.length > 0) {
-        styleReferenceImages = [...styleRefImages, ...styleReferenceImages];
+    // Add manual style references if present
+    if (styleRefImages.length > 0) {
+      styleReferenceImages = [...styleRefImages, ...styleReferenceImages];
         console.log('🎨 User style refs added:', styleRefImages.length, 'images');
         console.log('   URLs:', styleRefImages.map(u => u.slice(0, 50) + '...'));
-      }
+    }
       
       console.log('📤 Final style reference images:', styleReferenceImages.length);
 
@@ -1482,7 +1482,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                 </span>
                 <h2 className="text-2xl md:text-3xl font-semibold text-gray-900 mb-2">
                   {LOADING_STAGES[loadingStage]?.message || 'Analyse...'}
-                </h2>
+            </h2>
                 <p className="text-sm text-gray-400">
                   {LOADING_STAGES[loadingStage]?.sub || ''}
                 </p>
@@ -1511,7 +1511,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                   }}
                 />
               </div>
-              
+
               {/* Stage labels */}
               <div className="flex justify-between mt-3">
                 <span className={`text-[9px] font-mono uppercase ${loadingStage >= 0 ? 'text-emerald-600' : 'text-gray-300'}`}>
@@ -1668,11 +1668,11 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                         </span>
                       </button>
                     )}
-                  </div>
-                </div>
               </div>
+                </div>
             </div>
-            
+            </div>
+
             {/* Brand name indicator */}
             {brandData?.name && (
               <div className="mt-6 flex items-center justify-center gap-2">
@@ -1681,7 +1681,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                   {brandData.name}
                 </span>
                 <div className="w-1 h-1 bg-gray-300 rounded-full" />
-              </div>
+            </div>
             )}
           </div>
         </div>
@@ -1777,7 +1777,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
               <div className="flex items-center gap-2">
                 <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full" />
                 <span className="text-[10px] font-mono uppercase tracking-widest text-gray-400">Angles de contenu</span>
-              </div>
+                </div>
               <button 
                 onClick={() => setShowStyleGallery(true)}
                 className="text-[10px] font-medium text-gray-400 hover:text-gray-900 transition-colors flex items-center gap-1"
@@ -1811,47 +1811,47 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                       <div className="flex items-start gap-2">
                         <span className="text-sm flex-shrink-0">{typeEmoji}</span>
                         <span className="text-xs text-gray-700 line-clamp-2">{text?.slice(0, 60)}{text?.length > 60 ? '...' : ''}</span>
-                      </div>
+                  </div>
                     </button>
                   );
                 })}
                 
                 {/* Real Stats with better copy */}
                 {brandData.contentNuggets?.realStats?.slice(0, 2).map((stat: string, i: number) => (
-                  <button
-                    key={`stat-${i}`}
-                    onClick={() => {
-                      setSelectedTemplate('stat');
+              <button
+                        key={`stat-${i}`}
+              onClick={() => {
+                          setSelectedTemplate('stat');
                       setBrief(`${stat} — voici comment`);
-                    }}
+                        }}
                     className={`flex-shrink-0 px-3 py-2 border transition-all text-left max-w-[220px] ${
                       brief.includes(stat) ? 'bg-emerald-50 border-emerald-400' : 'bg-white border-gray-200 hover:border-emerald-400 hover:bg-emerald-50/50'
                     }`}
-                  >
-                    <div className="flex items-center gap-2">
+                      >
+                        <div className="flex items-center gap-2">
                       <span className="text-sm">📊</span>
                       <span className="text-xs text-gray-700 truncate">{stat.slice(0, 35)}</span>
-                    </div>
-                  </button>
-                ))}
+                        </div>
+              </button>
+            ))}
                 
-                {/* Testimonials */}
-                {brandData.contentNuggets?.testimonials?.slice(0, 2).map((t: any, i: number) => (
-                  <button
-                    key={`quote-${i}`}
-                    onClick={() => {
-                      setSelectedTemplate('quote');
+                    {/* Testimonials */}
+                    {brandData.contentNuggets?.testimonials?.slice(0, 2).map((t: any, i: number) => (
+                      <button
+                        key={`quote-${i}`}
+                        onClick={() => {
+                          setSelectedTemplate('quote');
                       setBrief(`"${t.quote}" — ${t.author}${t.company ? `, ${t.company}` : ''}`);
-                    }}
+                        }}
                     className="flex-shrink-0 px-3 py-2 bg-white border border-gray-200 hover:border-blue-400 hover:bg-blue-50/50 transition-all text-left max-w-[200px]"
-                  >
-                    <div className="flex items-center gap-2">
+                      >
+                        <div className="flex items-center gap-2">
                       <span className="text-sm">💬</span>
                       <span className="text-xs text-gray-700 truncate italic">"{t.quote?.slice(0, 25)}..."</span>
-                    </div>
-                  </button>
-                ))}
-              </div>
+        </div>
+                      </button>
+                    ))}
+                  </div>
               
               {/* Row 2: Features as hooks, not descriptions */}
               <div className="flex gap-2 flex-nowrap">
@@ -1864,53 +1864,53 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                     `${f} en 30 secondes`
                   ];
                   return (
-                    <button
-                      key={`feat-${i}`}
-                      onClick={() => {
-                        setSelectedTemplate('product');
+                      <button
+                        key={`feat-${i}`}
+                        onClick={() => {
+                          setSelectedTemplate('product');
                         setBrief(hooks[i % hooks.length]);
-                      }}
+                        }}
                       className="flex-shrink-0 px-3 py-1.5 bg-purple-50/50 border border-purple-200 hover:border-purple-400 transition-all text-xs text-purple-700 hover:text-purple-900"
-                    >
+                      >
                       ✨ {f.slice(0, 22)}{f.length > 22 ? '...' : ''}
-                    </button>
+                      </button>
                   );
                 })}
                 
                 {/* Key Points as "Why" questions */}
                 {brandData.keyPoints?.slice(0, 2).map((kp: string, i: number) => (
-                  <button
+                      <button
                     key={`kp-${i}`}
-                    onClick={() => {
-                      setSelectedTemplate('expert');
+                        onClick={() => {
+                          setSelectedTemplate('expert');
                       setBrief(`Pourquoi ${kp.toLowerCase()} ?`);
-                    }}
+                        }}
                     className="flex-shrink-0 px-3 py-1.5 bg-amber-50/50 border border-amber-200 hover:border-amber-400 transition-all text-xs text-amber-700 hover:text-amber-900"
-                  >
+                      >
                     🎯 {kp.slice(0, 20)}{kp.length > 20 ? '...' : ''}
-                  </button>
-                ))}
+                      </button>
+                    ))}
                 
                 {/* Quick suggestion - "problem agitation" style */}
                 {brandData.targetAudience && (
-                  <button
-                    onClick={() => {
+                        <button
+                          onClick={() => {
                       setSelectedTemplate('stat');
                       setBrief(`${brandData.targetAudience}, vous en avez marre de... ?`);
-                    }}
+                          }}
                     className="flex-shrink-0 px-3 py-1.5 bg-rose-50/50 border border-rose-200 hover:border-rose-400 transition-all text-xs text-rose-700 hover:text-rose-900"
-                  >
+                        >
                     🎤 Interpeller votre cible
-                  </button>
+                        </button>
                 )}
-              </div>
-            </div>
+                  </div>
+                          </div>
 
             {/* No data fallback - minimal */}
-            {!brandData.contentNuggets?.realStats?.length && 
-             !brandData.contentNuggets?.testimonials?.length && 
-             !brandData.industryInsights?.length &&
-             !brandData.features?.length && (
+              {!brandData.contentNuggets?.realStats?.length && 
+               !brandData.contentNuggets?.testimonials?.length && 
+               !brandData.industryInsights?.length &&
+               !brandData.features?.length && (
                 <div className="text-center py-4 text-gray-400">
                   <p className="text-sm">Aucune donnée exploitable trouvée</p>
                   <p className="text-xs mt-1">Ajoutez des informations dans l'identité ou écrivez librement !</p>
@@ -1958,20 +1958,20 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                   >
                     ✨ Galerie
                   </button>
-                </div>
+                    </div>
                 
                 {/* Selected styles + Drop zone in one row */}
                 <div className="flex gap-2 mb-2">
                   {/* Selected images */}
-                  {styleRefImages.map((img, i) => (
+                    {styleRefImages.map((img, i) => (
                     <div key={i} className="relative h-16 w-16 group rounded-lg overflow-hidden border-2 border-emerald-400 flex-shrink-0">
                       <img src={img} className="w-full h-full object-cover" />
-                      <button
-                        onClick={() => setStyleRefImages(prev => prev.filter((_, idx) => idx !== i))}
+                        <button
+                          onClick={() => setStyleRefImages(prev => prev.filter((_, idx) => idx !== i))}
                         className="absolute top-0.5 right-0.5 w-4 h-4 bg-black/60 text-white rounded-full flex items-center justify-center hover:bg-red-500 text-[9px]"
                       >×</button>
-                    </div>
-                  ))}
+                  </div>
+                ))}
                   
                   {/* Drop zone - always visible if less than 3 */}
                   {styleRefImages.length < 3 && (
@@ -1980,28 +1980,28 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                         <path d="M12 4v16m8-8H4" />
                       </svg>
                       <span className="text-[8px] text-gray-400 mt-0.5">Drop inspi</span>
-                      <input 
-                        type="file" 
-                        accept="image/*" 
-                        className="hidden"
-                        onChange={(e) => {
+                <input 
+                  type="file" 
+                  accept="image/*" 
+                  className="hidden" 
+                  onChange={(e) => {
                           if (e.target.files?.[0]) {
-                            const reader = new FileReader();
-                            reader.onload = (ev) => {
-                              if (typeof ev.target?.result === 'string') {
-                                setStyleRefImages(prev => [...prev, ev.target!.result as string].slice(0, 3));
-                              }
-                            };
-                            reader.readAsDataURL(e.target.files[0]);
+                        const reader = new FileReader();
+                        reader.onload = (ev) => {
+                          if (typeof ev.target?.result === 'string') {
+                             setStyleRefImages(prev => [...prev, ev.target!.result as string].slice(0, 3));
                           }
-                        }}
-                      />
+                        };
+                            reader.readAsDataURL(e.target.files[0]);
+                    }
+                  }} 
+                />
                     </label>
                   )}
-                </div>
+              </div>
 
                 {/* Quick picks from curated gallery */}
-                <div className="flex gap-1.5">
+                <div className="flex gap-1.5 items-center">
                   {[
                     { url: '/inspirations/ref-7.jpeg', label: 'Playful' },
                     { url: '/inspirations/ref-2.jpeg', label: 'Clean' },
@@ -2022,73 +2022,91 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                       </div>
                     </div>
                   ))}
-                  {/* More button */}
+                  {/* Gallery button - more obvious */}
                   <button
                     onClick={() => setShowStyleGallery(true)}
-                    className="h-12 w-12 rounded border border-dashed border-gray-300 flex items-center justify-center text-gray-400 hover:border-emerald-400 hover:text-emerald-500 transition-all flex-shrink-0"
+                    className="h-12 px-3 rounded bg-gray-900 text-white text-[10px] font-medium hover:bg-gray-800 transition-all flex items-center gap-1.5 flex-shrink-0"
                   >
-                    <span className="text-xs">+</span>
+                    <span>🎨</span>
+                    <span>Galerie</span>
                   </button>
                 </div>
               </div>
 
-              {/* 2. BRAND ASSETS ZONE - Compact */}
+              {/* 2. BRAND ASSETS ZONE - Clickable to select/deselect */}
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">Assets</label>
-                  <button
-                    onClick={() => setShowSourceManager(true)}
-                    className="text-[10px] text-gray-500 hover:text-gray-700"
-                  >+ Gérer</button>
+                  <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">Assets à utiliser</label>
+                  <span className="text-[10px] text-gray-400">Cliquez pour sélectionner</span>
                 </div>
                 
-                {/* Logo inline - compact */}
+                {/* All available brand assets - clickable to toggle */}
                 <div className="flex gap-2 flex-wrap">
+                  {/* Logo - always selected, can't be deselected */}
                   {brandData?.logo && (
-                    <div className="relative h-14 w-14 rounded border-2 border-emerald-300 overflow-hidden flex-shrink-0 group"
+                    <div 
+                      className="relative h-14 w-14 rounded border-2 border-emerald-500 overflow-hidden flex-shrink-0 cursor-default"
                       style={{
                         backgroundImage: `linear-gradient(45deg, #f0f0f0 25%, transparent 25%), linear-gradient(-45deg, #f0f0f0 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #f0f0f0 75%), linear-gradient(-45deg, transparent 75%, #f0f0f0 75%)`,
                         backgroundSize: '6px 6px',
                         backgroundPosition: '0 0, 0 3px, 3px -3px, -3px 0px'
                       }}
+                      title="Logo (toujours inclus)"
                     >
                       <img src={brandData.logo} className="w-full h-full object-contain p-1" alt="Logo" />
                       <div className="absolute bottom-0 left-0 right-0 bg-emerald-600 text-white text-[6px] text-center py-0.5 font-bold">
-                        LOGO
-                      </div>
-                    </div>
-                  )}
-                  
-                  {/* Other assets */}
-                  {uploadedImages.filter(img => img !== brandData?.logo).slice(0, 6).map((img, i) => {
-                    const labelObj = brandData?.labeledImages?.find((li: any) => li.url === img);
-                    const isClientLogo = labelObj?.category === 'client_logo';
+                        LOGO ✓
+                  </div>
+                  </div>
+                )}
+
+                  {/* Other available assets from labeledImages - click to toggle */}
+                  {brandData?.labeledImages?.filter((li: any) => li.url !== brandData?.logo && li.category !== 'icon').slice(0, 8).map((labeledImg: any, i: number) => {
+                    const isSelected = uploadedImages.includes(labeledImg.url);
+                    const isClientLogo = labeledImg.category === 'client_logo';
                     
                     return (
-                      <div key={i} className={`relative h-14 w-14 group rounded overflow-hidden border ${isClientLogo ? 'border-blue-300' : 'border-gray-200'}`}>
-                        <img src={img} className="w-full h-full object-cover" />
+                      <div 
+                        key={i} 
+                        onClick={() => {
+                          if (isSelected) {
+                            setUploadedImages(prev => prev.filter(img => img !== labeledImg.url));
+                          } else {
+                            setUploadedImages(prev => [...prev, labeledImg.url]);
+                          }
+                        }}
+                        className={`relative h-14 w-14 rounded overflow-hidden cursor-pointer transition-all ${
+                          isSelected 
+                            ? 'border-2 border-emerald-500 ring-2 ring-emerald-200' 
+                            : 'border border-gray-200 opacity-50 hover:opacity-100 hover:border-gray-400'
+                        }`}
+                        title={isSelected ? 'Cliquez pour retirer' : 'Cliquez pour ajouter'}
+                      >
+                        <img src={labeledImg.url} className="w-full h-full object-cover" />
                         {isClientLogo && (
                           <div className="absolute bottom-0 left-0 right-0 bg-blue-600 text-white text-[6px] text-center py-0.5">REF</div>
                         )}
-                        <button
-                          onClick={() => handleRemoveImage(uploadedImages.indexOf(img))}
-                          className="absolute top-0.5 right-0.5 w-3.5 h-3.5 bg-black/50 text-white rounded-full flex items-center justify-center text-[8px] opacity-0 group-hover:opacity-100 hover:bg-red-500"
-                        >×</button>
+                        {isSelected && (
+                          <div className="absolute top-0.5 right-0.5 w-4 h-4 bg-emerald-500 text-white rounded-full flex items-center justify-center text-[10px]">✓</div>
+                        )}
                       </div>
                     );
                   })}
                   
-                  {uploadedImages.filter(img => img !== brandData?.logo).length > 6 && (
-                    <div className="h-14 w-14 bg-gray-100 rounded flex items-center justify-center text-[10px] text-gray-500 font-medium">
-                      +{uploadedImages.filter(img => img !== brandData?.logo).length - 6}
-                    </div>
-                  )}
+                  {/* Upload more button */}
+                  <label className="h-14 w-14 rounded border border-dashed border-gray-300 flex flex-col items-center justify-center cursor-pointer hover:border-emerald-400 hover:bg-emerald-50/50 transition-all flex-shrink-0">
+                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path d="M12 4v16m8-8H4" />
+                </svg>
+                    <span className="text-[8px] text-gray-400 mt-0.5">Upload</span>
+                    <input type="file" multiple accept="image/*" className="hidden" onChange={handleImageUpload} />
+                  </label>
                 </div>
                 
                 <input ref={fileInputRef} type="file" multiple accept="image/*" className="hidden" onChange={handleImageUpload} />
               </div>
+              </div>
             </div>
-          </div>
 
           {/* Generate Button */}
           <div className="p-5 bg-gray-50 border-t border-gray-100">
