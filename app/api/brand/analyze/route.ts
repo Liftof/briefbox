@@ -782,6 +782,7 @@ export async function POST(request: Request) {
     const PARALLEL_API_KEY = process.env.PARALLEL_API_KEY;
     const parallelHeaders: Record<string, string> = {
         'Content-Type': 'application/json',
+        'parallel-beta': 'true', // Required header for beta API
     };
     if (PARALLEL_API_KEY) {
         parallelHeaders['x-api-key'] = PARALLEL_API_KEY;
