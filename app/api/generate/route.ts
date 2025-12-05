@@ -436,7 +436,18 @@ If any image contains very small text or low-resolution details that would be ha
 - SIMPLIFY diagrams: keep the concept but make it cleaner and more readable
 - SIMPLIFY UI screenshots: capture the essence but improve clarity
 - Never reproduce blurry or illegible text - either make it readable or remove it
-- Prioritize visual clarity over exact reproduction`);
+- Prioritize visual clarity over exact reproduction
+
+🚫 CRITICAL - DO NOT INVENT UI/INTERFACES:
+For SaaS, apps, or software products:
+- DO NOT invent or generate fake UI screens, dashboards, or interfaces
+- DO NOT create fictional app interfaces that don't exist
+- If no real UI screenshot is provided, be EVOCATIVE instead:
+  → Use abstract shapes, gradients, icons to suggest "tech/digital"
+  → Show the CONCEPT or BENEFIT, not a fake interface
+  → Use typography-focused designs with the message
+  → Show lifestyle/results imagery rather than fake product screens
+- If a real UI screenshot IS provided, you may use it as-is or simplify it, but don't add fictional UI elements`);
       
       imageContextPrefix = `[IMAGE CONTEXT]
 ${imageDescriptions.join('\n')}

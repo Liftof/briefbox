@@ -642,6 +642,16 @@ SPECIFIC AVOIDANCE LIST:
 - No "puzzle pieces"
 - No "busy backgrounds with too much text"
 
+🚫 FOR SAAS/TECH PRODUCTS - CRITICAL:
+- DO NOT invent fake UI screens, dashboards, or app interfaces
+- DO NOT generate fictional software interfaces that don't exist
+- If no real screenshot is provided, be EVOCATIVE instead:
+  → Abstract shapes, gradients, icons to suggest "digital/tech"
+  → Focus on the MESSAGE and BENEFIT, not fake product visuals
+  → Typography-first designs work great for SaaS
+  → Show results/lifestyle imagery rather than invented interfaces
+- Only use real UI screenshots if they are provided as assets
+
 ${feedbackGuidance ? feedbackGuidance : ''}
 ${knowledgeContext ? knowledgeContext : ''}
 
