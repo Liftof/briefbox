@@ -85,8 +85,13 @@ async function generateWithGoogle(
     // Gemini 3 Pro Image supports up to 14 reference images!
     // First 5 get "high fidelity", 6-14 still used but less precisely
     const imagesToProcess = imageUrls.slice(0, 14); // Max capacity
-    for (const url of imagesToProcess) {
-      const imageData = await urlToBase64(url);
+    
+    // PARALLEL Base64 conversion for speed
+    const imageDataResults = await Promise.all(
+      imagesToProcess.map(url => urlToBase64(url).catch(() => null))
+    );
+    
+    for (const imageData of imageDataResults) {
       if (imageData) {
         parts.push({
           inlineData: {
@@ -309,38 +314,47 @@ export async function POST(request: NextRequest) {
     // or if we implement a specific img2img endpoint later.
     
     // Replace processedImageUrls with combined list for generation
-    const finalImageUrls: string[] = [];
     let totalDataUriSize = 0;
     const MAX_DATA_URI_SIZE = 5 * 1024 * 1024; // 5MB total for data URIs
     
     // Gemini 3 Pro supports up to 14 images
     // First 5 = high fidelity, 6-14 = still used but less precisely
-    for (const url of allImageUrls.slice(0, 14)) {
-      // Skip invalid URLs
-      if (!url || typeof url !== 'string') continue;
-      
-      // Validate URL format
-      if (!url.startsWith('http') && !url.startsWith('data:image')) {
-        console.warn(`⚠️ Skipping invalid URL: ${url.slice(0, 50)}`);
-        continue;
-      }
-      
-      // Check if URL is accessible (quick HEAD check for http URLs)
-      if (url.startsWith('http')) {
-        try {
-          const headCheck = await fetch(url, { method: 'HEAD', signal: AbortSignal.timeout(3000) });
-          if (!headCheck.ok) {
-            console.warn(`⚠️ Skipping inaccessible URL (${headCheck.status}): ${url.slice(0, 60)}`);
-            continue;
-          }
-        } catch (e) {
-          console.warn(`⚠️ Skipping unreachable URL: ${url.slice(0, 60)}`);
-          continue;
+    const urlsToValidate = allImageUrls.slice(0, 14).filter(url => url && typeof url === 'string');
+    
+    // PARALLEL URL validation for speed
+    const validationResults = await Promise.all(
+      urlsToValidate.map(async (url): Promise<string | null> => {
+        // Validate URL format
+        if (!url.startsWith('http') && !url.startsWith('data:image')) {
+          console.warn(`⚠️ Skipping invalid URL: ${url.slice(0, 50)}`);
+          return null;
         }
-      }
+        
+        // Check if URL is accessible (quick HEAD check for http URLs)
+        if (url.startsWith('http')) {
+          try {
+            const headCheck = await fetch(url, { method: 'HEAD', signal: AbortSignal.timeout(2000) }); // Reduced timeout
+            if (!headCheck.ok) {
+              console.warn(`⚠️ Skipping inaccessible URL (${headCheck.status}): ${url.slice(0, 60)}`);
+              return null;
+            }
+          } catch (e) {
+            console.warn(`⚠️ Skipping unreachable URL: ${url.slice(0, 60)}`);
+            return null;
+          }
+        }
+        
+        return url;
+      })
+    );
+    
+    // Filter valid URLs and check data URI size limits
+    const finalImageUrls: string[] = [];
+    for (const url of validationResults) {
+      if (!url) continue;
       
       if (url.startsWith('data:')) {
-        const size = url.length * 0.75; // Approximate decoded size
+        const size = url.length * 0.75;
         if (totalDataUriSize + size > MAX_DATA_URI_SIZE) {
           console.warn(`⚠️ Skipping data URI - total size would exceed limit`);
           continue;
