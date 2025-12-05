@@ -554,14 +554,29 @@ AESTHETIC: ${aesthetic} (but interpreted with high taste).
 VIBE: ${toneVoice}.
 
 USER-CENTRIC MINDSET (CRITICAL):
-- THE VIEWER is scrolling fast. Bored. Distracted. Has 0.5 seconds to notice you.
-- YOUR JOB: Create a "pattern interrupt" - something that makes them STOP.
-- THE TEST: Would YOU stop scrolling for this? Would you tap to learn more?
-- EMOTION IS KEY: Even B2B buyers are humans. Make them feel something.
-  → Curiosity: "Wait, what? I need to know more"
-  → Relief: "Finally, someone gets my problem"  
-  → Ambition: "I want that result too"
-  → FOMO: "Am I missing out on this?"
+- THE VIEWER is scrolling fast. Has 0.5 seconds to notice you.
+- YOUR JOB: Create something that resonates with THEIR world.
+- THE TEST: Would the target audience stop for this? Does it speak to THEM?
+
+ADAPT TO THE BRAND CONTEXT:
+- Industry: ${brand.industry || 'General'}
+- Brand values: ${brand.values?.join(', ') || 'Not specified'}
+- Tone: ${toneVoice}
+
+TONE CALIBRATION (crucial):
+→ If CORPORATE/CONSULTING: Professional credibility, subtle authority, smart insights. No flashy gimmicks.
+→ If LOCAL SERVICE (salon, restaurant, artisan): Warm, personal, community-focused. Real and authentic.
+→ If NONPROFIT/CAUSE: Emotional impact, human stories, call to action. Meaning over marketing.
+→ If SAAS/TECH: Clear value prop, problem-solution, modern and clean. Benefits over features.
+→ If LIFESTYLE/CREATIVE: Aesthetic-first, aspirational, mood-driven. Vibe over explanation.
+→ If E-COMMERCE: Product hero, desire-triggering, urgency when appropriate.
+
+THE RIGHT EMOTION FOR THE CONTEXT:
+- B2B/Corporate → Trust, competence, "they get it"
+- B2C Service → Warmth, "I'm in good hands"  
+- Cause/Nonprofit → Empathy, purpose, "I want to help"
+- Tech/SaaS → Curiosity, efficiency, "this could solve my problem"
+- Lifestyle → Aspiration, belonging, "I want this life"
 
 COPYWRITING INSTRUCTIONS (CRITICAL):
 - TRANSFORM the brief into compelling marketing copy in ${language}.
@@ -589,11 +604,14 @@ TEXT ELEMENTS - BE CREATIVE:
 - BUT: every text must be 100% READABLE (contrast, size, spacing)
 
 WHAT TO AVOID (= instant scroll-past):
-- Generic corporate speak ("solutions innovantes", "leader du marché")
+- Generic corporate speak that means nothing ("solutions innovantes", "leader du marché")
+- Tone mismatch: don't be "startup bro" for a law firm, don't be stiff for a yoga studio
 - Empty buzzwords without substance
 - Text that explains the obvious
-- Cringe motivational quotes
-- Anything that sounds like an AI wrote it without thinking
+- Cringe motivational quotes (unless the brand IS motivational)
+- Fake urgency for non-urgent things
+- Being clever for clever's sake - clarity > cleverness
+- Anything that feels disconnected from what the brand actually DOES for people
 
 BRAND IDENTITY (STRICTLY FOLLOW):
 
