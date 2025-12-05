@@ -1,11 +1,9 @@
-import { fal } from "@fal-ai/client";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { NextRequest, NextResponse } from "next/server";
 import sharp from "sharp";
 
-fal.config({
-  credentials: process.env.FAL_KEY,
-});
+// NOTE: Fal has been removed - we now use Google AI (Gemini 3 Pro) exclusively
+// This is cheaper ($0.067/image vs $0.15) and supports more features (14 images, thinking)
 
 // Initialize Google AI
 const GOOGLE_AI_API_KEY = process.env.GOOGLE_AI_API_KEY;
@@ -175,68 +173,14 @@ async function generateWithGoogle(
   }
 }
 
-// Helper: Poll for queue completion with timeout
-async function pollForResult(requestId: string, maxWaitMs: number = 120000): Promise<any> {
-  const startTime = Date.now();
-  const pollInterval = 2000; // 2 seconds between polls
-  
-  while (Date.now() - startTime < maxWaitMs) {
-    try {
-      const status = await fal.queue.status("fal-ai/nano-banana-pro/edit", {
-        requestId,
-        logs: true,
-      });
-      
-      console.log(`📊 Queue status: ${status.status}`);
-      
-      // Check if completed - the status type is IN_PROGRESS | IN_QUEUE
-      // When completed, we can get the result directly
-      if (status.status !== "IN_PROGRESS" && status.status !== "IN_QUEUE") {
-        // Any other status means we should try to get the result
-        const result = await fal.queue.result("fal-ai/nano-banana-pro/edit", {
-          requestId,
-        });
-        return result;
-      }
-      
-      // Wait before next poll
-      await new Promise(resolve => setTimeout(resolve, pollInterval));
-    } catch (pollError: any) {
-      // If result fetch succeeds, return it
-      if (pollError.data) {
-        return pollError.data;
-      }
-      // If it's a "not found" error, the request might still be processing
-      if (pollError.status === 404) {
-        await new Promise(resolve => setTimeout(resolve, pollInterval));
-        continue;
-      }
-      // Check if it's a failed generation error
-      if (pollError.message?.includes('failed') || pollError.status === 500) {
-        throw new Error("Generation failed in queue: " + (pollError.message || 'Unknown error'));
-      }
-      throw pollError;
-    }
-  }
-  
-  throw new Error("Generation timed out after " + (maxWaitMs / 1000) + " seconds");
-}
-
 export async function POST(request: NextRequest) {
-  const FAL_KEY = process.env.FAL_KEY;
-  
-  if (!FAL_KEY) {
-    console.error("❌ Error: FAL_KEY is missing in environment variables.");
-    return NextResponse.json({ success: false, error: 'Server configuration error: Missing API Key (FAL_KEY)' }, { status: 500 });
+  // ====== GOOGLE AI IS NOW THE PRIMARY (AND ONLY) GENERATOR ======
+  if (!GOOGLE_AI_API_KEY || !genAI) {
+    console.error("❌ Error: GOOGLE_AI_API_KEY is missing in environment variables.");
+    return NextResponse.json({ success: false, error: 'Server configuration error: Missing Google AI API Key' }, { status: 500 });
   }
   
-  // Validate FAL_KEY format (should be a UUID-like string)
-  if (FAL_KEY.length < 20) {
-    console.error("❌ Error: FAL_KEY appears to be invalid (too short).");
-    return NextResponse.json({ success: false, error: 'Server configuration error: Invalid API Key format' }, { status: 500 });
-  }
-  
-  console.log(`🔑 FAL_KEY configured (ends with: ...${FAL_KEY.slice(-6)})`);
+  console.log(`🔑 Google AI configured (key ends: ...${GOOGLE_AI_API_KEY.slice(-6)})`);
 
   try {
     const body = await request.json();
@@ -582,66 +526,31 @@ ${imageDescriptions.join('\n')}
       
       console.log(`   🎨 Variation ${index + 1}:`, singlePrompt.slice(0, 60) + '...');
       
-      // ====== TRY GOOGLE FIRST (cheaper: $0.067-0.134/image vs $0.15) ======
-      if (genAI && GOOGLE_AI_API_KEY) {
-        try {
-          const googleResult = await generateWithGoogle(
-            singlePrompt.trim(),
-            finalImageUrls,
-            finalAspectRatio,
-            resolution
-          );
-          
-          if (googleResult) {
-            console.log(`   ✅ Variation ${index + 1} completed (Google AI)`);
-            return { images: [googleResult] };
-          }
-        } catch (googleError: any) {
-          console.warn(`   ⚠️ Google AI failed, falling back to Fal:`, googleError.message);
-        }
-      }
-      
-      // ====== FALLBACK TO FAL (Nano Banana Pro) ======
-      console.log(`   🍌 Falling back to Fal Nano Banana Pro...`);
-      
-      const input: Record<string, any> = {
-        prompt: singlePrompt.trim(),
-        num_images: 1,
-        aspect_ratio: finalAspectRatio,
-        output_format: "png",
-        image_urls: finalImageUrls,
-        resolution: resolution 
-      };
-
-      if (negativePrompt && negativePrompt.trim()) {
-        input.negative_prompt = negativePrompt.trim();
-      }
-
+      // ====== GOOGLE AI ONLY (Gemini 3 Pro Image Preview) ======
       try {
-        const result = await fal.subscribe("fal-ai/nano-banana-pro/edit", {
-          input,
-          logs: true, 
-        });
+        const googleResult = await generateWithGoogle(
+          singlePrompt.trim(),
+          finalImageUrls,
+          finalAspectRatio,
+          resolution
+        );
         
-        console.log(`   ✅ Variation ${index + 1} completed (Fal)`);
-        return result;
-      } catch (err: any) {
-        console.error(`   ❌ Variation ${index + 1} error:`, {
-          message: err.message,
-          status: err.status,
-          body: err.body,
-          detail: err.body?.detail,
-          fullError: JSON.stringify(err, Object.getOwnPropertyNames(err)),
-        });
-        const errorMessage = err?.body?.detail || err?.message || JSON.stringify(err);
-        throw new Error(typeof errorMessage === 'string' ? errorMessage : JSON.stringify(errorMessage));
+        if (googleResult) {
+          console.log(`   ✅ Variation ${index + 1} completed (Google AI)`);
+          return { images: [googleResult] };
+        } else {
+          throw new Error('Google AI returned no image');
+        }
+      } catch (googleError: any) {
+        console.error(`   ❌ Variation ${index + 1} Google AI error:`, googleError.message || googleError);
+        throw googleError;
       }
     };
 
     try {
         // Generate all images in parallel with their respective prompts
-        console.log(`🚀 Launching ${actualNumImages} parallel generations...`);
-        console.log(`   📸 Images being sent to Fal:`, finalImageUrls.map(u => u.startsWith('data:') ? 'data:image...' : u.slice(0, 60)));
+        console.log(`🚀 Launching ${actualNumImages} parallel generations (Google AI)...`);
+        console.log(`   📸 Images being sent:`, finalImageUrls.map(u => u.startsWith('data:') ? 'data:image...' : u.slice(0, 60)));
         
         const errors: string[] = [];
         
