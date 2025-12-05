@@ -365,9 +365,12 @@ export async function POST(request: NextRequest) {
     }
     
     // For Flux Pro 1.1, images are not required (Text-to-Image)
-    // We only log if we have them
+    // Log image breakdown
     if (finalImageUrls.length > 0) {
-      console.log(`📸 Images provided: ${finalImageUrls.length} (Note: Flux Pro 1.1 ignores image_urls input, using for prompt context only if handled)`);
+      console.log(`📸 Images breakdown:`);
+      console.log(`   🎨 Style references: ${processedReferenceUrls.length} (FIRST in list = high priority)`);
+      console.log(`   📦 Content images: ${processedImageUrls.length}`);
+      console.log(`   ✅ Total valid: ${finalImageUrls.length}`);
     }
 
     // Build image context prefix for the prompt
@@ -378,18 +381,26 @@ export async function POST(request: NextRequest) {
       const imageDescriptions: string[] = [];
       
       if (processedReferenceUrls.length > 0) {
-        imageDescriptions.push(`[STYLE INSPIRATION] Images 1-${processedReferenceUrls.length} are STYLE REFERENCES for artistic direction. Use them for:
-- Layout composition and visual hierarchy
-- Overall mood and artistic intention
-- Element placement and spacing
-- Visual storytelling approach
+        imageDescriptions.push(`🎨 [CRITICAL STYLE INSTRUCTION] Images 1-${processedReferenceUrls.length} are your STYLE REFERENCES.
 
-⚠️ DO NOT copy from these references:
-- Colors (use the BRAND colors from the prompt instead)
-- Typography (use the BRAND fonts from the prompt instead)  
-- Logo or brand elements (use the USER'S brand assets)
+YOU MUST CLOSELY IMITATE:
+✅ The EXACT layout structure and composition
+✅ The visual hierarchy (what's big, what's small, where things are placed)
+✅ The artistic style and mood (lighting, shadows, depth)
+✅ The spacing and breathing room between elements
+✅ The overall "vibe" and aesthetic direction
+✅ How text is integrated into the design
+✅ The level of minimalism or complexity
 
-The references show HOW to compose, not WHAT colors/fonts to use.`);
+YOU MUST NOT COPY:
+❌ The specific colors (use BRAND colors from the prompt instead)
+❌ The typography/fonts (use BRAND fonts instead)
+❌ The actual content/text from the reference
+❌ Any logos from the reference image
+
+THINK OF IT AS: "Make a visual that LOOKS LIKE this reference, but with the USER'S brand identity and message."
+
+This is the #1 priority - the generated image should feel like it belongs in the same design family as the reference.`);
       }
       
       if (processedImageUrls.length > 0) {
