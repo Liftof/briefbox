@@ -381,26 +381,22 @@ export async function POST(request: NextRequest) {
       const imageDescriptions: string[] = [];
       
       if (processedReferenceUrls.length > 0) {
-        imageDescriptions.push(`🎨 [CRITICAL STYLE INSTRUCTION] Images 1-${processedReferenceUrls.length} are your STYLE REFERENCES.
+        imageDescriptions.push(`🎨 [STYLE INSPIRATION] Images 1-${processedReferenceUrls.length} are visual INSPIRATION (not templates to copy).
 
-YOU MUST CLOSELY IMITATE:
-✅ The EXACT layout structure and composition
-✅ The visual hierarchy (what's big, what's small, where things are placed)
-✅ The artistic style and mood (lighting, shadows, depth)
-✅ The spacing and breathing room between elements
-✅ The overall "vibe" and aesthetic direction
-✅ How text is integrated into the design
-✅ The level of minimalism or complexity
+GET INSPIRED BY:
+→ The general composition approach (how elements are arranged)
+→ The mood and artistic direction
+→ The level of minimalism or richness
+→ How text and visuals interact
+→ The overall "energy" of the design
 
-YOU MUST NOT COPY:
-❌ The specific colors (use BRAND colors from the prompt instead)
-❌ The typography/fonts (use BRAND fonts instead)
-❌ The actual content/text from the reference
-❌ Any logos from the reference image
+⚠️ BUT ALWAYS PRIORITIZE THE CLIENT'S BRAND:
+✅ Use the CLIENT'S colors from the brand palette (not the reference colors)
+✅ Use the CLIENT'S typography style (not the reference fonts)
+✅ Use the CLIENT'S logo exactly as provided
+✅ Match the CLIENT'S brand personality and tone
 
-THINK OF IT AS: "Make a visual that LOOKS LIKE this reference, but with the USER'S brand identity and message."
-
-This is the #1 priority - the generated image should feel like it belongs in the same design family as the reference.`);
+The reference is a MOOD BOARD, not a template. Create something ORIGINAL that captures a similar vibe while being 100% true to the client's brand identity.`);
       }
       
       if (processedImageUrls.length > 0) {
