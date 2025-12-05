@@ -179,8 +179,8 @@ function PlaygroundContent() {
     { emoji: '🔍', message: 'Exploration du site...', sub: 'On scrape les pages clés' },
     { emoji: '🎨', message: 'Extraction des couleurs...', sub: 'Palette & identité visuelle' },
     { emoji: '📸', message: 'Analyse des images...', sub: 'Logo, produits, visuels' },
-    { emoji: '🧠', message: 'L\'IA réfléchit...', sub: 'GPT-4 analyse tout ça' },
-    { emoji: '🔥', message: 'Enrichissement web...', sub: 'Firecrawl trouve les tendances' },
+    { emoji: '🧠', message: 'L\'IA réfléchit...', sub: 'Analyse intelligente en cours' },
+    { emoji: '🔥', message: 'Enrichissement...', sub: 'Recherche de tendances' },
     { emoji: '📊', message: 'Compilation des insights...', sub: 'Pain points & concurrents' },
     { emoji: '✨', message: 'Finalisation...', sub: 'On prépare votre brief' },
   ];
@@ -202,8 +202,8 @@ function PlaygroundContent() {
   const FUN_FACTS = [
     "💡 On analyse jusqu'à 10 pages de votre site pour extraire le maximum d'insights.",
     "🎨 Les couleurs sont extraites directement de votre logo pour une cohérence parfaite.",
-    "🔥 Firecrawl nous aide à trouver les tendances de votre industrie.",
-    "🧠 GPT-4 Vision analyse même les screenshots de votre site.",
+    "🔥 On recherche les tendances de votre industrie en temps réel.",
+    "🧠 Notre IA analyse même les captures d'écran de votre site.",
     "📊 On identifie vos concurrents pour mieux vous positionner.",
     "✨ Chaque génération crée 2 versions : fidèle et créative.",
   ];
