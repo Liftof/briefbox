@@ -11,11 +11,45 @@ fal.config({
 const GOOGLE_AI_API_KEY = process.env.GOOGLE_AI_API_KEY;
 const genAI = GOOGLE_AI_API_KEY ? new GoogleGenerativeAI(GOOGLE_AI_API_KEY) : null;
 
-// Helper: Convert URL to base64 for Google AI
+// Helper: Convert SVG to PNG data URL using sharp
+async function convertSvgToPng(svgDataUrl: string): Promise<string | null> {
+  try {
+    const match = svgDataUrl.match(/^data:image\/svg\+xml;base64,(.+)$/);
+    if (!match) return null;
+    
+    const svgBuffer = Buffer.from(match[1], 'base64');
+    const pngBuffer = await sharp(svgBuffer)
+      .png()
+      .resize(1024, 1024, { fit: 'inside', withoutEnlargement: false })
+      .toBuffer();
+    
+    const pngBase64 = pngBuffer.toString('base64');
+    console.log('🔄 Converted SVG to PNG');
+    return `data:image/png;base64,${pngBase64}`;
+  } catch (e) {
+    console.warn('Failed to convert SVG to PNG:', e);
+    return null;
+  }
+}
+
+// Helper: Convert URL to base64 for Google AI (handles SVG conversion)
 async function urlToBase64(url: string): Promise<{ data: string; mimeType: string } | null> {
   try {
+    // Check if SVG and convert to PNG first
+    if (url.startsWith('data:image/svg+xml')) {
+      const pngUrl = await convertSvgToPng(url);
+      if (pngUrl) {
+        const match = pngUrl.match(/^data:([^;]+);base64,(.+)$/);
+        if (match) {
+          return { mimeType: match[1], data: match[2] };
+        }
+      }
+      console.warn('⚠️ SVG conversion failed, skipping image');
+      return null;
+    }
+    
     if (url.startsWith('data:')) {
-      // Already base64
+      // Already base64 (non-SVG)
       const match = url.match(/^data:([^;]+);base64,(.+)$/);
       if (match) {
         return { mimeType: match[1], data: match[2] };
@@ -26,10 +60,20 @@ async function urlToBase64(url: string): Promise<{ data: string; mimeType: strin
     const response = await fetch(url, { signal: AbortSignal.timeout(10000) });
     if (!response.ok) return null;
     
-    const buffer = await response.arrayBuffer();
-    const base64 = Buffer.from(buffer).toString('base64');
     const contentType = response.headers.get('content-type') || 'image/jpeg';
+    const buffer = await response.arrayBuffer();
     
+    // If fetched URL is SVG, convert to PNG
+    if (contentType.includes('svg')) {
+      const pngBuffer = await sharp(Buffer.from(buffer))
+        .png()
+        .resize(1024, 1024, { fit: 'inside', withoutEnlargement: false })
+        .toBuffer();
+      console.log('🔄 Converted fetched SVG to PNG');
+      return { data: pngBuffer.toString('base64'), mimeType: 'image/png' };
+    }
+    
+    const base64 = Buffer.from(buffer).toString('base64');
     return { data: base64, mimeType: contentType };
   } catch (e) {
     console.warn(`Failed to convert URL to base64: ${url.slice(0, 50)}...`);
@@ -238,9 +282,19 @@ export async function POST(request: NextRequest) {
         if (!trimmedUrl.startsWith('http') && !trimmedUrl.startsWith('data:image')) continue;
         if (trimmedUrl.includes('placehold.co') || trimmedUrl.includes('placeholder')) continue;
 
-        const isSvg = trimmedUrl.toLowerCase().endsWith('.svg');
+        // Check for SVG (both URL extension and data URI)
+        const isSvgUrl = trimmedUrl.toLowerCase().endsWith('.svg');
+        const isSvgDataUri = trimmedUrl.startsWith('data:image/svg+xml');
         
-        if (isSvg) {
+        if (isSvgDataUri) {
+            // Convert data URI SVG to PNG
+            const pngUrl = await convertSvgToPng(trimmedUrl);
+            if (pngUrl) {
+                processedReferenceUrls.push(pngUrl);
+            } else {
+                console.warn('⚠️ Skipping unconvertible SVG data URI');
+            }
+        } else if (isSvgUrl) {
             try {
                 console.log(`🔄 Converting reference SVG to PNG: ${trimmedUrl}`);
                 const response = await fetch(trimmedUrl);
@@ -272,16 +326,22 @@ export async function POST(request: NextRequest) {
         // Skip placeholder images or known bad assets
         if (trimmedUrl.includes('placehold.co') || trimmedUrl.includes('placeholder')) continue;
 
-        // Check for SVG or potentially problematic extensions in URL (simple check)
-        // Note: Some URLs might not have extension, so we ideally fetch and check content-type, 
-        // but for performance we'll do a mix.
-        const isSvg = trimmedUrl.toLowerCase().endsWith('.svg');
+        // Check for SVG (both URL extension and data URI)
+        const isSvgUrl = trimmedUrl.toLowerCase().endsWith('.svg');
+        const isSvgDataUri = trimmedUrl.startsWith('data:image/svg+xml');
         
-        // If it's SVG or we want to be safe, we convert. 
-        // For now, let's convert SVGs specifically as requested.
-        if (isSvg) {
+        if (isSvgDataUri) {
+            // Convert data URI SVG to PNG
+            console.log(`🔄 Converting SVG data URI to PNG`);
+            const pngUrl = await convertSvgToPng(trimmedUrl);
+            if (pngUrl) {
+                processedImageUrls.push(pngUrl);
+            } else {
+                console.warn('⚠️ Skipping unconvertible SVG data URI');
+            }
+        } else if (isSvgUrl) {
             try {
-                console.log(`🔄 Converting SVG to PNG: ${trimmedUrl}`);
+                console.log(`🔄 Converting SVG URL to PNG: ${trimmedUrl}`);
                 const response = await fetch(trimmedUrl);
                 if (!response.ok) {
                     console.warn(`Failed to fetch image for conversion: ${trimmedUrl}`);
@@ -296,12 +356,10 @@ export async function POST(request: NextRequest) {
                 processedImageUrls.push(`data:image/png;base64,${base64}`);
             } catch (e) {
                 console.error(`Error converting image ${trimmedUrl}:`, e);
-                // If conversion fails, maybe skip it or try original? 
-                // If it's SVG and failed, original won't work either on Fal. Skip.
+                // If conversion fails, skip (SVG won't work on Fal anyway)
             }
         } else {
             // Pass through other images (assuming they are JPG/PNG/WEBP)
-            // We could also check HEAD request for content-type if needed later.
             processedImageUrls.push(trimmedUrl);
         }
     }
