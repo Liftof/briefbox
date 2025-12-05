@@ -323,12 +323,32 @@ function getImagePriority(
   };
 }
 
-// Language-specific prompt additions
+// Language-specific prompt additions with copywriting nuances
 const LANGUAGE_INSTRUCTIONS: Record<string, string> = {
-  fr: 'PRIMARY LANGUAGE: FRENCH (Français). All text on the visual must be in native, idiomatic French. Use correct French typography (e.g., "« »" for quotes). Translate any English concepts into powerful French marketing copy.',
-  en: 'PRIMARY LANGUAGE: ENGLISH. All text on the visual must be in native, idiomatic English. Use punchy, direct marketing copy.',
-  es: 'PRIMARY LANGUAGE: SPANISH (Español). All text on the visual must be in native, idiomatic Spanish. Translate any concepts into powerful Spanish marketing copy.',
-  de: 'PRIMARY LANGUAGE: GERMAN (Deutsch). All text on the visual must be in native, idiomatic German. Translate any concepts into powerful German marketing copy.',
+  fr: `PRIMARY LANGUAGE: FRENCH (Français).
+- All text must be in native, idiomatic French
+- Use correct French typography: « » for quotes, espaces insécables before : ; ! ?
+- French copy style: elegant, slightly more formal than English, but still punchy
+- Avoid anglicisms unless they're commonly used (ex: "digital" is OK)
+- Good French headlines: "Révolutionnez votre...", "Découvrez comment...", "Le futur de..."`,
+  
+  en: `PRIMARY LANGUAGE: ENGLISH.
+- All text must be in native, idiomatic English
+- English copy style: punchy, direct, action-oriented
+- Use power words: "Unlock", "Discover", "Transform", "Boost"
+- Keep it short: every word must earn its place`,
+  
+  es: `PRIMARY LANGUAGE: SPANISH (Español).
+- All text must be in native, idiomatic Spanish
+- Spanish copy style: warm, engaging, benefit-focused
+- Use formal "usted" for B2B, informal "tú" for B2C
+- Good Spanish headlines: "Descubre cómo...", "Transforma tu...", "El secreto de..."`,
+  
+  de: `PRIMARY LANGUAGE: GERMAN (Deutsch).
+- All text must be in native, idiomatic German
+- German copy style: precise, trustworthy, benefit-oriented
+- Capitalize all nouns correctly
+- Good German headlines: "Entdecken Sie...", "So funktioniert...", "Der Weg zu..."`,
 };
 
 // Feedback patterns type (matching client-side)
@@ -541,9 +561,23 @@ USER-CENTRIC MINDSET (CRITICAL):
 COPYWRITING INSTRUCTIONS (CRITICAL):
 - TRANSFORM the brief into a powerful, short marketing headline in the target language (${language}).
 - DO NOT just copy-paste the brief. Make it punchy, engaging, and benefit-oriented.
-- Structure: Main Headline (3-6 words) + Optional Subheadline.
+- Structure: Main Headline (3-6 words) + Optional Subheadline (max 10 words).
 - Tone: ${toneVoice}.
-- SPELLING: Check strictly for typos.
+
+HEADLINE FORMULAS (pick one that fits):
+- "Comment [action] sans [pain point]" (How to X without Y)
+- "[Nombre] [bénéfice] en [temps]" (X benefits in Y time)
+- "Le secret de [audience] pour [résultat]" (The secret of X for Y)
+- "Arrêtez de [problème]. Commencez à [solution]" (Stop X. Start Y)
+- "[Question provocante] ?" (Provocative question)
+- "Et si [promesse audacieuse] ?" (What if bold promise?)
+
+TEXT QUALITY (Gemini strength - USE IT):
+- PERFECT spelling and grammar - you excel at this
+- Professional kerning and letter spacing
+- Text must be 100% readable - good contrast with background
+- NO text cut off at edges
+- Maximum 2 text elements (headline + optional subheadline)
 
 BRAND IDENTITY (STRICTLY FOLLOW):
 
