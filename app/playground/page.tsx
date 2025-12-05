@@ -185,6 +185,40 @@ function PlaygroundContent() {
     { emoji: '✨', message: 'Finalisation...', sub: 'On prépare votre brief' },
   ];
   
+  // Simulated discoveries that appear during loading
+  const DISCOVERY_ITEMS = [
+    { threshold: 10, emoji: '🌐', text: 'Site web détecté' },
+    { threshold: 20, emoji: '🖼️', text: 'Logo trouvé' },
+    { threshold: 30, emoji: '🎨', text: 'Palette de couleurs extraite' },
+    { threshold: 40, emoji: '📝', text: 'Tagline identifiée' },
+    { threshold: 50, emoji: '🎯', text: 'Audience cible analysée' },
+    { threshold: 60, emoji: '💡', text: 'Features clés repérées' },
+    { threshold: 70, emoji: '📊', text: 'Données marché récupérées' },
+    { threshold: 80, emoji: '🔥', text: 'Pain points détectés' },
+    { threshold: 90, emoji: '✅', text: 'Brief prêt !' },
+  ];
+  
+  // Rotating fun facts
+  const FUN_FACTS = [
+    "💡 On analyse jusqu'à 10 pages de votre site pour extraire le maximum d'insights.",
+    "🎨 Les couleurs sont extraites directement de votre logo pour une cohérence parfaite.",
+    "🔥 Firecrawl nous aide à trouver les tendances de votre industrie.",
+    "🧠 GPT-4 Vision analyse même les screenshots de votre site.",
+    "📊 On identifie vos concurrents pour mieux vous positionner.",
+    "✨ Chaque génération crée 2 versions : fidèle et créative.",
+  ];
+  
+  const [currentFact, setCurrentFact] = useState(0);
+  
+  // Rotate fun facts every 5 seconds
+  useEffect(() => {
+    if (step !== 'analyzing') return;
+    const interval = setInterval(() => {
+      setCurrentFact(prev => (prev + 1) % FUN_FACTS.length);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [step]);
+  
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true); // Collapsed by default
 
   const [brandData, setBrandData] = useState<any | null>(null);
@@ -1558,10 +1592,39 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
               </div>
             </div>
 
-            {/* Fun facts / tips */}
-            <div className="mt-6 px-6 py-4 bg-gradient-to-r from-gray-50 to-white border border-gray-100 rounded-lg max-w-md">
-              <p className="text-xs text-gray-500 text-center">
-                💡 <span className="text-gray-700">Le saviez-vous ?</span> On analyse jusqu'à 10 pages de votre site pour extraire le maximum d'insights.
+            {/* Live discovery feed */}
+            <div className="w-full max-w-md mb-6">
+              <div className="text-[10px] font-mono uppercase tracking-widest text-gray-400 mb-2">
+                Découvertes
+              </div>
+              <div className="bg-gray-50 border border-gray-100 rounded-lg p-3 space-y-1.5 h-[120px] overflow-hidden">
+                {DISCOVERY_ITEMS.filter(item => progress >= item.threshold).map((item, i) => (
+                  <div 
+                    key={i} 
+                    className="flex items-center gap-2 text-xs animate-fade-in"
+                    style={{ animationDelay: `${i * 100}ms` }}
+                  >
+                    <span className="text-sm">{item.emoji}</span>
+                    <span className="text-gray-600">{item.text}</span>
+                    <span className="text-emerald-500 text-[10px]">✓</span>
+                  </div>
+                ))}
+                {progress < 90 && (
+                  <div className="flex items-center gap-2 text-xs text-gray-300">
+                    <span className="animate-pulse">⏳</span>
+                    <span>En cours...</span>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Rotating fun facts */}
+            <div className="px-6 py-3 bg-gradient-to-r from-gray-50 to-white border border-gray-100 rounded-lg max-w-md">
+              <p 
+                key={currentFact}
+                className="text-xs text-gray-500 text-center animate-fade-in"
+              >
+                {FUN_FACTS[currentFact]}
               </p>
             </div>
 
