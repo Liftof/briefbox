@@ -1,10 +1,126 @@
 import { fal } from "@fal-ai/client";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 import { NextRequest, NextResponse } from "next/server";
 import sharp from "sharp";
 
 fal.config({
   credentials: process.env.FAL_KEY,
 });
+
+// Initialize Google AI
+const GOOGLE_AI_API_KEY = process.env.GOOGLE_AI_API_KEY;
+const genAI = GOOGLE_AI_API_KEY ? new GoogleGenerativeAI(GOOGLE_AI_API_KEY) : null;
+
+// Helper: Convert URL to base64 for Google AI
+async function urlToBase64(url: string): Promise<{ data: string; mimeType: string } | null> {
+  try {
+    if (url.startsWith('data:')) {
+      // Already base64
+      const match = url.match(/^data:([^;]+);base64,(.+)$/);
+      if (match) {
+        return { mimeType: match[1], data: match[2] };
+      }
+      return null;
+    }
+    
+    const response = await fetch(url, { signal: AbortSignal.timeout(10000) });
+    if (!response.ok) return null;
+    
+    const buffer = await response.arrayBuffer();
+    const base64 = Buffer.from(buffer).toString('base64');
+    const contentType = response.headers.get('content-type') || 'image/jpeg';
+    
+    return { data: base64, mimeType: contentType };
+  } catch (e) {
+    console.warn(`Failed to convert URL to base64: ${url.slice(0, 50)}...`);
+    return null;
+  }
+}
+
+// Helper: Generate with Google Gemini 3 Pro Image
+async function generateWithGoogle(
+  prompt: string,
+  imageUrls: string[],
+  aspectRatio: string,
+  resolution: string
+): Promise<{ url: string } | null> {
+  if (!genAI) {
+    console.warn('⚠️ Google AI not configured, skipping');
+    return null;
+  }
+  
+  console.log('🌐 Generating with Google Gemini 3 Pro Image...');
+  
+  try {
+    // Determine image size based on resolution
+    let imageSize = "1024x1024"; // 1K default
+    if (resolution === "2K") imageSize = "2048x2048";
+    if (resolution === "4K") imageSize = "4096x4096";
+    
+    // Map aspect ratio to Google format (width x height)
+    const aspectToSize: Record<string, string> = {
+      '1:1': imageSize,
+      '4:5': resolution === "2K" ? "1638x2048" : "819x1024",
+      '9:16': resolution === "2K" ? "1152x2048" : "576x1024",
+      '16:9': resolution === "2K" ? "2048x1152" : "1024x576",
+      '3:2': resolution === "2K" ? "2048x1365" : "1024x683",
+      '21:9': resolution === "2K" ? "2048x878" : "1024x439",
+    };
+    const finalSize = aspectToSize[aspectRatio] || imageSize;
+    
+    const model = genAI.getGenerativeModel({ 
+      model: "gemini-2.0-flash-exp", // Using stable model that supports image generation
+      generationConfig: {
+        // @ts-ignore - responseModalities is valid for image generation
+        responseModalities: ["image", "text"],
+      }
+    });
+    
+    // Build content parts
+    const parts: any[] = [{ text: prompt }];
+    
+    // Add reference images (up to 5 for best results)
+    const imagesToProcess = imageUrls.slice(0, 5);
+    for (const url of imagesToProcess) {
+      const imageData = await urlToBase64(url);
+      if (imageData) {
+        parts.push({
+          inlineData: {
+            mimeType: imageData.mimeType,
+            data: imageData.data
+          }
+        });
+      }
+    }
+    
+    console.log(`   📸 Sending ${parts.length - 1} images to Google AI`);
+    console.log(`   📏 Target size: ${finalSize}`);
+    
+    const result = await model.generateContent({
+      contents: [{ role: "user", parts }]
+    });
+    
+    const response = result.response;
+    
+    // Extract image from response
+    if (response.candidates && response.candidates[0]?.content?.parts) {
+      for (const part of response.candidates[0].content.parts) {
+        if (part.inlineData?.mimeType?.startsWith('image/')) {
+          // Convert base64 to data URL
+          const dataUrl = `data:${part.inlineData.mimeType};base64,${part.inlineData.data}`;
+          console.log('   ✅ Google AI generated image successfully');
+          return { url: dataUrl };
+        }
+      }
+    }
+    
+    console.warn('   ⚠️ No image in Google AI response');
+    return null;
+  } catch (error: any) {
+    console.error('   ❌ Google AI error:', error.message || error);
+    return null;
+  }
+}
 
 // Helper: Poll for queue completion with timeout
 async function pollForResult(requestId: string, maxWaitMs: number = 120000): Promise<any> {
@@ -338,18 +454,39 @@ ${imageDescriptions.join('\n')}
         return null;
       }
       
-      // NANO BANANA PRO CONFIGURATION
-      // As requested: Google SOTA / Flagship model
-      // Supported ratios: auto, 21:9, 16:9, 3:2, 4:3, 5:4, 1:1, 4:5, 3:4, 2:3, 9:16
       const validRatios = ['auto', '21:9', '16:9', '3:2', '4:3', '5:4', '1:1', '4:5', '3:4', '2:3', '9:16'];
       const finalAspectRatio = validRatios.includes(aspectRatio) ? aspectRatio : '1:1';
       
+      console.log(`   🎨 Variation ${index + 1}:`, singlePrompt.slice(0, 60) + '...');
+      
+      // ====== TRY GOOGLE FIRST (cheaper: $0.067-0.134/image vs $0.15) ======
+      if (genAI && GOOGLE_AI_API_KEY) {
+        try {
+          const googleResult = await generateWithGoogle(
+            singlePrompt.trim(),
+            finalImageUrls,
+            finalAspectRatio,
+            resolution
+          );
+          
+          if (googleResult) {
+            console.log(`   ✅ Variation ${index + 1} completed (Google AI)`);
+            return { images: [googleResult] };
+          }
+        } catch (googleError: any) {
+          console.warn(`   ⚠️ Google AI failed, falling back to Fal:`, googleError.message);
+        }
+      }
+      
+      // ====== FALLBACK TO FAL (Nano Banana Pro) ======
+      console.log(`   🍌 Falling back to Fal Nano Banana Pro...`);
+      
       const input: Record<string, any> = {
         prompt: singlePrompt.trim(),
-        num_images: 1, // One at a time for variations
+        num_images: 1,
         aspect_ratio: finalAspectRatio,
         output_format: "png",
-        image_urls: finalImageUrls, // CRITICAL: We restore image inputs
+        image_urls: finalImageUrls,
         resolution: resolution 
       };
 
@@ -357,19 +494,15 @@ ${imageDescriptions.join('\n')}
         input.negative_prompt = negativePrompt.trim();
       }
 
-      console.log(`   🍌 Nano Banana Pro | Variation ${index + 1}:`, singlePrompt.slice(0, 60) + '...');
-
       try {
-        // Reverting to Nano Banana Pro as requested
         const result = await fal.subscribe("fal-ai/nano-banana-pro/edit", {
           input,
           logs: true, 
         });
         
-        console.log(`   ✅ Variation ${index + 1} completed`);
+        console.log(`   ✅ Variation ${index + 1} completed (Fal)`);
         return result;
       } catch (err: any) {
-        // Log detailed error info
         console.error(`   ❌ Variation ${index + 1} error:`, {
           message: err.message,
           status: err.status,
@@ -377,7 +510,6 @@ ${imageDescriptions.join('\n')}
           detail: err.body?.detail,
           fullError: JSON.stringify(err, Object.getOwnPropertyNames(err)),
         });
-        // Create a proper error with message
         const errorMessage = err?.body?.detail || err?.message || JSON.stringify(err);
         throw new Error(typeof errorMessage === 'string' ? errorMessage : JSON.stringify(errorMessage));
       }
