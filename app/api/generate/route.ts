@@ -193,8 +193,8 @@ export async function POST(request: NextRequest) {
     let totalDataUriSize = 0;
     const MAX_DATA_URI_SIZE = 5 * 1024 * 1024; // 5MB total for data URIs
     
-    // Limit to 3 images max for Nano Banana Pro stability
-    for (const url of allImageUrls.slice(0, 3)) {
+    // Limit to 4 images: logo + style ref + 2 relevant assets
+    for (const url of allImageUrls.slice(0, 4)) {
       // Skip invalid URLs
       if (!url || typeof url !== 'string') continue;
       
