@@ -123,10 +123,62 @@ const TEMPLATE_IMAGE_NEEDS: Record<TemplateId, {
   }
 };
 
-// Smart image selection based on template type
+// Analyze prompt to determine which image categories are most relevant
+function analyzePromptForImages(prompt: string): {
+  boostCategories: string[];
+  reasoning: string;
+} {
+  const lowerPrompt = prompt.toLowerCase();
+  const boostCategories: string[] = [];
+  const reasons: string[] = [];
+
+  // Team/People keywords
+  if (/équipe|team|collaborat|humain|personne|employee|staff|membre/.test(lowerPrompt)) {
+    boostCategories.push('person', 'team');
+    reasons.push('mentions people/team');
+  }
+
+  // Product keywords
+  if (/produit|product|solution|outil|tool|fonctionnalit|feature/.test(lowerPrompt)) {
+    boostCategories.push('product', 'app_ui');
+    reasons.push('mentions product');
+  }
+
+  // App/Interface keywords
+  if (/app|interface|dashboard|écran|screen|ui|ux|plateforme/.test(lowerPrompt)) {
+    boostCategories.push('app_ui');
+    reasons.push('mentions app/interface');
+  }
+
+  // Trust/Social proof keywords
+  if (/client|témoignage|testimonial|confiance|trust|partenaire|partner/.test(lowerPrompt)) {
+    boostCategories.push('client_logo', 'person');
+    reasons.push('mentions social proof');
+  }
+
+  // Stats/Numbers keywords
+  if (/\d+%|\d+k|\d+m|statistique|stat|chiffre|number|metric|résultat|result/.test(lowerPrompt)) {
+    boostCategories.push('main_logo', 'texture');
+    reasons.push('mentions stats/metrics');
+  }
+
+  // Event keywords
+  if (/événement|event|webinar|conférence|meetup|live|lancement|launch/.test(lowerPrompt)) {
+    boostCategories.push('main_logo', 'person');
+    reasons.push('mentions event');
+  }
+
+  return {
+    boostCategories: [...new Set(boostCategories)], // Dedupe
+    reasoning: reasons.length > 0 ? `Prompt ${reasons.join(', ')}` : 'No specific keywords detected'
+  };
+}
+
+// Smart image selection based on template type AND prompt analysis
 function getImagePriority(
   labeledImages: any[], 
-  templateId: TemplateId = 'announcement'
+  templateId: TemplateId = 'announcement',
+  prompt: string = '' // NEW: Analyze prompt for smarter selection
 ): { 
   priority: string[], 
   excluded: string[], 
@@ -143,6 +195,9 @@ function getImagePriority(
       imageRoles: {}
     };
   }
+
+  // Analyze prompt for semantic image needs
+  const promptAnalysis = analyzePromptForImages(prompt);
   
   const templateNeeds = TEMPLATE_IMAGE_NEEDS[templateId] || TEMPLATE_IMAGE_NEEDS.announcement;
   const priority: string[] = [];
@@ -159,13 +214,34 @@ function getImagePriority(
     }
   }
   
-  // Select images based on template-specific priority order
-  for (const category of templateNeeds.priority) {
-    if (priority.length >= templateNeeds.maxImages) break;
+  // SMART SELECTION: Combine template needs with prompt analysis
+  // Prompt-boosted categories come first, then template defaults
+  const boostedCategories = promptAnalysis.boostCategories;
+  const templateCategories = templateNeeds.priority.filter(c => !boostedCategories.includes(c));
+  const finalPriorityOrder = [...boostedCategories, ...templateCategories];
+  
+  console.log(`🧠 Smart image selection: ${promptAnalysis.reasoning}`);
+  console.log(`   Priority order: ${finalPriorityOrder.join(' → ')}`);
+  
+  // Always ensure logo is in the first 5 positions (high fidelity zone)
+  // So we add it first if not already boosted
+  if (!boostedCategories.includes('main_logo')) {
+    const logoImages = labeledImages.filter(img => img.category === 'main_logo' && !img.url?.includes('placeholder'));
+    for (const img of logoImages) {
+      if (priority.length < 1) { // Logo goes first
+        priority.push(img.url);
+        imageRoles[img.url] = 'BRAND_LOGO (CRITICAL): This is the brand logo - display it clearly. DO NOT distort.';
+      }
+    }
+  }
+  
+  // Select images based on smart priority order (prompt analysis + template)
+  for (const category of finalPriorityOrder) {
+    if (priority.length >= templateNeeds.maxImages + 2) break; // Allow 2 extra for prompt-relevant images
     
     const images = labeledImages.filter(img => img.category === category);
     for (const img of images) {
-      if (priority.length >= templateNeeds.maxImages) break;
+      if (priority.length >= templateNeeds.maxImages + 2) break;
       
       // Skip very small images or placeholders
       if (img.url?.includes('placeholder') || img.url?.includes('1x1')) {
@@ -173,25 +249,34 @@ function getImagePriority(
         continue;
       }
       
+      // Skip if already added (e.g., logo)
+      if (priority.includes(img.url)) continue;
+      
       priority.push(img.url);
       
-      // Assign semantic role based on category
+      // Assign semantic role based on category + whether it was prompt-boosted
+      const isBoosted = boostedCategories.includes(category);
+      const boostPrefix = isBoosted ? '(PROMPT-RELEVANT) ' : '';
+      
       switch (category) {
         case 'main_logo':
-          imageRoles[img.url] = 'BRAND_LOGO: This is the brand logo - display it clearly and prominently';
+          imageRoles[img.url] = `${boostPrefix}BRAND_LOGO: This is the brand logo - display it clearly and prominently`;
           break;
         case 'product':
-          imageRoles[img.url] = 'PRODUCT_IMAGE: This is the main product - make it the hero element';
+          imageRoles[img.url] = `${boostPrefix}PRODUCT_IMAGE: This is the main product - make it the hero element`;
           break;
         case 'app_ui':
-          imageRoles[img.url] = 'APP_SCREENSHOT: Use as a visual element showing the product interface';
+          imageRoles[img.url] = `${boostPrefix}APP_SCREENSHOT: Use as a visual element showing the product interface`;
           break;
         case 'person':
         case 'team':
-          imageRoles[img.url] = 'PERSON_IMAGE: Human element - can be used subtly or prominently';
+          imageRoles[img.url] = `${boostPrefix}PERSON_IMAGE: Human element - feature prominently as requested`;
+          break;
+        case 'client_logo':
+          imageRoles[img.url] = `${boostPrefix}CLIENT_LOGO: Social proof element - show trust/partnership`;
           break;
         case 'texture':
-          imageRoles[img.url] = 'TEXTURE: Use as background element or visual texture';
+          imageRoles[img.url] = `${boostPrefix}TEXTURE: Use as background element or visual texture`;
           break;
         default:
           imageRoles[img.url] = 'SUPPORTING_VISUAL: Secondary visual element';
@@ -215,9 +300,16 @@ function getImagePriority(
   
   // Build reasoning
   const reasoningParts = [
-    `Template "${templateId}" needs: ${templateNeeds.priority.slice(0, 3).join(', ')}`,
-    `Selected ${priority.length}/${templateNeeds.maxImages} content images`
+    `Template "${templateId}" needs: ${templateNeeds.priority.slice(0, 3).join(', ')}`
   ];
+  
+  // Add prompt analysis reasoning
+  if (promptAnalysis.boostCategories.length > 0) {
+    reasoningParts.push(`Prompt boosted: ${promptAnalysis.boostCategories.join(', ')}`);
+  }
+  
+  reasoningParts.push(`Selected ${priority.length} content images`);
+  
   if (references.length > 0) {
     reasoningParts.push(`${references.length} style references`);
   }
@@ -402,8 +494,8 @@ export async function POST(request: NextRequest) {
     // Get style references based on brand aesthetic
     const styleRefs = getStyleReferences(aesthetic);
     
-    // Smart image selection - BASED ON TEMPLATE TYPE
-    const imageSelection = getImagePriority(brand.labeledImages || [], templateId);
+    // Smart image selection - BASED ON TEMPLATE TYPE + PROMPT ANALYSIS
+    const imageSelection = getImagePriority(brand.labeledImages || [], templateId, brief);
     const templateNeeds = TEMPLATE_IMAGE_NEEDS[templateId] || TEMPLATE_IMAGE_NEEDS.announcement;
 
     // Build image role instructions for the prompt
