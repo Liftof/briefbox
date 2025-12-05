@@ -558,6 +558,15 @@ USER-CENTRIC MINDSET (CRITICAL):
 - YOUR JOB: Create something that resonates with THEIR world.
 - THE TEST: Would the target audience stop for this? Does it speak to THEM?
 
+⚠️ PERSPECTIVE SHIFT - CRUCIAL:
+- We are NOT creating content ABOUT the client's industry
+- We ARE creating content that speaks TO the client's customers
+- WRONG: "The SaaS industry grew 30% this year" (nobody cares)
+- RIGHT: "68% of teams waste 5h/week on manual tasks" (their pain!)
+- WRONG: "M&A cabinets are in high demand" (meta, irrelevant)
+- RIGHT: "70% of SMBs don't prepare for succession" (their problem!)
+- Always ask: "Does the END CUSTOMER care about this?"
+
 ADAPT TO THE BRAND CONTEXT:
 - Industry: ${brand.industry || 'General'}
 - Brand values: ${brand.values?.join(', ') || 'Not specified'}

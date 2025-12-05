@@ -164,48 +164,60 @@ async function enrichWithFirecrawlSearch(
   try {
     console.log(`🔥 Smart Firecrawl Search for: ${industry} / ${brandName}`);
     
-    // STRATEGIC SEARCH MATRIX - Different sources for different insights
+    // STRATEGIC SEARCH MATRIX - Focus on END CUSTOMER problems, NOT industry meta-data!
+    // IMPORTANT: We want insights that speak TO the customer, not ABOUT the industry
     const searches = [
-      // 1. PAIN POINTS - User frustrations (scrape content for details)
+      // 1. PAIN POINTS - What problems does the END CUSTOMER face?
+      // NOT "SaaS market grew 30%" but "Teams waste 5h/week on manual tasks"
       {
-        query: `"${industry}" user frustrations complaints problems 2024`,
+        query: targetAudience 
+          ? `"${targetAudience}" problems challenges frustrations statistics`
+          : `people problems with "${industry}" frustrations complaints`,
         type: 'painPoints',
         config: { limit: 5, scrapeOptions: { formats: ['markdown'] } }
       },
       
-      // 2. FRESH TRENDS - Last month only (tbs filter)
+      // 2. CONSUMER/USER TRENDS - What's changing for END CUSTOMERS?
+      // NOT "Industry grew" but "More people are doing X"
       {
-        query: `${industry} trends growth 2025`,
+        query: targetAudience
+          ? `"${targetAudience}" behavior trends statistics 2024 2025`
+          : `consumer trends "${industry}" behavior changes statistics`,
         type: 'trends',
-        config: { limit: 5, tbs: 'qdr:m' } // Past month only!
+        config: { limit: 5, tbs: 'qdr:m' }
       },
       
-      // 3. INDUSTRY NEWS - Recent headlines for content angles
+      // 3. RELEVANT NEWS - Topics the END CUSTOMER cares about
       {
-        query: `${industry} ${brandName}`,
+        query: targetAudience 
+          ? `"${targetAudience}" news impact`
+          : `"${industry}" impact consumers users`,
         type: 'news',
-        config: { limit: 5, sources: ['news'] } // News source!
+        config: { limit: 5, sources: ['news'] }
       },
       
-      // 4. COMPETITOR ANALYSIS - Find alternatives & their weaknesses
+      // 4. COMPETITOR ANALYSIS - What are customers saying about alternatives?
       {
-        query: `"${brandName}" alternatives OR competitors OR "better than"`,
+        query: `"${brandName}" alternatives OR competitors reviews complaints`,
         type: 'competitors',
         config: { limit: 5, scrapeOptions: { formats: ['markdown'] } }
       },
       
-      // 5. RESEARCH/STATS - Academic backing for credibility
+      // 5. RESEARCH/STATS - Stats that resonate with END CUSTOMERS
+      // NOT "Market size $X billion" but "X% of people struggle with Y"
       {
-        query: `${industry} statistics research study 2024`,
+        query: targetAudience
+          ? `"${targetAudience}" statistics research study percentage`
+          : `"${industry}" customer statistics user research percentage`,
         type: 'research',
-        config: { limit: 3, categories: ['research'] } // Research category!
+        config: { limit: 3, categories: ['research'] }
       }
     ];
 
-    // Add audience-specific pain point search
+    // Add specific customer problem search
     if (targetAudience && targetAudience.length > 3) {
       searches.push({
-        query: `"${targetAudience}" challenges "${industry}" problems`,
+        query: `"${targetAudience}" biggest challenges pain points statistics survey`,
         type: 'painPoints',
         config: { limit: 3, scrapeOptions: { formats: ['markdown'] } }
       });
@@ -1146,9 +1158,9 @@ export async function POST(request: Request) {
         ],
         "industryInsights": [
            {
-             "painPoint": "Le problème concret que les utilisateurs subissent (ex: '68% des CM passent +3h/jour sur des tâches répétitives')",
-             "consequence": "Ce que ça leur coûte en temps/argent/stress (ex: 'Soit 15h/semaine perdues par équipe')",
-             "solution": "Comment le produit/service résout ce problème (ex: 'Automatisation du planning = 2h gagnées/jour')",
+             "painPoint": "CRITICAL: This must be relevant to the END CUSTOMER, not about the client's industry! Example: If client is a SaaS, don't say 'The SaaS market grew 30%'. Instead say '68% of teams waste 5h/week on manual tasks'. If client is a clothing brand, don't say 'Fashion industry is booming'. Instead say '40% of fashion is fast-fashion, damaging the environment'. ALWAYS think: what does the END CUSTOMER care about?",
+             "consequence": "The cost/impact for the END CUSTOMER (time, money, stress, environment, health...)",
+             "solution": "How the product/service solves THIS SPECIFIC problem for the customer",
              "type": "pain_point | trend | cost_of_inaction | social_proof"
            }
         ],
