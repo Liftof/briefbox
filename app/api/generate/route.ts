@@ -193,7 +193,31 @@ export async function POST(request: NextRequest) {
     let totalDataUriSize = 0;
     const MAX_DATA_URI_SIZE = 5 * 1024 * 1024; // 5MB total for data URIs
     
-    for (const url of allImageUrls.slice(0, 5)) {
+    // Limit to 3 images max for Nano Banana Pro stability
+    for (const url of allImageUrls.slice(0, 3)) {
+      // Skip invalid URLs
+      if (!url || typeof url !== 'string') continue;
+      
+      // Validate URL format
+      if (!url.startsWith('http') && !url.startsWith('data:image')) {
+        console.warn(`⚠️ Skipping invalid URL: ${url.slice(0, 50)}`);
+        continue;
+      }
+      
+      // Check if URL is accessible (quick HEAD check for http URLs)
+      if (url.startsWith('http')) {
+        try {
+          const headCheck = await fetch(url, { method: 'HEAD', signal: AbortSignal.timeout(3000) });
+          if (!headCheck.ok) {
+            console.warn(`⚠️ Skipping inaccessible URL (${headCheck.status}): ${url.slice(0, 60)}`);
+            continue;
+          }
+        } catch (e) {
+          console.warn(`⚠️ Skipping unreachable URL: ${url.slice(0, 60)}`);
+          continue;
+        }
+      }
+      
       if (url.startsWith('data:')) {
         const size = url.length * 0.75; // Approximate decoded size
         if (totalDataUriSize + size > MAX_DATA_URI_SIZE) {
