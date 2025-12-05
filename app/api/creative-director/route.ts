@@ -554,30 +554,46 @@ AESTHETIC: ${aesthetic} (but interpreted with high taste).
 VIBE: ${toneVoice}.
 
 USER-CENTRIC MINDSET (CRITICAL):
-- THINK LIKE THE USER: They are scrolling fast. They are bored. They have problems.
-- HOOK THEM: The visual must answer "What's in it for me?" immediately.
-- EMOTION: Even for B2B, trigger an emotion (relief, confidence, curiosity, ambition).
+- THE VIEWER is scrolling fast. Bored. Distracted. Has 0.5 seconds to notice you.
+- YOUR JOB: Create a "pattern interrupt" - something that makes them STOP.
+- THE TEST: Would YOU stop scrolling for this? Would you tap to learn more?
+- EMOTION IS KEY: Even B2B buyers are humans. Make them feel something.
+  → Curiosity: "Wait, what? I need to know more"
+  → Relief: "Finally, someone gets my problem"  
+  → Ambition: "I want that result too"
+  → FOMO: "Am I missing out on this?"
 
 COPYWRITING INSTRUCTIONS (CRITICAL):
-- TRANSFORM the brief into a powerful, short marketing headline in the target language (${language}).
-- DO NOT just copy-paste the brief. Make it punchy, engaging, and benefit-oriented.
-- Structure: Main Headline (3-6 words) + Optional Subheadline (max 10 words).
+- TRANSFORM the brief into compelling marketing copy in ${language}.
+- DO NOT just copy-paste the brief. Reinterpret it to spark CURIOSITY.
 - Tone: ${toneVoice}.
 
-HEADLINE FORMULAS (pick one that fits):
-- "Comment [action] sans [pain point]" (How to X without Y)
-- "[Nombre] [bénéfice] en [temps]" (X benefits in Y time)
-- "Le secret de [audience] pour [résultat]" (The secret of X for Y)
-- "Arrêtez de [problème]. Commencez à [solution]" (Stop X. Start Y)
-- "[Question provocante] ?" (Provocative question)
-- "Et si [promesse audacieuse] ?" (What if bold promise?)
+THE GOAL: Make the viewer STOP scrolling and WANT to know more.
+- What's the hook? What's the "wait, what?" moment?
+- What problem does this solve for THEM?
+- What emotion should they feel? (curiosity, relief, ambition, FOMO...)
 
-TEXT QUALITY (Gemini strength - USE IT):
-- PERFECT spelling and grammar - you excel at this
-- Professional kerning and letter spacing
-- Text must be 100% readable - good contrast with background
-- NO text cut off at edges
-- Maximum 2 text elements (headline + optional subheadline)
+HEADLINE INSPIRATION (adapt freely):
+- "Comment [action] sans [pain point]" → Curiosity + solution
+- "[Chiffre impactant] + [promesse]" → Credibility + benefit
+- "Le secret que [audience] ne vous dira jamais" → Intrigue
+- "[Question qui pique]" → Engagement
+- "Vous aussi vous [frustration commune] ?" → Empathy
+- "[Statement audacieux]." → Authority
+
+TEXT ELEMENTS - BE CREATIVE:
+- You can use multiple text elements if it serves the story
+- Play with hierarchy: big headline, smaller context, tiny detail
+- Text can interact with visuals (wrap around, point to, emerge from...)
+- Use shapes, badges, callouts if relevant
+- BUT: every text must be 100% READABLE (contrast, size, spacing)
+
+WHAT TO AVOID (= instant scroll-past):
+- Generic corporate speak ("solutions innovantes", "leader du marché")
+- Empty buzzwords without substance
+- Text that explains the obvious
+- Cringe motivational quotes
+- Anything that sounds like an AI wrote it without thinking
 
 BRAND IDENTITY (STRICTLY FOLLOW):
 
