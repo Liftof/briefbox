@@ -83,8 +83,8 @@ async function generateWithGoogle(
     const parts: any[] = [{ text: prompt }];
     
     // Gemini 3 Pro Image supports up to 14 reference images!
-    // 5 with high fidelity, up to 14 total
-    const imagesToProcess = imageUrls.slice(0, 10); // Using 10 for good balance
+    // First 5 get "high fidelity", 6-14 still used but less precisely
+    const imagesToProcess = imageUrls.slice(0, 14); // Max capacity
     for (const url of imagesToProcess) {
       const imageData = await urlToBase64(url);
       if (imageData) {
@@ -313,9 +313,9 @@ export async function POST(request: NextRequest) {
     let totalDataUriSize = 0;
     const MAX_DATA_URI_SIZE = 5 * 1024 * 1024; // 5MB total for data URIs
     
-    // Gemini 3 Pro supports up to 14 images - let's use up to 8 for quality
-    // Logo + style refs + relevant assets
-    for (const url of allImageUrls.slice(0, 8)) {
+    // Gemini 3 Pro supports up to 14 images
+    // First 5 = high fidelity, 6-14 = still used but less precisely
+    for (const url of allImageUrls.slice(0, 14)) {
       // Skip invalid URLs
       if (!url || typeof url !== 'string') continue;
       
