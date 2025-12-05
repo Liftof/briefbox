@@ -214,7 +214,8 @@ function PlaygroundContent() {
   const logoUploadRef = useRef<HTMLInputElement>(null);
 
   const [editingImage, setEditingImage] = useState<string | null>(null);
-  const [styleRefImages, setStyleRefImages] = useState<string[]>([]); // Changed to array for multi-ref
+  // Style references with optional descriptions
+  const [styleRefImages, setStyleRefImages] = useState<{url: string; note?: string}[]>([]);
   const [editPrompt, setEditPrompt] = useState('');
   const [editAdditionalImages, setEditAdditionalImages] = useState<string[]>([]); // NEW: Additional images for editing
   const [visualIdeas, setVisualIdeas] = useState<string[]>([]);
@@ -1214,11 +1215,25 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
       console.log('📸 Images to use (user priority):', imagesToUse.length, 'images');
       console.log('   Labels:', Object.entries(imageContextMap).map(([k, v]) => `${k.slice(-20)}: ${v.slice(0, 30)}`).slice(0, 4));
 
-    // Add manual style references if present
+    // Add manual style references if present (with optional notes)
     if (styleRefImages.length > 0) {
-      styleReferenceImages = [...styleRefImages, ...styleReferenceImages];
-        console.log('🎨 User style refs added:', styleRefImages.length, 'images');
-        console.log('   URLs:', styleRefImages.map(u => u.slice(0, 50) + '...'));
+      const styleRefUrls = styleRefImages.map(ref => ref.url);
+      styleReferenceImages = [...styleRefUrls, ...styleReferenceImages];
+      
+      // Build style notes for the prompt
+      const styleNotes = styleRefImages
+        .filter(ref => ref.note?.trim())
+        .map((ref, i) => `Style ref ${i + 1}: "${ref.note}"`)
+        .join('. ');
+      
+      if (styleNotes) {
+        // Append style notes to the brief
+        finalGenerationPrompt += `\n\n[USER STYLE NOTES: ${styleNotes}]`;
+        console.log('📝 Style notes:', styleNotes);
+      }
+      
+      console.log('🎨 User style refs added:', styleRefImages.length, 'images');
+      console.log('   URLs:', styleRefUrls.map(u => u.slice(0, 50) + '...'));
     }
 
       console.log('📤 Final style reference images:', styleReferenceImages.length);
@@ -2019,26 +2034,39 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                   </button>
                     </div>
                 
-                {/* Selected styles + Drop zone in one row */}
-                <div className="flex gap-2 mb-2">
-                  {/* Selected images */}
-                    {styleRefImages.map((img, i) => (
-                    <div key={i} className="relative h-16 w-16 group rounded-lg overflow-hidden border-2 border-emerald-400 flex-shrink-0">
-                      <img src={img} className="w-full h-full object-cover" />
+                {/* Selected styles + Drop zone */}
+                <div className="space-y-2 mb-2">
+                  {/* Selected images with note input */}
+                  {styleRefImages.map((ref, i) => (
+                    <div key={i} className="flex gap-2 items-start">
+                      <div className="relative h-14 w-14 flex-shrink-0 rounded-lg overflow-hidden border-2 border-emerald-400">
+                        <img src={ref.url} className="w-full h-full object-cover" />
                         <button
                           onClick={() => setStyleRefImages(prev => prev.filter((_, idx) => idx !== i))}
-                        className="absolute top-0.5 right-0.5 w-4 h-4 bg-black/60 text-white rounded-full flex items-center justify-center hover:bg-red-500 text-[9px]"
-                      >×</button>
+                          className="absolute top-0.5 right-0.5 w-4 h-4 bg-black/60 text-white rounded-full flex items-center justify-center hover:bg-red-500 text-[9px]"
+                        >×</button>
+                      </div>
+                      <input
+                        type="text"
+                        placeholder="Ex: J'aime le placement du texte..."
+                        value={ref.note || ''}
+                        onChange={(e) => {
+                          setStyleRefImages(prev => prev.map((r, idx) => 
+                            idx === i ? { ...r, note: e.target.value } : r
+                          ));
+                        }}
+                        className="flex-1 text-xs border border-gray-200 rounded px-2 py-1.5 placeholder:text-gray-300 focus:border-emerald-400 focus:outline-none"
+                      />
                   </div>
                 ))}
                   
                   {/* Drop zone - always visible if less than 3 */}
                   {styleRefImages.length < 3 && (
-                    <label className="h-16 flex-1 min-w-[60px] border-2 border-dashed border-gray-200 rounded-lg flex flex-col items-center justify-center cursor-pointer hover:border-emerald-400 hover:bg-emerald-50/50 transition-all">
+                    <label className="h-12 w-full border-2 border-dashed border-gray-200 rounded-lg flex items-center justify-center gap-2 cursor-pointer hover:border-emerald-400 hover:bg-emerald-50/50 transition-all">
                       <svg className="w-4 h-4 text-gray-300" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                         <path d="M12 4v16m8-8H4" />
                       </svg>
-                      <span className="text-[8px] text-gray-400 mt-0.5">Drop inspi</span>
+                      <span className="text-[10px] text-gray-400">Ajouter une inspiration</span>
                 <input 
                   type="file" 
                   accept="image/*" 
@@ -2048,7 +2076,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                         const reader = new FileReader();
                         reader.onload = (ev) => {
                           if (typeof ev.target?.result === 'string') {
-                             setStyleRefImages(prev => [...prev, ev.target!.result as string].slice(0, 3));
+                                setStyleRefImages(prev => [...prev, { url: ev.target!.result as string }].slice(0, 3));
                           }
                         };
                             reader.readAsDataURL(e.target.files[0]);
@@ -2066,14 +2094,14 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                     { url: '/inspirations/ref-2.jpeg', label: 'Clean' },
                     { url: '/inspirations/ref-5.jpeg', label: 'Bold' },
                     { url: '/inspirations/ref-8.jpeg', label: 'Dark' },
-                  ].filter(s => !styleRefImages.some(sel => sel.includes(s.url))).slice(0, 4).map((style, i) => (
+                  ].filter(s => !styleRefImages.some(sel => sel.url.includes(s.url))).slice(0, 4).map((style, i) => (
                     <div 
                       key={i}
                       onClick={() => {
                         const absoluteUrl = `${window.location.origin}${style.url}`;
-                        setStyleRefImages(prev => [...prev, absoluteUrl].slice(0, 3));
+                        setStyleRefImages(prev => [...prev, { url: absoluteUrl }].slice(0, 3));
                       }}
-                      className="relative h-12 w-12 rounded overflow-hidden cursor-pointer border border-gray-200 hover:border-emerald-400 transition-all group flex-shrink-0"
+                      className="relative h-10 w-10 rounded overflow-hidden cursor-pointer border border-gray-200 hover:border-emerald-400 transition-all group flex-shrink-0"
                     >
                       <img src={style.url} className="w-full h-full object-cover" />
                       <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
@@ -2081,10 +2109,10 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                       </div>
                     </div>
                   ))}
-                  {/* Gallery button - more obvious */}
+                  {/* Gallery button */}
                   <button
                     onClick={() => setShowStyleGallery(true)}
-                    className="h-12 px-3 rounded bg-gray-900 text-white text-[10px] font-medium hover:bg-gray-800 transition-all flex items-center gap-1.5 flex-shrink-0"
+                    className="h-10 px-3 rounded bg-gray-900 text-white text-[10px] font-medium hover:bg-gray-800 transition-all flex items-center gap-1.5 flex-shrink-0"
                   >
                     <span>🎨</span>
                     <span>Galerie</span>
@@ -2151,7 +2179,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                           <>
                             <div className="absolute top-0.5 right-0.5 w-4 h-4 bg-emerald-500 text-white rounded-full flex items-center justify-center text-[10px]">✓</div>
                             {/* Mode toggle - appears on hover */}
-                            <button
+                <button
                               onClick={(e) => {
                                 e.stopPropagation();
                                 setAssetModes(prev => ({
@@ -2384,7 +2412,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
             : url;
           console.log('🎨 Style ref selected:', absoluteUrl);
           // Add selected inspiration to styleRefImages
-          setStyleRefImages(prev => [absoluteUrl, ...prev].slice(0, 3));
+          setStyleRefImages(prev => [{ url: absoluteUrl }, ...prev].slice(0, 3));
           showToast('Style ajouté aux références', 'success');
         }}
       />
