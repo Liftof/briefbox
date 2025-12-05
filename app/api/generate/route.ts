@@ -351,8 +351,11 @@ ${imageDescriptions.join('\n')}
           status: err.status,
           body: err.body,
           detail: err.body?.detail,
+          fullError: JSON.stringify(err, Object.getOwnPropertyNames(err)),
         });
-        throw err;
+        // Create a proper error with message
+        const errorMessage = err?.body?.detail || err?.message || JSON.stringify(err);
+        throw new Error(typeof errorMessage === 'string' ? errorMessage : JSON.stringify(errorMessage));
       }
     };
 
@@ -365,8 +368,19 @@ ${imageDescriptions.join('\n')}
         
         const generationPromises = prompts.map((p, i) => 
           generateSingleImage(p, i).catch(err => {
-            const errorMsg = err?.body?.detail || err?.message || String(err);
+            // Better error extraction
+            let errorMsg = 'Unknown error';
+            if (err?.body?.detail) {
+              errorMsg = typeof err.body.detail === 'string' ? err.body.detail : JSON.stringify(err.body.detail);
+            } else if (err?.message) {
+              errorMsg = err.message;
+            } else if (typeof err === 'object') {
+              errorMsg = JSON.stringify(err);
+            } else {
+              errorMsg = String(err);
+            }
             console.error(`❌ Generation ${i + 1} failed:`, errorMsg);
+            console.error(`   Full error object:`, JSON.stringify(err, null, 2));
             errors.push(`Gen ${i + 1}: ${errorMsg}`);
             return null; // Return null for failed generations
           })
