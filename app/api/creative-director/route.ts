@@ -424,10 +424,16 @@ IMPORTANT: Use each image according to its role. The order of images reflects th
     const templateStyleEmphasis = templateNeeds.styleEmphasis;
 
     // FORCE THE STRUCTURE REQUESTED BY USER
-    // This is the exact prompt structure that works well with Nano Banana Pro
+    // This is the exact prompt structure that works well with Gemini 3 Pro (with thinking mode)
     const buildStructuredPrompt = (variationEmphasis: string) => {
       return `
 ROLE: Expert Art Director & Copywriter for a Brand Agency.
+
+THINK STEP BY STEP:
+1. First, analyze the brief and identify the key message
+2. Then, consider the brand identity and how to express it visually
+3. Plan the composition: where will the logo go? The headline? The visual elements?
+4. Finally, generate the image with all elements perfectly placed
 
 TASK: Create a sophisticated social media visual based on the following brief. The goal is to create a "stopper" visual - something that immediately grabs attention in a feed.
 

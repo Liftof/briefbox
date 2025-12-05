@@ -222,6 +222,7 @@ function PlaygroundContent() {
   const [isThinking, setIsThinking] = useState(false);
   const [contentLanguage, setContentLanguage] = useState<'fr' | 'en' | 'es' | 'de'>('fr');
   const [aspectRatio, setAspectRatio] = useState<string>('1:1');
+  const [resolution, setResolution] = useState<'2K' | '4K'>('2K');
   
   // Aspect ratio options
   const ASPECT_RATIOS = [
@@ -231,6 +232,12 @@ function PlaygroundContent() {
     { value: '16:9', label: '16:9', desc: 'Paysage', icon: '🖥️' },
     { value: '3:2', label: '3:2', desc: 'Photo', icon: '📷' },
     { value: '21:9', label: '21:9', desc: 'Cinéma', icon: '🎬' },
+  ];
+  
+  // Resolution options
+  const RESOLUTIONS = [
+    { value: '2K' as const, label: '2K', desc: '2048px' },
+    { value: '4K' as const, label: '4K', desc: '4096px', badge: 'PRO' },
   ];
   
   // Language options
@@ -989,7 +996,8 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
           imageUrls: allImages, // Base image first, then style refs
           referenceImages: styleReferences, // Also mark them as style refs
           numImages: 2,
-          aspectRatio
+          aspectRatio,
+          resolution
         })
       });
 
@@ -1204,10 +1212,10 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
         console.log('🎨 User style refs added:', styleRefImages.length, 'images');
         console.log('   URLs:', styleRefImages.map(u => u.slice(0, 50) + '...'));
     }
-      
+
       console.log('📤 Final style reference images:', styleReferenceImages.length);
 
-      // STEP 2: Generate with Fal using variations (or single prompt)
+      // STEP 2: Generate with Gemini using variations (or single prompt)
       const response = await fetch('/api/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -1219,7 +1227,8 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
           referenceImages: styleReferenceImages, // Style reference images
           imageContextMap: imageContextMap, // NEW: Pass explicit roles
           numImages: 2, // Reduced to 2 for cost optimization
-          aspectRatio
+          aspectRatio,
+          resolution // 2K by default, 4K for pro users
         })
       });
       const payload = await response.json();
@@ -1676,7 +1685,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                         </span>
                       </button>
                     )}
-                  </div>
+              </div>
                   
                   {/* No logo option */}
                   <button
@@ -1765,6 +1774,27 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                 <option key={ratio.value} value={ratio.value}>{ratio.icon} {ratio.label}</option>
               ))}
             </select>
+            {/* Resolution Toggle */}
+            <div className="flex items-center border border-gray-200">
+              {RESOLUTIONS.map(res => (
+                <button
+                  key={res.value}
+                  onClick={() => setResolution(res.value)}
+                  className={`text-xs px-3 py-2 transition-colors relative ${
+                    resolution === res.value 
+                      ? 'bg-gray-900 text-white' 
+                      : 'bg-white text-gray-500 hover:text-gray-900'
+                  }`}
+                >
+                  {res.label}
+                  {res.badge && resolution !== res.value && (
+                    <span className="absolute -top-1 -right-1 text-[8px] bg-emerald-500 text-white px-1 rounded">
+                      {res.badge}
+                    </span>
+                  )}
+                </button>
+              ))}
+            </div>
             {/* Language Toggle */}
             <select
               value={contentLanguage}

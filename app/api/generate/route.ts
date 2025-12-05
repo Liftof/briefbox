@@ -53,27 +53,30 @@ async function generateWithGoogle(
   
   try {
     // Determine image size based on resolution
-    let imageSize = "1024x1024"; // 1K default
-    if (resolution === "2K") imageSize = "2048x2048";
-    if (resolution === "4K") imageSize = "4096x4096";
+    // Gemini 3 Pro supports: 1K (1024), 2K (2048), 4K (4096)
+    let baseSize = 1024;
+    if (resolution === "2K") baseSize = 2048;
+    if (resolution === "4K") baseSize = 4096;
     
     // Map aspect ratio to Google format (width x height)
     const aspectToSize: Record<string, string> = {
-      '1:1': imageSize,
-      '4:5': resolution === "2K" ? "1638x2048" : "819x1024",
-      '9:16': resolution === "2K" ? "1152x2048" : "576x1024",
-      '16:9': resolution === "2K" ? "2048x1152" : "1024x576",
-      '3:2': resolution === "2K" ? "2048x1365" : "1024x683",
-      '21:9': resolution === "2K" ? "2048x878" : "1024x439",
+      '1:1': `${baseSize}x${baseSize}`,
+      '4:5': `${Math.round(baseSize * 0.8)}x${baseSize}`,
+      '9:16': `${Math.round(baseSize * 0.5625)}x${baseSize}`,
+      '16:9': `${baseSize}x${Math.round(baseSize * 0.5625)}`,
+      '3:2': `${baseSize}x${Math.round(baseSize * 0.667)}`,
+      '21:9': `${baseSize}x${Math.round(baseSize * 0.429)}`,
     };
-    const finalSize = aspectToSize[aspectRatio] || imageSize;
+    const finalSize = aspectToSize[aspectRatio] || `${baseSize}x${baseSize}`;
     
     const model = genAI.getGenerativeModel({ 
       model: "gemini-3-pro-image-preview", // Nano Banana Pro - best quality
       generationConfig: {
         // @ts-ignore - responseModalities is valid for image generation
         responseModalities: ["image", "text"],
-      }
+      },
+      // Gemini 3 Pro uses "thinking" by default for complex prompts
+      // This improves quality for multi-step instructions
     });
     
     // Build content parts
