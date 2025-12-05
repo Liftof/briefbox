@@ -429,6 +429,15 @@ The reference is a MOOD BOARD, not a template. Create something ORIGINAL that ca
         });
       }
       
+      // Add quality handling instructions
+      imageDescriptions.push(`
+⚠️ LOW QUALITY ASSET HANDLING:
+If any image contains very small text or low-resolution details that would be hard to reproduce clearly:
+- SIMPLIFY diagrams: keep the concept but make it cleaner and more readable
+- SIMPLIFY UI screenshots: capture the essence but improve clarity
+- Never reproduce blurry or illegible text - either make it readable or remove it
+- Prioritize visual clarity over exact reproduction`);
+      
       imageContextPrefix = `[IMAGE CONTEXT]
 ${imageDescriptions.join('\n')}
 
@@ -452,8 +461,27 @@ ${imageDescriptions.join('\n')}
         prompts = [imageContextPrefix + prompt];
       }
     } else if (hasPrompt) {
-      const enhancedPrompt = imageContextPrefix + prompt;
-      prompts = [enhancedPrompt, enhancedPrompt, enhancedPrompt, enhancedPrompt].slice(0, numImages);
+      // Create TWO distinct versions: FAITHFUL and INTERPRETED
+      const faithfulPrompt = imageContextPrefix + prompt + `
+
+[GENERATION MODE: FAITHFUL]
+- Stay close to the provided assets and references
+- Reproduce UI screenshots and diagrams as accurately as possible
+- Maintain the exact layout and structure shown in references
+- Be precise with brand elements`;
+
+      const interpretedPrompt = imageContextPrefix + prompt + `
+
+[GENERATION MODE: CREATIVE INTERPRETATION]
+- Take more artistic liberty while respecting the brand
+- Simplify complex diagrams into cleaner, more impactful visuals
+- Reinterpret UI elements in a fresh, modern way
+- Add creative flair while keeping the core message
+- Make it visually striking and scroll-stopping`;
+
+      // First image = faithful, second = interpreted
+      prompts = [faithfulPrompt, interpretedPrompt, faithfulPrompt, interpretedPrompt].slice(0, numImages);
+      console.log('🎨 Generation modes: Faithful + Interpreted');
     } else {
       return NextResponse.json({ success: false, error: 'No valid prompts provided' }, { status: 400 });
     }
