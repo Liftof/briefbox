@@ -69,7 +69,7 @@ async function generateWithGoogle(
     const finalSize = aspectToSize[aspectRatio] || imageSize;
     
     const model = genAI.getGenerativeModel({ 
-      model: "gemini-2.0-flash-exp", // Using stable model that supports image generation
+      model: "gemini-3-pro-image-preview", // Nano Banana Pro - best quality
       generationConfig: {
         // @ts-ignore - responseModalities is valid for image generation
         responseModalities: ["image", "text"],
