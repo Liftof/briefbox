@@ -24,8 +24,9 @@ interface ParallelSearchResult {
   excerpts: string[];
 }
 
-// Helper: Use Firecrawl Extract for structured data with web search enrichment
+// Helper: Use Firecrawl Extract v2 for structured data with web search enrichment
 // Docs: https://docs.firecrawl.dev/features/extract
+// UPGRADED TO V2: Better extraction, JSON format, caching
 async function extractWithFirecrawl(
   url: string,
   industry: string,
@@ -43,10 +44,10 @@ async function extractWithFirecrawl(
   }
 
   try {
-    console.log(`🔥 Firecrawl Extract with web search for: ${industry}`);
+    console.log(`🔥 Firecrawl Extract v2 with web search for: ${industry}`);
     
-    // Use Extract with enableWebSearch to find external data
-    const response = await fetch('https://api.firecrawl.dev/v1/extract', {
+    // V2 Extract with enableWebSearch and improved JSON format
+    const response = await fetch('https://api.firecrawl.dev/v2/extract', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -60,39 +61,43 @@ async function extractWithFirecrawl(
 3. Competitive landscape insights
 
 Focus on actionable marketing angles. Be specific with numbers when available.`,
-        schema: {
-          type: 'object',
-          properties: {
-            painPoints: {
-              type: 'array',
-              items: {
-                type: 'object',
-                properties: {
-                  problem: { type: 'string', description: 'The specific user problem' },
-                  impact: { type: 'string', description: 'Quantified impact (time/money lost)' }
-                },
-                required: ['problem', 'impact']
+        // V2 JSON format: { type: "json", schema }
+        formats: [{
+          type: 'json',
+          schema: {
+            type: 'object',
+            properties: {
+              painPoints: {
+                type: 'array',
+                items: {
+                  type: 'object',
+                  properties: {
+                    problem: { type: 'string', description: 'The specific user problem' },
+                    impact: { type: 'string', description: 'Quantified impact (time/money lost)' }
+                  },
+                  required: ['problem', 'impact']
+                }
+              },
+              trends: {
+                type: 'array',
+                items: {
+                  type: 'object',
+                  properties: {
+                    trend: { type: 'string', description: 'The industry trend' },
+                    relevance: { type: 'string', description: 'Why it matters for this brand' }
+                  },
+                  required: ['trend', 'relevance']
+                }
+              },
+              competitorInsights: {
+                type: 'array',
+                items: { type: 'string' },
+                description: 'Key competitor positioning or market gaps'
               }
             },
-            trends: {
-              type: 'array',
-              items: {
-                type: 'object',
-                properties: {
-                  trend: { type: 'string', description: 'The industry trend' },
-                  relevance: { type: 'string', description: 'Why it matters for this brand' }
-                },
-                required: ['trend', 'relevance']
-              }
-            },
-            competitorInsights: {
-              type: 'array',
-              items: { type: 'string' },
-              description: 'Key competitor positioning or market gaps'
-            }
-          },
-          required: ['painPoints', 'trends', 'competitorInsights']
-        },
+            required: ['painPoints', 'trends', 'competitorInsights']
+          }
+        }],
         enableWebSearch: true // KEY: This expands search beyond the URL!
       })
     });
@@ -223,19 +228,29 @@ async function enrichWithFirecrawlSearch(
       });
     }
 
-    // Execute ALL searches in parallel for speed
+    // Execute ALL searches in parallel for speed - V2 API with sources support
     const searchPromises = searches.map(async (search) => {
       try {
-        const response = await fetch('https://api.firecrawl.dev/v1/search', {
+        // V2: Add sources for news/images when relevant
+        const searchBody: any = {
+          query: search.query,
+          ...search.config,
+          // V2 improvements
+          maxAge: 172800, // 2 days cache (faster responses)
+        };
+        
+        // V2: Use sources for news searches
+        if (search.type === 'news') {
+          searchBody.sources = ['news'];
+        }
+        
+        const response = await fetch('https://api.firecrawl.dev/v2/search', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
             'Authorization': `Bearer ${FIRECRAWL_API_KEY}`
           },
-          body: JSON.stringify({
-            query: search.query,
-            ...search.config
-          })
+          body: JSON.stringify(searchBody)
         });
 
         if (!response.ok) {
@@ -542,16 +557,16 @@ async function extractColorsFromImage(imageUrl: string): Promise<string[]> {
   }
 }
 
-// Helper: Map website to find all URLs using Firecrawl /map
+// Helper: Map website to find all URLs using Firecrawl /map V2
+// V2: sitemap param replaces ignoreSitemap, better redirect handling
 async function mapWebsite(url: string): Promise<string[]> {
     try {
-      console.log('🗺️ Mapping website structure:', url);
+      console.log('🗺️ Mapping website structure (v2):', url);
       const controller = new AbortController();
       // Increased timeout to 45s as Firecrawl mapping can take time for larger sites
-      // or when the service is under load.
       const timeoutId = setTimeout(() => controller.abort(), 45000);
 
-      const response = await fetch('https://api.firecrawl.dev/v1/map', {
+      const response = await fetch('https://api.firecrawl.dev/v2/map', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -560,7 +575,8 @@ async function mapWebsite(url: string): Promise<string[]> {
         body: JSON.stringify({
           url,
           search: "about story mission team blog press careers values history",
-          ignoreSitemap: false,
+          // V2: sitemap param instead of ignoreSitemap
+          sitemap: "include", // "only" | "skip" | "include"
           includeSubdomains: false,
           limit: 50
         }),
@@ -570,16 +586,16 @@ async function mapWebsite(url: string): Promise<string[]> {
       clearTimeout(timeoutId);
 
       if (!response.ok) {
-      console.warn('Map API failed:', await response.text());
-      return [];
-    }
+        console.warn('Map API failed:', await response.text());
+        return [];
+      }
 
-    const data = await response.json();
-    if (data.success && Array.isArray(data.links)) {
-      console.log(`✅ Map found ${data.links.length} potential pages`);
-      return data.links;
-    }
-    return [];
+      const data = await response.json();
+      if (data.success && Array.isArray(data.links)) {
+        console.log(`✅ Map found ${data.links.length} potential pages`);
+        return data.links;
+      }
+      return [];
   } catch (e) {
     console.warn('Map error:', e);
     return [];
@@ -801,8 +817,8 @@ export async function POST(request: Request) {
     }
 
     try {
-        // Firecrawl mainly for the primary website to get structure
-        const firecrawlPromise = fetch('https://api.firecrawl.dev/v1/scrape', {
+        // Firecrawl V2 for the primary website - faster with caching & better branding detection
+        const firecrawlPromise = fetch('https://api.firecrawl.dev/v2/scrape', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -811,7 +827,12 @@ export async function POST(request: Request) {
             body: JSON.stringify({
                 url, // Primary URL only for detailed structure
                 formats: ["markdown", "html", "screenshot"],
-                onlyMainContent: false
+                onlyMainContent: false,
+                // V2 improvements for speed
+                maxAge: 86400, // 1 day cache
+                blockAds: true,
+                skipTlsVerification: true,
+                removeBase64Images: true
             })
         });
 
@@ -972,15 +993,15 @@ export async function POST(request: Request) {
         
         console.log(`🎯 Selected ${finalPagesToScrape.length} high-value pages to scrape:`, finalPagesToScrape);
 
-        // BATCH SCRAPE: Scrape all selected pages in parallel
-        // We use Firecrawl /scrape for high quality markdown + metadata
+        // BATCH SCRAPE V2: Scrape all selected pages in parallel
+        // V2: Faster with caching, better error handling
         const scrapePromises = finalPagesToScrape.map(async (pageUrl) => {
             try {
                 const controller = new AbortController();
                 // Increased to 30s per page to account for rendering, queue times, and heavier pages
                 const timeoutId = setTimeout(() => controller.abort(), 30000); 
 
-                const res = await fetch('https://api.firecrawl.dev/v1/scrape', {
+                const res = await fetch('https://api.firecrawl.dev/v2/scrape', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -989,7 +1010,11 @@ export async function POST(request: Request) {
                     body: JSON.stringify({
                         url: pageUrl,
                         formats: ["markdown", "html"], // HTML helps finding images hidden in markup
-                        onlyMainContent: false
+                        onlyMainContent: false,
+                        // V2 speed improvements
+                        maxAge: 86400, // 1 day cache
+                        blockAds: true,
+                        skipTlsVerification: true
                     }),
                     signal: controller.signal
                 });

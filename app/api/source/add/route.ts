@@ -10,8 +10,8 @@ export async function POST(request: Request) {
 
     console.log('🌐 Scraping additional source:', url);
 
-    // Use Firecrawl to get content
-    const firecrawlResponse = await fetch('https://api.firecrawl.dev/v1/scrape', {
+    // Use Firecrawl V2 to get content - faster with caching
+    const firecrawlResponse = await fetch('https://api.firecrawl.dev/v2/scrape', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -19,7 +19,11 @@ export async function POST(request: Request) {
       },
       body: JSON.stringify({
         url,
-        formats: ["markdown", "screenshot"]
+        formats: ["markdown", "screenshot"],
+        // V2 improvements
+        maxAge: 86400, // 1 day cache
+        blockAds: true,
+        skipTlsVerification: true
       })
     });
 
