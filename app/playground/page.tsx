@@ -1130,7 +1130,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
 
       setProgress(80);
 
-      const normalized: GeneratedImage[] = (payload.images || [])
+      const rawImages: GeneratedImage[] = (payload.images || [])
         .map((img: any, index: number) => {
           const url = typeof img === 'string' ? img : img?.url || img?.image;
           if (!url) return null;
@@ -1142,11 +1142,36 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
         })
         .filter(Boolean) as GeneratedImage[];
 
-      if (!normalized.length) {
+      if (!rawImages.length) {
         throw new Error('Aucune image modifiée retournée');
       }
 
-      // Save to local generations
+      // Upload to Vercel Blob to avoid localStorage quota issues
+      setStatusMessage('📤 Sauvegarde...');
+      const uploadedImages = await Promise.all(
+        rawImages.map(async (img) => {
+          if (img.url.startsWith('data:')) {
+            try {
+              const uploadResponse = await fetch('/api/upload', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ imageData: img.url })
+              });
+              const uploadResult = await uploadResponse.json();
+              if (uploadResult.success && uploadResult.url) {
+                return { ...img, url: uploadResult.url };
+              }
+            } catch (e) {
+              console.warn('Failed to upload edit to Blob:', e);
+            }
+          }
+          return img;
+        })
+      );
+
+      const normalized = uploadedImages as GeneratedImage[];
+
+      // Save to local generations - now with Blob URLs
       const generationsToSave = normalized.map(img => ({
         url: img.url,
         prompt: `[EDIT] ${editInstruction}`,
@@ -1377,7 +1402,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
         throw new Error(payload.error || 'Impossible de générer des visuels');
       }
 
-      const normalized: GeneratedImage[] = (payload.images || [])
+      const rawImages = (payload.images || [])
         .map((img: any, index: number) => {
           const url = typeof img === 'string' ? img : img?.url || img?.image;
           if (!url) return null;
@@ -1389,11 +1414,37 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
         })
         .filter(Boolean) as GeneratedImage[];
 
-      if (!normalized.length) {
+      if (!rawImages.length) {
         throw new Error('Aucune image retournée par le générateur');
       }
 
-      // Save to Projects (localStorage)
+      // Upload data URLs to Vercel Blob to avoid localStorage quota issues
+      setStatusMessage('📤 Sauvegarde des images...');
+      const uploadedImages = await Promise.all(
+        rawImages.map(async (img) => {
+          // Only upload if it's a data URL (base64)
+          if (img.url.startsWith('data:')) {
+            try {
+              const uploadResponse = await fetch('/api/upload', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ imageData: img.url })
+              });
+              const uploadResult = await uploadResponse.json();
+              if (uploadResult.success && uploadResult.url) {
+                return { ...img, url: uploadResult.url };
+              }
+            } catch (e) {
+              console.warn('Failed to upload image to Blob, keeping data URL:', e);
+            }
+          }
+          return img;
+        })
+      );
+
+      const normalized = uploadedImages as GeneratedImage[];
+
+      // Save to Projects (localStorage) - now with Blob URLs instead of data URLs
       const generationsToSave = normalized.map(img => ({
         url: img.url,
         prompt: finalPrompt,
