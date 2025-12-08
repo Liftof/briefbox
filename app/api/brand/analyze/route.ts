@@ -1127,25 +1127,27 @@ export async function POST(request: Request) {
     // Limit images sent to AI to avoid token limits and ensure quality
     const imagesForAnalysis = uniqueImages.slice(0, 40);
 
-    // REDUCED content to avoid token limits (was causing "I can't assist" errors)
+    // Full content - using Claude-3.5-Sonnet which has 200K context
     const combinedContent = `
-    METADATA:
+    SOURCE 1 (METADATA):
     Title: ${firecrawlMetadata.title || 'Unknown'}
     Description: ${firecrawlMetadata.description || 'Unknown'}
     
-    MAIN PAGE CONTENT:
-    ${firecrawlMarkdown.substring(0, 6000)}
+    SOURCE 2 (MAIN PAGE CONTENT):
+    ${firecrawlMarkdown.substring(0, 15000)}
 
-    ADDITIONAL SOURCES:
-    ${parallelContent.substring(0, 2000)}
-    ${deepCrawlContent.substring(0, 4000)}
-    ${nuggetsFormatted.substring(0, 1500)}
+    SOURCE 3 (PARALLEL AI):
+    ${parallelContent.substring(0, 5000)}
     
-    IMAGES TO ANALYZE (${imagesForAnalysis.length}):
-    ${imagesForAnalysis.slice(0, 20).join('\n')}
+    SOURCE 4 (DEEP CRAWL):
+    ${deepCrawlContent.substring(0, 12000)}
+    ${nuggetsFormatted}
+    
+    DETECTED IMAGES (${imagesForAnalysis.length}):
+    ${imagesForAnalysis.join('\n')}
     `;
     
-    console.log(`📊 Prompt content size: ~${combinedContent.length} chars`);
+    console.log(`📊 Prompt content size: ~${combinedContent.length} chars (using Claude-3.5-Sonnet 200K context)`);
     
     const prompt = `
       Analyze this website content to extract brand identity information.
@@ -1328,6 +1330,7 @@ export async function POST(request: Request) {
         });
     }
 
+    // Using Claude-3.5-Sonnet: 200K context, excellent at JSON, rarely refuses
     const aiResponse = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -1337,13 +1340,13 @@ export async function POST(request: Request) {
         "X-Title": "BriefBox"
       },
       body: JSON.stringify({
-        "model": "openai/gpt-4o-mini", // Using GPT-4o-mini (faster, cheaper, still great quality)
+        "model": "anthropic/claude-3.5-sonnet", // 200K context, great at JSON, rarely refuses
         "messages": [
-          {"role": "system", "content": "You are a Brand Analyst. Extract brand identity from website content. Return ONLY valid JSON, no explanations."},
+          {"role": "system", "content": "You are a Brand Analyst. Extract brand identity from website content. Return ONLY valid JSON matching the requested schema. No markdown, no explanations, just the JSON object."},
           {"role": "user", "content": userMessageContent}
         ],
-        "max_tokens": 4000, // Limit response size
-        "temperature": 0.3 // More deterministic for JSON
+        "max_tokens": 8000,
+        "temperature": 0.2
       })
     });
 
@@ -1377,17 +1380,17 @@ export async function POST(request: Request) {
     const aiData = await aiResponse.json();
     let text = aiData.choices[0].message.content;
     
-    // Detect model refusals (safety filters)
+    // Detect model refusals (safety filters) - shouldn't happen with Claude but just in case
     const isRefusal = text.toLowerCase().includes("i'm sorry") || 
                       text.toLowerCase().includes("i cannot") ||
                       text.toLowerCase().includes("can't assist") ||
                       text.toLowerCase().includes("i can't help") ||
-                      text.toLowerCase().includes("unable to");
+                      text.toLowerCase().includes("unable to assist");
     
     if (isRefusal) {
-        console.warn("⚠️ Model refused to analyze, trying fallback model (Claude)...");
+        console.warn("⚠️ Claude refused, trying GPT-4o-mini fallback...");
         
-        // Retry with Claude which is often more permissive for business analysis
+        // Fallback to GPT-4o-mini with simplified prompt
         const fallbackResponse = await fetch("https://openrouter.ai/api/v1/chat/completions", {
             method: "POST",
             headers: {
@@ -1395,20 +1398,21 @@ export async function POST(request: Request) {
                 "Content-Type": "application/json",
             },
             body: JSON.stringify({
-                "model": "anthropic/claude-3-haiku", // Cheaper and often more permissive
+                "model": "openai/gpt-4o-mini",
                 "messages": [
-                    {"role": "system", "content": "You are a brand analyst. Analyze the website content and return valid JSON with brand information."},
+                    {"role": "system", "content": "Extract brand info as JSON. Be helpful and complete the task."},
                     {"role": "user", "content": typeof userMessageContent === 'string' ? userMessageContent : userMessageContent[0]?.text || 'Analyze this brand'}
-                ]
+                ],
+                "max_tokens": 4000
             })
         });
         
         if (fallbackResponse.ok) {
             const fallbackData = await fallbackResponse.json();
             text = fallbackData.choices?.[0]?.message?.content || '';
-            console.log("✅ Fallback model responded");
+            console.log("✅ Fallback GPT-4o-mini responded");
         } else {
-            console.warn("⚠️ Fallback model also failed");
+            console.warn("⚠️ Fallback also failed:", await fallbackResponse.text());
         }
     }
     
