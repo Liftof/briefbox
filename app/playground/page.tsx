@@ -484,38 +484,65 @@ function PlaygroundContent() {
       });
     }, 800);
 
-    try {
-      const response = await fetch('/api/brand/analyze', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-            url,
-            socialLinks: [],
-            otherLinks: []
-        })
-      });
-      const data = await response.json();
-      if (!response.ok || !data.success) {
-        throw new Error(data.error || 'Analyse impossible');
+    // Retry logic for failed scrapes
+    const maxRetries = 2;
+    let lastError: any = null;
+    
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        if (attempt > 1) {
+          setStatusMessage(`Nouvelle tentative (${attempt}/${maxRetries})...`);
+          setProgress(10); // Reset progress for retry
+        }
+        
+        const response = await fetch('/api/brand/analyze', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+              url,
+              socialLinks: [],
+              otherLinks: []
+          })
+        });
+        const data = await response.json();
+        
+        if (!response.ok || !data.success) {
+          throw new Error(data.error || 'Analyse impossible');
+        }
+
+        clearInterval(timer);
+        setProgress(100);
+        hydrateBrand(data.brand);
+        setStatus('idle');
+        
+        setTimeout(() => {
+            setStep('logo-confirm');
+            if (data.brand?.logo) {
+              showToast('Logo détecté !', 'success');
+            } else {
+              showToast('Analyse terminée — uploadez votre logo', 'info');
+            }
+        }, 500);
+        
+        return; // Success! Exit the retry loop
+        
+      } catch (error: any) {
+        lastError = error;
+        console.error(`Analyze attempt ${attempt} failed:`, error);
+        
+        if (attempt < maxRetries) {
+          // Wait before retry (exponential backoff)
+          await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+        }
       }
-
-      clearInterval(timer);
-      setProgress(100);
-      hydrateBrand(data.brand);
-      setStatus('idle');
-      
-      setTimeout(() => {
-          setStep('logo-confirm');
-          showToast('Logo détecté !', 'success');
-      }, 500);
-
-    } catch (error: any) {
-      clearInterval(timer);
-      console.error('Analyze error', error);
-      setStatus('error');
-      setStep('url');
-      showToast(error.message || 'Impossible d\'analyser ce site', 'error');
     }
+    
+    // All retries failed
+    clearInterval(timer);
+    console.error('All analyze attempts failed:', lastError);
+    setStatus('error');
+    setStep('url');
+    showToast(lastError?.message || 'Impossible d\'analyser ce site après plusieurs tentatives', 'error');
   };
 
   const handleAnalyzeBrand = async () => {
@@ -537,39 +564,64 @@ function PlaygroundContent() {
       });
     }, 800);
 
-    try {
-      const response = await fetch('/api/brand/analyze', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-            url,
-            socialLinks: socialLinks.filter(Boolean),
-            otherLinks: otherLinks.split(',').map(l => l.trim()).filter(Boolean)
-        })
-      });
-      const data = await response.json();
-      if (!response.ok || !data.success) {
-        throw new Error(data.error || 'Analyse impossible');
+    // Retry logic for failed scrapes
+    const maxRetries = 2;
+    let lastError: any = null;
+    
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        if (attempt > 1) {
+          setStatusMessage(`Nouvelle tentative (${attempt}/${maxRetries})...`);
+          setProgress(10);
+        }
+        
+        const response = await fetch('/api/brand/analyze', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+              url,
+              socialLinks: socialLinks.filter(Boolean),
+              otherLinks: otherLinks.split(',').map(l => l.trim()).filter(Boolean)
+          })
+        });
+        const data = await response.json();
+        
+        if (!response.ok || !data.success) {
+          throw new Error(data.error || 'Analyse impossible');
+        }
+
+        clearInterval(timer);
+        setProgress(100);
+        hydrateBrand(data.brand);
+        setStatus('idle');
+        
+        setTimeout(() => {
+            setStep('logo-confirm');
+            if (data.brand?.logo) {
+              showToast('Logo détecté !', 'success');
+            } else {
+              showToast('Analyse terminée — uploadez votre logo', 'info');
+            }
+        }, 500);
+        
+        return; // Success!
+        
+      } catch (error: any) {
+        lastError = error;
+        console.error(`Analyze attempt ${attempt} failed:`, error);
+        
+        if (attempt < maxRetries) {
+          await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+        }
       }
-
-      clearInterval(timer);
-      setProgress(100);
-      hydrateBrand(data.brand);
-      setStatus('idle');
-      
-      setTimeout(() => {
-          // New brands go to logo confirmation step first
-          setStep('logo-confirm');
-          showToast('Logo détecté !', 'success');
-      }, 500);
-
-    } catch (error: any) {
-      clearInterval(timer);
-      console.error('Analyze error', error);
-      setStatus('error');
-      setStep('url');
-      showToast(error.message || 'Impossible d\'analyser ce site', 'error');
     }
+    
+    // All retries failed
+    clearInterval(timer);
+    console.error('All analyze attempts failed:', lastError);
+    setStatus('error');
+    setStep('url');
+    showToast(lastError?.message || 'Impossible d\'analyser ce site après plusieurs tentatives', 'error');
   };
 
   // Check if user is new (no previous generations)
@@ -592,12 +644,34 @@ function PlaygroundContent() {
     const brandName = brand.name || 'nous';
     
     // Priority 1: Pain point with emotional hook (most engaging!)
-    const painPoint = insights.find((i: any) => i.type === 'pain_point' && i.painPoint);
-    if (painPoint?.painPoint) {
+    // Check multiple sources for pain points
+    let mainPainPoint: string | null = null;
+    
+    // Source 1: industryInsights with type 'pain_point'
+    const painPointInsight = insights.find((i: any) => i.type === 'pain_point' && i.painPoint);
+    if (painPointInsight?.painPoint) {
+      mainPainPoint = painPointInsight.painPoint;
+    }
+    
+    // Source 2: contentNuggets.painPoints (from Firecrawl search)
+    if (!mainPainPoint && contentNuggets.painPoints && contentNuggets.painPoints.length > 0) {
+      const firstPain = contentNuggets.painPoints[0];
+      mainPainPoint = typeof firstPain === 'string' ? firstPain : firstPain.point || firstPain.problem;
+    }
+    
+    // Source 3: brand.painPoints (direct)
+    if (!mainPainPoint && brand.painPoints && brand.painPoints.length > 0) {
+      mainPainPoint = brand.painPoints[0];
+    }
+    
+    if (mainPainPoint) {
+      // Clean up the pain point text for use in hook
+      const cleanPainPoint = mainPainPoint.replace(/^[0-9%]+\s*(of|des|de)\s*/i, '').trim();
       const hooks = [
-        `Vous aussi vous en avez marre de ${painPoint.painPoint.toLowerCase()} ?`,
-        `Stop à ${painPoint.painPoint.toLowerCase()}. Voici la solution.`,
-        `${painPoint.painPoint} ? On a la réponse.`,
+        `Vous aussi vous en avez marre de "${cleanPainPoint.toLowerCase()}" ?`,
+        `Stop. ${cleanPainPoint}. Voici la solution.`,
+        `${cleanPainPoint} ? On a la réponse.`,
+        `Le problème que personne ne veut voir : ${cleanPainPoint.toLowerCase()}`,
       ];
       return {
         brief: hooks[Math.floor(Math.random() * hooks.length)],
@@ -1715,11 +1789,11 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                   )}
                 </div>
                 
-                {/* Warning if logo looks suspicious */}
-                {currentLogo && !currentLogo.includes(brandData?.name?.toLowerCase().replace(/\s+/g, '')) && (
+                {/* Warning ONLY if NO logo was found - removed false positive heuristic */}
+                {!currentLogo && (
                   <div className="px-6 py-3 bg-amber-50 border-t border-amber-100 flex items-center gap-2 text-amber-700 text-sm">
                     <span>⚠️</span>
-                    <span>Ce logo ne semble pas correspondre à <strong>{brandData?.name}</strong>. Vérifiez ou uploadez le bon.</span>
+                    <span>Aucun logo détecté automatiquement. Uploadez le logo de <strong>{brandData?.name}</strong>.</span>
                   </div>
                 )}
 

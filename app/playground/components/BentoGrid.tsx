@@ -538,18 +538,19 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
           <h3 className="text-lg font-semibold text-gray-900">Identité & Direction Artistique</h3>
         </div>
 
-        <div className="grid grid-cols-12 gap-4">
+        {/* MOBILE-RESPONSIVE: stack on mobile, grid on desktop */}
+        <div className="grid grid-cols-2 md:grid-cols-12 gap-3 md:gap-4">
           {/* Logo */}
-          <div className="col-span-3">
+          <div className="col-span-1 md:col-span-3">
             <button 
               onClick={() => setLogoSelectorOpen(true)}
-              className="w-full aspect-square p-4 flex items-center justify-center border border-gray-200 transition-all hover:border-emerald-500 relative group overflow-hidden"
+              className="w-full aspect-square p-3 md:p-4 flex items-center justify-center border border-gray-200 transition-all hover:border-emerald-500 relative group overflow-hidden"
               style={CHECKER_PATTERN_STYLE}
             >
               {localData.logo ? (
                 <img src={localData.logo} alt="Logo" className="w-full h-full object-contain relative z-10" />
               ) : (
-                <span className="text-3xl text-gray-300 relative z-10">LOGO</span>
+                <span className="text-xl md:text-3xl text-gray-300 relative z-10">LOGO</span>
               )}
               <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center z-20">
                 <span className="text-white text-xs font-medium flex items-center gap-1">
@@ -560,48 +561,48 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
           </div>
 
           {/* Colors */}
-          <div className="col-span-3 bg-gray-900 p-4 border border-gray-800">
-            <div className="flex items-center justify-between mb-3">
-              <span className="text-[10px] font-mono uppercase tracking-widest text-gray-500">Palette</span>
+          <div className="col-span-1 md:col-span-3 bg-gray-900 p-3 md:p-4 border border-gray-800">
+            <div className="flex items-center justify-between mb-2 md:mb-3">
+              <span className="text-[9px] md:text-[10px] font-mono uppercase tracking-widest text-gray-500">Palette</span>
               <EditButton onClick={() => setColorEditorOpen(true)} />
             </div>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-1 md:gap-2">
               {localData.colors?.slice(0, 6).map((color: string, i: number) => (
-                <div key={i} className="flex items-center gap-2 px-2 py-1 bg-white/5 rounded">
-                  <div className="w-4 h-4 rounded-full ring-1 ring-white/10" style={{ backgroundColor: color }} />
-                  <span className="text-[10px] font-mono text-gray-400">{color}</span>
+                <div key={i} className="flex items-center gap-1 md:gap-2 px-1.5 md:px-2 py-0.5 md:py-1 bg-white/5 rounded">
+                  <div className="w-3 h-3 md:w-4 md:h-4 rounded-full ring-1 ring-white/10" style={{ backgroundColor: color }} />
+                  <span className="text-[8px] md:text-[10px] font-mono text-gray-400 hidden sm:inline">{color}</span>
                 </div>
               ))}
             </div>
           </div>
 
           {/* Fonts - Show ALL fonts */}
-          <div className="col-span-3 bg-white border border-gray-200 p-4">
-            <span className="text-[10px] font-mono uppercase tracking-widest text-gray-400 block mb-3">Typographies</span>
-            <div className="space-y-2">
+          <div className="col-span-1 md:col-span-3 bg-white border border-gray-200 p-3 md:p-4">
+            <span className="text-[9px] md:text-[10px] font-mono uppercase tracking-widest text-gray-400 block mb-2 md:mb-3">Typographies</span>
+            <div className="space-y-1 md:space-y-2">
               {localData.fonts?.map((font: string, i: number) => (
-                <div key={i} className={`flex items-center gap-2 ${i === 0 ? '' : 'opacity-60'}`}>
-                  {i === 0 && <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full" />}
-                  <span className={`text-sm ${i === 0 ? 'font-medium text-gray-900' : 'text-gray-500'}`}>{font}</span>
-                  {i === 0 && <span className="text-[8px] text-emerald-600 font-mono uppercase ml-auto">principale</span>}
+                <div key={i} className={`flex items-center gap-1 md:gap-2 ${i === 0 ? '' : 'opacity-60'}`}>
+                  {i === 0 && <span className="w-1 h-1 md:w-1.5 md:h-1.5 bg-emerald-500 rounded-full" />}
+                  <span className={`text-xs md:text-sm ${i === 0 ? 'font-medium text-gray-900' : 'text-gray-500'} truncate`}>{font}</span>
+                  {i === 0 && <span className="text-[7px] md:text-[8px] text-emerald-600 font-mono uppercase ml-auto hidden sm:inline">principale</span>}
                 </div>
-              )) || <span className="text-sm text-gray-400">Sans-serif</span>}
+              )) || <span className="text-xs md:text-sm text-gray-400">Sans-serif</span>}
             </div>
           </div>
             
           {/* Tagline */}
-          <div className="col-span-3 bg-white border border-gray-200 p-4">
-              <span className="text-[10px] font-mono uppercase tracking-widest text-gray-400 block mb-3">Tagline</span>
+          <div className="col-span-1 md:col-span-3 bg-white border border-gray-200 p-3 md:p-4">
+              <span className="text-[9px] md:text-[10px] font-mono uppercase tracking-widest text-gray-400 block mb-2 md:mb-3">Tagline</span>
               <textarea 
                 value={localData.tagline || ''}
                 onChange={(e) => handleChange('tagline', e.target.value)}
-                className="w-full bg-transparent outline-none text-sm text-gray-900 resize-none h-16 leading-relaxed placeholder:text-gray-300"
+                className="w-full bg-transparent outline-none text-xs md:text-sm text-gray-900 resize-none h-12 md:h-16 leading-relaxed placeholder:text-gray-300"
               placeholder="Slogan..."
               />
           </div>
 
           {/* STRATEGIE DE MARQUE - New Block */}
-          <div className="col-span-6 bg-white border border-gray-200 p-4">
+          <div className="col-span-2 md:col-span-6 bg-white border border-gray-200 p-3 md:p-4">
             <div className="flex items-center gap-2 mb-4">
               <span className="text-[10px] font-mono uppercase tracking-widest text-gray-400">Stratégie & Cible</span>
             </div>
@@ -628,16 +629,16 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
           </div>
 
           {/* Storytelling */}
-          <div className="col-span-6 bg-white border border-gray-200 p-4">
-            <div className="flex items-center gap-2 mb-4">
-              <span className="text-[10px] font-mono uppercase tracking-widest text-gray-400">Brand Story</span>
+          <div className="col-span-2 md:col-span-6 bg-white border border-gray-200 p-3 md:p-4">
+            <div className="flex items-center gap-2 mb-3 md:mb-4">
+              <span className="text-[9px] md:text-[10px] font-mono uppercase tracking-widest text-gray-400">Brand Story</span>
             </div>
             <div className="h-full">
-              <span className="text-[9px] text-purple-600 font-bold uppercase tracking-wider block mb-1">📖 Notre Histoire</span>
+              <span className="text-[8px] md:text-[9px] text-purple-600 font-bold uppercase tracking-wider block mb-1">📖 Notre Histoire</span>
               <textarea 
                 value={localData.brandStory || ''}
                 onChange={(e) => handleChange('brandStory', e.target.value)}
-                className="w-full bg-purple-50/50 border-b border-purple-100 p-2 outline-none text-sm text-gray-700 resize-none h-32 leading-relaxed placeholder:text-gray-300"
+                className="w-full bg-purple-50/50 border-b border-purple-100 p-2 outline-none text-xs md:text-sm text-gray-700 resize-none h-24 md:h-32 leading-relaxed placeholder:text-gray-300"
                 placeholder="Racontez l'histoire de votre marque..."
               />
             </div>
