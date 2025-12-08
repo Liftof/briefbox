@@ -2,6 +2,14 @@ import { put } from '@vercel/blob';
 import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(request: NextRequest) {
+  // Check for Blob token first
+  if (!process.env.BLOB_READ_WRITE_TOKEN) {
+    console.error('❌ BLOB_READ_WRITE_TOKEN is not set!');
+    return NextResponse.json({ 
+      error: 'Storage not configured. Please set BLOB_READ_WRITE_TOKEN in Vercel.' 
+    }, { status: 500 });
+  }
+
   try {
     const body = await request.json();
     const { imageData, filename } = body;

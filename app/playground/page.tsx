@@ -1159,25 +1159,35 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
               });
               const uploadResult = await uploadResponse.json();
               if (uploadResult.success && uploadResult.url) {
+                console.log('✅ Edit uploaded to Blob:', uploadResult.url.slice(0, 50) + '...');
                 return { ...img, url: uploadResult.url };
+              } else {
+                console.error('❌ Blob upload failed:', uploadResult.error);
+                return { ...img, skipSave: true };
               }
             } catch (e) {
-              console.warn('Failed to upload edit to Blob:', e);
+              console.error('❌ Blob upload error:', e);
+              return { ...img, skipSave: true };
             }
           }
           return img;
         })
       );
 
-      const normalized = uploadedImages as GeneratedImage[];
+      const normalized = uploadedImages as (GeneratedImage & { skipSave?: boolean })[];
 
-      // Save to local generations - now with Blob URLs
-      const generationsToSave = normalized.map(img => ({
-        url: img.url,
-        prompt: `[EDIT] ${editInstruction}`,
-        brandName: brandData?.name,
-      }));
-      addGenerations(generationsToSave);
+      // Save to local generations - only successfully uploaded images
+      const generationsToSave = normalized
+        .filter(img => !img.skipSave)
+        .map(img => ({
+          url: img.url,
+          prompt: `[EDIT] ${editInstruction}`,
+          brandName: brandData?.name,
+        }));
+      
+      if (generationsToSave.length > 0) {
+        addGenerations(generationsToSave);
+      }
       window.dispatchEvent(new Event('generations-updated'));
 
       setGeneratedImages((prev) => [...normalized, ...prev].slice(0, 16));
@@ -1432,26 +1442,39 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
               });
               const uploadResult = await uploadResponse.json();
               if (uploadResult.success && uploadResult.url) {
+                console.log('✅ Image uploaded to Blob:', uploadResult.url.slice(0, 50) + '...');
                 return { ...img, url: uploadResult.url };
+              } else {
+                // Upload failed - return null to filter out
+                console.error('❌ Blob upload failed:', uploadResult.error);
+                showToast('Erreur de sauvegarde - image non persistée', 'error');
+                return { ...img, url: img.url, skipSave: true }; // Mark to skip localStorage
               }
             } catch (e) {
-              console.warn('Failed to upload image to Blob, keeping data URL:', e);
+              console.error('❌ Blob upload error:', e);
+              showToast('Erreur de sauvegarde cloud', 'error');
+              return { ...img, url: img.url, skipSave: true };
             }
           }
           return img;
         })
       );
 
-      const normalized = uploadedImages as GeneratedImage[];
+      const normalized = uploadedImages as (GeneratedImage & { skipSave?: boolean })[];
 
-      // Save to Projects (localStorage) - now with Blob URLs instead of data URLs
-      const generationsToSave = normalized.map(img => ({
-        url: img.url,
-        prompt: finalPrompt,
-        templateId: selectedTemplate || undefined,
-        brandName: targetBrand?.name,
-      }));
-      addGenerations(generationsToSave);
+      // Save to Projects (localStorage) - only save successfully uploaded images
+      const generationsToSave = normalized
+        .filter(img => !img.skipSave) // Don't save data URLs to localStorage
+        .map(img => ({
+          url: img.url,
+          prompt: finalPrompt,
+          templateId: selectedTemplate || undefined,
+          brandName: targetBrand?.name,
+        }));
+      
+      if (generationsToSave.length > 0) {
+        addGenerations(generationsToSave);
+      }
       
       // Trigger update event for ProjectsView
       window.dispatchEvent(new Event('generations-updated'));
