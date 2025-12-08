@@ -55,12 +55,19 @@ async function extractWithFirecrawl(
       },
       body: JSON.stringify({
         urls: [url],
-        prompt: `For a ${industry} company called "${brandName}", extract:
-1. Pain points their target users face (with specific impact/cost)
-2. Current industry trends (2024-2025)
-3. Competitive landscape insights
+        prompt: `For a ${industry} company called "${brandName}", extract insights about their TARGET CUSTOMERS (not about the ${industry} industry itself!):
 
-Focus on actionable marketing angles. Be specific with numbers when available.`,
+1. Pain points the TARGET USERS face daily (with specific impact/cost on THEM)
+   - Example: "73% of marketing professionals juggle 5+ tools daily" ✅
+   - NOT: "The SaaS market will reach $X billion" ❌
+
+2. Trends affecting the TARGET USERS' work/life (2024-2025)
+   - Example: "Remote marketers report 30% more burnout" ✅
+   - NOT: "AI adoption in enterprise is growing" ❌
+
+3. What competitors fail to solve for these users
+
+Focus on stats that would make the TARGET CUSTOMER stop scrolling. Be specific with percentages and time/money impact.`,
         // V2 Extract uses schema directly, not formats array
         schema: {
           type: 'object',
@@ -70,8 +77,8 @@ Focus on actionable marketing angles. Be specific with numbers when available.`,
               items: {
                 type: 'object',
                 properties: {
-                  problem: { type: 'string', description: 'The specific user problem' },
-                  impact: { type: 'string', description: 'Quantified impact (time/money lost)' }
+                  problem: { type: 'string', description: 'A specific struggle the TARGET USER faces daily' },
+                  impact: { type: 'string', description: 'Quantified impact on THEM (time/money/stress lost)' }
                 },
                 required: ['problem', 'impact']
               }
@@ -81,8 +88,8 @@ Focus on actionable marketing angles. Be specific with numbers when available.`,
               items: {
                 type: 'object',
                 properties: {
-                  trend: { type: 'string', description: 'The industry trend' },
-                  relevance: { type: 'string', description: 'Why it matters for this brand' }
+                  trend: { type: 'string', description: 'A trend affecting the TARGET USERS work/life' },
+                  relevance: { type: 'string', description: 'Why it matters for THEM (not for the industry)' }
                 },
                 required: ['trend', 'relevance']
               }
@@ -90,7 +97,7 @@ Focus on actionable marketing angles. Be specific with numbers when available.`,
             competitorInsights: {
               type: 'array',
               items: { type: 'string' },
-              description: 'Key competitor positioning or market gaps'
+              description: 'What competitors fail to deliver for the target users'
             }
           },
           required: ['painPoints', 'trends', 'competitorInsights']
@@ -166,34 +173,36 @@ async function enrichWithFirecrawlSearch(
   try {
     console.log(`🔥 Smart Firecrawl Search for: ${industry} / ${brandName}`);
     
-    // STRATEGIC SEARCH MATRIX - Focus on END CUSTOMER problems, NOT industry meta-data!
-    // IMPORTANT: We want insights that speak TO the customer, not ABOUT the industry
+    // STRATEGIC SEARCH MATRIX - Focus on TARGET AUDIENCE problems, NOT industry meta-data!
+    // IMPORTANT: We want insights that speak TO the target customer, not ABOUT the client's industry
+    // Example: For a "SaaS for marketers", search for "marketer problems", NOT "SaaS market growth"
+    
     const searches = [
-      // 1. PAIN POINTS - What problems does the END CUSTOMER face?
-      // NOT "SaaS market grew 30%" but "Teams waste 5h/week on manual tasks"
+      // 1. PAIN POINTS - What problems does the TARGET AUDIENCE face in their daily work?
+      // If targetAudience = "marketing professionals", search for THEIR struggles
       {
         query: targetAudience 
-          ? `"${targetAudience}" problems challenges frustrations statistics`
-          : `people problems with "${industry}" frustrations complaints`,
+          ? `"${targetAudience}" daily struggles challenges time wasted statistics survey`
+          : `professionals problems with "${industry}" frustrations pain points`,
         type: 'painPoints',
         config: { limit: 5, scrapeOptions: { formats: ['markdown'] } }
       },
       
-      // 2. CONSUMER/USER TRENDS - What's changing for END CUSTOMERS?
-      // NOT "Industry grew" but "More people are doing X"
+      // 2. TARGET AUDIENCE TRENDS - What's changing in THEIR profession?
+      // NOT "Industry grew" but "More marketers are struggling with X"
       {
         query: targetAudience
-          ? `"${targetAudience}" behavior trends statistics 2024 2025`
-          : `consumer trends "${industry}" behavior changes statistics`,
+          ? `"${targetAudience}" challenges trends burnout workload statistics 2024 2025`
+          : `"${industry}" users challenges productivity statistics`,
         type: 'trends',
         config: { limit: 5, tbs: 'qdr:m' }
       },
       
-      // 3. RELEVANT NEWS - Topics the END CUSTOMER cares about
+      // 3. RELEVANT NEWS - Topics the TARGET AUDIENCE cares about professionally
       {
         query: targetAudience 
-          ? `"${targetAudience}" news impact`
-          : `"${industry}" impact consumers users`,
+          ? `"${targetAudience}" career challenges news`
+          : `"${industry}" professionals news impact`,
         type: 'news',
         config: { limit: 5, sources: ['news'] }
       },
@@ -205,12 +214,12 @@ async function enrichWithFirecrawlSearch(
         config: { limit: 5, scrapeOptions: { formats: ['markdown'] } }
       },
       
-      // 5. RESEARCH/STATS - Stats that resonate with END CUSTOMERS
-      // NOT "Market size $X billion" but "X% of people struggle with Y"
+      // 5. RESEARCH/STATS - Stats about the TARGET AUDIENCE's work life
+      // NOT "Market size $X billion" but "X% of [target audience] struggle with Y"
       {
         query: targetAudience
-          ? `"${targetAudience}" statistics research study percentage`
-          : `"${industry}" customer statistics user research percentage`,
+          ? `"${targetAudience}" survey study report percentage time productivity`
+          : `"${industry}" users customer statistics survey percentage`,
         type: 'research',
         config: { limit: 3, categories: ['research'] }
       }
@@ -1191,12 +1200,13 @@ export async function POST(request: Request) {
         ],
         "industryInsights": [
            {
-             "painPoint": "CRITICAL: This must be relevant to the END CUSTOMER, not about the client's industry! Example: If client is a SaaS, don't say 'The SaaS market grew 30%'. Instead say '68% of teams waste 5h/week on manual tasks'. If client is a clothing brand, don't say 'Fashion industry is booming'. Instead say '40% of fashion is fast-fashion, damaging the environment'. ALWAYS think: what does the END CUSTOMER care about?",
-             "consequence": "The cost/impact for the END CUSTOMER (time, money, stress, environment, health...)",
-             "solution": "How the product/service solves THIS SPECIFIC problem for the customer",
+             "painPoint": "A specific stat about the TARGET AUDIENCE's daily struggle (NOT about the market/industry size!). Example: '73% des community managers utilisent 5+ outils par jour'",
+             "consequence": "The cost/impact on THEM personally (time lost, stress, missed opportunities...)",
+             "solution": "How your product helps THEM specifically",
              "type": "pain_point | trend | cost_of_inaction | social_proof"
            }
         ],
+        "_industryInsights_RULES": "⚠️ FORBIDDEN: Market size stats ('$X billion market'), generic tech trends ('AI adoption growing'), anything about the CLIENT's industry growth. ✅ REQUIRED: Stats about TARGET AUDIENCE struggles, their daily pain points, their professional challenges.",
         "contentNuggets": {
            "realStats": ["Statistiques réelles trouvées sur le site"],
            "testimonials": [{"quote": "Citation client", "author": "Nom", "company": "Entreprise"}],
@@ -1223,9 +1233,16 @@ export async function POST(request: Request) {
          - 'vocabulary': Extract specific terms the brand uses. E.g. instead of "software", do they say "Platform", "OS", "Hub"? Extract 4-5 distinct terms.
          - 'painPoints': What problems do they solve? Extract 3-4 specific customer struggles (e.g. "Manual data entry", "Security compliance costs").
       3. **TARGET AUDIENCE & UVP (CRITICAL):**
-         - 'targetAudience': Be precise. Not just "Everyone", but "Remote-first CTOs" or "Parents of toddlers".
+         - 'targetAudience': WHO uses/buys this product? Be SPECIFIC about the END CUSTOMER, not the industry.
+           ⚠️ COMMON MISTAKE: If analyzing a SaaS for marketers, the target is "Marketing teams" or "Social media managers", NOT "SaaS companies" or "businesses".
+           ⚠️ ASK YOURSELF: "Who will see the social media posts we create?" → THOSE are the target audience.
+           Examples: "Remote-first CTOs", "Freelance designers", "E-commerce store owners", "Parents of toddlers", "HR managers in SMBs"
          - 'uniqueValueProposition': What is the #1 Benefit? If it's a non-profit, it's the Impact (e.g. "Saving oceans"). If service, it's the Outcome (e.g. "Doubling revenue"). If product, it's the Utility.
-      4. **INDUSTRY & MOTIFS:** Identify the specific sector. List 3 visual elements typical of this industry (e.g. for Cybersec: 'Locks', 'Shields', 'Code').
+      4. **INDUSTRY vs TARGET (IMPORTANT DISTINCTION):** 
+         - 'industry': What the company SELLS (e.g., "SaaS", "Consulting", "E-commerce")
+         - 'targetAudience': WHO they sell TO (e.g., "Marketing professionals", "CFOs", "Small business owners")
+         - These are DIFFERENT! A "SaaS company" sells software, but their TARGET might be "HR managers" or "Sales teams".
+         - 'visualMotifs': List 3 visual elements typical of this industry (e.g. for Cybersec: 'Locks', 'Shields', 'Code').
       5. **IMAGE CATEGORIZATION (STRICT RULES):** 
          - 'main_logo': The brand's logo.
          - 'client_logo': Logos of customers, partners, or 'featured in' sections.
@@ -1271,26 +1288,34 @@ export async function POST(request: Request) {
          
       8. **PAIN POINTS & MARKET CONTEXT (CRITICAL - RETHINK THIS):** Generate 4-5 actionable insights.
          
-         STOP generating generic market size stats like "Le marché atteindra X Mds$". Nobody cares.
+         ⚠️ GOLDEN RULE: These insights must speak TO the TARGET AUDIENCE, not ABOUT the client's industry!
          
-         Instead, focus on:
-         - **pain_point**: What frustrates the target users RIGHT NOW? Quantify with time/money lost.
-         - **trend**: What's changing in their world that makes this solution timely?
-         - **cost_of_inaction**: What happens if they DON'T solve this? Show the risk.
-         - **social_proof**: What are others like them doing? Peer pressure stats.
+         🚫 FORBIDDEN PATTERNS (auto-reject):
+         - "The [industry] market will reach $X billion" (nobody cares about market size)
+         - "SaaS/AI/Tech adoption is growing" (too generic)
+         - "Companies are investing more in X" (vague corporate speak)
+         - Any stat about the CLIENT'S industry growth
          
-         FORMULA: [Specific Audience] + [Specific Problem] + [Quantified Impact]
+         ✅ WHAT WE WANT: Stats that resonate with the END CUSTOMER'S daily struggles:
+         - **pain_point**: What frustrates the TARGET AUDIENCE RIGHT NOW? Quantify with time/money lost.
+         - **trend**: What's changing in THEIR world that makes this solution timely?
+         - **cost_of_inaction**: What happens if THEY DON'T solve this? Show the risk.
+         - **social_proof**: What are others like THEM doing? Peer pressure stats.
          
-         EXAMPLES for a Social Media Management SaaS:
-         - { "painPoint": "73% des CM jonglent entre 5+ outils différents chaque jour", "consequence": "Perte moyenne de 12h/semaine en copier-coller entre plateformes", "solution": "Centralisation = 1 seul dashboard pour tout gérer", "type": "pain_point" }
-         - { "painPoint": "Sans planning éditorial, 62% des posts sont publiés 'quand on y pense'", "consequence": "Engagement 3x inférieur vs marques avec calendrier structuré", "solution": "Calendrier visuel + rappels automatiques", "type": "cost_of_inaction" }
-         - { "painPoint": "Les équipes marketing passent 40% de leur temps sur du reporting manuel", "consequence": "Moins de temps pour la créativité et la stratégie", "solution": "Analytics automatisés = focus sur ce qui compte", "type": "pain_point" }
-         - { "painPoint": "78% des entreprises prévoient d'augmenter leur budget social media en 2025", "consequence": "Ceux qui n'investissent pas seront distancés", "solution": "Positionnement early adopter", "type": "trend" }
+         FORMULA: [TARGET AUDIENCE] + [THEIR Specific Problem] + [Quantified Impact on THEM]
          
-         BAD EXAMPLES (DO NOT GENERATE):
-         - "Le marché du social media management atteindra 41Mds$ en 2025" (generic, useless)
-         - "Les réseaux sociaux sont importants" (obvious, no insight)
-         - "Industry Report 2024" as source (lazy, fake-sounding)
+         EXAMPLE - If client is a "SaaS for communication professionals":
+         - ✅ "73% des CM jonglent entre 5+ outils différents chaque jour" (speaks to CM's daily pain)
+         - ✅ "Les équipes marketing passent 40% de leur temps sur du reporting" (their time is wasted)
+         - ❌ "Le marché du SaaS atteindra 200Mds$ en 2025" (who cares? CM don't care about SaaS market)
+         - ❌ "95% des entreprises adopteront l'IA" (generic, doesn't speak to CM specifically)
+         
+         EXAMPLE - If client is a "Consulting firm for CFOs":
+         - ✅ "67% des CFOs passent plus de temps sur la compliance que sur la stratégie" (CFO's pain)
+         - ❌ "Le marché du consulting financier croît de 8%" (industry stat, not helpful for CFO)
+         
+         ASK YOURSELF: "If I'm the target customer, would this stat make me stop scrolling?"
+         If the answer is "meh, generic", DON'T include it.
          
       9. **CONTENT VALIDATION (INTELLIGENT AGENT TASK):** 
          I have provided a raw list of "EXTRACTED CONTENT NUGGETS" above. Your job is to FILTER and CLEAN them.
