@@ -46,7 +46,7 @@ async function extractWithFirecrawl(
   try {
     console.log(`🔥 Firecrawl Extract v2 with web search for: ${industry}`);
     
-    // V2 Extract with enableWebSearch and improved JSON format
+    // V2 Extract API - uses prompt + schema directly (not formats array)
     const response = await fetch('https://api.firecrawl.dev/v2/extract', {
       method: 'POST',
       headers: {
@@ -61,43 +61,40 @@ async function extractWithFirecrawl(
 3. Competitive landscape insights
 
 Focus on actionable marketing angles. Be specific with numbers when available.`,
-        // V2 JSON format: { type: "json", schema }
-        formats: [{
-          type: 'json',
-          schema: {
-            type: 'object',
-            properties: {
-              painPoints: {
-                type: 'array',
-                items: {
-                  type: 'object',
-                  properties: {
-                    problem: { type: 'string', description: 'The specific user problem' },
-                    impact: { type: 'string', description: 'Quantified impact (time/money lost)' }
-                  },
-                  required: ['problem', 'impact']
-                }
-              },
-              trends: {
-                type: 'array',
-                items: {
-                  type: 'object',
-                  properties: {
-                    trend: { type: 'string', description: 'The industry trend' },
-                    relevance: { type: 'string', description: 'Why it matters for this brand' }
-                  },
-                  required: ['trend', 'relevance']
-                }
-              },
-              competitorInsights: {
-                type: 'array',
-                items: { type: 'string' },
-                description: 'Key competitor positioning or market gaps'
+        // V2 Extract uses schema directly, not formats array
+        schema: {
+          type: 'object',
+          properties: {
+            painPoints: {
+              type: 'array',
+              items: {
+                type: 'object',
+                properties: {
+                  problem: { type: 'string', description: 'The specific user problem' },
+                  impact: { type: 'string', description: 'Quantified impact (time/money lost)' }
+                },
+                required: ['problem', 'impact']
               }
             },
-            required: ['painPoints', 'trends', 'competitorInsights']
-          }
-        }],
+            trends: {
+              type: 'array',
+              items: {
+                type: 'object',
+                properties: {
+                  trend: { type: 'string', description: 'The industry trend' },
+                  relevance: { type: 'string', description: 'Why it matters for this brand' }
+                },
+                required: ['trend', 'relevance']
+              }
+            },
+            competitorInsights: {
+              type: 'array',
+              items: { type: 'string' },
+              description: 'Key competitor positioning or market gaps'
+            }
+          },
+          required: ['painPoints', 'trends', 'competitorInsights']
+        },
         enableWebSearch: true // KEY: This expands search beyond the URL!
       })
     });
