@@ -2022,8 +2022,19 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
             <div className="space-y-2 overflow-x-auto pb-2 -mx-2 px-2" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
               {/* Row 1: Pain Points transformed into engaging hooks */}
               <div className="flex gap-2 flex-nowrap">
-                {/* Pain Points with emotional hooks */}
-                {brandData.industryInsights?.slice(0, 4).map((insight: any, i: number) => {
+                {/* Pain Points with emotional hooks - FILTER OUT industry meta-stats */}
+                {brandData.industryInsights?.filter((insight: any) => {
+                  const text = (insight.painPoint || insight.fact || insight.didYouKnow || '').toLowerCase();
+                  // Exclude industry meta-stats that don't speak TO the customer
+                  const excludePatterns = [
+                    'market is forecasted', 'market will reach', 'market grew', 'market growth',
+                    'industry worth', 'industry will', 'industry is projected',
+                    'billion dollar', 'trillion dollar', '$1', '$2', '$3', '$4', '$5',
+                    'the global', 'the saas', 'the software', 'the market',
+                    'organizations will adopt', 'companies will'
+                  ];
+                  return !excludePatterns.some(p => text.includes(p));
+                }).slice(0, 4).map((insight: any, i: number) => {
                   const rawText = insight.painPoint || insight.fact || insight.didYouKnow;
                   if (!rawText) return null;
                   
@@ -2494,13 +2505,28 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
               </button>
             </div>
 
+            {/* Hint for editing */}
+            <p className="text-xs text-gray-400 mb-3">
+              💡 Une faute d'orthographe, un logo à corriger ou un détail à changer ? Cliquez sur ✏️ pour modifier n'importe quelle image.
+            </p>
+
             <div className="grid grid-cols-2 gap-4">
-              {generatedImages.map((img) => (
+              {generatedImages.map((img) => {
+                // Map aspect ratio to CSS class
+                const aspectClasses: Record<string, string> = {
+                  '1:1': 'aspect-square',
+                  '4:5': 'aspect-[4/5]',
+                  '9:16': 'aspect-[9/16]',
+                  '16:9': 'aspect-[16/9]',
+                  '3:2': 'aspect-[3/2]',
+                  '21:9': 'aspect-[21/9]',
+                };
+                const aspectClass = aspectClasses[img.aspectRatio || '1:1'] || 'aspect-square';
+                
+                return (
               <div
                 key={img.id}
-                  className={`bg-gray-100 overflow-hidden relative group cursor-pointer border border-gray-200 hover:border-gray-400 transition-all hover:shadow-xl ${
-                  img.aspectRatio === '9:16' ? 'aspect-[9/16]' : 'aspect-square'
-                }`}
+                  className={`bg-gray-100 overflow-hidden relative group cursor-pointer border border-gray-200 hover:border-gray-400 transition-all hover:shadow-xl ${aspectClass}`}
               >
                 <img src={img.url} className="w-full h-full object-cover" />
                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all flex items-center justify-center gap-3 opacity-0 group-hover:opacity-100">
@@ -2552,7 +2578,8 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                   </button>
                 </div>
               </div>
-            ))}
+                );
+              })}
             </div>
           </div>
         )}
