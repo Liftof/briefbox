@@ -848,38 +848,46 @@ export async function POST(request: Request) {
         const [firecrawlRes, parallelRes] = await Promise.allSettled([firecrawlPromise, parallelPromise]);
 
         // Process Firecrawl
-        if (firecrawlRes.status === 'fulfilled' && firecrawlRes.value.ok) {
-            const scrapeData = await firecrawlRes.value.json();
-            if (scrapeData.success) {
-                firecrawlMarkdown = scrapeData.data?.markdown || '';
-                firecrawlMetadata = { 
-                    ...(scrapeData.data?.metadata || {}), 
-                    screenshot: scrapeData.data?.screenshot 
-                };
-                console.log('✅ Firecrawl success');
+        if (firecrawlRes.status === 'fulfilled') {
+            if (firecrawlRes.value.ok) {
+                const scrapeData = await firecrawlRes.value.json();
+                if (scrapeData.success) {
+                    firecrawlMarkdown = scrapeData.data?.markdown || '';
+                    firecrawlMetadata = { 
+                        ...(scrapeData.data?.metadata || {}), 
+                        screenshot: scrapeData.data?.screenshot 
+                    };
+                    console.log('✅ Firecrawl success - markdown length:', firecrawlMarkdown.length);
+                } else {
+                    console.warn('⚠️ Firecrawl returned success:false:', JSON.stringify(scrapeData).slice(0, 500));
+                }
             } else {
-                console.warn('Firecrawl returned success:false', scrapeData);
+                const errorText = await firecrawlRes.value.text();
+                console.warn('⚠️ Firecrawl HTTP error:', firecrawlRes.value.status, errorText.slice(0, 500));
             }
         } else {
-            console.warn('Firecrawl failed or rejected');
+            console.warn('⚠️ Firecrawl promise rejected:', firecrawlRes.reason);
         }
 
         // Process Parallel
-        if (parallelRes.status === 'fulfilled' && parallelRes.value.ok) {
-            const parallelData = await parallelRes.value.json();
-            if (parallelData.results && parallelData.results.length > 0) {
-                // Concatenate excerpts from all sources
-                parallelContent = parallelData.results
-                    .map((res: any) => `SOURCE (${res.url}):\n` + (res.excerpts || []).join('\n\n'))
-                    .join('\n\n---\n\n');
-                console.log('✅ Parallel AI success');
+        if (parallelRes.status === 'fulfilled') {
+            if (parallelRes.value.ok) {
+                const parallelData = await parallelRes.value.json();
+                if (parallelData.results && parallelData.results.length > 0) {
+                    // Concatenate excerpts from all sources
+                    parallelContent = parallelData.results
+                        .map((res: any) => `SOURCE (${res.url}):\n` + (res.excerpts || []).join('\n\n'))
+                        .join('\n\n---\n\n');
+                    console.log('✅ Parallel AI success - sources:', parallelData.results.length);
+                } else {
+                    console.log('ℹ️ Parallel AI returned no results');
+                }
+            } else {
+                const errorText = await parallelRes.value.text();
+                console.warn('⚠️ Parallel API HTTP error:', parallelRes.value.status, errorText.slice(0, 300));
             }
         } else {
-             if (parallelRes.status === 'fulfilled') {
-                 console.warn('Parallel API failed:', await parallelRes.value.text());
-             } else {
-                 console.warn('Parallel API rejected:', parallelRes.reason);
-             }
+            console.warn('⚠️ Parallel API rejected:', parallelRes.reason);
         }
 
     } catch (e) {
