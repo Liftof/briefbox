@@ -1127,24 +1127,25 @@ export async function POST(request: Request) {
     // Limit images sent to AI to avoid token limits and ensure quality
     const imagesForAnalysis = uniqueImages.slice(0, 40);
 
+    // REDUCED content to avoid token limits (was causing "I can't assist" errors)
     const combinedContent = `
-    SOURCE 1 (FIRECRAWL METADATA):
+    METADATA:
     Title: ${firecrawlMetadata.title || 'Unknown'}
     Description: ${firecrawlMetadata.description || 'Unknown'}
     
-    SOURCE 2 (FIRECRAWL CONTENT - MAIN PAGE):
-    ${firecrawlMarkdown.substring(0, 12000)}
+    MAIN PAGE CONTENT:
+    ${firecrawlMarkdown.substring(0, 6000)}
 
-    SOURCE 3 (PARALLEL AI EXTRACT):
-    ${parallelContent.substring(0, 4000)}
+    ADDITIONAL SOURCES:
+    ${parallelContent.substring(0, 2000)}
+    ${deepCrawlContent.substring(0, 4000)}
+    ${nuggetsFormatted.substring(0, 1500)}
     
-    SOURCE 4 (DEEP CRAWL - BLOG/ABOUT/CASE STUDIES - UP TO 7 PAGES):
-    ${deepCrawlContent.substring(0, 10000)}
-    ${nuggetsFormatted}
-    
-    DETECTED IMAGES (Analyze these):
-    ${imagesForAnalysis.join('\n')}
+    IMAGES TO ANALYZE (${imagesForAnalysis.length}):
+    ${imagesForAnalysis.slice(0, 20).join('\n')}
     `;
+    
+    console.log(`📊 Prompt content size: ~${combinedContent.length} chars`);
     
     const prompt = `
       Analyze this website content to extract brand identity information.
@@ -1332,15 +1333,17 @@ export async function POST(request: Request) {
       headers: {
         "Authorization": `Bearer ${process.env.OPENROUTER_API_KEY}`,
         "Content-Type": "application/json",
-        "HTTP-Referer": "https://briefbox.vercel.app", // Optional, for including your app on openrouter.ai rankings.
-        "X-Title": "BriefBox" // Optional. Shows in rankings on openrouter.ai.
+        "HTTP-Referer": "https://briefbox.vercel.app",
+        "X-Title": "BriefBox"
       },
       body: JSON.stringify({
-        "model": "openai/gpt-4o", // Using GPT-4o for high-quality reasoning + Vision
+        "model": "openai/gpt-4o-mini", // Using GPT-4o-mini (faster, cheaper, still great quality)
         "messages": [
-          {"role": "system", "content": "You are an expert Brand Strategist & Creative Director. Your goal is to deeply analyze a website's content (and screenshot if provided) to extract a precise Brand Identity and actionable Social Media Visual Concepts. You must understand the company's positioning, value proposition, and aesthetic to generating high-converting visual briefs.\n\nIMAGE CLASSIFICATION RULES:\n- 'person' category is ONLY for images with clearly visible human faces, bodies or hands.\n- Objects like microphones, cameras, headphones, or any equipment are ALWAYS 'product', never 'person'.\n- When in doubt between 'person' and 'product', choose 'product'.\n- Apply strict visual analysis, do not anthropomorphize objects."},
+          {"role": "system", "content": "You are a Brand Analyst. Extract brand identity from website content. Return ONLY valid JSON, no explanations."},
           {"role": "user", "content": userMessageContent}
-        ]
+        ],
+        "max_tokens": 4000, // Limit response size
+        "temperature": 0.3 // More deterministic for JSON
       })
     });
 
