@@ -1,6 +1,16 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState } from 'react';
+import Link from 'next/link';
+
+interface SidebarProps {
+  activeTab: string;
+  setActiveTab: (tab: string) => void;
+  brandData?: any;
+  onEditBrand?: () => void;
+  isCollapsed: boolean;
+  toggleCollapse: () => void;
+}
 
 export default function Sidebar({ 
   activeTab, 
@@ -9,211 +19,172 @@ export default function Sidebar({
   onEditBrand,
   isCollapsed,
   toggleCollapse
-}: { 
-  activeTab: string, 
-  setActiveTab: (tab: string) => void,
-  brandData?: any,
-  onEditBrand?: () => void,
-  isCollapsed: boolean,
-  toggleCollapse: () => void
-}) {
-  const [isHovered, setIsHovered] = useState(false);
-  const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  
-  // Expand on hover with small delay for smooth UX
-  const handleMouseEnter = () => {
-    if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
-    hoverTimeoutRef.current = setTimeout(() => {
-      setIsHovered(true);
-    }, 150); // Small delay to prevent accidental triggers
-  };
-  
-  const handleMouseLeave = () => {
-    if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
-    hoverTimeoutRef.current = setTimeout(() => {
-      setIsHovered(false);
-    }, 300); // Delay before collapsing
-  };
-  
-  // Cleanup timeout on unmount
-  useEffect(() => {
-    return () => {
-      if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
-    };
-  }, []);
-  
-  // Sidebar is expanded if hovered OR manually expanded
-  const isExpanded = isHovered || !isCollapsed;
+}: SidebarProps) {
+  const [hoveredItem, setHoveredItem] = useState<string | null>(null);
 
   const menuItems = [
-    { id: 'create', icon: '✦', label: 'Créer', disabled: false },
-    // Strategy merged into Create view - angles carousel at top
-    { id: 'projects', icon: '◫', label: 'Projets', disabled: false },
+    { id: 'create', icon: '✦', label: 'Créer' },
+    { id: 'projects', icon: '◫', label: 'Projets' },
     { id: 'calendar', icon: '▤', label: 'Calendrier', disabled: true },
-    { id: 'stats', icon: '◔', label: 'Statistiques', disabled: true },
+    { id: 'stats', icon: '◔', label: 'Stats', disabled: true },
   ];
 
   return (
-    <aside 
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
-      className={`fixed left-4 top-4 bottom-4 bg-white border border-gray-200 z-40 flex flex-col justify-between transition-all duration-300 ease-out ${
-        isExpanded ? 'w-[260px] p-5' : 'w-[72px] p-3'
-      }`}
-    >
-      {/* Subtle grid pattern */}
-      <div 
-        className="absolute inset-0 opacity-[0.02] pointer-events-none"
-        style={{
-          backgroundImage: `
-            linear-gradient(to right, #000 1px, transparent 1px),
-            linear-gradient(to bottom, #000 1px, transparent 1px)
-          `,
-          backgroundSize: '20px 20px'
-        }}
-      />
-
-      {/* Collapse Toggle - Pin/Unpin button */}
-      <button 
-        onClick={toggleCollapse}
-        className="absolute -right-3 top-8 w-6 h-6 bg-white border border-gray-200 flex items-center justify-center text-gray-400 hover:text-gray-900 hover:border-gray-400 transition-all z-50"
-        title={isCollapsed ? "Épingler ouvert" : "Dépingler"}
+    <>
+      {/* Sidebar */}
+      <aside 
+        className={`fixed left-0 top-0 bottom-0 bg-white border-r border-gray-200 z-40 flex flex-col transition-all duration-300 ease-out ${
+          isCollapsed ? 'w-16' : 'w-56'
+        }`}
       >
-        <svg 
-          className={`w-3 h-3 transition-transform ${!isCollapsed ? 'rotate-45' : ''}`} 
-          fill="none" 
-          stroke="currentColor" 
-          strokeWidth="2" 
-          viewBox="0 0 24 24"
-        >
-          {isCollapsed ? (
-            <path d="M9 5l7 7-7 7" />
-          ) : (
-            <path d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" /> 
-          )}
-        </svg>
-      </button>
-
-      <div className="relative z-10">
-        {/* Logo */}
-        <div className={`flex items-center gap-3 mb-8 transition-all ${!isExpanded ? 'justify-center' : ''}`}>
-          <div className="w-9 h-9 bg-gray-900 flex-shrink-0 flex items-center justify-center">
-            <span className="text-white text-sm font-semibold">Q</span>
-          </div>
-          <span className={`font-semibold text-lg tracking-tight overflow-hidden whitespace-nowrap transition-all duration-300 ${!isExpanded ? 'w-0 opacity-0' : 'w-auto opacity-100'}`}>
-            Palette
-          </span>
+        {/* Header with logo */}
+        <div className={`flex items-center h-16 border-b border-gray-100 ${isCollapsed ? 'justify-center px-2' : 'px-4'}`}>
+          <Link href="/" className="flex items-center gap-2.5 group">
+            <div className="w-8 h-8 bg-gray-900 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:bg-gray-800 transition-colors">
+              <span className="text-white text-xs font-bold">P</span>
+            </div>
+            {!isCollapsed && (
+              <span className="font-semibold text-gray-900 tracking-tight">Palette</span>
+            )}
+          </Link>
         </div>
 
         {/* Navigation */}
-        <nav className="space-y-1">
-          {menuItems.map((item) => (
-            <div key={item.id} className="relative group">
-              <button
-                onClick={() => !item.disabled && setActiveTab(item.id)}
-                disabled={item.disabled}
-                className={`flex items-center gap-3 text-sm font-medium transition-all duration-200 ${
-                  !isExpanded 
-                    ? 'w-12 h-12 justify-center p-0 mx-auto' 
-                    : 'w-full px-4 py-3'
-                } ${
-                  item.disabled 
-                    ? 'text-gray-300 cursor-not-allowed' 
-                    : activeTab === item.id 
-                      ? 'bg-gray-900 text-white' 
-                      : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
-                }`}
-                title={!isExpanded ? item.label : undefined}
-              >
-                <span className={`text-base ${activeTab === item.id && !item.disabled ? 'text-emerald-400' : ''}`}>
-                  {item.icon}
-                </span>
-                <span className={`overflow-hidden whitespace-nowrap transition-all duration-300 ${!isExpanded ? 'w-0 opacity-0' : 'w-auto opacity-100'}`}>
-                  {item.label}
-                </span>
-              </button>
+        <nav className="flex-1 py-4 px-2">
+          <div className="space-y-1">
+            {menuItems.map((item) => {
+              const isActive = activeTab === item.id;
+              const isDisabled = item.disabled;
               
-              {/* Tooltip for collapsed state */}
-              {!isExpanded && (
-                <div className="absolute left-full top-1/2 -translate-y-1/2 ml-3 bg-gray-900 text-white text-xs px-2 py-1 opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-50">
-                  {item.label}
-                  {item.disabled && ' (bientôt)'}
+              return (
+                <div key={item.id} className="relative">
+                  <button
+                    onClick={() => !isDisabled && setActiveTab(item.id)}
+                    onMouseEnter={() => setHoveredItem(item.id)}
+                    onMouseLeave={() => setHoveredItem(null)}
+                    disabled={isDisabled}
+                    className={`w-full flex items-center gap-3 rounded-lg transition-all duration-150 ${
+                      isCollapsed ? 'justify-center h-11 px-0' : 'px-3 h-10'
+                    } ${
+                      isDisabled 
+                        ? 'text-gray-300 cursor-not-allowed' 
+                        : isActive 
+                          ? 'bg-gray-900 text-white' 
+                          : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                    }`}
+                  >
+                    <span className={`text-base flex-shrink-0 ${isActive ? 'text-emerald-400' : ''}`}>
+                      {item.icon}
+                    </span>
+                    {!isCollapsed && (
+                      <span className="text-sm font-medium">{item.label}</span>
+                    )}
+                    {!isCollapsed && isDisabled && (
+                      <span className="ml-auto text-[9px] font-mono uppercase tracking-wider text-gray-300 bg-gray-100 px-1.5 py-0.5 rounded">
+                        soon
+                      </span>
+                    )}
+                  </button>
+                  
+                  {/* Tooltip when collapsed */}
+                  {isCollapsed && hoveredItem === item.id && (
+                    <div className="absolute left-full top-1/2 -translate-y-1/2 ml-2 bg-gray-900 text-white text-xs font-medium px-2.5 py-1.5 rounded-md whitespace-nowrap z-50 shadow-lg">
+                      {item.label}
+                      {isDisabled && <span className="text-gray-400 ml-1">(bientôt)</span>}
+                      <div className="absolute right-full top-1/2 -translate-y-1/2 border-4 border-transparent border-r-gray-900" />
+                    </div>
+                  )}
                 </div>
-              )}
-              
-              {item.disabled && isExpanded && (
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[9px] font-mono uppercase tracking-widest text-gray-300">
-                  soon
-                </span>
-              )}
-            </div>
-          ))}
+              );
+            })}
+          </div>
         </nav>
-      </div>
 
-      {/* Brand Card */}
-      <div className="relative z-10">
-        {brandData ? (
-          <div 
-            className={`bg-gray-50 border border-gray-200 cursor-pointer hover:border-gray-400 transition-all group ${
-              !isExpanded ? 'p-2 flex flex-col items-center justify-center' : 'p-4'
-            }`}
-            onClick={onEditBrand}
-          >
-            {isExpanded && (
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-[9px] font-mono uppercase tracking-widest text-gray-400">Ma Marque</span>
-                <svg className="w-3 h-3 text-gray-300 group-hover:text-gray-600 transition-colors" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                  <path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                </svg>
-              </div>
-            )}
-            
-            <div className={`flex items-center gap-3 ${!isExpanded ? 'justify-center w-full' : 'mb-3'}`}>
-              <div className="w-9 h-9 bg-white flex items-center justify-center p-1 border border-gray-200 flex-shrink-0">
-                {brandData.logo ? (
-                  <img src={brandData.logo} className="w-full h-full object-contain" />
-                ) : (
-                  <span className="text-sm text-gray-400">◆</span>
+        {/* Brand Card - Bottom */}
+        <div className={`border-t border-gray-100 ${isCollapsed ? 'p-2' : 'p-3'}`}>
+          {brandData ? (
+            <button
+              onClick={onEditBrand}
+              className={`w-full bg-gray-50 hover:bg-gray-100 border border-gray-200 hover:border-gray-300 rounded-lg transition-all group ${
+                isCollapsed ? 'p-2' : 'p-3'
+              }`}
+            >
+              <div className={`flex items-center ${isCollapsed ? 'justify-center' : 'gap-3'}`}>
+                {/* Brand logo */}
+                <div className="w-8 h-8 bg-white rounded border border-gray-200 flex items-center justify-center overflow-hidden flex-shrink-0">
+                  {brandData.logo ? (
+                    <img src={brandData.logo} className="w-full h-full object-contain" alt="" />
+                  ) : (
+                    <span className="text-gray-400 text-xs">◆</span>
+                  )}
+                </div>
+                
+                {!isCollapsed && (
+                  <div className="flex-1 min-w-0 text-left">
+                    <div className="text-sm font-medium text-gray-900 truncate">
+                      {brandData.name || 'Ma marque'}
+                    </div>
+                    <div className="text-[10px] text-gray-400 truncate">
+                      {brandData.tagline || 'Cliquez pour modifier'}
+                    </div>
+                  </div>
+                )}
+                
+                {!isCollapsed && (
+                  <svg className="w-4 h-4 text-gray-300 group-hover:text-gray-500 transition-colors flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                  </svg>
                 )}
               </div>
               
-              <div className={`overflow-hidden transition-all duration-300 ${!isExpanded ? 'w-0 opacity-0 hidden' : 'w-auto opacity-100'}`}>
-                <div className="font-medium text-sm truncate text-gray-900">{brandData.name}</div>
-                <div className="text-[10px] text-gray-400 truncate">{brandData.tagline || 'Aucun slogan'}</div>
+              {/* Color palette preview */}
+              {!isCollapsed && brandData.colors?.length > 0 && (
+                <div className="flex gap-1 mt-2">
+                  {brandData.colors.slice(0, 5).map((color: string, i: number) => (
+                    <div 
+                      key={i}
+                      className="w-4 h-4 rounded-sm border border-gray-200"
+                      style={{ backgroundColor: color }}
+                    />
+                  ))}
+                </div>
+              )}
+            </button>
+          ) : (
+            <div className={`bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200 rounded-lg ${
+              isCollapsed ? 'p-2' : 'p-3'
+            }`}>
+              <div className={`flex items-center ${isCollapsed ? 'justify-center' : 'gap-3'}`}>
+                <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-teal-600 rounded flex-shrink-0" />
+                {!isCollapsed && (
+                  <div className="text-left">
+                    <div className="text-xs font-medium text-gray-900">Plan Starter</div>
+                    <div className="text-[10px] text-gray-500">3 générations gratuites</div>
+                  </div>
+                )}
               </div>
             </div>
+          )}
+        </div>
 
-            {isExpanded && brandData.colors && brandData.colors.length > 0 && (
-              <div className="flex gap-1">
-                {brandData.colors.slice(0, 5).map((c: string, i: number) => (
-                  <div 
-                    key={i} 
-                    className="w-5 h-5 border border-gray-200" 
-                    style={{ backgroundColor: c }}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
-        ) : (
-          <div className={`bg-gray-50 border border-gray-200 transition-all ${!isExpanded ? 'p-2 flex flex-col items-center' : 'p-4'}`}>
-            <div className={`flex items-center gap-3 ${!isExpanded ? 'justify-center' : 'mb-3'}`}>
-              <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-teal-600 flex-shrink-0" />
-              <div className={`transition-all duration-300 ${!isExpanded ? 'w-0 opacity-0 hidden' : 'w-auto opacity-100'}`}>
-                <div className="text-xs font-medium text-gray-900">Free Plan</div>
-                <div className="text-[10px] text-gray-400">75/100 crédits</div>
-              </div>
-            </div>
-            
-            {isExpanded && (
-              <div className="h-px bg-gray-200 overflow-hidden">
-                <div className="h-full bg-gray-900 w-[75%]" />
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-    </aside>
+        {/* Collapse toggle */}
+        <div className="border-t border-gray-100 p-2">
+          <button
+            onClick={toggleCollapse}
+            className="w-full flex items-center justify-center h-9 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-all"
+          >
+            <svg 
+              className={`w-4 h-4 transition-transform duration-300 ${isCollapsed ? 'rotate-180' : ''}`}
+              fill="none" 
+              stroke="currentColor" 
+              strokeWidth="2" 
+              viewBox="0 0 24 24"
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
+            </svg>
+          </button>
+        </div>
+      </aside>
+    </>
   );
 }

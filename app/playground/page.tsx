@@ -3016,7 +3016,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
         />
       )}
 
-      <div className={`flex-1 transition-all duration-300 ease-out overflow-x-hidden ${step !== 'url' && step !== 'analyzing' && step !== 'bento' ? (isSidebarCollapsed ? 'ml-[88px]' : 'ml-[276px]') : 'w-full'}`}>
+      <div className={`flex-1 transition-all duration-300 ease-out overflow-x-hidden ${step !== 'url' && step !== 'analyzing' && step !== 'bento' ? (isSidebarCollapsed ? 'ml-16' : 'ml-56') : 'w-full'}`}>
         <main className={`mx-auto min-h-screen flex flex-col justify-center transition-all duration-500 ${
             step === 'bento' 
                 ? 'w-full px-4 md:px-12 py-8 max-w-[1920px]' 
