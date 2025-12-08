@@ -1374,6 +1374,41 @@ export async function POST(request: Request) {
     const aiData = await aiResponse.json();
     let text = aiData.choices[0].message.content;
     
+    // Detect model refusals (safety filters)
+    const isRefusal = text.toLowerCase().includes("i'm sorry") || 
+                      text.toLowerCase().includes("i cannot") ||
+                      text.toLowerCase().includes("can't assist") ||
+                      text.toLowerCase().includes("i can't help") ||
+                      text.toLowerCase().includes("unable to");
+    
+    if (isRefusal) {
+        console.warn("⚠️ Model refused to analyze, trying fallback model (Claude)...");
+        
+        // Retry with Claude which is often more permissive for business analysis
+        const fallbackResponse = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+            method: "POST",
+            headers: {
+                "Authorization": `Bearer ${process.env.OPENROUTER_API_KEY}`,
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                "model": "anthropic/claude-3-haiku", // Cheaper and often more permissive
+                "messages": [
+                    {"role": "system", "content": "You are a brand analyst. Analyze the website content and return valid JSON with brand information."},
+                    {"role": "user", "content": typeof userMessageContent === 'string' ? userMessageContent : userMessageContent[0]?.text || 'Analyze this brand'}
+                ]
+            })
+        });
+        
+        if (fallbackResponse.ok) {
+            const fallbackData = await fallbackResponse.json();
+            text = fallbackData.choices?.[0]?.message?.content || '';
+            console.log("✅ Fallback model responded");
+        } else {
+            console.warn("⚠️ Fallback model also failed");
+        }
+    }
+    
     // Clean up markdown code blocks if present
     text = text.replace(/```json\n?/g, '').replace(/```/g, '').trim();
     
@@ -1386,15 +1421,21 @@ export async function POST(request: Request) {
         }
         brandData = JSON.parse(text);
     } catch (e) {
-        console.error("Failed to parse JSON from Gemini:", text);
-        // Fallback data on parse error
+        console.error("Failed to parse JSON:", text.slice(0, 200));
+        // Fallback data on parse error - extract what we can from metadata
         brandData = {
-          name: firecrawlMetadata.title || "Brand",
+          name: firecrawlMetadata.title?.split('|')[0]?.split('-')[0]?.trim() || "Brand",
           description: firecrawlMetadata.description || "",
-          colors: ["#000000"],
-          aesthetic: "Modern",
-          logo: null
+          tagline: firecrawlMetadata.description?.split('.')[0] || "",
+          colors: ["#000000", "#ffffff"],
+          fonts: ["Sans-serif"],
+          values: ["Quality"],
+          aesthetic: ["Modern"],
+          toneVoice: ["Professional"],
+          logo: firecrawlMetadata.ogImage || firecrawlMetadata.icon || null,
+          industry: "Business"
         };
+        console.log("ℹ️ Using fallback brand data from metadata");
     }
 
     // 3. Extract Colors from Logo (if available) - REAL EXTRACTION
