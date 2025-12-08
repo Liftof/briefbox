@@ -1,7 +1,7 @@
 {
-  "name": "quittetonagence",
+  "name": "palette",
   "version": "1.0.0",
-  "description": "Créez vos visuels pro sans agence",
+  "description": "Palette — Créez vos visuels pro avec l'IA",
   "main": "index.js",
   "scripts": {
     "dev": "next dev",

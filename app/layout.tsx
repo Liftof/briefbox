@@ -9,8 +9,8 @@ const lexend = Lexend({
 });
 
 export const metadata: Metadata = {
-  title: "QuitteTonAgence — Créez vos visuels pro sans agence",
-  description: "Fini les agences hors de prix. Créez vos visuels social media comme un pro en 2 minutes avec l'IA. Tout le monde peut être créatif.",
+  title: "Palette — Créez vos visuels pro avec l'IA",
+  description: "Générez des visuels social media professionnels en 2 minutes avec l'IA. Analysez votre marque, choisissez un style, créez.",
 };
 
 export default function RootLayout({

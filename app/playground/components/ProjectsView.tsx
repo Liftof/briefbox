@@ -28,9 +28,9 @@ export interface Folder {
 }
 
 // LocalStorage keys
-const GENERATIONS_KEY = 'briefbox_generations';
-const FOLDERS_KEY = 'briefbox_folders';
-const FEEDBACK_PATTERNS_KEY = 'briefbox_feedback_patterns';
+const GENERATIONS_KEY = 'palette_generations';
+const FOLDERS_KEY = 'palette_folders';
+const FEEDBACK_PATTERNS_KEY = 'palette_feedback_patterns';
 
 // Feedback patterns for learning
 export interface FeedbackPatterns {

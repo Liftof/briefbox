@@ -29,9 +29,9 @@ export default function Navigation() {
             {/* Logo */}
             <Link href="/" className="flex items-center gap-2.5 group">
               <div className="w-7 h-7 bg-gray-900 rounded-full flex items-center justify-center">
-                <span className="text-white text-[9px] font-semibold">B</span>
+                <span className="text-white text-[9px] font-semibold">P</span>
               </div>
-              <span className="text-gray-900 font-medium text-sm">Flowww</span>
+              <span className="text-gray-900 font-medium text-sm">Palette</span>
             </Link>
 
             {/* Desktop menu */}

@@ -1,6 +1,6 @@
-# Architecture Technique BriefBox (V2 - Workflow "Smart Agency")
+# Architecture Technique Palette (V2 - Workflow "Smart Agency")
 
-Ce document détaille le fonctionnement de BriefBox. L'objectif est de simuler une agence créative : on analyse la matière, on propose des angles, on définit une DA via des inspirations, et on produit.
+Ce document détaille le fonctionnement de Palette. L'objectif est de simuler une agence créative : on analyse la matière, on propose des angles, on définit une DA via des inspirations, et on produit.
 
 ## 1. Vue d'ensemble du Workflow
 

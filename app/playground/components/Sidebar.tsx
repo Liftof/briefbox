@@ -101,7 +101,7 @@ export default function Sidebar({
             <span className="text-white text-sm font-semibold">Q</span>
           </div>
           <span className={`font-semibold text-lg tracking-tight overflow-hidden whitespace-nowrap transition-all duration-300 ${!isExpanded ? 'w-0 opacity-0' : 'w-auto opacity-100'}`}>
-            QuitteTonAgence
+            Palette
           </span>
         </div>
 

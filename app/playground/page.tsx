@@ -629,7 +629,7 @@ function PlaygroundContent() {
   const isNewUser = useCallback(() => {
     if (typeof window === 'undefined') return false;
     try {
-      const data = localStorage.getItem('briefbox_generations');
+      const data = localStorage.getItem('palette_generations');
       const generations = data ? JSON.parse(data) : [];
       return !Array.isArray(generations) || generations.length === 0;
     } catch {
@@ -2635,7 +2635,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                         const blobUrl = window.URL.createObjectURL(blob);
                         const link = document.createElement('a');
                         link.href = blobUrl;
-                          link.download = `briefbox-${Date.now()}.png`;
+                          link.download = `palette-${Date.now()}.png`;
                         document.body.appendChild(link);
                         link.click();
                         document.body.removeChild(link);

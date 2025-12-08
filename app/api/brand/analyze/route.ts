@@ -1361,8 +1361,8 @@ export async function POST(request: Request) {
       headers: {
         "Authorization": `Bearer ${process.env.OPENROUTER_API_KEY}`,
         "Content-Type": "application/json",
-        "HTTP-Referer": "https://briefbox.vercel.app",
-        "X-Title": "BriefBox"
+        "HTTP-Referer": "https://palette.vercel.app",
+        "X-Title": "Palette"
       },
       body: JSON.stringify({
         "model": "anthropic/claude-3.5-sonnet", // 200K context, great at JSON, rarely refuses
