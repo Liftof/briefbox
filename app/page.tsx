@@ -1,5 +1,6 @@
 import Navigation from '@/components/Navigation';
 import Hero from '@/components/Hero';
+import CtaSection from '@/components/CtaSection';
 import Link from 'next/link';
 
 export default function Home() {
@@ -246,7 +247,7 @@ export default function Home() {
               <span className="text-xs font-mono uppercase tracking-[0.2em] text-gray-400">Tarifs</span>
             </div>
             <h2 className="text-3xl md:text-4xl font-light text-gray-900 leading-tight mb-4">
-              Le prix d'un café par jour.<br />
+              Moins cher qu'un café par jour.<br />
               <span className="font-semibold">Pour tous vos visuels.</span>
             </h2>
             <p className="text-gray-500 max-w-xl mx-auto">
@@ -425,30 +426,7 @@ export default function Home() {
       </section>
 
       {/* CTA */}
-      <section className="py-24 md:py-32 bg-gray-900 text-white relative overflow-hidden">
-        {/* Floating accents */}
-        <div className="absolute top-20 left-20 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-20 right-20 w-96 h-96 bg-sky-500/10 rounded-full blur-3xl" />
-        
-        <div className="max-w-3xl mx-auto px-6 text-center relative z-10">
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-light mb-6 leading-tight">
-            Prêt à créer<br />
-            <span className="font-semibold">en 60 secondes ?</span>
-          </h2>
-          <p className="text-lg text-gray-400 mb-10 max-w-xl mx-auto">
-            Votre premier visuel est gratuit. Sans carte bancaire.
-          </p>
-          <Link 
-            href="/playground" 
-            className="inline-flex items-center gap-3 bg-white text-gray-900 px-8 py-4 font-medium text-sm hover:bg-gray-100 transition-colors"
-          >
-            <span>Commencer maintenant</span>
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <path d="M5 12h14M12 5l7 7-7 7" />
-            </svg>
-          </Link>
-        </div>
-      </section>
+      <CtaSection />
 
       {/* Footer */}
       <footer className="py-16 bg-[#FAFAFA] border-t border-gray-200">
