@@ -87,6 +87,15 @@ body {
 .animate-float-3 { animation: float-3 18s ease-in-out infinite; }
 .animate-shimmer { animation: shimmer 2s ease-in-out infinite; }
 
+/* Infinite marquee scroll */
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+.animate-marquee { 
+  animation: marquee 30s linear infinite;
+}
+
 /* Fade in animation for loading states */
 @keyframes fade-in {
   from { opacity: 0; transform: translateY(10px); }

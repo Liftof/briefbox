@@ -205,32 +205,39 @@ export default function Home() {
             <p className="text-gray-500">De vrais visuels, générés en quelques clics.</p>
           </div>
           
-          {/* Gallery Grid - Real user examples */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {[1, 2, 3, 4, 5, 6, 7].slice(0, 4).map((i) => (
-              <div key={i} className="aspect-[4/5] bg-gray-100 rounded-lg relative overflow-hidden group">
-                <img 
-                  src={`/gallery/gal-${i}.png`} 
-                  alt={`Visuel créé avec Palette ${i}`}
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-              </div>
-            ))}
-          </div>
-          
-          {/* Second row on larger screens */}
-          <div className="hidden md:grid grid-cols-3 gap-4 mt-4">
-            {[5, 6, 7].map((i) => (
-              <div key={i} className="aspect-[4/5] bg-gray-100 rounded-lg relative overflow-hidden group">
-                <img 
-                  src={`/gallery/gal-${i}.png`} 
-                  alt={`Visuel créé avec Palette ${i}`}
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-              </div>
-            ))}
+          {/* Infinite scrolling gallery */}
+          <div className="relative overflow-hidden">
+            {/* Fade edges */}
+            <div className="absolute left-0 top-0 bottom-0 w-20 bg-gradient-to-r from-gray-50 to-transparent z-10 pointer-events-none" />
+            <div className="absolute right-0 top-0 bottom-0 w-20 bg-gradient-to-l from-gray-50 to-transparent z-10 pointer-events-none" />
+            
+            {/* Scrolling container */}
+            <div className="flex gap-4 animate-marquee hover:[animation-play-state:paused]">
+              {/* First set */}
+              {[1, 2, 3, 4, 5, 6, 7].map((i) => (
+                <div key={`a-${i}`} className="w-48 md:w-64 flex-shrink-0">
+                  <div className="aspect-square bg-gray-100 rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
+                    <img 
+                      src={`/gallery/gal-${i}.png`} 
+                      alt={`Visuel créé avec Palette ${i}`}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                </div>
+              ))}
+              {/* Duplicate for seamless loop */}
+              {[1, 2, 3, 4, 5, 6, 7].map((i) => (
+                <div key={`b-${i}`} className="w-48 md:w-64 flex-shrink-0">
+                  <div className="aspect-square bg-gray-100 rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
+                    <img 
+                      src={`/gallery/gal-${i}.png`} 
+                      alt={`Visuel créé avec Palette ${i}`}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
           
           <div className="text-center mt-8">
