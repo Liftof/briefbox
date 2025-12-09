@@ -81,7 +81,7 @@ export default function Home() {
                     <div className="w-8 h-8 bg-blue-500/20 rounded-full flex items-center justify-center text-blue-400 text-sm flex-shrink-0">✓</div>
                     <div>
                       <div className="font-medium text-white mb-1">2 minutes chrono</div>
-                      <div className="text-sm text-gray-400 leading-relaxed">Décrivez ce que vous voulez. L'IA le génère. Simple.</div>
+                      <div className="text-sm text-gray-400 leading-relaxed">Décrivez ce que vous voulez. C'est généré instantanément.</div>
                     </div>
                   </div>
                   <div className="flex items-start gap-4">
@@ -150,7 +150,7 @@ export default function Home() {
             <div className="relative">
               <div className="text-8xl font-light text-gray-100 absolute -top-4 -left-2">3</div>
               <div className="relative z-10 pt-12">
-                <h3 className="text-xl font-medium text-gray-900 mb-3">L'IA génère vos visuels</h3>
+                <h3 className="text-xl font-medium text-gray-900 mb-3">Vos visuels sont générés</h3>
                 <p className="text-gray-400 leading-relaxed text-sm">
                   Obtenez automatiquement des visuels haute qualité, déclinés dans tous les formats. Modifiez en un clic.
                 </p>
@@ -378,7 +378,7 @@ export default function Home() {
                 <img src="/logo.png" alt="Palette" className="h-8 object-contain" />
               </div>
               <p className="text-xs text-gray-400 leading-relaxed">
-                Des visuels beaux, cohérents, générés par IA. Sans effort.
+                Des visuels pros, cohérents, générés automatiquement.
               </p>
             </div>
             <div>

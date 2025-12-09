@@ -49,16 +49,16 @@ export default function Hero() {
             {/* Headline */}
             <h1 className="mb-6 md:mb-8" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
               <span className="block text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-light text-gray-900 leading-[1.1] mb-2">
-                Entrez votre site.
+                Vos visuels de marque.
               </span>
               <span className="block text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-semibold text-gray-900 leading-[1.1]">
-                Voilà. Vos visuels sont créés.
+                En 60 secondes.
               </span>
             </h1>
 
             {/* Subheadline */}
             <p className="text-lg text-gray-400 leading-relaxed max-w-md mb-10">
-              L'IA analyse votre marque et génère des visuels <span className="text-gray-900 font-medium">beaux</span>, <span className="text-gray-900 font-medium">cohérents</span> et <span className="text-gray-900 font-medium">100% à votre image</span>. Pour vos réseaux, vos pubs — automatiquement.
+              Votre marque est importée depuis votre site web, puis décrivez ce que vous voulez et publiez. Des visuels <span className="text-gray-900 font-medium">pros</span>, <span className="text-gray-900 font-medium">cohérents</span>, <span className="text-gray-900 font-medium">100% à votre image</span> — sans graphiste, sans agence, sans attendre.
             </p>
 
             {/* URL Input */}
