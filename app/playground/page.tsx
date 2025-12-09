@@ -570,44 +570,44 @@ function PlaygroundContent() {
     let lastError: any = null;
     
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
-      try {
+    try {
         if (attempt > 1) {
           setStatusMessage(`Nouvelle tentative (${attempt}/${maxRetries})...`);
           setProgress(10);
         }
         
-        const response = await fetch('/api/brand/analyze', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-              url,
-              socialLinks: socialLinks.filter(Boolean),
-              otherLinks: otherLinks.split(',').map(l => l.trim()).filter(Boolean)
-          })
-        });
-        const data = await response.json();
+      const response = await fetch('/api/brand/analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+            url,
+            socialLinks: socialLinks.filter(Boolean),
+            otherLinks: otherLinks.split(',').map(l => l.trim()).filter(Boolean)
+        })
+      });
+      const data = await response.json();
         
-        if (!response.ok || !data.success) {
-          throw new Error(data.error || 'Analyse impossible');
-        }
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || 'Analyse impossible');
+      }
 
-        clearInterval(timer);
-        setProgress(100);
-        hydrateBrand(data.brand);
-        setStatus('idle');
-        
-        setTimeout(() => {
-            setStep('logo-confirm');
+      clearInterval(timer);
+      setProgress(100);
+      hydrateBrand(data.brand);
+      setStatus('idle');
+      
+      setTimeout(() => {
+          setStep('logo-confirm');
             if (data.brand?.logo) {
-              showToast('Logo détecté !', 'success');
+          showToast('Logo détecté !', 'success');
             } else {
               showToast('Analyse terminée — uploadez votre logo', 'info');
             }
-        }, 500);
-        
+      }, 500);
+
         return; // Success!
         
-      } catch (error: any) {
+    } catch (error: any) {
         lastError = error;
         console.error(`Analyze attempt ${attempt} failed:`, error);
         
@@ -618,10 +618,10 @@ function PlaygroundContent() {
     }
     
     // All retries failed
-    clearInterval(timer);
+      clearInterval(timer);
     console.error('All analyze attempts failed:', lastError);
-    setStatus('error');
-    setStep('url');
+      setStatus('error');
+      setStep('url');
     showToast(lastError?.message || 'Impossible d\'analyser ce site après plusieurs tentatives', 'error');
   };
 
@@ -1495,14 +1495,14 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
       const generationsToSave = normalized
         .filter(img => !img.skipSave) // Don't save data URLs to localStorage
         .map(img => ({
-          url: img.url,
-          prompt: finalPrompt,
-          templateId: selectedTemplate || undefined,
-          brandName: targetBrand?.name,
-        }));
+        url: img.url,
+        prompt: finalPrompt,
+        templateId: selectedTemplate || undefined,
+        brandName: targetBrand?.name,
+      }));
       
       if (generationsToSave.length > 0) {
-        addGenerations(generationsToSave);
+      addGenerations(generationsToSave);
       }
       
       // Trigger update event for ProjectsView
@@ -1539,20 +1539,19 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
           <div className="absolute bottom-32 left-16 w-48 h-48 bg-gradient-to-tr from-emerald-200/15 to-teal-300/10 rounded-full blur-3xl" />
 
           <div className="relative z-10 w-full max-w-2xl mx-auto px-6">
-            {/* Header */}
+            {/* Header with Logo */}
             <div className="mb-16">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
-                <span className="text-xs font-mono uppercase tracking-[0.2em] text-gray-400">Brand Scanner</span>
+              <div className="mb-8">
+                <img src="/logo-icon.png" alt="Palette" className="w-14 h-14 object-contain" />
               </div>
               
               <h1 className="text-4xl md:text-5xl font-light text-gray-900 leading-[1.1] mb-4" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
                 Commençons par<br />
-                <span className="font-semibold">votre identité.</span>
+                <span className="font-semibold">votre marque.</span>
               </h1>
               
               <p className="text-gray-400 text-lg max-w-md leading-relaxed">
-                Notre IA analyse votre site en quelques secondes — logo, couleurs, ton, positionnement.
+                On récupère votre logo, vos couleurs, votre ton — en quelques secondes. Ensuite, créez.
               </p>
             </div>
 

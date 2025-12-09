@@ -81,7 +81,7 @@ export default function Home() {
                     <div className="w-8 h-8 bg-emerald-500/20 rounded-full flex items-center justify-center text-emerald-400 text-sm flex-shrink-0">✓</div>
                     <div>
                       <div className="font-medium text-white mb-1">2 minutes chrono</div>
-                      <div className="text-sm text-gray-400 leading-relaxed">Vous décrivez, l'IA génère. C'est aussi simple que ça.</div>
+                      <div className="text-sm text-gray-400 leading-relaxed">Décrivez ce que vous voulez. Palette le crée. Simple.</div>
                     </div>
                   </div>
                   <div className="flex items-start gap-4">
@@ -94,8 +94,8 @@ export default function Home() {
                   <div className="flex items-start gap-4">
                     <div className="w-8 h-8 bg-emerald-500/20 rounded-full flex items-center justify-center text-emerald-400 text-sm flex-shrink-0">✓</div>
                     <div>
-                      <div className="font-medium text-white mb-1">100% On-Brand</div>
-                      <div className="text-sm text-gray-400 leading-relaxed">L'IA respecte votre charte graphique à la lettre.</div>
+                      <div className="font-medium text-white mb-1">100% à votre image</div>
+                      <div className="text-sm text-gray-400 leading-relaxed">Vos couleurs, votre logo, votre style. Automatiquement.</div>
                     </div>
                   </div>
                 </div>
@@ -150,9 +150,9 @@ export default function Home() {
             <div className="relative">
               <div className="text-8xl font-light text-gray-100 absolute -top-4 -left-2">3</div>
               <div className="relative z-10 pt-12">
-                <h3 className="text-xl font-medium text-gray-900 mb-3">L'IA génère tout</h3>
+                <h3 className="text-xl font-medium text-gray-900 mb-3">Vos visuels arrivent</h3>
                 <p className="text-gray-400 leading-relaxed text-sm">
-                  Obtenez instantanément des visuels déclinés dans tous les formats, prêts à poster.
+                  Obtenez instantanément des visuels haute qualité, déclinés dans tous les formats. Modifiez en un clic.
                 </p>
               </div>
             </div>
@@ -312,7 +312,7 @@ export default function Home() {
                 </svg>
               </summary>
               <div className="px-6 pb-6 text-sm text-gray-500 leading-relaxed border-t border-gray-100 pt-4">
-                L'IA fait le travail d'un directeur artistique. Vous uploadez votre charte graphique et l'IA génère des visuels pro qui respectent votre identité.
+                Palette fait le travail d'un directeur artistique. Entrez votre site, on récupère votre charte, et vous générez des visuels pro qui respectent votre identité.
               </div>
             </details>
 
@@ -379,7 +379,7 @@ export default function Home() {
                 <span className="text-sm font-medium text-gray-900">Palette</span>
               </div>
               <p className="text-xs text-gray-400 leading-relaxed">
-                La première plateforme d'IA générative dédiée aux marques.
+                Des visuels beaux, cohérents, à votre image. Sans effort.
               </p>
             </div>
             <div>

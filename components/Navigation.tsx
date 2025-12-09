@@ -27,9 +27,9 @@ export default function Navigation() {
               : 'bg-transparent'
           }`}>
             {/* Logo */}
-            <Link href="/" className="flex items-center gap-2 group">
-              <img src="/logo-icon.png" alt="Palette" className="w-8 h-8 object-contain" />
-              <span className="text-gray-900 font-medium text-sm">Palette</span>
+            <Link href="/" className="flex items-center gap-2.5 group">
+              <img src="/logo-icon.png" alt="Palette" className="w-10 h-10 object-contain" />
+              <span className="text-gray-900 font-semibold text-base">Palette</span>
             </Link>
 
             {/* Desktop menu */}

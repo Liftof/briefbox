@@ -46,10 +46,9 @@ export default function Hero() {
           
           {/* Left: Content */}
           <div className="max-w-xl">
-            {/* Status indicator */}
+            {/* Logo badge */}
             <div className="flex items-center gap-3 mb-10">
-              <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
-              <span className="text-xs font-mono uppercase tracking-[0.2em] text-gray-400">Visual AI Platform</span>
+              <img src="/logo-icon.png" alt="Palette" className="w-12 h-12 object-contain" />
             </div>
 
             {/* Headline */}
@@ -58,13 +57,13 @@ export default function Hero() {
                 Entrez votre site.
               </span>
               <span className="block text-5xl md:text-6xl font-semibold text-gray-900 leading-[1.1]">
-                L'IA crée vos visuels.
+                Voilà. Vos visuels sont créés.
               </span>
             </h1>
 
             {/* Subheadline */}
             <p className="text-lg text-gray-400 leading-relaxed max-w-md mb-10">
-              On analyse votre marque en 60 secondes. Ensuite, générez des visuels <span className="text-gray-900 font-medium">haute résolution</span>, <span className="text-gray-900 font-medium">100% on-brand</span> en un clic.
+              Produisez des visuels <span className="text-gray-900 font-medium">beaux</span>, <span className="text-gray-900 font-medium">cohérents</span> et <span className="text-gray-900 font-medium">100% à votre image</span>. Pour vos réseaux, vos pubs, vos supports — sans effort, sans graphiste.
             </p>
 
             {/* URL Input */}
@@ -133,20 +132,25 @@ export default function Hero() {
             </div>
 
             {/* Stats */}
-            <div className="flex items-center gap-12 pt-8 border-t border-gray-200">
+            <div className="flex items-center gap-10 pt-8 border-t border-gray-200">
               <div>
-                <div className="text-2xl font-semibold text-gray-900 mb-1">60s</div>
-                <div className="text-xs font-mono uppercase tracking-wider text-gray-400">d'analyse</div>
+                <div className="text-2xl font-semibold text-gray-900 mb-1">∞</div>
+                <div className="text-xs font-mono uppercase tracking-wider text-gray-400">visuels</div>
               </div>
               <div className="w-px h-10 bg-gray-200" />
               <div>
-                <div className="text-2xl font-semibold text-gray-900 mb-1">100%</div>
-                <div className="text-xs font-mono uppercase tracking-wider text-gray-400">on-brand</div>
+                <div className="text-2xl font-semibold text-gray-900 mb-1">2K</div>
+                <div className="text-xs font-mono uppercase tracking-wider text-gray-400">haute déf</div>
+              </div>
+              <div className="w-px h-10 bg-gray-200" />
+              <div>
+                <div className="text-2xl font-semibold text-gray-900 mb-1">1 clic</div>
+                <div className="text-xs font-mono uppercase tracking-wider text-gray-400">pour modifier</div>
               </div>
               <div className="w-px h-10 bg-gray-200" />
               <div>
                 <div className="text-2xl font-semibold text-gray-900 mb-1">0€</div>
-                <div className="text-xs font-mono uppercase tracking-wider text-gray-400">pour démarrer</div>
+                <div className="text-xs font-mono uppercase tracking-wider text-gray-400">pour tester</div>
               </div>
             </div>
           </div>

@@ -9,8 +9,8 @@ const lexend = Lexend({
 });
 
 export const metadata: Metadata = {
-  title: "Palette — Créez vos visuels pro avec l'IA",
-  description: "Générez des visuels social media professionnels en 2 minutes avec l'IA. Analysez votre marque, choisissez un style, créez.",
+  title: "Palette — Des visuels beaux, cohérents, à votre image",
+  description: "Entrez votre site, récupérez votre charte, créez des visuels pro en 2 minutes. Pour vos réseaux, vos pubs, tous vos supports.",
   icons: {
     icon: "/logo-icon.png",
     apple: "/logo-icon.png",
