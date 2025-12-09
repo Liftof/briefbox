@@ -27,10 +27,8 @@ export default function Navigation() {
               : 'bg-transparent'
           }`}>
             {/* Logo */}
-            <Link href="/" className="flex items-center gap-2.5 group">
-              <div className="w-7 h-7 bg-gray-900 rounded-full flex items-center justify-center">
-                <span className="text-white text-[9px] font-semibold">P</span>
-              </div>
+            <Link href="/" className="flex items-center gap-2 group">
+              <img src="/logo-icon.png" alt="Palette" className="w-8 h-8 object-contain" />
               <span className="text-gray-900 font-medium text-sm">Palette</span>
             </Link>
 

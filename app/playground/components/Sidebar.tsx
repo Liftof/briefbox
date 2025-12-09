@@ -39,10 +39,12 @@ export default function Sidebar({
       >
         {/* Header with logo */}
         <div className={`flex items-center h-16 border-b border-gray-100 ${isCollapsed ? 'justify-center px-2' : 'px-4'}`}>
-          <Link href="/" className="flex items-center gap-2.5 group">
-            <div className="w-8 h-8 bg-gray-900 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:bg-gray-800 transition-colors">
-              <span className="text-white text-xs font-bold">P</span>
-            </div>
+          <Link href="/" className="flex items-center gap-2 group">
+            <img 
+              src="/logo-icon.png" 
+              alt="Palette" 
+              className="w-8 h-8 object-contain flex-shrink-0" 
+            />
             {!isCollapsed && (
               <span className="font-semibold text-gray-900 tracking-tight">Palette</span>
             )}

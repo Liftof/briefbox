@@ -375,9 +375,7 @@ export default function Home() {
           <div className="grid md:grid-cols-4 gap-12 mb-12">
             <div>
               <div className="flex items-center gap-2 mb-4">
-                <div className="w-6 h-6 bg-gray-900 rounded-full flex items-center justify-center">
-                  <span className="text-white text-[10px] font-bold">P</span>
-                </div>
+                <img src="/logo-icon.png" alt="Palette" className="w-7 h-7 object-contain" />
                 <span className="text-sm font-medium text-gray-900">Palette</span>
               </div>
               <p className="text-xs text-gray-400 leading-relaxed">
