@@ -637,9 +637,32 @@ function PlaygroundContent() {
     }
   }, []);
 
+  // Helper: Filter out useless industry meta-stats
+  const isUsefulInsight = (text: string): boolean => {
+    const lower = text.toLowerCase();
+    const badPatterns = [
+      'market is forecasted', 'market will reach', 'market grew', 'market growth',
+      'market is projected', 'projected to reach', 'is projected to',
+      'industry worth', 'industry will', 'industry is projected',
+      'billion', 'trillion', 'usd ', ' usd', 'eur ', ' eur',
+      '$1', '$2', '$3', '$4', '$5', '$6', '$7', '$8', '$9',
+      'cagr', 'rising at', 'growth rate', 'compound annual',
+      'the global', 'the saas', 'the software', 'the market', 'the industry',
+      'organizations will adopt', 'companies will', 'enterprises will',
+      'by 2025', 'by 2026', 'by 2027', 'by 2028', 'by 2029', 'by 2030', 'by 2031', 'by 2032',
+      'food safety', 'quality control market'
+    ];
+    return !badPatterns.some(p => lower.includes(p));
+  };
+
   // Build a smart prompt from the RICH bento data (pain points, competitors, trends)
   const buildSmartWelcomePrompt = useCallback((brand: any): { brief: string; templateId: TemplateId } | null => {
-    const insights = Array.isArray(brand.industryInsights) ? brand.industryInsights : [];
+    const rawInsights = Array.isArray(brand.industryInsights) ? brand.industryInsights : [];
+    // Filter out garbage market stats
+    const insights = rawInsights.filter((i: any) => {
+      const text = i.painPoint || i.fact || i.didYouKnow || '';
+      return isUsefulInsight(text);
+    });
     const contentNuggets = brand.contentNuggets || {};
     const features = brand.features || [];
     const brandName = brand.name || 'nous';
@@ -648,16 +671,22 @@ function PlaygroundContent() {
     // Check multiple sources for pain points
     let mainPainPoint: string | null = null;
     
-    // Source 1: industryInsights with type 'pain_point'
+    // Source 1: industryInsights with type 'pain_point' (already filtered)
     const painPointInsight = insights.find((i: any) => i.type === 'pain_point' && i.painPoint);
     if (painPointInsight?.painPoint) {
       mainPainPoint = painPointInsight.painPoint;
     }
     
-    // Source 2: contentNuggets.painPoints (from Firecrawl search)
+    // Source 2: contentNuggets.painPoints (from Firecrawl search) - filter garbage
     if (!mainPainPoint && contentNuggets.painPoints && contentNuggets.painPoints.length > 0) {
-      const firstPain = contentNuggets.painPoints[0];
-      mainPainPoint = typeof firstPain === 'string' ? firstPain : firstPain.point || firstPain.problem;
+      const validPainPoints = contentNuggets.painPoints.filter((p: any) => {
+        const text = typeof p === 'string' ? p : p.point || p.problem || '';
+        return isUsefulInsight(text);
+      });
+      if (validPainPoints.length > 0) {
+        const firstPain = validPainPoints[0];
+        mainPainPoint = typeof firstPain === 'string' ? firstPain : firstPain.point || firstPain.problem;
+      }
     }
     
     // Source 3: brand.painPoints (direct)
@@ -2101,11 +2130,22 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                   const text = (insight.painPoint || insight.fact || insight.didYouKnow || '').toLowerCase();
                   // Exclude industry meta-stats that don't speak TO the customer
                   const excludePatterns = [
+                    // Market size / projections
                     'market is forecasted', 'market will reach', 'market grew', 'market growth',
+                    'market is projected', 'projected to reach', 'is projected to',
                     'industry worth', 'industry will', 'industry is projected',
-                    'billion dollar', 'trillion dollar', '$1', '$2', '$3', '$4', '$5',
-                    'the global', 'the saas', 'the software', 'the market',
-                    'organizations will adopt', 'companies will'
+                    // Money figures
+                    'billion', 'trillion', 'usd ', ' usd', 'eur ', ' eur',
+                    '$1', '$2', '$3', '$4', '$5', '$6', '$7', '$8', '$9',
+                    // Growth rates
+                    'cagr', 'rising at', 'growth rate', 'compound annual',
+                    // Generic industry talk
+                    'the global', 'the saas', 'the software', 'the market', 'the industry',
+                    'organizations will adopt', 'companies will', 'enterprises will',
+                    // Year projections
+                    'by 2025', 'by 2026', 'by 2027', 'by 2028', 'by 2029', 'by 2030', 'by 2031', 'by 2032',
+                    // Food safety (wtf?)
+                    'food safety', 'quality control market'
                   ];
                   return !excludePatterns.some(p => text.includes(p));
                 }).slice(0, 4).map((insight: any, i: number) => {
