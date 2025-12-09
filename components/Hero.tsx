@@ -8,8 +8,43 @@ export default function Hero() {
   const [socialProofCount, setSocialProofCount] = useState(0);
   
   useEffect(() => {
-    // Generate random number between 150 and 1800
-    setSocialProofCount(Math.floor(Math.random() * (1800 - 150 + 1)) + 150);
+    const calculateDailyCount = () => {
+      // Get current time in Paris timezone
+      const parisTime = new Date().toLocaleString('en-US', { timeZone: 'Europe/Paris' });
+      const parisDate = new Date(parisTime);
+      
+      const hour = parisDate.getHours();
+      const minute = parisDate.getMinutes();
+      const day = parisDate.getDate();
+      const month = parisDate.getMonth();
+      
+      // Create a seed based on the day (for consistent "random" variation)
+      const daySeed = (day * 31 + month * 12) % 100;
+      
+      // Base starts at ~150 at midnight, grows to ~1800 by 23:59
+      // Progress through the day (0 to 1)
+      const dayProgress = (hour * 60 + minute) / (24 * 60);
+      
+      // Base growth: 150 -> 1800 throughout the day
+      const baseCount = 150 + Math.floor(dayProgress * 1650);
+      
+      // Add some "randomness" based on the day seed (±50)
+      const variation = Math.floor((daySeed / 100) * 100) - 50;
+      
+      // Add small jumps every 15 minutes to simulate real activity
+      const quarterHourBoost = Math.floor((hour * 4 + Math.floor(minute / 15)) * 3);
+      
+      return Math.max(150, Math.min(1800, baseCount + variation + quarterHourBoost));
+    };
+    
+    setSocialProofCount(calculateDailyCount());
+    
+    // Update every 15 minutes
+    const interval = setInterval(() => {
+      setSocialProofCount(calculateDailyCount());
+    }, 15 * 60 * 1000);
+    
+    return () => clearInterval(interval);
   }, []);
   const [url, setUrl] = useState('');
   const [isLoading, setIsLoading] = useState(false);
