@@ -24,6 +24,56 @@ interface ParallelSearchResult {
   excerpts: string[];
 }
 
+// ==========================================
+// INSIGHT QUALITY FILTER - Apply at SOURCE
+// ==========================================
+// Filter out generic market stats that nobody cares about
+// This runs BEFORE adding to brandData, not at display time
+function isRelevantInsight(text: string): boolean {
+  if (!text || text.length < 10) return false;
+  
+  const lower = text.toLowerCase();
+  
+  // FORBIDDEN patterns - generic industry garbage
+  const garbagePatterns = [
+    // Market size / projections (useless for end users)
+    'market is projected', 'projected to reach', 'is projected to',
+    'market will reach', 'market grew', 'market growth', 'market size',
+    'market is forecasted', 'market forecast',
+    // Money figures (nobody cares about industry TAM)
+    'billion', 'trillion', 'million dollar', 'usd ', ' usd', 'eur ', ' eur',
+    '$1', '$2', '$3', '$4', '$5', '$6', '$7', '$8', '$9',
+    // Growth rates / financial metrics
+    'cagr', 'compound annual', 'growth rate', 'rising at a',
+    'year-over-year', 'yoy growth',
+    // Generic industry talk
+    'the global market', 'the industry', 'the market is', 'market players',
+    'industry worth', 'industry will', 'industry is expected',
+    'organizations will adopt', 'companies will', 'enterprises will',
+    'adoption rate', 'adoption is growing',
+    // Year projections
+    'by 2024', 'by 2025', 'by 2026', 'by 2027', 'by 2028', 'by 2029', 'by 2030', 'by 2031', 'by 2032',
+    'in 2024', 'in 2025', 'in 2030',
+    // Random unrelated industries (Firecrawl sometimes returns garbage)
+    'food safety', 'quality control market', 'healthcare market',
+    'automotive market', 'manufacturing market',
+    // Too vague / generic
+    'digital transformation', 'artificial intelligence market', 'ai market',
+    'machine learning market', 'cloud computing market',
+    'according to a report', 'industry report', 'market report',
+  ];
+  
+  // Check if any garbage pattern is present
+  for (const pattern of garbagePatterns) {
+    if (lower.includes(pattern)) {
+      console.log(`🗑️ Filtered out garbage insight: "${text.slice(0, 60)}..." (matched: ${pattern})`);
+      return false;
+    }
+  }
+  
+  return true;
+}
+
 // Helper: Use Firecrawl Extract v2 for structured data with web search enrichment
 // Docs: https://docs.firecrawl.dev/features/extract
 // UPGRADED TO V2: Better extraction, JSON format, caching
@@ -1791,41 +1841,47 @@ FORMAT: Return ONLY a valid JSON array:
           )
         ]);
 
-        // === Process SEARCH results ===
+        // === Process SEARCH results (with quality filter!) ===
         if (searchEnrichment.painPoints.length > 0) {
-          const painPointInsights = searchEnrichment.painPoints.map(pp => ({
-            painPoint: pp.point,
-            consequence: '',
-            solution: '',
-            type: 'pain_point' as const,
-            source: pp.source,
-            isEnriched: true
-          }));
+          const painPointInsights = searchEnrichment.painPoints
+            .filter(pp => isRelevantInsight(pp.point)) // FILTER GARBAGE
+            .map(pp => ({
+              painPoint: pp.point,
+              consequence: '',
+              solution: '',
+              type: 'pain_point' as const,
+              source: pp.source,
+              isEnriched: true
+            }));
 
-          brandData.industryInsights = [
-            ...(brandData.industryInsights || []),
-            ...painPointInsights
-          ].slice(0, 6);
-          
-          console.log(`✅ Added ${painPointInsights.length} pain points from Search`);
+          if (painPointInsights.length > 0) {
+            brandData.industryInsights = [
+              ...(brandData.industryInsights || []),
+              ...painPointInsights
+            ].slice(0, 6);
+            console.log(`✅ Added ${painPointInsights.length} VALID pain points from Search (filtered ${searchEnrichment.painPoints.length - painPointInsights.length} garbage)`);
+          }
         }
 
         if (searchEnrichment.trends.length > 0) {
-          const trendInsights = searchEnrichment.trends.map(t => ({
-            painPoint: t.trend,
-            consequence: t.isRecent ? '🔥 Tendance récente' : '',
-            solution: '',
-            type: 'trend' as const,
-            source: t.source,
-            isEnriched: true
-          }));
+          const trendInsights = searchEnrichment.trends
+            .filter(t => isRelevantInsight(t.trend)) // FILTER GARBAGE
+            .map(t => ({
+              painPoint: t.trend,
+              consequence: t.isRecent ? '🔥 Tendance récente' : '',
+              solution: '',
+              type: 'trend' as const,
+              source: t.source,
+              isEnriched: true
+            }));
 
-          brandData.industryInsights = [
-            ...(brandData.industryInsights || []),
-            ...trendInsights
-          ].slice(0, 8);
-          
-          console.log(`✅ Added ${trendInsights.length} trends from Search`);
+          if (trendInsights.length > 0) {
+            brandData.industryInsights = [
+              ...(brandData.industryInsights || []),
+              ...trendInsights
+            ].slice(0, 8);
+            console.log(`✅ Added ${trendInsights.length} VALID trends from Search (filtered ${searchEnrichment.trends.length - trendInsights.length} garbage)`);
+          }
         }
 
         // === NEW: Process COMPETITORS for market positioning ===
@@ -1873,16 +1929,18 @@ FORMAT: Return ONLY a valid JSON array:
           }));
         }
 
-        // === Process EXTRACT results (structured data with web search) ===
+        // === Process EXTRACT results (structured data with web search) - with quality filter! ===
         if (extractEnrichment.painPoints.length > 0) {
-          const extractPainPoints = extractEnrichment.painPoints.map(pp => ({
-            painPoint: pp.problem,
-            consequence: pp.impact,
-            solution: '',
-            type: 'pain_point' as const,
-            source: pp.source || 'firecrawl-extract',
-            isEnriched: true
-          }));
+          const extractPainPoints = extractEnrichment.painPoints
+            .filter(pp => isRelevantInsight(pp.problem)) // FILTER GARBAGE
+            .map(pp => ({
+              painPoint: pp.problem,
+              consequence: pp.impact,
+              solution: '',
+              type: 'pain_point' as const,
+              source: pp.source || 'firecrawl-extract',
+              isEnriched: true
+            }));
 
           // Merge with existing, avoiding duplicates
           const existingPains = new Set(
@@ -1894,30 +1952,34 @@ FORMAT: Return ONLY a valid JSON array:
             pp => !existingPains.has(pp.painPoint.toLowerCase().slice(0, 30))
           );
 
-          brandData.industryInsights = [
-            ...(brandData.industryInsights || []),
-            ...newPains
-          ].slice(0, 10);
-          
-          console.log(`✅ Added ${newPains.length} pain points from Extract`);
+          if (newPains.length > 0) {
+            brandData.industryInsights = [
+              ...(brandData.industryInsights || []),
+              ...newPains
+            ].slice(0, 10);
+            console.log(`✅ Added ${newPains.length} VALID pain points from Extract`);
+          }
         }
 
         if (extractEnrichment.trends.length > 0) {
-          const extractTrends = extractEnrichment.trends.map(t => ({
-            painPoint: t.trend,
-            consequence: t.relevance,
-            solution: '',
-            type: 'trend' as const,
-            source: t.source || 'firecrawl-extract',
-            isEnriched: true
-          }));
+          const extractTrends = extractEnrichment.trends
+            .filter(t => isRelevantInsight(t.trend)) // FILTER GARBAGE
+            .map(t => ({
+              painPoint: t.trend,
+              consequence: t.relevance,
+              solution: '',
+              type: 'trend' as const,
+              source: t.source || 'firecrawl-extract',
+              isEnriched: true
+            }));
 
-          brandData.industryInsights = [
-            ...(brandData.industryInsights || []),
-            ...extractTrends
-          ].slice(0, 12);
-          
-          console.log(`✅ Added ${extractTrends.length} trends from Extract`);
+          if (extractTrends.length > 0) {
+            brandData.industryInsights = [
+              ...(brandData.industryInsights || []),
+              ...extractTrends
+            ].slice(0, 12);
+            console.log(`✅ Added ${extractTrends.length} VALID trends from Extract`);
+          }
         }
 
         // Add competitor insights to features/keyPoints
