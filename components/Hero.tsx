@@ -46,9 +46,9 @@ export default function Hero() {
           
           {/* Left: Content */}
           <div className="max-w-xl">
-            {/* Logo badge */}
-            <div className="flex items-center gap-3 mb-10">
-              <img src="/logo-icon.png" alt="Palette" className="w-12 h-12 object-contain" />
+            {/* Logo */}
+            <div className="mb-10">
+              <img src="/logo.png" alt="Palette" className="h-12 object-contain" />
             </div>
 
             {/* Headline */}
@@ -63,7 +63,7 @@ export default function Hero() {
 
             {/* Subheadline */}
             <p className="text-lg text-gray-400 leading-relaxed max-w-md mb-10">
-              Produisez des visuels <span className="text-gray-900 font-medium">beaux</span>, <span className="text-gray-900 font-medium">cohérents</span> et <span className="text-gray-900 font-medium">100% à votre image</span>. Pour vos réseaux, vos pubs, vos supports — sans effort, sans graphiste.
+              L'IA analyse votre marque et génère des visuels <span className="text-gray-900 font-medium">beaux</span>, <span className="text-gray-900 font-medium">cohérents</span> et <span className="text-gray-900 font-medium">100% à votre image</span>. Pour vos réseaux, vos pubs — automatiquement.
             </p>
 
             {/* URL Input */}

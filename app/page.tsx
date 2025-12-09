@@ -81,7 +81,7 @@ export default function Home() {
                     <div className="w-8 h-8 bg-emerald-500/20 rounded-full flex items-center justify-center text-emerald-400 text-sm flex-shrink-0">✓</div>
                     <div>
                       <div className="font-medium text-white mb-1">2 minutes chrono</div>
-                      <div className="text-sm text-gray-400 leading-relaxed">Décrivez ce que vous voulez. Palette le crée. Simple.</div>
+                      <div className="text-sm text-gray-400 leading-relaxed">Décrivez ce que vous voulez. L'IA le génère. Simple.</div>
                     </div>
                   </div>
                   <div className="flex items-start gap-4">
@@ -150,9 +150,9 @@ export default function Home() {
             <div className="relative">
               <div className="text-8xl font-light text-gray-100 absolute -top-4 -left-2">3</div>
               <div className="relative z-10 pt-12">
-                <h3 className="text-xl font-medium text-gray-900 mb-3">Vos visuels arrivent</h3>
+                <h3 className="text-xl font-medium text-gray-900 mb-3">L'IA génère vos visuels</h3>
                 <p className="text-gray-400 leading-relaxed text-sm">
-                  Obtenez instantanément des visuels haute qualité, déclinés dans tous les formats. Modifiez en un clic.
+                  Obtenez automatiquement des visuels haute qualité, déclinés dans tous les formats. Modifiez en un clic.
                 </p>
               </div>
             </div>
@@ -374,12 +374,11 @@ export default function Home() {
         <div className="max-w-6xl mx-auto px-6">
           <div className="grid md:grid-cols-4 gap-12 mb-12">
             <div>
-              <div className="flex items-center gap-2 mb-4">
-                <img src="/logo-icon.png" alt="Palette" className="w-7 h-7 object-contain" />
-                <span className="text-sm font-medium text-gray-900">Palette</span>
+              <div className="mb-4">
+                <img src="/logo.png" alt="Palette" className="h-8 object-contain" />
               </div>
               <p className="text-xs text-gray-400 leading-relaxed">
-                Des visuels beaux, cohérents, à votre image. Sans effort.
+                Des visuels beaux, cohérents, générés par IA. Sans effort.
               </p>
             </div>
             <div>
