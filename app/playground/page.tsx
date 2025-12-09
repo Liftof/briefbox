@@ -256,7 +256,7 @@ function PlaygroundContent() {
   const [visualIdeas, setVisualIdeas] = useState<string[]>([]);
   const [brief, setBrief] = useState('');
   const [generatedImages, setGeneratedImages] = useState<GeneratedImage[]>([]);
-  const [lightboxImage, setLightboxImage] = useState<string | null>(null);
+  const [lightboxImage, setLightboxImage] = useState<GeneratedImage | null>(null);
   const [isThinking, setIsThinking] = useState(false);
   const [contentLanguage, setContentLanguage] = useState<'fr' | 'en' | 'es' | 'de'>('fr');
   const [aspectRatio, setAspectRatio] = useState<string>('1:1');
@@ -606,7 +606,7 @@ function PlaygroundContent() {
       }, 500);
 
         return; // Success!
-        
+
     } catch (error: any) {
         lastError = error;
         console.error(`Analyze attempt ${attempt} failed:`, error);
@@ -2028,24 +2028,24 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
     // Strategy view merged into Create - angles carousel at top of the page
 
     return (
-      <div className="animate-fade-in max-w-5xl mx-auto px-4">
+      <div className="animate-fade-in w-full max-w-5xl mx-auto px-3 sm:px-4">
         {/* ═══════════════════════════════════════════════════════════════════════════
             VERTICAL STACKED CREATIVE SPACE
             Clean top-to-bottom flow: Header → Ideas → Form → Results
             ═══════════════════════════════════════════════════════════════════════════ */}
         
         {/* Header Bar */}
-        <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-100">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-gray-100">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gray-900 flex items-center justify-center">
+            <div className="w-10 h-10 bg-gray-900 flex items-center justify-center flex-shrink-0">
               <span className="text-white text-lg">✦</span>
           </div>
-            <div>
-              <h1 className="text-lg font-semibold text-gray-900">{brandData?.name || 'Marque'}</h1>
+            <div className="min-w-0">
+              <h1 className="text-lg font-semibold text-gray-900 truncate">{brandData?.name || 'Marque'}</h1>
               <span className="text-xs text-gray-400">Créez vos visuels</span>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             {/* Aspect Ratio Toggle */}
             <select
               value={aspectRatio}
@@ -2623,7 +2623,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
               💡 Une faute d'orthographe, un logo à corriger ou un détail à changer ? Cliquez sur ✏️ pour modifier n'importe quelle image.
             </p>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {generatedImages.map((img) => {
                 // Map aspect ratio to CSS class
                 const aspectClasses: Record<string, string> = {
@@ -2644,7 +2644,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                 <img src={img.url} className="w-full h-full object-cover" />
                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all flex items-center justify-center gap-3 opacity-0 group-hover:opacity-100">
                   <button
-                    onClick={() => setLightboxImage(img.url)}
+                    onClick={() => setLightboxImage(img)}
                       className="w-11 h-11 bg-white text-gray-900 flex items-center justify-center hover:bg-gray-100 transition-colors shadow-lg"
                     title="Voir"
                   >
@@ -3027,24 +3027,118 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
         </div>
       )}
 
+      {/* Expanded Image View with Options Panel */}
       {lightboxImage && (
         <div
-          className="fixed inset-0 z-[100] bg-black/90 backdrop-blur-sm flex items-center justify-center p-8 animate-fade-in"
+          className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-sm flex animate-fade-in"
           onClick={() => setLightboxImage(null)}
         >
-          <img src={lightboxImage} alt="Full view" className="max-w-full max-h-full object-contain" onClick={(e) => e.stopPropagation()} />
+          {/* Close button */}
           <button
-            className="absolute top-6 right-6 w-10 h-10 border border-white/20 flex items-center justify-center text-white/50 hover:text-white hover:border-white/50 transition"
+            className="absolute top-4 right-4 z-10 w-10 h-10 border border-white/20 flex items-center justify-center text-white/50 hover:text-white hover:border-white/50 transition rounded-full bg-black/50"
             onClick={() => setLightboxImage(null)}
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
               <path d="M6 18L18 6M6 6l12 12" />
             </svg>
           </button>
+
+          {/* Main content area */}
+          <div className="flex flex-col md:flex-row w-full h-full" onClick={(e) => e.stopPropagation()}>
+            {/* Image preview - takes most of the space */}
+            <div className="flex-1 flex items-center justify-center p-4 md:p-8 overflow-hidden">
+              <img 
+                src={lightboxImage.url} 
+                alt="Full view" 
+                className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
+              />
+            </div>
+
+            {/* Options Panel - Right side on desktop, bottom on mobile */}
+            <div className="w-full md:w-80 bg-gray-900 border-t md:border-t-0 md:border-l border-white/10 p-6 flex flex-col gap-4">
+              {/* Header */}
+              <div className="border-b border-white/10 pb-4">
+                <h3 className="text-white font-medium text-lg mb-1">Votre création</h3>
+                <p className="text-gray-400 text-xs">
+                  {lightboxImage.aspectRatio || '1:1'} • Prêt pour export
+                </p>
+              </div>
+
+              {/* Actions */}
+              <div className="space-y-3">
+                {/* Download */}
+                <button
+                  onClick={async () => {
+                    try {
+                      const response = await fetch(lightboxImage.url);
+                      const blob = await response.blob();
+                      const blobUrl = window.URL.createObjectURL(blob);
+                      const link = document.createElement('a');
+                      link.href = blobUrl;
+                      link.download = `palette-${Date.now()}.png`;
+                      document.body.appendChild(link);
+                      link.click();
+                      document.body.removeChild(link);
+                      window.URL.revokeObjectURL(blobUrl);
+                    } catch (err) {
+                      window.open(lightboxImage.url, '_blank');
+                    }
+                  }}
+                  className="w-full py-3 bg-white text-gray-900 font-medium text-sm hover:bg-gray-100 transition-colors flex items-center justify-center gap-2 rounded"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                  </svg>
+                  Télécharger
+                </button>
+
+                {/* Edit/Modify */}
+                <button
+                  onClick={() => {
+                    setEditingImage(lightboxImage.url);
+                    setEditPrompt('');
+                    setLightboxImage(null);
+                  }}
+                  className="w-full py-3 border border-white/20 text-white font-medium text-sm hover:bg-white/10 transition-colors flex items-center justify-center gap-2 rounded"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                  </svg>
+                  Modifier
+                </button>
+
+                {/* Re-generate (iterate) */}
+                <button
+                  onClick={() => {
+                    setLightboxImage(null);
+                    // Trigger a new generation with the same brief
+                    if (brief.trim()) {
+                      handleGenerate();
+                    }
+                  }}
+                  className="w-full py-3 border border-white/20 text-white font-medium text-sm hover:bg-white/10 transition-colors flex items-center justify-center gap-2 rounded"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                  Ré-générer
+                </button>
+              </div>
+
+              {/* Tips */}
+              <div className="mt-auto pt-4 border-t border-white/10">
+                <p className="text-gray-500 text-xs leading-relaxed">
+                  💡 Cliquez sur "Modifier" pour corriger une faute, remplacer un logo, ou ajuster un détail.
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
       )}
 
+      {/* Sidebar - hidden on mobile */}
       {step !== 'url' && step !== 'analyzing' && step !== 'bento' && (
+        <div className="hidden md:block">
         <Sidebar 
             activeTab={activeTab} 
             setActiveTab={setActiveTab} 
@@ -3053,9 +3147,10 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
             isCollapsed={isSidebarCollapsed}
             toggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
         />
+        </div>
       )}
 
-      <div className={`flex-1 transition-all duration-300 ease-out overflow-x-hidden ${step !== 'url' && step !== 'analyzing' && step !== 'bento' ? (isSidebarCollapsed ? 'ml-16' : 'ml-56') : 'w-full'}`}>
+      <div className={`flex-1 transition-all duration-300 ease-out overflow-x-hidden ${step !== 'url' && step !== 'analyzing' && step !== 'bento' ? (isSidebarCollapsed ? 'md:ml-[80px]' : 'md:ml-[240px]') : 'w-full'}`}>
         <main className={`mx-auto min-h-screen flex flex-col justify-center transition-all duration-500 ${
             step === 'bento' 
                 ? 'w-full px-4 md:px-12 py-8 max-w-[1920px]' 

@@ -47,11 +47,11 @@ export default function Hero() {
           {/* Left: Content */}
           <div className="max-w-xl">
             {/* Headline */}
-            <h1 className="mb-8" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
-              <span className="block text-5xl md:text-6xl font-light text-gray-900 leading-[1.1] mb-2">
+            <h1 className="mb-6 md:mb-8" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
+              <span className="block text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-light text-gray-900 leading-[1.1] mb-2">
                 Entrez votre site.
               </span>
-              <span className="block text-5xl md:text-6xl font-semibold text-gray-900 leading-[1.1]">
+              <span className="block text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-semibold text-gray-900 leading-[1.1]">
                 Voilà. Vos visuels sont créés.
               </span>
             </h1>
@@ -67,9 +67,9 @@ export default function Hero() {
               <div className="absolute -top-2 -left-2 w-4 h-4 border-l-2 border-t-2 border-gray-300" />
               <div className="absolute -bottom-2 -right-2 w-4 h-4 border-r-2 border-b-2 border-gray-300" />
               
-              <div className="bg-white border border-gray-200 p-2 flex items-center gap-2">
-                <div className="flex-1 flex items-center gap-3 px-4">
-                  <svg className="w-5 h-5 text-gray-300 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
+              <div className="bg-white border border-gray-200 p-2 flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                <div className="flex-1 flex items-center gap-3 px-3 sm:px-4">
+                  <svg className="w-5 h-5 text-gray-300 flex-shrink-0 hidden sm:block" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
                     <circle cx="12" cy="12" r="10" />
                     <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
                   </svg>
@@ -79,7 +79,7 @@ export default function Hero() {
                     value={url}
                     onChange={(e) => setUrl(e.target.value)}
                     onKeyDown={handleKeyDown}
-                    className="flex-1 py-3 text-lg font-light outline-none placeholder:text-gray-300"
+                    className="flex-1 py-3 text-base sm:text-lg font-light outline-none placeholder:text-gray-300"
                   />
                 </div>
                 
@@ -127,22 +127,19 @@ export default function Hero() {
             </div>
 
             {/* Stats */}
-            <div className="flex items-center gap-10 pt-8 border-t border-gray-200">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 pt-8 border-t border-gray-200">
               <div>
                 <div className="text-2xl font-semibold text-gray-900 mb-1">∞</div>
                 <div className="text-xs font-mono uppercase tracking-wider text-gray-400">visuels</div>
               </div>
-              <div className="w-px h-10 bg-gray-200" />
               <div>
                 <div className="text-2xl font-semibold text-gray-900 mb-1">2K</div>
                 <div className="text-xs font-mono uppercase tracking-wider text-gray-400">haute déf</div>
               </div>
-              <div className="w-px h-10 bg-gray-200" />
               <div>
                 <div className="text-2xl font-semibold text-gray-900 mb-1">1 clic</div>
                 <div className="text-xs font-mono uppercase tracking-wider text-gray-400">pour modifier</div>
               </div>
-              <div className="w-px h-10 bg-gray-200" />
               <div>
                 <div className="text-2xl font-semibold text-gray-900 mb-1">0€</div>
                 <div className="text-xs font-mono uppercase tracking-wider text-gray-400">pour tester</div>

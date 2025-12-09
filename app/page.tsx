@@ -32,7 +32,7 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-8">
+          <div className="grid gap-8 md:grid-cols-2">
             {/* Agency Side */}
             <div className="relative">
               <div className="absolute -top-3 -left-3 w-6 h-6 border-l-2 border-t-2 border-red-200" />
@@ -123,7 +123,7 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-12">
+          <div className="grid gap-8 md:grid-cols-3 md:gap-12">
             {/* Step 1 */}
             <div className="relative">
               <div className="text-8xl font-light text-gray-100 absolute -top-4 -left-2">1</div>
@@ -191,7 +191,7 @@ export default function Home() {
             </span>
           </div>
 
-          <div className="grid lg:grid-cols-3 gap-6 items-start">
+          <div className="grid gap-6 lg:grid-cols-3 items-start">
             {/* Starter */}
             <div className="bg-white border border-gray-200 p-8">
               <div className="text-xs font-mono uppercase tracking-widest text-gray-400 mb-4">Starter</div>
@@ -350,7 +350,7 @@ export default function Home() {
         <div className="absolute bottom-20 right-20 w-96 h-96 bg-sky-500/10 rounded-full blur-3xl" />
         
         <div className="max-w-3xl mx-auto px-6 text-center relative z-10">
-          <h2 className="text-4xl md:text-5xl font-light mb-6 leading-tight">
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-light mb-6 leading-tight">
             Prêt à quitter<br />
             <span className="font-semibold">votre agence ?</span>
           </h2>
@@ -372,7 +372,7 @@ export default function Home() {
       {/* Footer */}
       <footer className="py-16 bg-[#FAFAFA] border-t border-gray-200">
         <div className="max-w-6xl mx-auto px-6">
-          <div className="grid md:grid-cols-4 gap-12 mb-12">
+          <div className="grid grid-cols-2 gap-8 md:grid-cols-4 md:gap-12 mb-12">
             <div>
               <div className="mb-4">
                 <img src="/logo.png" alt="Palette" className="h-8 object-contain" />

@@ -620,11 +620,21 @@ ${imageDescriptions.join('\n')}
           throw new Error(`Aucune image générée. ${errorDetail}`);
         }
 
+        // Normalize images and include aspect ratio
+        const normalizedImages = finalImages.map((img: any) => {
+          const url = typeof img === 'string' ? img : img?.url || img?.image || img;
+          return {
+            url,
+            aspect_ratio: aspectRatio // Include the requested aspect ratio
+          };
+        });
+
         return NextResponse.json({
           success: true,
-          images: finalImages,
-          generatedCount: finalImages.length,
-          requestedCount: actualNumImages
+          images: normalizedImages,
+          generatedCount: normalizedImages.length,
+          requestedCount: actualNumImages,
+          aspectRatio // Also return it at top level for reference
         });
     } catch (falError: any) {
         // Catch Fal specific errors
