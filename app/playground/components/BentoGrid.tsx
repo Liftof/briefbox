@@ -5,7 +5,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 // Tag options
 const TAG_OPTIONS = [
   { value: 'main_logo', label: 'Logo', color: 'bg-gray-900 text-white' },
-  { value: 'product', label: 'Produit', color: 'bg-emerald-500 text-white' },
+  { value: 'product', label: 'Produit', color: 'bg-blue-500 text-white' },
   { value: 'app_ui', label: 'App/UI', color: 'bg-purple-500 text-white' },
   { value: 'reference', label: 'Visuel de référence', color: 'bg-amber-500 text-white' },
   { value: 'team', label: 'Équipe', color: 'bg-blue-500 text-white' },
@@ -31,7 +31,7 @@ function EditButton({ onClick, title }: { onClick: () => void; title?: string })
   return (
     <button
       onClick={onClick}
-      className="p-1.5 text-emerald-500 hover:text-emerald-600 hover:bg-emerald-50 rounded transition-all"
+      className="p-1.5 text-blue-500 hover:text-blue-600 hover:bg-blue-50 rounded transition-all"
       title={title || 'Modifier'}
     >
       <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
@@ -114,7 +114,7 @@ function ImportPopup({ isOpen, onClose, onImport, forReferences = false }: {
       <div className={`bg-white w-full max-w-2xl max-h-[80vh] flex flex-col shadow-2xl border ${forReferences ? 'border-purple-300' : 'border-gray-200'}`}>
         <div className={`px-6 py-4 border-b flex items-center justify-between ${forReferences ? 'border-purple-200 bg-gradient-to-r from-purple-50 to-fuchsia-50' : 'border-gray-200'}`}>
           <h2 className="text-sm font-medium text-gray-900 uppercase tracking-wider flex items-center gap-2">
-            <span className={`w-2 h-2 rounded-full ${forReferences ? 'bg-purple-500' : 'bg-emerald-500'}`} />
+            <span className={`w-2 h-2 rounded-full ${forReferences ? 'bg-purple-500' : 'bg-blue-500'}`} />
             {forReferences ? '🎨 Importer des visuels de référence' : 'Importer des fichiers'}
           </h2>
           <button onClick={handleClose} className="text-gray-400 hover:text-gray-900">×</button>
@@ -131,7 +131,7 @@ function ImportPopup({ isOpen, onClose, onImport, forReferences = false }: {
         <div 
           className={`m-6 border-2 border-dashed rounded-lg p-8 text-center transition-all cursor-pointer ${
             isDragging 
-              ? (forReferences ? 'border-purple-500 bg-purple-50' : 'border-emerald-500 bg-emerald-50') 
+              ? (forReferences ? 'border-purple-500 bg-purple-50' : 'border-blue-500 bg-blue-50') 
               : 'border-gray-300 hover:border-gray-400'
           }`}
           onDrop={handleDrop}
@@ -198,7 +198,7 @@ function ImportPopup({ isOpen, onClose, onImport, forReferences = false }: {
             disabled={pendingFiles.length === 0}
             className={`px-6 py-2 text-sm font-medium ${
               pendingFiles.length > 0 
-                ? (forReferences ? 'bg-purple-500 text-white hover:bg-purple-600' : 'bg-emerald-500 text-white hover:bg-emerald-600') 
+                ? (forReferences ? 'bg-purple-500 text-white hover:bg-purple-600' : 'bg-blue-500 text-white hover:bg-blue-600') 
                 : 'bg-gray-200 text-gray-400'
             }`}
           >Importer {pendingFiles.length > 0 && `(${pendingFiles.length})`}</button>
@@ -241,7 +241,7 @@ function ColorEditorPopup({ isOpen, onClose, colors, onSave }: {
       <div className="bg-gray-900 w-full max-w-md max-h-[70vh] flex flex-col shadow-2xl border border-gray-800">
         <div className="px-6 py-4 border-b border-gray-800 flex items-center justify-between">
           <h2 className="text-sm font-medium text-white uppercase tracking-wider flex items-center gap-2">
-            <span className="w-2 h-2 bg-emerald-500 rounded-full" />
+            <span className="w-2 h-2 bg-blue-500 rounded-full" />
             Modifier la palette
           </h2>
           <button onClick={onClose} className="text-gray-400 hover:text-white">×</button>
@@ -264,14 +264,14 @@ function ColorEditorPopup({ isOpen, onClose, colors, onSave }: {
               <button onClick={() => removeColor(index)} className="text-gray-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity">×</button>
             </div>
           ))}
-          <button onClick={addColor} className="w-full p-3 border-2 border-dashed border-gray-700 text-gray-500 hover:border-emerald-500 hover:text-emerald-400 transition-all flex items-center justify-center gap-2 rounded">
+          <button onClick={addColor} className="w-full p-3 border-2 border-dashed border-gray-700 text-gray-500 hover:border-blue-500 hover:text-blue-400 transition-all flex items-center justify-center gap-2 rounded">
             + Ajouter une couleur
           </button>
         </div>
 
         <div className="px-6 py-4 border-t border-gray-800 flex items-center justify-between">
           <button onClick={onClose} className="px-4 py-2 text-sm text-gray-400">Annuler</button>
-          <button onClick={handleSave} className="px-6 py-2 bg-emerald-500 text-white text-sm font-medium hover:bg-emerald-600">Enregistrer</button>
+          <button onClick={handleSave} className="px-6 py-2 bg-blue-500 text-white text-sm font-medium hover:bg-blue-600">Enregistrer</button>
         </div>
       </div>
     </div>
@@ -294,7 +294,7 @@ function TagEditor({ currentTag, onTagChange, position }: {
         >
           <div className={`w-3 h-3 rounded-sm ${opt.color.split(' ')[0]}`} />
           <span className="text-gray-700">{opt.label}</span>
-          {currentTag === opt.value && <span className="ml-auto text-emerald-500">✓</span>}
+          {currentTag === opt.value && <span className="ml-auto text-blue-500">✓</span>}
         </button>
       ))}
     </div>
@@ -494,7 +494,7 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
                   <button
                     key={i}
                     onClick={() => handleLogoChange(img)}
-                    className={`aspect-square border-2 overflow-hidden transition-all hover:border-emerald-500 ${img === localData.logo ? 'border-emerald-500 ring-2 ring-emerald-200' : 'border-gray-200'}`}
+                    className={`aspect-square border-2 overflow-hidden transition-all hover:border-blue-500 ${img === localData.logo ? 'border-blue-500 ring-2 ring-blue-200' : 'border-gray-200'}`}
                     style={CHECKER_PATTERN_STYLE}
                   >
                     <img src={img} className="w-full h-full object-contain relative z-10" loading="lazy" />
@@ -524,7 +524,7 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
           </div>
         </div>
         <div className="flex items-center gap-2 text-xs text-gray-400">
-          <span className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+          <span className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
           Brand Identity
         </div>
       </header>
@@ -544,7 +544,7 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
           <div className="col-span-1 md:col-span-3">
             <button 
               onClick={() => setLogoSelectorOpen(true)}
-              className="w-full aspect-square p-3 md:p-4 flex items-center justify-center border border-gray-200 transition-all hover:border-emerald-500 relative group overflow-hidden"
+              className="w-full aspect-square p-3 md:p-4 flex items-center justify-center border border-gray-200 transition-all hover:border-blue-500 relative group overflow-hidden"
               style={CHECKER_PATTERN_STYLE}
             >
               {localData.logo ? (
@@ -554,7 +554,7 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
               )}
               <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center z-20">
                 <span className="text-white text-xs font-medium flex items-center gap-1">
-                  <span className="text-emerald-400">✎</span> Changer
+                  <span className="text-blue-400">✎</span> Changer
                 </span>
               </div>
             </button>
@@ -582,9 +582,9 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
             <div className="space-y-1 md:space-y-2">
               {localData.fonts?.map((font: string, i: number) => (
                 <div key={i} className={`flex items-center gap-1 md:gap-2 ${i === 0 ? '' : 'opacity-60'}`}>
-                  {i === 0 && <span className="w-1 h-1 md:w-1.5 md:h-1.5 bg-emerald-500 rounded-full" />}
+                  {i === 0 && <span className="w-1 h-1 md:w-1.5 md:h-1.5 bg-blue-500 rounded-full" />}
                   <span className={`text-xs md:text-sm ${i === 0 ? 'font-medium text-gray-900' : 'text-gray-500'} truncate`}>{font}</span>
-                  {i === 0 && <span className="text-[7px] md:text-[8px] text-emerald-600 font-mono uppercase ml-auto hidden sm:inline">principale</span>}
+                  {i === 0 && <span className="text-[7px] md:text-[8px] text-blue-600 font-mono uppercase ml-auto hidden sm:inline">principale</span>}
                 </div>
               )) || <span className="text-xs md:text-sm text-gray-400">Sans-serif</span>}
             </div>
@@ -608,11 +608,11 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
             </div>
             <div className="space-y-4">
               <div>
-                <span className="text-[9px] text-emerald-600 font-bold uppercase tracking-wider block mb-1">🎯 Cible (Target Audience)</span>
+                <span className="text-[9px] text-blue-600 font-bold uppercase tracking-wider block mb-1">🎯 Cible (Target Audience)</span>
                 <textarea 
                   value={localData.targetAudience || ''}
                   onChange={(e) => handleChange('targetAudience', e.target.value)}
-                  className="w-full bg-emerald-50/50 border-b border-emerald-100 p-2 outline-none text-sm text-gray-700 resize-none h-14 leading-relaxed placeholder:text-gray-300"
+                  className="w-full bg-blue-50/50 border-b border-blue-100 p-2 outline-none text-sm text-gray-700 resize-none h-14 leading-relaxed placeholder:text-gray-300"
                   placeholder="Qui sont vos clients idéaux ?"
                 />
               </div>
@@ -690,17 +690,17 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
             </div>
 
             {/* 2. Forces & USPs - Features + Key Points */}
-            <div className="bg-gradient-to-br from-emerald-50 to-teal-50 border border-emerald-100 p-4 rounded-lg">
+            <div className="bg-gradient-to-br from-blue-50 to-sky-50 border border-blue-100 p-4 rounded-lg">
               <div className="flex items-center gap-2 mb-3">
                 <span className="text-lg">💎</span>
-                <span className="text-[10px] font-mono uppercase tracking-widest text-emerald-600">Forces & USPs</span>
+                <span className="text-[10px] font-mono uppercase tracking-widest text-blue-600">Forces & USPs</span>
               </div>
               
               <div className="space-y-1.5 max-h-44 overflow-y-auto">
                 {/* Features */}
                 {localData.features?.map((f: string, i: number) => (
                   <div key={`f-${i}`} className="group flex items-center gap-2 p-1.5 bg-white/70 rounded text-xs">
-                    <span className="text-emerald-500">✓</span>
+                    <span className="text-blue-500">✓</span>
                     <span className="text-gray-700 flex-1">{f}</span>
                     <button onClick={() => {
                       const newFeatures = [...localData.features];
@@ -711,8 +711,8 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
                 ))}
                 {/* Key Points */}
                 {localData.keyPoints?.map((kp: string, i: number) => (
-                  <div key={`kp-${i}`} className="group flex items-center gap-2 p-1.5 bg-teal-100/50 rounded text-xs">
-                    <span className="text-teal-600">★</span>
+                  <div key={`kp-${i}`} className="group flex items-center gap-2 p-1.5 bg-sky-100/50 rounded text-xs">
+                    <span className="text-sky-600">★</span>
                     <span className="text-gray-700 flex-1">{kp}</span>
                     <button onClick={() => {
                       const newKPs = [...localData.keyPoints];
@@ -818,7 +818,7 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
                       )}
                       <p className="text-xs text-gray-800 font-medium">{insight.painPoint || insight.fact}</p>
                       {insight.consequence && <p className="text-[10px] text-rose-600 mt-1">→ {insight.consequence}</p>}
-                      {insight.solution && <p className="text-[10px] text-emerald-600 mt-1">✓ {insight.solution}</p>}
+                      {insight.solution && <p className="text-[10px] text-blue-600 mt-1">✓ {insight.solution}</p>}
                       <button 
                         onClick={() => {
                           const newInsights = [...localData.industryInsights];
@@ -905,7 +905,7 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
               <span className="text-[10px] font-mono uppercase tracking-widest text-gray-400">
                 Bibliothèque d'assets
               </span>
-              <span className="px-2 py-0.5 bg-emerald-100 text-emerald-700 text-[10px] font-bold">
+              <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-[10px] font-bold">
                 {assetImages.length || 0} images
               </span>
               {/* Crawl stats indicator */}
@@ -917,7 +917,7 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
             </div>
             <button 
               onClick={() => openImportPopup(false)}
-              className="px-2 py-1 bg-emerald-500 text-white text-[9px] font-medium uppercase hover:bg-emerald-600 flex items-center gap-1"
+              className="px-2 py-1 bg-blue-500 text-white text-[9px] font-medium uppercase hover:bg-blue-600 flex items-center gap-1"
             >
               <span>+</span> Ajouter
             </button>
@@ -933,7 +933,7 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
                 <div key={i} className="relative aspect-square group" style={CHECKER_PATTERN_STYLE}>
                   <img 
                     src={img} 
-                    className="w-full h-full object-contain border border-gray-200 hover:border-emerald-400 transition-colors relative z-10" 
+                    className="w-full h-full object-contain border border-gray-200 hover:border-blue-400 transition-colors relative z-10" 
                     loading="lazy" 
                     onError={(e) => {
                       // Hide broken images
@@ -993,13 +993,13 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
           className="w-full group relative py-4 bg-gray-900 text-white text-sm font-medium transition-all hover:bg-black"
         >
           <span className="relative z-10 flex items-center justify-center gap-3">
-            <span className="w-2 h-2 bg-emerald-500 rounded-full" />
+            <span className="w-2 h-2 bg-blue-500 rounded-full" />
             Valider & Créer
             <svg className="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
               <path d="M5 12h14M12 5l7 7-7 7" />
             </svg>
           </span>
-          <div className="absolute inset-0 bg-gradient-to-r from-emerald-600 to-teal-600 opacity-0 group-hover:opacity-100 transition-opacity" />
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-sky-600 opacity-0 group-hover:opacity-100 transition-opacity" />
         </button>
       </section>
     </div>

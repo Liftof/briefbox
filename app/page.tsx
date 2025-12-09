@@ -69,30 +69,30 @@ export default function Home() {
 
             {/* Solution Side */}
             <div className="relative">
-              <div className="absolute -bottom-3 -right-3 w-6 h-6 border-r-2 border-b-2 border-emerald-300" />
+              <div className="absolute -bottom-3 -right-3 w-6 h-6 border-r-2 border-b-2 border-blue-300" />
               <div className="bg-gray-900 text-white p-10 h-full">
                 <div className="flex items-center gap-3 mb-8">
-                  <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
-                  <span className="text-xs font-mono uppercase tracking-widest text-emerald-400">Avec Palette</span>
+                  <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse" />
+                  <span className="text-xs font-mono uppercase tracking-widest text-blue-400">Avec Palette</span>
                 </div>
                 
                 <div className="space-y-8">
                   <div className="flex items-start gap-4">
-                    <div className="w-8 h-8 bg-emerald-500/20 rounded-full flex items-center justify-center text-emerald-400 text-sm flex-shrink-0">✓</div>
+                    <div className="w-8 h-8 bg-blue-500/20 rounded-full flex items-center justify-center text-blue-400 text-sm flex-shrink-0">✓</div>
                     <div>
                       <div className="font-medium text-white mb-1">2 minutes chrono</div>
                       <div className="text-sm text-gray-400 leading-relaxed">Décrivez ce que vous voulez. L'IA le génère. Simple.</div>
                     </div>
                   </div>
                   <div className="flex items-start gap-4">
-                    <div className="w-8 h-8 bg-emerald-500/20 rounded-full flex items-center justify-center text-emerald-400 text-sm flex-shrink-0">✓</div>
+                    <div className="w-8 h-8 bg-blue-500/20 rounded-full flex items-center justify-center text-blue-400 text-sm flex-shrink-0">✓</div>
                     <div>
                       <div className="font-medium text-white mb-1">Dès 19€/mois</div>
                       <div className="text-sm text-gray-400 leading-relaxed">Visuels 2K haute résolution inclus.</div>
                     </div>
                   </div>
                   <div className="flex items-start gap-4">
-                    <div className="w-8 h-8 bg-emerald-500/20 rounded-full flex items-center justify-center text-emerald-400 text-sm flex-shrink-0">✓</div>
+                    <div className="w-8 h-8 bg-blue-500/20 rounded-full flex items-center justify-center text-blue-400 text-sm flex-shrink-0">✓</div>
                     <div>
                       <div className="font-medium text-white mb-1">100% à votre image</div>
                       <div className="text-sm text-gray-400 leading-relaxed">Vos couleurs, votre logo, votre style. Automatiquement.</div>
@@ -200,15 +200,15 @@ export default function Home() {
               
               <ul className="space-y-3 mb-8">
                 <li className="flex items-center gap-3 text-sm text-gray-600">
-                  <span className="text-emerald-500">✓</span>
+                  <span className="text-blue-500">✓</span>
                   3 générations offertes
                 </li>
                 <li className="flex items-center gap-3 text-sm text-gray-600">
-                  <span className="text-emerald-500">✓</span>
+                  <span className="text-blue-500">✓</span>
                   Analyse de marque complète
                 </li>
                 <li className="flex items-center gap-3 text-sm text-gray-600">
-                  <span className="text-emerald-500">✓</span>
+                  <span className="text-blue-500">✓</span>
                   Export 2K haute résolution
                 </li>
                 <li className="flex items-center gap-3 text-sm text-gray-300">
@@ -224,29 +224,29 @@ export default function Home() {
 
             {/* Pro - Featured */}
             <div className="relative bg-gray-900 text-white p-8 lg:-mt-4 lg:-mb-4">
-              <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-emerald-500 text-white text-[10px] font-mono uppercase tracking-widest px-3 py-1">
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-blue-500 text-white text-[10px] font-mono uppercase tracking-widest px-3 py-1">
                 Populaire
               </div>
               
-              <div className="text-xs font-mono uppercase tracking-widest text-emerald-400 mb-4">Pro</div>
+              <div className="text-xs font-mono uppercase tracking-widest text-blue-400 mb-4">Pro</div>
               <div className="text-4xl font-light text-white mb-2">19€<span className="text-lg text-gray-500">/mois</span></div>
               <p className="text-sm text-gray-400 mb-8">50 crédits • Idéal pour freelances</p>
               
               <ul className="space-y-3 mb-8">
                 <li className="flex items-center gap-3 text-sm text-gray-300">
-                  <span className="text-emerald-400">✓</span>
+                  <span className="text-blue-400">✓</span>
                   50 générations/mois
                 </li>
                 <li className="flex items-center gap-3 text-sm text-gray-300">
-                  <span className="text-emerald-400">✓</span>
+                  <span className="text-blue-400">✓</span>
                   Galerie d'inspirations complète
                 </li>
                 <li className="flex items-center gap-3 text-sm text-gray-300">
-                  <span className="text-emerald-400">✓</span>
+                  <span className="text-blue-400">✓</span>
                   Tous les ratios et formats
                 </li>
                 <li className="flex items-center gap-3 text-sm text-gray-300">
-                  <span className="text-emerald-400">✓</span>
+                  <span className="text-blue-400">✓</span>
                   Historique illimité
                 </li>
               </ul>
@@ -264,19 +264,19 @@ export default function Home() {
               
               <ul className="space-y-3 mb-8">
                 <li className="flex items-center gap-3 text-sm text-gray-600">
-                  <span className="text-emerald-500">✓</span>
+                  <span className="text-blue-500">✓</span>
                   150 générations/mois
                 </li>
                 <li className="flex items-center gap-3 text-sm text-gray-600">
-                  <span className="text-emerald-500">✓</span>
+                  <span className="text-blue-500">✓</span>
                   Tout du plan Pro
                 </li>
                 <li className="flex items-center gap-3 text-sm text-gray-600">
-                  <span className="text-emerald-500">✓</span>
+                  <span className="text-blue-500">✓</span>
                   3 membres d'équipe
                 </li>
                 <li className="flex items-center gap-3 text-sm text-gray-600">
-                  <span className="text-emerald-500">✓</span>
+                  <span className="text-blue-500">✓</span>
                   Support prioritaire
                 </li>
               </ul>
@@ -346,8 +346,8 @@ export default function Home() {
       {/* CTA */}
       <section className="py-32 bg-gray-900 text-white relative overflow-hidden">
         {/* Floating accents */}
-        <div className="absolute top-20 left-20 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl" />
-        <div className="absolute bottom-20 right-20 w-96 h-96 bg-teal-500/10 rounded-full blur-3xl" />
+        <div className="absolute top-20 left-20 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl" />
+        <div className="absolute bottom-20 right-20 w-96 h-96 bg-sky-500/10 rounded-full blur-3xl" />
         
         <div className="max-w-3xl mx-auto px-6 text-center relative z-10">
           <h2 className="text-4xl md:text-5xl font-light mb-6 leading-tight">
@@ -408,7 +408,7 @@ export default function Home() {
             <span className="text-xs text-gray-400">© 2025 Palette. Tous droits réservés.</span>
             <div className="flex items-center gap-4 text-xs text-gray-400">
               <span className="flex items-center gap-2">
-                <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full" />
+                <div className="w-1.5 h-1.5 bg-blue-500 rounded-full" />
                 Tous les systèmes opérationnels
               </span>
             </div>

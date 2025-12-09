@@ -155,7 +155,7 @@ export default function StyleGallery({ isOpen, onClose, onSelect }: StyleGallery
                   onSelect(img.url);
                   onClose();
                 }}
-                className="group relative aspect-[4/5] bg-gray-100 rounded-xl overflow-hidden cursor-pointer border-2 border-transparent hover:border-emerald-500 hover:shadow-xl transition-all duration-300"
+                className="group relative aspect-[4/5] bg-gray-100 rounded-xl overflow-hidden cursor-pointer border-2 border-transparent hover:border-blue-500 hover:shadow-xl transition-all duration-300"
               >
                 {/* Image with fallback */}
                 <img 
@@ -184,7 +184,7 @@ export default function StyleGallery({ isOpen, onClose, onSelect }: StyleGallery
                     </div>
                   )}
                   
-                  <button className="mt-3 w-full py-2.5 bg-emerald-500 text-white text-xs font-bold uppercase tracking-wider rounded-lg hover:bg-emerald-600 transition-colors">
+                  <button className="mt-3 w-full py-2.5 bg-blue-500 text-white text-xs font-bold uppercase tracking-wider rounded-lg hover:bg-blue-600 transition-colors">
                     Utiliser ce style
                   </button>
                 </div>

@@ -142,7 +142,7 @@ export default function StrategyView({ brandData, onUseIdea, onOpenGallery }: St
           {/* TABS NAVIGATION - Pills */}
           <div className="flex flex-wrap gap-2 mb-8">
             <TabButton id="all" label="Vue d'ensemble" count={totalIdeas} color="gray" />
-            <TabButton id="proof" label="Preuve Sociale" count={statsCount + testimonialsCount} color="emerald" />
+            <TabButton id="proof" label="Preuve Sociale" count={statsCount + testimonialsCount} color="blue" />
             <TabButton id="market" label="Marché & Trends" count={insightsCount + blogCount} color="amber" />
             <TabButton id="identity" label="Offre & Identité" count={featuresCount + painPointsCount + vocabCount} color="purple" />
           </div>
@@ -155,7 +155,7 @@ export default function StrategyView({ brandData, onUseIdea, onOpenGallery }: St
           {(activeTab === 'all' || activeTab === 'proof') && (
             <>
               {showGenerics && (
-                <div className="group bg-white p-5 border border-dashed border-gray-300 hover:border-emerald-500 hover:bg-emerald-50/30 transition-all cursor-pointer rounded-2xl flex flex-col gap-3"
+                <div className="group bg-white p-5 border border-dashed border-gray-300 hover:border-blue-500 hover:bg-blue-50/30 transition-all cursor-pointer rounded-2xl flex flex-col gap-3"
                   onClick={() => onUseIdea('quote', `"Le service de ${brandData.name} est exceptionnel..."`)}>
                   <div className="flex justify-between items-start">
                     <span className="text-2xl opacity-50 grayscale group-hover:grayscale-0 transition-all">💬</span>
@@ -169,22 +169,22 @@ export default function StrategyView({ brandData, onUseIdea, onOpenGallery }: St
               )}
 
               {brandData.contentNuggets?.realStats?.map((stat: string, i: number) => (
-                <div key={`stat-${i}`} className="group bg-white p-6 border border-gray-100 hover:border-emerald-500/50 hover:shadow-xl hover:shadow-emerald-500/5 transition-all cursor-pointer rounded-2xl flex flex-col relative overflow-hidden"
+                <div key={`stat-${i}`} className="group bg-white p-6 border border-gray-100 hover:border-blue-500/50 hover:shadow-xl hover:shadow-blue-500/5 transition-all cursor-pointer rounded-2xl flex flex-col relative overflow-hidden"
                   onClick={() => onUseIdea('stat', stat)}>
-                  <div className="absolute top-0 right-0 w-16 h-16 bg-emerald-50 rounded-bl-full -mr-8 -mt-8 transition-transform group-hover:scale-110" />
+                  <div className="absolute top-0 right-0 w-16 h-16 bg-blue-50 rounded-bl-full -mr-8 -mt-8 transition-transform group-hover:scale-110" />
                   
                   <div className="flex items-center gap-2 mb-4 relative z-10">
-                    <span className="flex items-center justify-center w-6 h-6 rounded-full bg-emerald-100 text-emerald-600 text-xs">📊</span>
-                    <span className="text-[10px] font-bold text-emerald-700 uppercase tracking-widest">Chiffre Clé</span>
+                    <span className="flex items-center justify-center w-6 h-6 rounded-full bg-blue-100 text-blue-600 text-xs">📊</span>
+                    <span className="text-[10px] font-bold text-blue-700 uppercase tracking-widest">Chiffre Clé</span>
                   </div>
                   
-                  <h4 className="text-2xl font-bold text-gray-900 mb-4 leading-tight relative z-10 group-hover:text-emerald-900 transition-colors">
+                  <h4 className="text-2xl font-bold text-gray-900 mb-4 leading-tight relative z-10 group-hover:text-blue-900 transition-colors">
                     {stat}
                   </h4>
                   
                   <div className="mt-auto pt-4 border-t border-gray-50 flex justify-between items-center">
                     <span className="text-[10px] text-gray-400 font-medium">Source: Site Web</span>
-                    <span className="text-emerald-600 text-xs opacity-0 group-hover:opacity-100 transition-opacity transform translate-x-2 group-hover:translate-x-0">Créer →</span>
+                    <span className="text-blue-600 text-xs opacity-0 group-hover:opacity-100 transition-opacity transform translate-x-2 group-hover:translate-x-0">Créer →</span>
                   </div>
                 </div>
               ))}

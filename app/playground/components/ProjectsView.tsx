@@ -389,7 +389,7 @@ export default function ProjectsView() {
             }}
             className={`${starSize} transition-all hover:scale-110 ${
               currentRating && currentRating >= star 
-                ? star === 1 ? 'text-red-400' : star === 2 ? 'text-amber-400' : 'text-emerald-400'
+                ? star === 1 ? 'text-red-400' : star === 2 ? 'text-amber-400' : 'text-blue-400'
                 : 'text-gray-300 hover:text-gray-400'
             }`}
             title={star === 1 ? 'Pas bien' : star === 2 ? 'Moyen' : 'Super !'}
@@ -517,7 +517,7 @@ export default function ProjectsView() {
                   onDragEnd={() => setDraggedGen(null)}
                   className={`relative aspect-square bg-gray-100 border border-gray-200 overflow-hidden group cursor-move hover:border-gray-400 transition-all ${
                     draggedGen === gen.id ? 'opacity-50 scale-95' : ''
-                  } ${gen.feedback?.rating === 3 ? 'ring-2 ring-emerald-400' : ''}`}
+                  } ${gen.feedback?.rating === 3 ? 'ring-2 ring-blue-400' : ''}`}
                 >
                   <img 
                     src={gen.url} 
@@ -534,7 +534,7 @@ export default function ProjectsView() {
                           key={star}
                           className={`text-[10px] ${
                             gen.feedback!.rating >= star 
-                              ? star === 1 ? 'text-red-400' : star === 2 ? 'text-amber-400' : 'text-emerald-400'
+                              ? star === 1 ? 'text-red-400' : star === 2 ? 'text-amber-400' : 'text-blue-400'
                               : 'text-gray-500'
                           }`}
                         >★</span>

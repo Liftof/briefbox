@@ -75,7 +75,7 @@ export default function Sidebar({
                           : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
                     }`}
                   >
-                    <span className={`text-base flex-shrink-0 ${isActive ? 'text-emerald-400' : ''}`}>
+                    <span className={`text-base flex-shrink-0 ${isActive ? 'text-blue-400' : ''}`}>
                       {item.icon}
                     </span>
                     {!isCollapsed && (
@@ -157,7 +157,7 @@ export default function Sidebar({
               isCollapsed ? 'p-2' : 'p-3'
             }`}>
               <div className={`flex items-center ${isCollapsed ? 'justify-center' : 'gap-3'}`}>
-                <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-teal-600 rounded flex-shrink-0" />
+                <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-sky-600 rounded flex-shrink-0" />
                 {!isCollapsed && (
                   <div className="text-left">
                     <div className="text-xs font-medium text-gray-900">Plan Starter</div>

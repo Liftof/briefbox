@@ -1536,7 +1536,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
           
           {/* Floating accent */}
           <div className="absolute top-20 right-20 w-64 h-64 bg-gradient-to-br from-amber-200/20 to-orange-300/10 rounded-full blur-3xl" />
-          <div className="absolute bottom-32 left-16 w-48 h-48 bg-gradient-to-tr from-emerald-200/15 to-teal-300/10 rounded-full blur-3xl" />
+          <div className="absolute bottom-32 left-16 w-48 h-48 bg-gradient-to-tr from-blue-200/15 to-sky-300/10 rounded-full blur-3xl" />
 
           <div className="relative z-10 w-full max-w-2xl mx-auto px-6">
             {/* Header with Logo */}
@@ -1655,7 +1655,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                 <button
                 onClick={handleAnalyzeBrand}
                 disabled={!websiteUrl}
-                  className="group bg-gray-900 text-white px-8 py-4 font-medium text-sm disabled:opacity-30 disabled:cursor-not-allowed transition-all hover:bg-emerald-600"
+                  className="group bg-gray-900 text-white px-8 py-4 font-medium text-sm disabled:opacity-30 disabled:cursor-not-allowed transition-all hover:bg-blue-600"
                 >
                   <span className="flex items-center gap-3">
                     Scanner la marque
@@ -1707,7 +1707,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
           />
 
           {/* Floating accent */}
-          <div className="absolute top-1/4 right-1/4 w-64 h-64 bg-gradient-to-br from-emerald-200/20 to-emerald-100/10 rounded-full blur-3xl" />
+          <div className="absolute top-1/4 right-1/4 w-64 h-64 bg-gradient-to-br from-blue-200/20 to-blue-100/10 rounded-full blur-3xl" />
           <div className="absolute bottom-1/3 left-1/3 w-80 h-80 bg-gradient-to-tr from-amber-100/15 to-transparent rounded-full blur-3xl" />
 
           {/* Corner frames */}
@@ -1717,7 +1717,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
           <div className="relative z-10 flex flex-col items-center max-w-lg w-full px-6">
             {/* Status label */}
             <div className="flex items-center gap-2 mb-6">
-              <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+              <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
               <span className="text-[10px] font-mono uppercase tracking-widest text-gray-400">
                 Analyse en cours
               </span>
@@ -1751,7 +1751,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
               {/* Progress bar */}
               <div className="relative h-2 bg-gray-100 rounded-full overflow-hidden">
                 <div 
-                  className="absolute left-0 top-0 h-full bg-gradient-to-r from-emerald-500 to-teal-400 transition-all duration-700 ease-out rounded-full"
+                  className="absolute left-0 top-0 h-full bg-gradient-to-r from-blue-500 to-sky-400 transition-all duration-700 ease-out rounded-full"
                   style={{ width: `${progress}%` }}
                 />
                 {/* Shimmer effect */}
@@ -1766,13 +1766,13 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
 
               {/* Stage labels */}
               <div className="flex justify-between mt-3">
-                <span className={`text-[9px] font-mono uppercase ${loadingStage >= 0 ? 'text-emerald-600' : 'text-gray-300'}`}>
+                <span className={`text-[9px] font-mono uppercase ${loadingStage >= 0 ? 'text-blue-600' : 'text-gray-300'}`}>
                   Scraping
                 </span>
-                <span className={`text-[9px] font-mono uppercase ${loadingStage >= 3 ? 'text-emerald-600' : 'text-gray-300'}`}>
+                <span className={`text-[9px] font-mono uppercase ${loadingStage >= 3 ? 'text-blue-600' : 'text-gray-300'}`}>
                   IA
                 </span>
-                <span className={`text-[9px] font-mono uppercase ${loadingStage >= 5 ? 'text-emerald-600' : 'text-gray-300'}`}>
+                <span className={`text-[9px] font-mono uppercase ${loadingStage >= 5 ? 'text-blue-600' : 'text-gray-300'}`}>
                   Enrichissement
                 </span>
               </div>
@@ -1792,7 +1792,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                   >
                     <span className="text-sm">{item.emoji}</span>
                     <span className="text-gray-600">{item.text}</span>
-                    <span className="text-emerald-500 text-[10px]">✓</span>
+                    <span className="text-blue-500 text-[10px]">✓</span>
               </div>
                 ))}
                 {progress < 90 && (
@@ -1835,14 +1835,14 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
           }} />
           
           {/* Floating accents - matching URL step */}
-          <div className="absolute top-20 right-20 w-64 h-64 bg-gradient-to-br from-emerald-200/20 to-teal-300/10 rounded-full blur-3xl" />
+          <div className="absolute top-20 right-20 w-64 h-64 bg-gradient-to-br from-blue-200/20 to-sky-300/10 rounded-full blur-3xl" />
           <div className="absolute bottom-32 left-16 w-48 h-48 bg-gradient-to-tr from-amber-200/15 to-orange-300/10 rounded-full blur-3xl" />
 
           <div className="relative z-10 w-full max-w-xl mx-auto px-6">
             {/* Header - matching URL step style */}
             <div className="mb-10">
               <div className="flex items-center gap-3 mb-6">
-                <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+                <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
                 <span className="text-xs font-mono uppercase tracking-[0.2em] text-gray-400">Logo Check</span>
               </div>
               
@@ -1947,7 +1947,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                       <button
                         onClick={handleConfirmLogo}
                         disabled={isUploadingLogo || isConfirmingLogo}
-                        className="flex-1 px-5 py-3 bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="flex-1 px-5 py-3 bg-blue-600 text-white text-sm font-medium hover:bg-blue-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         {isConfirmingLogo ? (
                           <span className="flex items-center justify-center gap-2">
@@ -2070,7 +2070,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                 >
                   {res.label}
                   {res.badge && resolution !== res.value && (
-                    <span className="absolute -top-1 -right-1 text-[8px] bg-emerald-500 text-white px-1 rounded">
+                    <span className="absolute -top-1 -right-1 text-[8px] bg-blue-500 text-white px-1 rounded">
                       {res.badge}
                     </span>
                   )}
@@ -2108,7 +2108,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
             {/* Section header */}
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
-                <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full" />
+                <span className="w-1.5 h-1.5 bg-blue-500 rounded-full" />
                 <span className="text-[10px] font-mono uppercase tracking-widest text-gray-400">Angles de contenu</span>
                 </div>
               <button 
@@ -2209,7 +2209,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                       setBrief(`${stat} — voici comment`);
                         }}
                     className={`flex-shrink-0 px-3 py-2 border transition-all text-left max-w-[220px] ${
-                      brief.includes(stat) ? 'bg-emerald-50 border-emerald-400' : 'bg-white border-gray-200 hover:border-emerald-400 hover:bg-emerald-50/50'
+                      brief.includes(stat) ? 'bg-blue-50 border-blue-400' : 'bg-white border-gray-200 hover:border-blue-400 hover:bg-blue-50/50'
                     }`}
                       >
                         <div className="flex items-center gap-2">
@@ -2314,7 +2314,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                 <button
                   onClick={handleMagicEnhance}
                   disabled={isThinking}
-                  className="text-xs text-emerald-600 hover:text-emerald-700 transition-colors disabled:opacity-30 flex items-center gap-1"
+                  className="text-xs text-blue-600 hover:text-blue-700 transition-colors disabled:opacity-30 flex items-center gap-1"
                 >
                   <span>✦</span> Enrichir
                 </button>
@@ -2338,7 +2338,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                   <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">Style à imiter</label>
                   <button 
                     onClick={() => setShowStyleGallery(true)}
-                    className="text-[10px] text-emerald-600 hover:text-emerald-700 flex items-center gap-1"
+                    className="text-[10px] text-blue-600 hover:text-blue-700 flex items-center gap-1"
                   >
                     ✨ Galerie
                   </button>
@@ -2349,7 +2349,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                   {/* Selected images with note input */}
                   {styleRefImages.map((ref, i) => (
                     <div key={i} className="flex gap-2 items-start">
-                      <div className="relative h-14 w-14 flex-shrink-0 rounded-lg overflow-hidden border-2 border-emerald-400">
+                      <div className="relative h-14 w-14 flex-shrink-0 rounded-lg overflow-hidden border-2 border-blue-400">
                         <img src={ref.url} className="w-full h-full object-cover" />
                         <button
                           onClick={() => setStyleRefImages(prev => prev.filter((_, idx) => idx !== i))}
@@ -2365,14 +2365,14 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                             idx === i ? { ...r, note: e.target.value } : r
                           ));
                         }}
-                        className="flex-1 text-xs border border-gray-200 rounded px-2 py-1.5 placeholder:text-gray-300 focus:border-emerald-400 focus:outline-none"
+                        className="flex-1 text-xs border border-gray-200 rounded px-2 py-1.5 placeholder:text-gray-300 focus:border-blue-400 focus:outline-none"
                       />
                   </div>
                 ))}
                   
                   {/* Drop zone - always visible if less than 3 */}
                   {styleRefImages.length < 3 && (
-                    <label className="h-12 w-full border-2 border-dashed border-gray-200 rounded-lg flex items-center justify-center gap-2 cursor-pointer hover:border-emerald-400 hover:bg-emerald-50/50 transition-all">
+                    <label className="h-12 w-full border-2 border-dashed border-gray-200 rounded-lg flex items-center justify-center gap-2 cursor-pointer hover:border-blue-400 hover:bg-blue-50/50 transition-all">
                       <svg className="w-4 h-4 text-gray-300" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                         <path d="M12 4v16m8-8H4" />
                       </svg>
@@ -2411,7 +2411,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                         const absoluteUrl = `${window.location.origin}${style.url}`;
                         setStyleRefImages(prev => [...prev, { url: absoluteUrl }].slice(0, 3));
                       }}
-                      className="relative h-10 w-10 rounded overflow-hidden cursor-pointer border border-gray-200 hover:border-emerald-400 transition-all group flex-shrink-0"
+                      className="relative h-10 w-10 rounded overflow-hidden cursor-pointer border border-gray-200 hover:border-blue-400 transition-all group flex-shrink-0"
                     >
                       <img src={style.url} className="w-full h-full object-cover" />
                       <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
@@ -2442,7 +2442,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                   {/* Logo - always selected, can't be deselected */}
                   {brandData?.logo && (
                     <div 
-                      className="relative h-14 w-14 rounded border-2 border-emerald-500 overflow-hidden flex-shrink-0 cursor-default"
+                      className="relative h-14 w-14 rounded border-2 border-blue-500 overflow-hidden flex-shrink-0 cursor-default"
                       style={{
                         backgroundImage: `linear-gradient(45deg, #f0f0f0 25%, transparent 25%), linear-gradient(-45deg, #f0f0f0 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #f0f0f0 75%), linear-gradient(-45deg, transparent 75%, #f0f0f0 75%)`,
                         backgroundSize: '6px 6px',
@@ -2451,7 +2451,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                       title="Logo (toujours inclus)"
                     >
                       <img src={brandData.logo} className="w-full h-full object-contain p-1" alt="Logo" />
-                      <div className="absolute bottom-0 left-0 right-0 bg-emerald-600 text-white text-[6px] text-center py-0.5 font-bold">
+                      <div className="absolute bottom-0 left-0 right-0 bg-blue-600 text-white text-[6px] text-center py-0.5 font-bold">
                         LOGO ✓
                   </div>
                   </div>
@@ -2476,7 +2476,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                         }}
                         className={`relative h-14 w-14 rounded overflow-hidden cursor-pointer transition-all group ${
                           isSelected 
-                            ? 'border-2 border-emerald-500 ring-2 ring-emerald-200' 
+                            ? 'border-2 border-blue-500 ring-2 ring-blue-200' 
                             : 'border border-gray-200 opacity-50 hover:opacity-100 hover:border-gray-400'
                         }`}
                         title={isSelected ? 'Cliquez pour retirer' : 'Cliquez pour ajouter'}
@@ -2487,7 +2487,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                         )}
                         {isSelected && (
                           <>
-                            <div className="absolute top-0.5 right-0.5 w-4 h-4 bg-emerald-500 text-white rounded-full flex items-center justify-center text-[10px]">✓</div>
+                            <div className="absolute top-0.5 right-0.5 w-4 h-4 bg-blue-500 text-white rounded-full flex items-center justify-center text-[10px]">✓</div>
                             {/* Mode toggle - appears on hover */}
                 <button
                               onClick={(e) => {
@@ -2513,7 +2513,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                   })}
                   
                   {/* Upload more button */}
-                  <label className="h-14 w-14 rounded border border-dashed border-gray-300 flex flex-col items-center justify-center cursor-pointer hover:border-emerald-400 hover:bg-emerald-50/50 transition-all flex-shrink-0">
+                  <label className="h-14 w-14 rounded border border-dashed border-gray-300 flex flex-col items-center justify-center cursor-pointer hover:border-blue-400 hover:bg-blue-50/50 transition-all flex-shrink-0">
                     <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                   <path d="M12 4v16m8-8H4" />
                 </svg>
@@ -2533,7 +2533,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
             {status !== 'idle' && status !== 'complete' && status !== 'error' && (
               <div className="mb-4">
                 <div className="h-1 bg-gray-200 rounded-full overflow-hidden mb-2">
-                  <div className="h-full bg-emerald-500 transition-all duration-500" style={{ width: `${progress}%` }} />
+                  <div className="h-full bg-blue-500 transition-all duration-500" style={{ width: `${progress}%` }} />
                 </div>
                 <span className="text-xs text-gray-500">{statusMessage}</span>
               </div>
@@ -2554,7 +2554,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                 </>
               ) : (
                 <>
-                  <span className="text-emerald-400 text-lg">✦</span>
+                  <span className="text-blue-400 text-lg">✦</span>
                   <span>Générer 2 visuels</span>
                   <svg className="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                     <path d="M5 12h14M12 5l7 7-7 7" />
@@ -2581,7 +2581,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
         {(status === 'preparing' || status === 'running') && (
           <div className="mb-8">
             <div className="flex items-center gap-2 mb-4">
-              <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
+              <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
               <span className="text-sm text-gray-500">Création en cours...</span>
             </div>
             <div className="grid grid-cols-2 gap-4">
@@ -2608,7 +2608,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
                 <span className="text-sm font-medium text-gray-700">Vos créations</span>
-                <span className="px-2 py-0.5 bg-emerald-100 text-emerald-700 text-xs font-medium">{generatedImages.length}</span>
+                <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs font-medium">{generatedImages.length}</span>
               </div>
               <button
                 onClick={() => setGeneratedImages([])}
@@ -2716,11 +2716,11 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
           <div
             key={toast.id}
             className={`pointer-events-auto px-4 py-3 border flex items-center gap-3 bg-white animate-slide-in-right ${
-              toast.type === 'error' ? 'border-red-200 text-red-600' : toast.type === 'success' ? 'border-emerald-200' : 'border-gray-200'
+              toast.type === 'error' ? 'border-red-200 text-red-600' : toast.type === 'success' ? 'border-blue-200' : 'border-gray-200'
             }`}
           >
             <div className={`w-2 h-2 rounded-full ${
-              toast.type === 'success' ? 'bg-emerald-500' : toast.type === 'error' ? 'bg-red-500' : 'bg-gray-400'
+              toast.type === 'success' ? 'bg-blue-500' : toast.type === 'error' ? 'bg-red-500' : 'bg-gray-400'
             }`} />
             <span className="text-sm text-gray-900">{toast.message}</span>
           </div>
@@ -2937,7 +2937,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
 
             {/* Edit form */}
             <div className="flex-1 flex flex-col justify-center p-8">
-              <div className="text-[10px] font-mono uppercase tracking-widest text-emerald-600 mb-2">
+              <div className="text-[10px] font-mono uppercase tracking-widest text-blue-600 mb-2">
                 ✏️ Mode édition directe
               </div>
               <h3 className="text-xl font-semibold mb-2">Modifier cette image</h3>
@@ -2948,7 +2948,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
               <textarea
                 value={editPrompt}
                 onChange={(e) => setEditPrompt(e.target.value)}
-                className="w-full h-28 p-4 border border-gray-200 resize-none mb-4 bg-white focus:border-emerald-400 focus:ring-1 focus:ring-emerald-100 outline-none transition-all text-sm"
+                className="w-full h-28 p-4 border border-gray-200 resize-none mb-4 bg-white focus:border-blue-400 focus:ring-1 focus:ring-blue-100 outline-none transition-all text-sm"
                 placeholder="Ex: Change le fond en bleu nuit, ajoute un effet de lumière sur le produit, mets le logo en blanc..."
               />
 
@@ -3016,7 +3016,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                 className="group bg-gray-900 text-white py-4 font-medium text-sm hover:bg-black transition-colors disabled:opacity-30 flex items-center justify-center gap-2"
                 disabled={!editPrompt.trim()}
               >
-                <span className="text-emerald-400">✏️</span>
+                <span className="text-blue-400">✏️</span>
                 Appliquer la modification
                 <svg className="w-4 h-4 transition-transform group-hover:translate-x-0.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                   <path d="M5 12h14M12 5l7 7-7 7" />

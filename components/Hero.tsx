@@ -38,7 +38,7 @@ export default function Hero() {
       
       {/* Floating accents */}
       <div className="absolute top-32 right-32 w-96 h-96 bg-gradient-to-br from-amber-200/20 to-orange-300/10 rounded-full blur-3xl" />
-      <div className="absolute bottom-32 left-16 w-72 h-72 bg-gradient-to-tr from-emerald-200/15 to-teal-300/10 rounded-full blur-3xl" />
+      <div className="absolute bottom-32 left-16 w-72 h-72 bg-gradient-to-tr from-blue-200/15 to-sky-300/10 rounded-full blur-3xl" />
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-gradient-to-br from-gray-100/50 to-transparent rounded-full blur-3xl" />
 
       <div className="max-w-7xl mx-auto px-6 w-full relative z-10">
@@ -183,7 +183,7 @@ export default function Hero() {
 
                   {/* Status badge */}
                   <div className="absolute top-6 right-6 bg-white/10 backdrop-blur-md text-white text-xs font-medium px-3 py-1.5 flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full" />
+                    <span className="w-1.5 h-1.5 bg-blue-400 rounded-full" />
                     Généré
                   </div>
                 </div>
@@ -210,7 +210,7 @@ export default function Hero() {
             {/* Floating assets card */}
             <div className="absolute -right-8 bottom-20 w-56 bg-white border border-gray-200 p-4 shadow-xl transform rotate-3 hover:rotate-0 transition-transform">
               <div className="flex items-center gap-2 mb-3">
-                <div className="w-2 h-2 bg-emerald-500 rounded-full" />
+                <div className="w-2 h-2 bg-blue-500 rounded-full" />
                 <span className="text-[10px] font-mono uppercase tracking-widest text-gray-400">Assets chargés</span>
               </div>
               <div className="flex gap-2">
