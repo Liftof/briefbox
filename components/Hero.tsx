@@ -56,34 +56,45 @@ export default function Hero() {
       
       const hour = parisDate.getHours();
       const minute = parisDate.getMinutes();
+      const second = parisDate.getSeconds();
       const day = parisDate.getDate();
       const month = parisDate.getMonth();
       
-      // Create a seed based on the day (for consistent "random" variation)
+      // Create a seed based on the day (for consistent daily variation)
       const daySeed = (day * 31 + month * 12) % 100;
       
-      // Base starts at ~150 at midnight, grows to ~1800 by 23:59
-      // Progress through the day (0 to 1)
-      const dayProgress = (hour * 60 + minute) / (24 * 60);
+      // Progress through the day with seconds precision (0 to 1)
+      const dayProgress = (hour * 3600 + minute * 60 + second) / (24 * 3600);
       
-      // Base growth: 150 -> 1800 throughout the day
-      const baseCount = 150 + Math.floor(dayProgress * 1650);
+      // More dramatic growth curve:
+      // - Slow start in early morning (people sleeping)
+      // - Acceleration during work hours (9h-18h)  
+      // - Slower evening
+      let growthMultiplier = 1;
+      if (hour >= 9 && hour < 12) growthMultiplier = 1.3; // Morning peak
+      if (hour >= 12 && hour < 14) growthMultiplier = 0.9; // Lunch dip
+      if (hour >= 14 && hour < 18) growthMultiplier = 1.4; // Afternoon peak
+      if (hour >= 18 && hour < 21) growthMultiplier = 1.1; // Evening
+      if (hour >= 21 || hour < 6) growthMultiplier = 0.5; // Night
       
-      // Add some "randomness" based on the day seed (±50)
-      const variation = Math.floor((daySeed / 100) * 100) - 50;
+      // Base growth: 89 -> 2847 throughout the day (more dramatic range)
+      const baseCount = 89 + Math.floor(dayProgress * 2758 * growthMultiplier);
       
-      // Add small jumps every 15 minutes to simulate real activity
-      const quarterHourBoost = Math.floor((hour * 4 + Math.floor(minute / 15)) * 3);
+      // Daily seed variation (±100)
+      const dailyVariation = Math.floor((daySeed / 100) * 200) - 100;
       
-      return Math.max(150, Math.min(1800, baseCount + variation + quarterHourBoost));
+      // Minute-level micro-bumps (simulates real-time activity)
+      const minuteBump = Math.floor((minute % 7) * 3 + (second % 13));
+      
+      return Math.max(89, Math.min(2999, baseCount + dailyVariation + minuteBump));
     };
     
     setSocialProofCount(calculateDailyCount());
     
-    // Update every 15 minutes
+    // Update every 30 seconds for "live" feeling
     const interval = setInterval(() => {
       setSocialProofCount(calculateDailyCount());
-    }, 15 * 60 * 1000);
+    }, 30 * 1000);
     
     return () => clearInterval(interval);
   }, []);
