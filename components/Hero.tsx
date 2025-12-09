@@ -46,11 +46,6 @@ export default function Hero() {
           
           {/* Left: Content */}
           <div className="max-w-xl">
-            {/* Logo */}
-            <div className="mb-10">
-              <img src="/logo.png" alt="Palette" className="h-12 object-contain" />
-            </div>
-
             {/* Headline */}
             <h1 className="mb-8" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
               <span className="block text-5xl md:text-6xl font-light text-gray-900 leading-[1.1] mb-2">
