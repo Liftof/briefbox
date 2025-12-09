@@ -25,6 +25,79 @@ interface ParallelSearchResult {
 }
 
 // ==========================================
+// TRANSFORM RAW DATA → SMART EDITORIAL ANGLES
+// ==========================================
+// Takes raw Firecrawl data and transforms it into engaging editorial angles
+// using a fast LLM (Claude Haiku) - this is the MISSING step!
+async function transformToEditorialAngles(
+  rawInsights: { text: string; source?: string; type: string }[],
+  brandContext: { name: string; targetAudience: string; industry: string }
+): Promise<{ painPoint: string; consequence: string; type: string }[]> {
+  if (!rawInsights.length || !process.env.OPENROUTER_API_KEY) {
+    return [];
+  }
+
+  try {
+    console.log(`🎯 Transforming ${rawInsights.length} raw insights into editorial angles...`);
+    
+    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${process.env.OPENROUTER_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        "model": "anthropic/claude-3-haiku", // Fast & cheap for this task
+        "messages": [{
+          "role": "user",
+          "content": `Tu es un expert en content marketing. Transforme ces données brutes en ANGLES ÉDITORIAUX percutants pour ${brandContext.name} (cible: ${brandContext.targetAudience}).
+
+DONNÉES BRUTES:
+${rawInsights.map((r, i) => `${i + 1}. [${r.type}] ${r.text}`).join('\n')}
+
+RÈGLES:
+- Chaque angle doit INTERPELLER la cible (${brandContext.targetAudience})
+- Formule comme une question, une provocation, ou un hook émotionnel
+- PAS de stats génériques sur le marché ou l'industrie
+- PAS de "le marché atteindra X milliards"
+- Garde uniquement ce qui PARLE à la cible au quotidien
+
+Retourne un JSON array avec max 4 angles:
+[
+  { "painPoint": "L'angle reformulé comme hook", "consequence": "L'impact sur la cible", "type": "pain_point|trend|social_proof" }
+]
+
+Si une donnée brute n'est pas pertinente pour la cible, IGNORE-LA. Mieux vaut 1-2 bons angles que 4 mauvais.
+Retourne UNIQUEMENT le JSON array, rien d'autre.`
+        }],
+        "max_tokens": 500,
+        "temperature": 0.3
+      })
+    });
+
+    if (!response.ok) {
+      console.warn('Editorial angle transformation failed:', response.status);
+      return [];
+    }
+
+    const data = await response.json();
+    const content = data.choices?.[0]?.message?.content || '[]';
+    
+    // Parse JSON from response
+    const jsonMatch = content.match(/\[[\s\S]*\]/);
+    if (!jsonMatch) return [];
+    
+    const angles = JSON.parse(jsonMatch[0]);
+    console.log(`✅ Transformed into ${angles.length} smart editorial angles`);
+    return angles;
+    
+  } catch (error) {
+    console.warn('Failed to transform insights:', error);
+    return [];
+  }
+}
+
+// ==========================================
 // INSIGHT QUALITY FILTER - Apply at SOURCE
 // ==========================================
 // Filter out generic market stats that nobody cares about
@@ -1841,46 +1914,55 @@ FORMAT: Return ONLY a valid JSON array:
           )
         ]);
 
-        // === Process SEARCH results (with quality filter!) ===
-        if (searchEnrichment.painPoints.length > 0) {
-          const painPointInsights = searchEnrichment.painPoints
-            .filter(pp => isRelevantInsight(pp.point)) // FILTER GARBAGE
-            .map(pp => ({
-              painPoint: pp.point,
-              consequence: '',
-              solution: '',
-              type: 'pain_point' as const,
-              source: pp.source,
-              isEnriched: true
-            }));
-
-          if (painPointInsights.length > 0) {
-            brandData.industryInsights = [
-              ...(brandData.industryInsights || []),
-              ...painPointInsights
-            ].slice(0, 6);
-            console.log(`✅ Added ${painPointInsights.length} VALID pain points from Search (filtered ${searchEnrichment.painPoints.length - painPointInsights.length} garbage)`);
+        // === Process SEARCH + EXTRACT results through LLM transformation ===
+        // Collect ALL raw insights for batch transformation
+        const rawInsightsForTransform: { text: string; source?: string; type: string }[] = [];
+        
+        // Add pain points from Search
+        for (const pp of searchEnrichment.painPoints) {
+          if (isRelevantInsight(pp.point)) {
+            rawInsightsForTransform.push({ text: pp.point, source: pp.source, type: 'pain_point' });
           }
         }
-
-        if (searchEnrichment.trends.length > 0) {
-          const trendInsights = searchEnrichment.trends
-            .filter(t => isRelevantInsight(t.trend)) // FILTER GARBAGE
-            .map(t => ({
-              painPoint: t.trend,
-              consequence: t.isRecent ? '🔥 Tendance récente' : '',
+        
+        // Add trends from Search
+        for (const t of searchEnrichment.trends) {
+          if (isRelevantInsight(t.trend)) {
+            rawInsightsForTransform.push({ text: t.trend, source: t.source, type: 'trend' });
+          }
+        }
+        
+        // Transform raw data into smart editorial angles via Claude
+        if (rawInsightsForTransform.length > 0) {
+          console.log(`📝 Sending ${rawInsightsForTransform.length} raw insights to LLM for editorial transformation...`);
+          
+          const smartAngles = await transformToEditorialAngles(
+            rawInsightsForTransform,
+            {
+              name: brandData.name || 'the brand',
+              targetAudience: brandData.targetAudience || 'professionals',
+              industry: brandData.industry || 'general'
+            }
+          );
+          
+          if (smartAngles.length > 0) {
+            const transformedInsights = smartAngles.map(angle => ({
+              painPoint: angle.painPoint,
+              consequence: angle.consequence || '',
               solution: '',
-              type: 'trend' as const,
-              source: t.source,
-              isEnriched: true
+              type: angle.type as 'pain_point' | 'trend' | 'social_proof',
+              isEnriched: true,
+              isTransformed: true // Mark as LLM-transformed
             }));
-
-          if (trendInsights.length > 0) {
+            
             brandData.industryInsights = [
               ...(brandData.industryInsights || []),
-              ...trendInsights
+              ...transformedInsights
             ].slice(0, 8);
-            console.log(`✅ Added ${trendInsights.length} VALID trends from Search (filtered ${searchEnrichment.trends.length - trendInsights.length} garbage)`);
+            
+            console.log(`✅ Added ${transformedInsights.length} LLM-transformed editorial angles`);
+          } else {
+            console.log('⚠️ LLM transformation returned no usable angles');
           }
         }
 
@@ -1929,56 +2011,68 @@ FORMAT: Return ONLY a valid JSON array:
           }));
         }
 
-        // === Process EXTRACT results (structured data with web search) - with quality filter! ===
-        if (extractEnrichment.painPoints.length > 0) {
-          const extractPainPoints = extractEnrichment.painPoints
-            .filter(pp => isRelevantInsight(pp.problem)) // FILTER GARBAGE
-            .map(pp => ({
-              painPoint: pp.problem,
-              consequence: pp.impact,
-              solution: '',
-              type: 'pain_point' as const,
-              source: pp.source || 'firecrawl-extract',
-              isEnriched: true
-            }));
-
-          // Merge with existing, avoiding duplicates
-          const existingPains = new Set(
-            (brandData.industryInsights || [])
-              .map((i: any) => i.painPoint?.toLowerCase().slice(0, 30))
-          );
-          
-          const newPains = extractPainPoints.filter(
-            pp => !existingPains.has(pp.painPoint.toLowerCase().slice(0, 30))
-          );
-
-          if (newPains.length > 0) {
-            brandData.industryInsights = [
-              ...(brandData.industryInsights || []),
-              ...newPains
-            ].slice(0, 10);
-            console.log(`✅ Added ${newPains.length} VALID pain points from Extract`);
+        // === Process EXTRACT results - add to transformation batch ===
+        // Extract results also go through LLM transformation (don't append raw!)
+        const extractRawInsights: { text: string; source?: string; type: string }[] = [];
+        
+        for (const pp of extractEnrichment.painPoints) {
+          if (isRelevantInsight(pp.problem)) {
+            extractRawInsights.push({ 
+              text: `${pp.problem}${pp.impact ? ` (Impact: ${pp.impact})` : ''}`, 
+              source: pp.source, 
+              type: 'pain_point' 
+            });
           }
         }
-
-        if (extractEnrichment.trends.length > 0) {
-          const extractTrends = extractEnrichment.trends
-            .filter(t => isRelevantInsight(t.trend)) // FILTER GARBAGE
-            .map(t => ({
-              painPoint: t.trend,
-              consequence: t.relevance,
-              solution: '',
-              type: 'trend' as const,
-              source: t.source || 'firecrawl-extract',
-              isEnriched: true
-            }));
-
-          if (extractTrends.length > 0) {
-            brandData.industryInsights = [
-              ...(brandData.industryInsights || []),
-              ...extractTrends
-            ].slice(0, 12);
-            console.log(`✅ Added ${extractTrends.length} VALID trends from Extract`);
+        
+        for (const t of extractEnrichment.trends) {
+          if (isRelevantInsight(t.trend)) {
+            extractRawInsights.push({ 
+              text: `${t.trend}${t.relevance ? ` (${t.relevance})` : ''}`, 
+              source: t.source, 
+              type: 'trend' 
+            });
+          }
+        }
+        
+        // Transform Extract results through LLM too
+        if (extractRawInsights.length > 0) {
+          console.log(`📝 Sending ${extractRawInsights.length} Extract insights to LLM for transformation...`);
+          
+          const smartExtractAngles = await transformToEditorialAngles(
+            extractRawInsights,
+            {
+              name: brandData.name || 'the brand',
+              targetAudience: brandData.targetAudience || 'professionals',
+              industry: brandData.industry || 'general'
+            }
+          );
+          
+          if (smartExtractAngles.length > 0) {
+            // Dedupe against existing insights
+            const existingPains = new Set(
+              (brandData.industryInsights || [])
+                .map((i: any) => i.painPoint?.toLowerCase().slice(0, 30))
+            );
+            
+            const newAngles = smartExtractAngles
+              .filter(a => !existingPains.has(a.painPoint.toLowerCase().slice(0, 30)))
+              .map(angle => ({
+                painPoint: angle.painPoint,
+                consequence: angle.consequence || '',
+                solution: '',
+                type: angle.type as 'pain_point' | 'trend' | 'social_proof',
+                isEnriched: true,
+                isTransformed: true
+              }));
+            
+            if (newAngles.length > 0) {
+              brandData.industryInsights = [
+                ...(brandData.industryInsights || []),
+                ...newAngles
+              ].slice(0, 10);
+              console.log(`✅ Added ${newAngles.length} LLM-transformed angles from Extract`);
+            }
           }
         }
 
