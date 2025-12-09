@@ -1321,15 +1321,41 @@ export async function POST(request: Request) {
              "intent": "Pourquoi ce post est pertinent pour cette marque (1 phrase)"
            }
         ],
-        "industryInsights": [
+        "editorialHooks": [
            {
-             "painPoint": "A specific stat about the TARGET AUDIENCE's daily struggle (NOT about the market/industry size!). Example: '73% des community managers utilisent 5+ outils par jour'",
-             "consequence": "The cost/impact on THEM personally (time lost, stress, missed opportunities...)",
-             "solution": "How your product helps THEM specifically",
-             "type": "pain_point | trend | cost_of_inaction | social_proof"
+             "hook": "Ready-to-use social media hook in French. Must be attention-grabbing, emotional, specific. Max 60 chars.",
+             "subtext": "Supporting line that adds context or amplifies the hook. Max 80 chars.",
+             "type": "pain_point | trend | provocation | social_proof | tip",
+             "emotion": "curiosity | fear | hope | frustration | relief"
            }
         ],
-        "_industryInsights_RULES": "⚠️ FORBIDDEN: Market size stats ('$X billion market'), generic tech trends ('AI adoption growing'), anything about the CLIENT's industry growth. ✅ REQUIRED: Stats about TARGET AUDIENCE struggles, their daily pain points, their professional challenges.",
+        "_editorialHooks_RULES": {
+          "GENERATE_6_HOOKS": true,
+          "LANGUAGE": "French only",
+          "GOOD_EXAMPLES": [
+            "⚡ 2h par jour sur l'admin ? C'est 10h/semaine de perdu.",
+            "73% des CM jonglent entre 5+ outils. Et vous ?",
+            "Stop aux posts génériques. Voici ce qui engage vraiment.",
+            "Le secret des marques qui cartonnent sur LinkedIn ?",
+            "Vos visuels sont beaux... mais convertissent-ils ?"
+          ],
+          "BAD_EXAMPLES_NEVER_GENERATE": [
+            "Le marché du SaaS atteindra 500 milliards en 2025",
+            "L'IA transforme l'industrie",
+            "Le secteur connaît une croissance de 15%",
+            "Les entreprises adoptent de plus en plus...",
+            "Le marché mondial est estimé à...",
+            "D'ici 2030, le secteur...",
+            "L'industrie [X] représente [Y] milliards"
+          ],
+          "MANDATORY_RULES": [
+            "Each hook must speak TO the target audience, not ABOUT the industry",
+            "Use 'vous/votre' to address the reader directly", 
+            "Include specific numbers when possible (73%, 2h, 5 outils)",
+            "Create curiosity or emotional response",
+            "Never mention market size, growth rates, or industry projections"
+          ]
+        },
         "contentNuggets": {
            "realStats": ["Statistiques réelles trouvées sur le site"],
            "testimonials": [{"quote": "Citation client", "author": "Nom", "company": "Entreprise"}],
@@ -2114,6 +2140,76 @@ FORMAT: Return ONLY a valid JSON array:
                 _verified: usesRealStat || usesRealTestimonial
             };
         });
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // STEP C: SOURCE-BASED FILTERING - Only keep quality insights
+    // ═══════════════════════════════════════════════════════════════════════════
+    const BAD_PATTERNS = [
+      /market.*(?:reach|worth|size|grow|project|forecast)/i,
+      /\$\d+\s*(?:billion|trillion|million)/i,
+      /(?:billion|trillion)\s*(?:dollar|usd|eur)/i,
+      /cagr|compound annual/i,
+      /industry.*(?:worth|size|grow|reach)/i,
+      /(?:global|worldwide).*market/i,
+      /by 202[5-9]|by 203[0-9]/i,
+      /\d+%.*(?:growth|increase|rise)/i,
+    ];
+
+    const filterInsight = (insight: any): boolean => {
+      // Keep if explicitly marked as real data or transformed
+      if (insight.isRealData || insight.isTransformed || insight.isEnriched) {
+        return true;
+      }
+      
+      const text = (insight.painPoint || insight.hook || insight.fact || '').toLowerCase();
+      
+      // Reject if matches bad patterns
+      if (BAD_PATTERNS.some(pattern => pattern.test(text))) {
+        console.log(`   ❌ Filtered out: "${text.slice(0, 50)}..."`);
+        return false;
+      }
+      
+      // Reject if too short or generic
+      if (text.length < 20) return false;
+      
+      // Keep otherwise
+      return true;
+    };
+
+    // Filter industryInsights
+    if (Array.isArray(brandData.industryInsights)) {
+      const originalCount = brandData.industryInsights.length;
+      brandData.industryInsights = brandData.industryInsights.filter(filterInsight);
+      console.log(`🔍 Filtered industryInsights: ${originalCount} → ${brandData.industryInsights.length}`);
+    }
+
+    // ═══════════════════════════════════════════════════════════════════════════
+    // STEP D: MAP editorialHooks to industryInsights format for frontend compat
+    // ═══════════════════════════════════════════════════════════════════════════
+    if (Array.isArray(brandData.editorialHooks) && brandData.editorialHooks.length > 0) {
+      // editorialHooks are already in the right format from the prompt
+      // Map them to industryInsights format for frontend compatibility
+      const hooksAsInsights = brandData.editorialHooks
+        .filter((h: any) => h.hook && h.hook.length > 10)
+        .filter(filterInsight)
+        .map((h: any) => ({
+          painPoint: h.hook,
+          consequence: h.subtext || '',
+          solution: '',
+          type: h.type || 'pain_point',
+          emotion: h.emotion,
+          isEditorialHook: true, // Mark so frontend knows these are curated
+          isTransformed: true
+        }));
+      
+      // Prioritize editorial hooks over raw insights
+      brandData.industryInsights = [
+        ...hooksAsInsights,
+        ...(brandData.industryInsights || []).filter((i: any) => !i.isEditorialHook).slice(0, 2)
+      ].slice(0, 8);
+      
+      console.log(`✅ Mapped ${hooksAsInsights.length} editorial hooks to industryInsights`);
     }
 
     return NextResponse.json({

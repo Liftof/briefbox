@@ -2120,82 +2120,59 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
               </button>
             </div>
             
-            {/* Scrollable pills - More engaging hooks */}
+            {/* Scrollable pills - Pre-curated editorial hooks from API */}
             <div className="space-y-2 overflow-x-auto pb-2 -mx-2 px-2" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-              {/* Row 1: Pain Points transformed into engaging hooks */}
+              {/* Row 1: Editorial hooks (pre-filtered and curated by API) */}
               <div className="flex gap-2 flex-nowrap">
-                {/* Pain Points with emotional hooks - FILTER OUT industry meta-stats */}
-                {brandData.industryInsights?.filter((insight: any) => {
-                  const text = (insight.painPoint || insight.fact || insight.didYouKnow || '').toLowerCase();
-                  // Exclude industry meta-stats that don't speak TO the customer
-                  const excludePatterns = [
-                    // Market size / projections
-                    'market is forecasted', 'market will reach', 'market grew', 'market growth',
-                    'market is projected', 'projected to reach', 'is projected to',
-                    'industry worth', 'industry will', 'industry is projected',
-                    // Money figures
-                    'billion', 'trillion', 'usd ', ' usd', 'eur ', ' eur',
-                    '$1', '$2', '$3', '$4', '$5', '$6', '$7', '$8', '$9',
-                    // Growth rates
-                    'cagr', 'rising at', 'growth rate', 'compound annual',
-                    // Generic industry talk
-                    'the global', 'the saas', 'the software', 'the market', 'the industry',
-                    'organizations will adopt', 'companies will', 'enterprises will',
-                    // Year projections
-                    'by 2025', 'by 2026', 'by 2027', 'by 2028', 'by 2029', 'by 2030', 'by 2031', 'by 2032',
-                    // Food safety (wtf?)
-                    'food safety', 'quality control market'
-                  ];
-                  return !excludePatterns.some(p => text.includes(p));
-                }).slice(0, 4).map((insight: any, i: number) => {
-                  const rawText = insight.painPoint || insight.fact || insight.didYouKnow;
-                  if (!rawText) return null;
+                {/* Editorial Hooks - already curated, just display */}
+                {brandData.industryInsights?.slice(0, 6).map((insight: any, i: number) => {
+                  const hookText = insight.painPoint || insight.hook || insight.fact;
+                  if (!hookText) return null;
                   
-                  // Transform raw pain point into engaging hook
-                  const typeConfig: Record<string, { emoji: string; hooks: string[]; color: string }> = {
-                    'pain_point': { 
-                      emoji: '⚡', 
-                      hooks: [
-                        `Stop à "${rawText.slice(0, 30)}..." — voici la solution`,
-                        `Vous aussi, marre de ${rawText.toLowerCase().slice(0, 25)}... ?`,
-                        `${rawText.slice(0, 35)}... On règle ça.`
-                      ],
-                      color: 'rose'
-                    },
-                    'trend': { 
-                      emoji: '📈', 
-                      hooks: [
-                        `📈 Tendance : ${rawText.slice(0, 35)}...`,
-                        `${rawText.slice(0, 35)}... — En profitez-vous ?`
-                      ],
-                      color: 'blue'
-                    },
-                    'competitive': { 
-                      emoji: '🎯', 
-                      hooks: [
-                        `Ce que nos concurrents ne font pas : ${rawText.slice(0, 25)}...`,
-                        `Notre différence ? ${rawText.slice(0, 30)}...`
-                      ],
-                      color: 'purple'
-                    },
+                  // Type-based styling
+                  const typeEmoji: Record<string, string> = {
+                    'pain_point': '⚡',
+                    'trend': '📈',
+                    'provocation': '🎯',
+                    'social_proof': '💬',
+                    'tip': '💡',
+                    'competitive': '🎯',
                   };
                   
-                  const config = typeConfig[insight.type] || { emoji: '💡', hooks: [rawText], color: 'gray' };
-                  const hook = config.hooks[i % config.hooks.length];
+                  const typeColor: Record<string, string> = {
+                    'pain_point': 'rose',
+                    'trend': 'blue',
+                    'provocation': 'purple',
+                    'social_proof': 'amber',
+                    'tip': 'gray',
+                    'competitive': 'indigo',
+                  };
+                  
+                  const emoji = typeEmoji[insight.type] || '💡';
+                  const color = typeColor[insight.type] || 'gray';
                   
                   return (
                     <button
                       key={`insight-${i}`}
                       onClick={() => {
                         setSelectedTemplate(insight.type === 'trend' ? 'announcement' : 'stat');
-                        setBrief(hook);
+                        // Use the hook directly - it's already well-formatted
+                        const fullBrief = insight.consequence 
+                          ? `${hookText}\n\n${insight.consequence}`
+                          : hookText;
+                        setBrief(fullBrief);
                       }}
-                      className={`flex-shrink-0 px-3 py-2 border transition-all text-left max-w-[260px] bg-${config.color}-50/30 border-${config.color}-200 hover:border-${config.color}-400 hover:bg-${config.color}-50`}
+                      className={`flex-shrink-0 px-3 py-2 border transition-all text-left max-w-[280px] bg-${color}-50/30 border-${color}-200 hover:border-${color}-400 hover:bg-${color}-50`}
                     >
                       <div className="flex items-start gap-2">
-                        <span className="text-sm flex-shrink-0">{config.emoji}</span>
-                        <span className="text-xs text-gray-700 line-clamp-2">{hook.slice(0, 55)}{hook.length > 55 ? '...' : ''}</span>
+                        <span className="text-sm flex-shrink-0">{emoji}</span>
+                        <div className="min-w-0">
+                          <span className="text-xs text-gray-700 line-clamp-2">{hookText}</span>
+                          {insight.consequence && (
+                            <span className="text-[10px] text-gray-400 block mt-0.5 truncate">{insight.consequence}</span>
+                          )}
                   </div>
+                      </div>
                     </button>
                   );
                 }).filter(Boolean)}
