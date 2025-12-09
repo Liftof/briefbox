@@ -69,35 +69,45 @@ export default function Home() {
               </div>
             </div>
 
-            {/* What you could do */}
+            {/* What you could do - Light gradient with Palette colors */}
             <div className="relative">
-              <div className="absolute -bottom-3 -right-3 w-6 h-6 border-r-2 border-b-2 border-blue-300" />
-              <div className="bg-gray-900 text-white p-8 md:p-10 h-full">
-                <div className="flex items-center gap-3 mb-8">
-                  <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse" />
-                  <span className="text-xs font-mono uppercase tracking-widest text-blue-400">Ce que vous pourriez faire</span>
-                </div>
+              <div className="absolute -bottom-3 -right-3 w-6 h-6 border-r-2 border-b-2 border-blue-400" />
+              <div className="bg-gradient-to-br from-blue-50 via-white to-amber-50 border border-blue-100 p-8 md:p-10 h-full relative overflow-hidden">
+                {/* Subtle color blobs */}
+                <div className="absolute top-0 right-0 w-32 h-32 bg-blue-200/30 rounded-full blur-3xl" />
+                <div className="absolute bottom-0 left-0 w-24 h-24 bg-amber-200/20 rounded-full blur-2xl" />
                 
-                <div className="space-y-6">
-                  <div className="flex items-start gap-4">
-                    <div className="w-8 h-8 bg-blue-500/20 rounded-full flex items-center justify-center text-blue-400 text-sm flex-shrink-0">✓</div>
-                    <div>
-                      <div className="font-medium text-white mb-1">2 minutes. Vraiment.</div>
-                      <div className="text-sm text-gray-400 leading-relaxed">Décrivez ce que vous voulez. Publiez. C'est tout.</div>
+                <div className="relative z-10">
+                  <div className="flex items-center gap-3 mb-8">
+                    <div className="flex -space-x-1">
+                      <div className="w-2 h-2 bg-red-500 rounded-full" />
+                      <div className="w-2 h-2 bg-blue-500 rounded-full" />
+                      <div className="w-2 h-2 bg-amber-400 rounded-full" />
                     </div>
+                    <span className="text-xs font-mono uppercase tracking-widest text-blue-600">Ce que vous pourriez faire</span>
                   </div>
-                  <div className="flex items-start gap-4">
-                    <div className="w-8 h-8 bg-blue-500/20 rounded-full flex items-center justify-center text-blue-400 text-sm flex-shrink-0">✓</div>
-                    <div>
-                      <div className="font-medium text-white mb-1">19€/mois. Tout compris.</div>
-                      <div className="text-sm text-gray-400 leading-relaxed">Pas de surprise. Pas de devis. Pas de "ça dépend".</div>
+                  
+                  <div className="space-y-6">
+                    <div className="flex items-start gap-4">
+                      <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm flex-shrink-0 shadow-lg shadow-blue-500/30">✓</div>
+                      <div>
+                        <div className="font-medium text-gray-900 mb-1">2 minutes. Vraiment.</div>
+                        <div className="text-sm text-gray-500 leading-relaxed">Décrivez ce que vous voulez. Publiez. C'est tout.</div>
+                      </div>
                     </div>
-                  </div>
-                  <div className="flex items-start gap-4">
-                    <div className="w-8 h-8 bg-blue-500/20 rounded-full flex items-center justify-center text-blue-400 text-sm flex-shrink-0">✓</div>
-                    <div>
-                      <div className="font-medium text-white mb-1">100% votre marque</div>
-                      <div className="text-sm text-gray-400 leading-relaxed">Vos couleurs, votre logo, votre ton. Palette apprend, vous validez.</div>
+                    <div className="flex items-start gap-4">
+                      <div className="w-8 h-8 bg-amber-400 rounded-full flex items-center justify-center text-white text-sm flex-shrink-0 shadow-lg shadow-amber-400/30">✓</div>
+                      <div>
+                        <div className="font-medium text-gray-900 mb-1">19€/mois. Tout compris.</div>
+                        <div className="text-sm text-gray-500 leading-relaxed">Pas de surprise. Pas de devis. Pas de "ça dépend".</div>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-4">
+                      <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center text-white text-sm flex-shrink-0 shadow-lg shadow-red-500/30">✓</div>
+                      <div>
+                        <div className="font-medium text-gray-900 mb-1">100% votre marque</div>
+                        <div className="text-sm text-gray-500 leading-relaxed">Vos couleurs, votre logo, votre ton. Palette apprend, vous validez.</div>
+                      </div>
                     </div>
                   </div>
                 </div>
