@@ -28,9 +28,10 @@ export default function CtaSection() {
 
   return (
     <section className="py-24 md:py-32 bg-gray-900 text-white relative overflow-hidden">
-      {/* Floating accents */}
-      <div className="absolute top-20 left-20 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl" />
-      <div className="absolute bottom-20 right-20 w-96 h-96 bg-sky-500/10 rounded-full blur-3xl" />
+      {/* Floating accents - Palette logo colors */}
+      <div className="absolute top-20 left-20 w-64 h-64 bg-red-500/10 rounded-full blur-3xl" />
+      <div className="absolute top-40 left-40 w-48 h-48 bg-amber-400/10 rounded-full blur-3xl" />
+      <div className="absolute bottom-20 right-20 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl" />
       
       <div className="max-w-3xl mx-auto px-6 text-center relative z-10">
         <h2 className="text-3xl sm:text-4xl md:text-5xl font-light mb-6 leading-tight">

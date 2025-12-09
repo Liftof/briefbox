@@ -128,8 +128,14 @@ export default function Home() {
           <div className="grid gap-8 md:grid-cols-3 md:gap-12">
             {/* Step 1 */}
             <div className="relative">
-              <div className="text-8xl font-light text-gray-100 absolute -top-4 -left-2">1</div>
+              <div className="text-8xl font-light text-red-100 absolute -top-4 -left-2">1</div>
               <div className="relative z-10 pt-12">
+                <div className="w-10 h-10 bg-red-500 rounded-xl flex items-center justify-center mb-4">
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="10" />
+                    <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+                  </svg>
+                </div>
                 <h3 className="text-xl font-medium text-gray-900 mb-3">Collez votre site web</h3>
                 <p className="text-gray-500 leading-relaxed">
                   Palette scanne votre marque : logo, couleurs, typos, ton. Une seule fois, pour toujours.
@@ -139,8 +145,13 @@ export default function Home() {
 
             {/* Step 2 */}
             <div className="relative">
-              <div className="text-8xl font-light text-gray-100 absolute -top-4 -left-2">2</div>
+              <div className="text-8xl font-light text-blue-100 absolute -top-4 -left-2">2</div>
               <div className="relative z-10 pt-12">
+                <div className="w-10 h-10 bg-blue-500 rounded-xl flex items-center justify-center mb-4">
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                  </svg>
+                </div>
                 <h3 className="text-xl font-medium text-gray-900 mb-3">Dites ce que vous voulez</h3>
                 <p className="text-gray-500 leading-relaxed">
                   "Une story pour le Black Friday". "Un carousel LinkedIn sur notre levée de fonds". En français, comme vous parleriez à un humain.
@@ -150,8 +161,13 @@ export default function Home() {
 
             {/* Step 3 */}
             <div className="relative">
-              <div className="text-8xl font-light text-gray-100 absolute -top-4 -left-2">3</div>
+              <div className="text-8xl font-light text-amber-100 absolute -top-4 -left-2">3</div>
               <div className="relative z-10 pt-12">
+                <div className="w-10 h-10 bg-amber-400 rounded-xl flex items-center justify-center mb-4">
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <path d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
                 <h3 className="text-xl font-medium text-gray-900 mb-3">Publiez ou ajustez</h3>
                 <p className="text-gray-500 leading-relaxed">
                   Visuels générés en 60 secondes. Un détail à changer ? Un clic. Pas satisfait ? Régénérez. Gratuit.
@@ -165,6 +181,10 @@ export default function Home() {
       {/* Proof Section - Gallery */}
       <section className="py-24 md:py-32 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-gray-50 to-white" />
+        {/* Palette color accents */}
+        <div className="absolute top-20 right-20 w-64 h-64 bg-red-200/20 rounded-full blur-3xl" />
+        <div className="absolute bottom-20 left-20 w-64 h-64 bg-blue-200/20 rounded-full blur-3xl" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-amber-200/15 rounded-full blur-3xl" />
         
         <div className="max-w-6xl mx-auto px-6 relative z-10">
           <div className="text-center mb-16">

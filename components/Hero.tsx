@@ -1,10 +1,16 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth, SignInButton } from '@clerk/nextjs';
 
 export default function Hero() {
+  const [socialProofCount, setSocialProofCount] = useState(0);
+  
+  useEffect(() => {
+    // Generate random number between 150 and 1800
+    setSocialProofCount(Math.floor(Math.random() * (1800 - 150 + 1)) + 150);
+  }, []);
   const [url, setUrl] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { isSignedIn, isLoaded } = useAuth();
@@ -36,9 +42,10 @@ export default function Hero() {
         backgroundSize: '60px 60px'
       }} />
       
-      {/* Floating accents */}
-      <div className="absolute top-32 right-32 w-96 h-96 bg-gradient-to-br from-amber-200/20 to-orange-300/10 rounded-full blur-3xl" />
-      <div className="absolute bottom-32 left-16 w-72 h-72 bg-gradient-to-tr from-blue-200/15 to-sky-300/10 rounded-full blur-3xl" />
+      {/* Floating accents - Palette logo colors */}
+      <div className="absolute top-20 right-20 w-96 h-96 bg-gradient-to-br from-red-200/20 to-red-300/10 rounded-full blur-3xl" />
+      <div className="absolute top-40 right-60 w-64 h-64 bg-gradient-to-br from-amber-200/25 to-yellow-300/15 rounded-full blur-3xl" />
+      <div className="absolute bottom-32 left-16 w-72 h-72 bg-gradient-to-tr from-blue-200/20 to-blue-300/10 rounded-full blur-3xl" />
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-gradient-to-br from-gray-100/50 to-transparent rounded-full blur-3xl" />
 
       <div className="max-w-7xl mx-auto px-6 w-full relative z-10">
@@ -46,6 +53,20 @@ export default function Hero() {
           
           {/* Left: Content */}
           <div className="max-w-xl">
+            {/* Social Proof Badge */}
+            {socialProofCount > 0 && (
+              <div className="inline-flex items-center gap-3 bg-white border border-gray-200 px-4 py-2 shadow-sm mb-8">
+                <div className="flex -space-x-1">
+                  <div className="w-2 h-2 bg-red-500 rounded-full" />
+                  <div className="w-2 h-2 bg-blue-500 rounded-full" />
+                  <div className="w-2 h-2 bg-amber-400 rounded-full" />
+                </div>
+                <span className="text-sm text-gray-600">
+                  <span className="font-semibold text-gray-900">{socialProofCount.toLocaleString('fr-FR')}</span> visuels générés aujourd'hui
+                </span>
+              </div>
+            )}
+            
             {/* Headline */}
             <h1 className="mb-6 md:mb-8" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
               <span className="block text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-light text-gray-900 leading-[1.1] mb-2">
