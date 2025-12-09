@@ -1,11 +1,52 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth, SignInButton } from '@clerk/nextjs';
 
 export default function Hero() {
   const [socialProofCount, setSocialProofCount] = useState(0);
+  const [promptText, setPromptText] = useState('');
+  const [displayedPrompt, setDisplayedPrompt] = useState('');
+  const [isTyping, setIsTyping] = useState(true);
+  const [isFocused, setIsFocused] = useState(false);
+  const promptInputRef = useRef<HTMLTextAreaElement>(null);
+  
+  const defaultPrompt = "Story Instagram Black Friday avec mon logo en haut et photo lifestyle en fond";
+  
+  // Typewriter effect
+  useEffect(() => {
+    if (!isTyping) return;
+    
+    let index = 0;
+    const timer = setInterval(() => {
+      if (index <= defaultPrompt.length) {
+        setDisplayedPrompt(defaultPrompt.slice(0, index));
+        index++;
+      } else {
+        setIsTyping(false);
+        setPromptText(defaultPrompt);
+        clearInterval(timer);
+      }
+    }, 40); // Speed of typing
+    
+    return () => clearInterval(timer);
+  }, []);
+
+  const handlePromptSubmit = () => {
+    const text = promptText.trim() || defaultPrompt;
+    // Redirect will be handled by SignInButton or direct navigation
+    if (isSignedIn) {
+      router.push(`/playground?brief=${encodeURIComponent(text)}`);
+    }
+  };
+
+  const handlePromptKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handlePromptSubmit();
+    }
+  };
   
   useEffect(() => {
     const calculateDailyCount = () => {
@@ -178,7 +219,7 @@ export default function Hero() {
               </div>
               
               <p className="mt-3 text-xs text-gray-400 pl-1">
-                Gratuit • Aucune CB requise • Résultats en 60 secondes
+                Essai gratuit • Aucune CB requise • Résultats en 60 secondes
               </p>
             </div>
 
@@ -189,7 +230,7 @@ export default function Hero() {
                 <div className="text-xs font-mono uppercase tracking-wider text-gray-400">visuels</div>
               </div>
               <div>
-                <div className="text-2xl font-semibold text-gray-900 mb-1">2K</div>
+                <div className="text-2xl font-semibold text-gray-900 mb-1">4K</div>
                 <div className="text-xs font-mono uppercase tracking-wider text-gray-400">haute déf</div>
               </div>
               <div>
@@ -243,20 +284,78 @@ export default function Hero() {
               </div>
             </div>
 
-            {/* Floating prompt card */}
-            <div className="absolute -left-20 top-20 w-72 bg-white border border-gray-200 p-5 shadow-xl transform -rotate-2 hover:rotate-0 transition-transform">
-              <div className="flex items-center gap-2 mb-3">
-                <div className="w-2 h-2 bg-gray-400 rounded-full" />
-                <span className="text-[10px] font-mono uppercase tracking-widest text-gray-400">Votre brief</span>
+            {/* Floating prompt card - Interactive! */}
+            <div 
+              className={`absolute -left-20 top-20 w-80 bg-white border-2 p-5 shadow-xl transition-all duration-300 cursor-text ${
+                isFocused 
+                  ? 'border-blue-500 rotate-0 scale-105 shadow-2xl shadow-blue-500/20' 
+                  : 'border-gray-200 -rotate-2 hover:rotate-0 hover:border-gray-300'
+              }`}
+              onClick={() => {
+                setIsFocused(true);
+                setIsTyping(false);
+                setPromptText(promptText || defaultPrompt);
+                setTimeout(() => promptInputRef.current?.focus(), 100);
+              }}
+            >
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2">
+                  <div className={`w-2 h-2 rounded-full transition-colors ${isFocused ? 'bg-blue-500 animate-pulse' : 'bg-gray-400'}`} />
+                  <span className="text-[10px] font-mono uppercase tracking-widest text-gray-400">Votre brief</span>
+                </div>
+                {isFocused && (
+                  <span className="text-[9px] font-mono uppercase tracking-wider text-blue-500">Modifiez-moi !</span>
+                )}
               </div>
-              <p className="text-sm text-gray-600 leading-relaxed">
-                "Story Instagram Black Friday avec mon logo en haut et photo lifestyle en fond"
-              </p>
-              <div className="mt-3 flex items-center gap-2 text-[10px] text-gray-400">
-                <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                  <path d="M5 12h14M12 5l7 7-7 7" />
-                </svg>
-                <span className="font-mono">ENTER</span>
+              
+              {isFocused ? (
+                <textarea
+                  ref={promptInputRef}
+                  value={promptText}
+                  onChange={(e) => setPromptText(e.target.value)}
+                  onKeyDown={handlePromptKeyDown}
+                  onBlur={() => !promptText && setIsFocused(false)}
+                  placeholder="Décrivez votre visuel..."
+                  className="w-full text-sm text-gray-700 leading-relaxed resize-none outline-none bg-transparent min-h-[60px]"
+                  rows={3}
+                />
+              ) : (
+                <p className="text-sm text-gray-600 leading-relaxed min-h-[60px]">
+                  "{isTyping ? displayedPrompt : (promptText || defaultPrompt)}"
+                  {isTyping && <span className="inline-block w-0.5 h-4 bg-gray-400 ml-0.5 animate-pulse" />}
+                </p>
+              )}
+              
+              <div className="mt-3 flex items-center justify-between">
+                <div className="flex items-center gap-2 text-[10px] text-gray-400">
+                  <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <path d="M5 12h14M12 5l7 7-7 7" />
+                  </svg>
+                  <span className="font-mono">ENTER pour générer</span>
+                </div>
+                
+                {isFocused && (
+                  isLoaded && isSignedIn ? (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handlePromptSubmit();
+                      }}
+                      className="bg-gray-900 text-white text-xs px-3 py-1.5 hover:bg-black transition-colors"
+                    >
+                      Générer →
+                    </button>
+                  ) : (
+                    <SignInButton mode="modal" forceRedirectUrl={`/playground?brief=${encodeURIComponent(promptText || defaultPrompt)}`}>
+                      <button
+                        onClick={(e) => e.stopPropagation()}
+                        className="bg-gray-900 text-white text-xs px-3 py-1.5 hover:bg-black transition-colors"
+                      >
+                        Générer →
+                      </button>
+                    </SignInButton>
+                  )
+                )}
               </div>
             </div>
 
