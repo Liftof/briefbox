@@ -205,14 +205,30 @@ export default function Home() {
             <p className="text-gray-500">De vrais visuels, générés en quelques clics.</p>
           </div>
           
-          {/* Gallery Grid - Placeholder for real examples */}
+          {/* Gallery Grid - Real user examples */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="aspect-[4/5] bg-gradient-to-br from-gray-200 to-gray-300 rounded-lg relative overflow-hidden group">
+            {[1, 2, 3, 4, 5, 6, 7].slice(0, 4).map((i) => (
+              <div key={i} className="aspect-[4/5] bg-gray-100 rounded-lg relative overflow-hidden group">
+                <img 
+                  src={`/gallery/gal-${i}.png`} 
+                  alt={`Visuel créé avec Palette ${i}`}
+                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                <div className="absolute bottom-4 left-4 right-4 text-white opacity-0 group-hover:opacity-100 transition-opacity">
-                  <div className="text-xs font-mono uppercase tracking-wider">Exemple {i}</div>
-                </div>
+              </div>
+            ))}
+          </div>
+          
+          {/* Second row on larger screens */}
+          <div className="hidden md:grid grid-cols-3 gap-4 mt-4">
+            {[5, 6, 7].map((i) => (
+              <div key={i} className="aspect-[4/5] bg-gray-100 rounded-lg relative overflow-hidden group">
+                <img 
+                  src={`/gallery/gal-${i}.png`} 
+                  alt={`Visuel créé avec Palette ${i}`}
+                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
               </div>
             ))}
           </div>
