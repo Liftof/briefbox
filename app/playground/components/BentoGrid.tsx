@@ -1,16 +1,28 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { useTranslation } from '@/lib/i18n';
 
-// Tag options
+// Static tag options (used by sub-components that don't have locale access)
 const TAG_OPTIONS = [
   { value: 'main_logo', label: 'Logo', color: 'bg-gray-900 text-white' },
   { value: 'product', label: 'Produit', color: 'bg-blue-500 text-white' },
   { value: 'app_ui', label: 'App/UI', color: 'bg-purple-500 text-white' },
-  { value: 'reference', label: 'Visuel de référence', color: 'bg-amber-500 text-white' },
+  { value: 'reference', label: 'Référence', color: 'bg-amber-500 text-white' },
   { value: 'team', label: 'Équipe', color: 'bg-blue-500 text-white' },
   { value: 'lifestyle', label: 'Lifestyle', color: 'bg-pink-500 text-white' },
   { value: 'other', label: 'Autre', color: 'bg-gray-200 text-gray-600' },
+];
+
+// Localized tag options (used in main BentoGrid component)
+const getTagOptions = (locale: string) => [
+  { value: 'main_logo', label: 'Logo', color: 'bg-gray-900 text-white' },
+  { value: 'product', label: locale === 'fr' ? 'Produit' : 'Product', color: 'bg-blue-500 text-white' },
+  { value: 'app_ui', label: 'App/UI', color: 'bg-purple-500 text-white' },
+  { value: 'reference', label: locale === 'fr' ? 'Référence' : 'Reference', color: 'bg-amber-500 text-white' },
+  { value: 'team', label: locale === 'fr' ? 'Équipe' : 'Team', color: 'bg-blue-500 text-white' },
+  { value: 'lifestyle', label: 'Lifestyle', color: 'bg-pink-500 text-white' },
+  { value: 'other', label: locale === 'fr' ? 'Autre' : 'Other', color: 'bg-gray-200 text-gray-600' },
 ];
 
 // Checker pattern style for transparent/white images (like Photoshop)
@@ -359,6 +371,8 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
   onAddSource?: () => void, 
   onBack?: () => void 
 }) {
+  const { locale } = useTranslation();
+  const localizedTags = getTagOptions(locale);
   const [localData, setLocalData] = useState(brandData);
   const [importPopupOpen, setImportPopupOpen] = useState(false);
   const [importForReferences, setImportForReferences] = useState(false); // NEW: Track if importing for reference visuals
@@ -454,7 +468,7 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
   };
   const finalLogoBg = isDark(logoBgColor) ? '#FFFFFF' : isLight(logoBgColor) ? '#1a1a1a' : logoBgColor;
 
-  const getTagColor = (tag: string) => TAG_OPTIONS.find(t => t.value === tag)?.color || 'bg-gray-200 text-gray-600';
+  const getTagColor = (tag: string) => localizedTags.find(t => t.value === tag)?.color || 'bg-gray-200 text-gray-600';
 
   // Get non-reference images for asset library
   const assetImages = localData.images?.filter((img: string) => {
@@ -578,7 +592,7 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
 
           {/* Fonts - Show ALL fonts */}
           <div className="col-span-1 md:col-span-3 bg-white border border-gray-200 p-3 md:p-4">
-            <span className="text-[9px] md:text-[10px] font-mono uppercase tracking-widest text-gray-400 block mb-2 md:mb-3">Typographies</span>
+            <span className="text-[9px] md:text-[10px] font-mono uppercase tracking-widest text-gray-400 block mb-2 md:mb-3">{locale === 'fr' ? 'Typographies' : 'Typography'}</span>
             <div className="space-y-1 md:space-y-2">
               {localData.fonts?.map((font: string, i: number) => (
                 <div key={i} className={`flex items-center gap-1 md:gap-2 ${i === 0 ? '' : 'opacity-60'}`}>
@@ -592,7 +606,7 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
             
           {/* Tagline */}
           <div className="col-span-1 md:col-span-3 bg-white border border-gray-200 p-3 md:p-4">
-              <span className="text-[9px] md:text-[10px] font-mono uppercase tracking-widest text-gray-400 block mb-2 md:mb-3">Tagline</span>
+              <span className="text-[9px] md:text-[10px] font-mono uppercase tracking-widest text-gray-400 block mb-2 md:mb-3">{locale === 'fr' ? 'Accroche' : 'Tagline'}</span>
               <textarea 
                 value={localData.tagline || ''}
                 onChange={(e) => handleChange('tagline', e.target.value)}
@@ -604,7 +618,7 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
           {/* STRATEGIE DE MARQUE - New Block */}
           <div className="col-span-2 md:col-span-6 bg-white border border-gray-200 p-3 md:p-4">
             <div className="flex items-center gap-2 mb-4">
-              <span className="text-[10px] font-mono uppercase tracking-widest text-gray-400">Stratégie & Cible</span>
+              <span className="text-[10px] font-mono uppercase tracking-widest text-gray-400">{locale === 'fr' ? 'Stratégie & Cible' : 'Strategy & Target'}</span>
             </div>
             <div className="space-y-4">
               <div>
@@ -631,7 +645,7 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
           {/* Storytelling */}
           <div className="col-span-2 md:col-span-6 bg-white border border-gray-200 p-3 md:p-4">
             <div className="flex items-center gap-2 mb-3 md:mb-4">
-              <span className="text-[9px] md:text-[10px] font-mono uppercase tracking-widest text-gray-400">Brand Story</span>
+              <span className="text-[9px] md:text-[10px] font-mono uppercase tracking-widest text-gray-400">{locale === 'fr' ? 'Histoire de marque' : 'Brand Story'}</span>
             </div>
             <div className="h-full">
               <span className="text-[8px] md:text-[9px] text-purple-600 font-bold uppercase tracking-wider block mb-1">📖 Notre Histoire</span>
@@ -790,7 +804,7 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2">
                     <span className="text-lg">⚡</span>
-                    <span className="text-[10px] font-mono uppercase tracking-widest text-rose-600">Pain Points & Contexte Marché</span>
+                    <span className="text-[10px] font-mono uppercase tracking-widest text-rose-600">{locale === 'fr' ? 'Pain Points & Contexte Marché' : 'Pain Points & Market Context'}</span>
                   </div>
                   {(localData.industryInsights?.length || 0) > 0 && (
                     <span className="bg-rose-100 text-rose-700 text-[9px] px-1.5 py-0.5 font-bold rounded">
@@ -903,7 +917,7 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-3">
               <span className="text-[10px] font-mono uppercase tracking-widest text-gray-400">
-                Bibliothèque d'assets
+                {locale === 'fr' ? "Bibliothèque d'assets" : "Asset library"}
               </span>
               <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-[10px] font-bold">
                 {assetImages.length || 0} images
@@ -944,7 +958,7 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
                     onClick={(e) => openTagEditor(e, originalIndex)}
                     className={`absolute top-0.5 left-0.5 text-[6px] font-mono uppercase px-0.5 py-0.5 leading-none ${getTagColor(label)} opacity-0 group-hover:opacity-100 transition-opacity`}
                   >
-                    {TAG_OPTIONS.find(t => t.value === label)?.label.slice(0, 4) || '...'}
+                    {localizedTags.find(t => t.value === label)?.label.slice(0, 4) || '...'}
                   </button>
                   <button 
                     onClick={() => handleChange('images', localData.images.filter((_: any, idx: number) => idx !== originalIndex))} 
@@ -975,7 +989,7 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
                 });
                 return Object.entries(categoryCounts).map(([cat, count]) => (
                   <span key={cat} className={`text-[9px] px-1.5 py-0.5 ${getTagColor(cat)}`}>
-                    {TAG_OPTIONS.find(t => t.value === cat)?.label || cat}: {count}
+                    {localizedTags.find(t => t.value === cat)?.label || cat}: {count}
                   </span>
                 ));
               })()}
@@ -994,7 +1008,7 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
         >
           <span className="relative z-10 flex items-center justify-center gap-3">
             <span className="w-2 h-2 bg-blue-500 rounded-full" />
-            Valider & Créer
+            {locale === 'fr' ? 'Valider & Créer' : 'Validate & Create'}
             <svg className="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
               <path d="M5 12h14M12 5l7 7-7 7" />
             </svg>
