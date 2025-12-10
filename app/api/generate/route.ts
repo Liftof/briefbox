@@ -466,7 +466,13 @@ The reference is a MOOD BOARD, not a template. Create something ORIGINAL that ca
             // If role mentions "LOGO", make it ALL CAPS and VERY EXPLICIT
             if (role.toLowerCase().includes('logo')) {
                 console.log(`   ✅ LOGO FOUND in processed images at position ${idx}`);
-                imageDescriptions.push(`Image ${idx}: [CRITICAL] BRAND LOGO. ${role}. DO NOT MODIFY. DO NOT DISTORT. REPRODUCE EXACTLY AS PROVIDED.`);
+                imageDescriptions.push(`Image ${idx}: ⚠️⚠️⚠️ BRAND LOGO ⚠️⚠️⚠️
+THIS IS THE OFFICIAL LOGO. REPRODUCE IT EXACTLY AS SHOWN:
+- Copy pixel by pixel - no modifications
+- Same colors, shapes, proportions
+- Do not stylize, simplify, or redraw
+- Place prominently in the final image
+TREAT THIS AS A SACRED ELEMENT - DO NOT ALTER.`);
             } else {
                 imageDescriptions.push(`Image ${idx}: ${role}`);
             }
@@ -499,14 +505,20 @@ For SaaS, apps, or software products:
       
       // Add a global logo protection rule at the top
       const logoRule = `
-🛡️ LOGO PROTECTION RULE (HIGHEST PRIORITY):
-Any image marked as "BRAND LOGO" or "LOGO" MUST be reproduced EXACTLY:
-- Same colors (no color shifting)
-- Same proportions (no stretching/squishing)  
-- Same shapes (no simplification or modification)
-- Same text/typography if present (letter by letter)
-- Place it clearly visible in the composition
-- If the logo is complex, simplify the REST of the image, NOT the logo
+🛡️🛡️🛡️ LOGO PROTECTION - ABSOLUTE RULE 🛡️🛡️🛡️
+
+THE FIRST IMAGE (Image 1) IS THE BRAND LOGO. THIS IS NON-NEGOTIABLE:
+
+1. COPY IT EXACTLY - pixel-perfect reproduction
+2. DO NOT modify colors, shapes, proportions, or any detail
+3. DO NOT stylize, simplify, or "improve" it
+4. DO NOT add effects, shadows, or modifications
+5. PLACE IT PROMINENTLY in the composition (corner or center)
+6. If you cannot reproduce it exactly, show it SMALLER but UNCHANGED
+
+Think of the logo as a PHOTOGRAPH of a physical object - you can resize it, but you cannot redraw or alter it.
+
+FAILURE TO PRESERVE THE LOGO EXACTLY WILL RUIN THE BRAND'S IDENTITY.
 
 `;
       
