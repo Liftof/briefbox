@@ -44,7 +44,7 @@ function EditButton({ onClick, title }: { onClick: () => void; title?: string })
     <button
       onClick={onClick}
       className="p-1.5 text-blue-500 hover:text-blue-600 hover:bg-blue-50 rounded transition-all"
-      title={title || 'Modifier'}
+      title={title}
     >
       <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
         <path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -54,11 +54,12 @@ function EditButton({ onClick, title }: { onClick: () => void; title?: string })
 }
 
 // Import popup component
-function ImportPopup({ isOpen, onClose, onImport, forReferences = false }: { 
+function ImportPopup({ isOpen, onClose, onImport, forReferences = false, locale = 'fr' }: { 
   isOpen: boolean; 
   onClose: () => void; 
   onImport: (files: { url: string; tag: string }[]) => void;
   forReferences?: boolean;
+  locale?: string;
 }) {
   const [pendingFiles, setPendingFiles] = useState<{ file: File; preview: string; tag: string }[]>([]);
   const [isDragging, setIsDragging] = useState(false);
@@ -127,7 +128,10 @@ function ImportPopup({ isOpen, onClose, onImport, forReferences = false }: {
         <div className={`px-6 py-4 border-b flex items-center justify-between ${forReferences ? 'border-purple-200 bg-gradient-to-r from-purple-50 to-fuchsia-50' : 'border-gray-200'}`}>
           <h2 className="text-sm font-medium text-gray-900 uppercase tracking-wider flex items-center gap-2">
             <span className={`w-2 h-2 rounded-full ${forReferences ? 'bg-purple-500' : 'bg-blue-500'}`} />
-            {forReferences ? '🎨 Importer des visuels de référence' : 'Importer des fichiers'}
+            {forReferences 
+              ? (locale === 'fr' ? '🎨 Importer des visuels de référence' : '🎨 Import reference visuals')
+              : (locale === 'fr' ? 'Importer des fichiers' : 'Import files')
+            }
           </h2>
           <button onClick={handleClose} className="text-gray-400 hover:text-gray-900">×</button>
         </div>
@@ -135,8 +139,8 @@ function ImportPopup({ isOpen, onClose, onImport, forReferences = false }: {
         {/* Info banner for reference imports */}
         {forReferences && (
           <div className="mx-6 mt-4 p-3 bg-purple-50 border border-purple-200 text-xs text-purple-700">
-            <strong>Ces visuels guideront le style de vos créations :</strong> couleurs, composition, ambiance. 
-            Ils seront automatiquement tagués "Visuel de référence".
+            <strong>{locale === 'fr' ? 'Ces visuels guideront le style de vos créations :' : 'These visuals will guide your creations\' style:'}</strong> {locale === 'fr' ? 'couleurs, composition, ambiance.' : 'colors, composition, mood.'} 
+            {locale === 'fr' ? 'Ils seront automatiquement tagués "Visuel de référence".' : 'They will be automatically tagged "Reference visual".'}
           </div>
         )}
 
@@ -159,8 +163,8 @@ function ImportPopup({ isOpen, onClose, onImport, forReferences = false }: {
             className="hidden"
             onChange={(e) => handleFiles(e.target.files)}
           />
-          <p className="text-sm text-gray-600">Glissez-déposez vos images ici</p>
-          <p className="text-xs text-gray-400">ou cliquez pour parcourir</p>
+          <p className="text-sm text-gray-600">{locale === 'fr' ? 'Glissez-déposez vos images ici' : 'Drag and drop your images here'}</p>
+          <p className="text-xs text-gray-400">{locale === 'fr' ? 'ou cliquez pour parcourir' : 'or click to browse'}</p>
         </div>
 
         {pendingFiles.length > 0 && (
@@ -204,7 +208,7 @@ function ImportPopup({ isOpen, onClose, onImport, forReferences = false }: {
         )}
 
         <div className={`px-6 py-4 border-t flex items-center justify-between ${forReferences ? 'border-purple-200 bg-purple-50/50' : 'border-gray-200 bg-gray-50'}`}>
-          <button onClick={handleClose} className="px-4 py-2 text-sm text-gray-600">Annuler</button>
+          <button onClick={handleClose} className="px-4 py-2 text-sm text-gray-600">{locale === 'fr' ? 'Annuler' : 'Cancel'}</button>
           <button
             onClick={handleImport}
             disabled={pendingFiles.length === 0}
@@ -213,7 +217,7 @@ function ImportPopup({ isOpen, onClose, onImport, forReferences = false }: {
                 ? (forReferences ? 'bg-purple-500 text-white hover:bg-purple-600' : 'bg-blue-500 text-white hover:bg-blue-600') 
                 : 'bg-gray-200 text-gray-400'
             }`}
-          >Importer {pendingFiles.length > 0 && `(${pendingFiles.length})`}</button>
+          >{locale === 'fr' ? 'Importer' : 'Import'} {pendingFiles.length > 0 && `(${pendingFiles.length})`}</button>
         </div>
       </div>
     </div>
@@ -221,10 +225,11 @@ function ImportPopup({ isOpen, onClose, onImport, forReferences = false }: {
 }
 
 // Color editor popup
-function ColorEditorPopup({ isOpen, onClose, colors, onSave }: {
+function ColorEditorPopup({ isOpen, onClose, colors, onSave, locale = 'fr' }: {
   isOpen: boolean;
   onClose: () => void;
   colors: string[];
+  locale?: string;
   onSave: (colors: string[]) => void;
 }) {
   const [editableColors, setEditableColors] = useState<string[]>([]);
@@ -254,7 +259,7 @@ function ColorEditorPopup({ isOpen, onClose, colors, onSave }: {
         <div className="px-6 py-4 border-b border-gray-800 flex items-center justify-between">
           <h2 className="text-sm font-medium text-white uppercase tracking-wider flex items-center gap-2">
             <span className="w-2 h-2 bg-blue-500 rounded-full" />
-            Modifier la palette
+            {locale === 'fr' ? 'Modifier la palette' : 'Edit palette'}
           </h2>
           <button onClick={onClose} className="text-gray-400 hover:text-white">×</button>
         </div>
@@ -277,13 +282,13 @@ function ColorEditorPopup({ isOpen, onClose, colors, onSave }: {
             </div>
           ))}
           <button onClick={addColor} className="w-full p-3 border-2 border-dashed border-gray-700 text-gray-500 hover:border-blue-500 hover:text-blue-400 transition-all flex items-center justify-center gap-2 rounded">
-            + Ajouter une couleur
+            + {locale === 'fr' ? 'Ajouter une couleur' : 'Add a color'}
           </button>
         </div>
 
         <div className="px-6 py-4 border-t border-gray-800 flex items-center justify-between">
-          <button onClick={onClose} className="px-4 py-2 text-sm text-gray-400">Annuler</button>
-          <button onClick={handleSave} className="px-6 py-2 bg-blue-500 text-white text-sm font-medium hover:bg-blue-600">Enregistrer</button>
+          <button onClick={onClose} className="px-4 py-2 text-sm text-gray-400">{locale === 'fr' ? 'Annuler' : 'Cancel'}</button>
+          <button onClick={handleSave} className="px-6 py-2 bg-blue-500 text-white text-sm font-medium hover:bg-blue-600">{locale === 'fr' ? 'Enregistrer' : 'Save'}</button>
         </div>
       </div>
     </div>
@@ -314,7 +319,7 @@ function TagEditor({ currentTag, onTagChange, position }: {
 }
 
 // Simple inline add input
-function AddItemInput({ placeholder, onAdd }: { placeholder: string, onAdd: (value: string) => void }) {
+function AddItemInput({ placeholder, onAdd, locale = 'fr' }: { placeholder: string, onAdd: (value: string) => void, locale?: string }) {
   const [value, setValue] = useState('');
   const [isAdding, setIsAdding] = useState(false);
 
@@ -324,7 +329,7 @@ function AddItemInput({ placeholder, onAdd }: { placeholder: string, onAdd: (val
         onClick={() => setIsAdding(true)}
         className="w-full py-2 mt-2 text-xs text-gray-400 hover:text-gray-600 border border-dashed border-gray-200 hover:border-gray-300 flex items-center justify-center gap-1 transition-all"
       >
-        <span>+</span> Ajouter
+        <span>+</span> {locale === 'fr' ? 'Ajouter' : 'Add'}
       </button>
     );
   }
@@ -484,8 +489,9 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
         onClose={() => { setImportPopupOpen(false); setImportForReferences(false); }} 
         onImport={handleImportFiles}
         forReferences={importForReferences}
+        locale={locale}
       />
-      <ColorEditorPopup isOpen={colorEditorOpen} onClose={() => setColorEditorOpen(false)} colors={localData.colors || []} onSave={(colors) => handleChange('colors', colors)} />
+      <ColorEditorPopup isOpen={colorEditorOpen} onClose={() => setColorEditorOpen(false)} colors={localData.colors || []} onSave={(colors) => handleChange('colors', colors)} locale={locale} />
       {tagEditorState.isOpen && (
         <TagEditor
           currentTag={localData.labeledImages?.find((li: any) => li.url === localData.images[tagEditorState.imageIndex])?.category || 'other'}
@@ -741,8 +747,9 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
               </div>
               
               <AddItemInput 
-                placeholder="Ex: Gain de temps 10x, Support 24/7" 
+                placeholder={locale === 'fr' ? "Ex: Gain de temps 10x, Support 24/7" : "E.g.: 10x time savings, 24/7 support"} 
                 onAdd={(val) => handleChange('features', [...(localData.features || []), val])}
+                locale={locale}
               />
             </div>
 
@@ -786,7 +793,7 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
               </div>
               
               <AddItemInput 
-                placeholder="Ton (Pro, Fun) ou terme clé" 
+                placeholder={locale === 'fr' ? "Ton (Pro, Fun) ou terme clé" : "Tone (Pro, Fun) or key term"} 
                 onAdd={(val) => {
                   // If it's a short word, add to tone, otherwise to vocabulary
                   if (val.length < 15 && !val.includes(' ')) {
@@ -795,6 +802,7 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
                     handleChange('vocabulary', [...(localData.vocabulary || []), val]);
                   }
                 }}
+                locale={locale}
               />
             </div>
 
@@ -846,10 +854,11 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
                 </div>
                 
                 <AddItemInput 
-                  placeholder="Ajouter un pain point ou tendance marché..." 
+                  placeholder={locale === 'fr' ? "Ajouter un pain point ou tendance marché..." : "Add a pain point or market trend..."} 
                   onAdd={(val) => {
                     handleChange('industryInsights', [...(localData.industryInsights || []), { painPoint: val, type: 'pain_point' }]);
                   }}
+                  locale={locale}
                 />
               </div>
             )}
@@ -933,7 +942,7 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
               onClick={() => openImportPopup(false)}
               className="px-2 py-1 bg-blue-500 text-white text-[9px] font-medium uppercase hover:bg-blue-600 flex items-center gap-1"
             >
-              <span>+</span> Ajouter
+              <span>+</span> {locale === 'fr' ? 'Ajouter' : 'Add'}
             </button>
           </div>
           
