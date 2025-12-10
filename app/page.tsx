@@ -2,8 +2,13 @@ import Navigation from '@/components/Navigation';
 import Hero from '@/components/Hero';
 import CtaSection from '@/components/CtaSection';
 import Link from 'next/link';
+import { headers } from 'next/headers';
+import { getServerLocale } from '@/lib/i18n';
 
-export default function Home() {
+export default async function Home() {
+  const headersList = await headers();
+  const acceptLanguage = headersList.get('accept-language') || 'fr';
+  const locale = getServerLocale(acceptLanguage);
   return (
     <div className="min-h-screen bg-[#FAFAFA] font-sans text-gray-900">
       <Navigation />
@@ -22,14 +27,20 @@ export default function Home() {
           <div className="max-w-3xl mb-16">
             <div className="flex items-center gap-3 mb-6">
               <div className="w-2 h-2 bg-red-500 rounded-full" />
-              <span className="text-xs font-mono uppercase tracking-[0.2em] text-gray-400">Le problème</span>
+              <span className="text-xs font-mono uppercase tracking-[0.2em] text-gray-400">{locale === 'fr' ? 'Le problème' : 'The problem'}</span>
             </div>
             <h2 className="text-3xl md:text-4xl lg:text-5xl font-light text-gray-900 leading-tight mb-6">
-              Lundi 9h. Votre boss veut<br />
-              <span className="font-semibold">une campagne pour vendredi.</span>
+              {locale === 'fr' ? (
+                <>Lundi 9h. Votre boss veut<br /><span className="font-semibold">une campagne pour vendredi.</span></>
+              ) : (
+                <>Monday 9am. Your boss wants<br /><span className="font-semibold">a campaign by Friday.</span></>
+              )}
             </h2>
             <p className="text-gray-500 leading-relaxed text-lg">
-              Vous connaissez la suite : brief à l'agence, devis dans 48h, premiers retours dans 2 semaines, résultat qui ressemble à tout sauf à votre marque. Ou alors Canva, et ce rendu "template gratuit" que tout le monde reconnaît.
+              {locale === 'fr' 
+                ? "Vous connaissez la suite : brief à l'agence, devis dans 48h, premiers retours dans 2 semaines, résultat qui ressemble à tout sauf à votre marque. Ou alors Canva, et ce rendu \"template gratuit\" que tout le monde reconnaît."
+                : "You know how it goes: brief the agency, quote in 48h, first feedback in 2 weeks, result that looks nothing like your brand. Or Canva, and that \"free template\" look everyone recognizes."
+              }
             </p>
           </div>
 
@@ -40,29 +51,29 @@ export default function Home() {
               <div className="absolute -top-3 -left-3 w-6 h-6 border-l-2 border-t-2 border-red-200" />
               <div className="bg-white border border-gray-200 p-8 md:p-10">
                 <div className="flex items-center gap-3 mb-8">
-                  <span className="text-xs font-mono uppercase tracking-widest text-red-400">Ce que vous faites aujourd'hui</span>
+                  <span className="text-xs font-mono uppercase tracking-widest text-red-400">{locale === 'fr' ? "Ce que vous faites aujourd'hui" : "What you do today"}</span>
                 </div>
                 
                 <div className="space-y-6">
                   <div className="flex items-start gap-4">
                     <div className="w-8 h-8 bg-red-50 rounded-full flex items-center justify-center text-red-400 text-sm flex-shrink-0">✗</div>
                     <div>
-                      <div className="font-medium text-gray-900 mb-1">2-3 semaines pour un visuel</div>
-                      <div className="text-sm text-gray-400 leading-relaxed">Brief, devis, allers-retours, validations... Votre Black Friday est passé.</div>
+                      <div className="font-medium text-gray-900 mb-1">{locale === 'fr' ? '2-3 semaines pour un visuel' : '2-3 weeks for one visual'}</div>
+                      <div className="text-sm text-gray-400 leading-relaxed">{locale === 'fr' ? 'Brief, devis, allers-retours, validations... Votre Black Friday est passé.' : 'Brief, quote, back and forth, validations... Your Black Friday is over.'}</div>
                     </div>
                   </div>
                   <div className="flex items-start gap-4">
                     <div className="w-8 h-8 bg-red-50 rounded-full flex items-center justify-center text-red-400 text-sm flex-shrink-0">✗</div>
                     <div>
-                      <div className="font-medium text-gray-900 mb-1">2000-5000€ par campagne</div>
-                      <div className="text-sm text-gray-400 leading-relaxed">Pour des "jours/homme" et des réunions de cadrage.</div>
+                      <div className="font-medium text-gray-900 mb-1">{locale === 'fr' ? '2000-5000€ par campagne' : '$2000-5000 per campaign'}</div>
+                      <div className="text-sm text-gray-400 leading-relaxed">{locale === 'fr' ? 'Pour des "jours/homme" et des réunions de cadrage.' : 'For "man-days" and kickoff meetings.'}</div>
                     </div>
                   </div>
                   <div className="flex items-start gap-4">
                     <div className="w-8 h-8 bg-red-50 rounded-full flex items-center justify-center text-red-400 text-sm flex-shrink-0">✗</div>
                     <div>
-                      <div className="font-medium text-gray-900 mb-1">Un résultat générique</div>
-                      <div className="text-sm text-gray-400 leading-relaxed">Ils ont 15 clients. Vous êtes le n°12 sur leur liste.</div>
+                      <div className="font-medium text-gray-900 mb-1">{locale === 'fr' ? 'Un résultat générique' : 'Generic results'}</div>
+                      <div className="text-sm text-gray-400 leading-relaxed">{locale === 'fr' ? 'Ils ont 15 clients. Vous êtes le n°12 sur leur liste.' : 'They have 15 clients. You\'re #12 on their list.'}</div>
                     </div>
                   </div>
                 </div>
@@ -84,29 +95,29 @@ export default function Home() {
                       <div className="w-2 h-2 bg-blue-500 rounded-full" />
                       <div className="w-2 h-2 bg-amber-400 rounded-full" />
                     </div>
-                    <span className="text-xs font-mono uppercase tracking-widest text-blue-600">Ce que vous pourriez faire</span>
+                    <span className="text-xs font-mono uppercase tracking-widest text-blue-600">{locale === 'fr' ? "Ce que vous pourriez faire" : "What you could do"}</span>
                   </div>
                   
                   <div className="space-y-6">
                     <div className="flex items-start gap-4">
                       <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm flex-shrink-0 shadow-lg shadow-blue-500/30">✓</div>
                       <div>
-                        <div className="font-medium text-gray-900 mb-1">2 minutes. Vraiment.</div>
-                        <div className="text-sm text-gray-500 leading-relaxed">Décrivez ce que vous voulez. Publiez. C'est tout.</div>
+                        <div className="font-medium text-gray-900 mb-1">{locale === 'fr' ? '2 minutes. Vraiment.' : '2 minutes. Really.'}</div>
+                        <div className="text-sm text-gray-500 leading-relaxed">{locale === 'fr' ? "Décrivez ce que vous voulez. Publiez. C'est tout." : "Describe what you want. Publish. That's it."}</div>
                       </div>
                     </div>
                     <div className="flex items-start gap-4">
                       <div className="w-8 h-8 bg-amber-400 rounded-full flex items-center justify-center text-white text-sm flex-shrink-0 shadow-lg shadow-amber-400/30">✓</div>
                       <div>
-                        <div className="font-medium text-gray-900 mb-1">19€/mois. Tout compris.</div>
-                        <div className="text-sm text-gray-500 leading-relaxed">Pas de surprise. Pas de devis. Pas de "ça dépend".</div>
+                        <div className="font-medium text-gray-900 mb-1">{locale === 'fr' ? '19€/mois. Tout compris.' : '$19/mo. All included.'}</div>
+                        <div className="text-sm text-gray-500 leading-relaxed">{locale === 'fr' ? 'Pas de surprise. Pas de devis. Pas de "ça dépend".' : 'No surprises. No quotes. No "it depends".'}</div>
                       </div>
                     </div>
                     <div className="flex items-start gap-4">
                       <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center text-white text-sm flex-shrink-0 shadow-lg shadow-red-500/30">✓</div>
                       <div>
-                        <div className="font-medium text-gray-900 mb-1">100% votre marque</div>
-                        <div className="text-sm text-gray-500 leading-relaxed">Vos couleurs, votre logo, votre ton. Palette apprend, vous validez.</div>
+                        <div className="font-medium text-gray-900 mb-1">{locale === 'fr' ? '100% votre marque' : '100% your brand'}</div>
+                        <div className="text-sm text-gray-500 leading-relaxed">{locale === 'fr' ? 'Vos couleurs, votre logo, votre ton. Palette apprend, vous validez.' : 'Your colors, your logo, your tone. Palette learns, you approve.'}</div>
                       </div>
                     </div>
                   </div>
@@ -124,7 +135,7 @@ export default function Home() {
           <div className="max-w-3xl mb-16">
             <div className="flex items-center gap-3 mb-6">
               <div className="w-2 h-2 bg-gray-900 rounded-full" />
-              <span className="text-xs font-mono uppercase tracking-[0.2em] text-gray-400">Comment ça marche</span>
+              <span className="text-xs font-mono uppercase tracking-[0.2em] text-gray-400">{locale === 'fr' ? 'Comment ça marche' : 'How it works'}</span>
             </div>
             <h2 className="text-3xl md:text-4xl lg:text-5xl font-light text-gray-900 leading-tight mb-6">
               Plus simple que d'expliquer<br />
@@ -297,7 +308,7 @@ export default function Home() {
           <div className="text-center mb-6">
             <div className="inline-flex items-center gap-3 mb-6">
               <div className="w-2 h-2 bg-gray-900 rounded-full" />
-              <span className="text-xs font-mono uppercase tracking-[0.2em] text-gray-400">Tarifs</span>
+              <span className="text-xs font-mono uppercase tracking-[0.2em] text-gray-400">{locale === 'fr' ? 'Tarifs' : 'Pricing'}</span>
             </div>
             <h2 className="text-3xl md:text-4xl font-light text-gray-900 leading-tight mb-4">
               Moins cher qu'un café par jour.<br />
@@ -312,7 +323,7 @@ export default function Home() {
             {/* Starter */}
             <div className="bg-white border border-gray-200 p-8">
               <div className="flex items-center justify-between mb-4">
-                <div className="text-xs font-mono uppercase tracking-widest text-gray-400">Starter</div>
+                <div className="text-xs font-mono uppercase tracking-widest text-gray-400">{locale === 'fr' ? 'Starter' : 'Starter'}</div>
               </div>
               <div className="text-4xl font-light text-gray-900 mb-2">Gratuit</div>
               <p className="text-sm text-gray-500 mb-8">Pour voir si ça marche vraiment</p>
@@ -344,7 +355,7 @@ export default function Home() {
             {/* Pro - Featured */}
             <div className="relative bg-gray-900 text-white p-8 lg:-mt-4 lg:-mb-4">
               <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-blue-500 text-white text-[10px] font-mono uppercase tracking-widest px-3 py-1">
-                Populaire
+                {locale === 'fr' ? 'Populaire' : 'Popular'}
               </div>
               
               <div className="text-xs font-mono uppercase tracking-widest text-blue-400 mb-4">Pro</div>
@@ -418,7 +429,7 @@ export default function Home() {
           <div className="mb-16">
             <div className="flex items-center gap-3 mb-6">
               <div className="w-2 h-2 bg-gray-900 rounded-full" />
-              <span className="text-xs font-mono uppercase tracking-[0.2em] text-gray-400">FAQ</span>
+              <span className="text-xs font-mono uppercase tracking-[0.2em] text-gray-400">{locale === 'fr' ? 'FAQ' : 'FAQ'}</span>
             </div>
             <h2 className="text-3xl md:text-4xl font-light text-gray-900 leading-tight">
               Questions<br />
@@ -494,7 +505,7 @@ export default function Home() {
               </p>
             </div>
             <div>
-              <div className="text-[10px] font-mono uppercase tracking-widest text-gray-400 mb-4">Produit</div>
+              <div className="text-[10px] font-mono uppercase tracking-widest text-gray-400 mb-4">{locale === 'fr' ? 'Produit' : 'Product'}</div>
               <div className="space-y-2 text-sm text-gray-500">
                 <a href="#fonctionnement" className="block hover:text-gray-900 transition-colors">Comment ça marche</a>
                 <a href="#tarifs" className="block hover:text-gray-900 transition-colors">Tarifs</a>
@@ -502,7 +513,7 @@ export default function Home() {
               </div>
             </div>
             <div>
-              <div className="text-[10px] font-mono uppercase tracking-widest text-gray-400 mb-4">Ressources</div>
+              <div className="text-[10px] font-mono uppercase tracking-widest text-gray-400 mb-4">{locale === 'fr' ? 'Ressources' : 'Resources'}</div>
               <div className="space-y-2 text-sm text-gray-500">
                 <a href="#faq" className="block hover:text-gray-900 transition-colors">FAQ</a>
               </div>
