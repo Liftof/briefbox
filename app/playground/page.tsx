@@ -1368,10 +1368,16 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
       const imagesToUse: string[] = [];
       
       // 1. LOGO FIRST - Always include and protect it
+      console.log('🔍 LOGO DEBUG - handleGenerate:');
+      console.log(`   targetBrand?.logo exists: ${!!targetBrand?.logo}`);
+      console.log(`   targetBrand?.logo value: ${targetBrand?.logo ? targetBrand.logo.slice(0, 80) + '...' : 'NONE'}`);
+      
       if (targetBrand?.logo) {
         imagesToUse.push(targetBrand.logo);
         imageContextMap[targetBrand.logo] = "BRAND_LOGO (CRITICAL): This is the official brand logo. Display it clearly and prominently. DO NOT distort, warp, or modify it in any way. It must remain perfectly legible.";
-        console.log('🏷️ Logo added first:', targetBrand.logo.slice(0, 50));
+        console.log('✅ Logo added to imagesToUse and imageContextMap');
+      } else {
+        console.log('⚠️ NO LOGO in targetBrand - will check references for main_logo category');
       }
       
       // 2. USER SELECTION IS PRIORITY - Add all user-selected images (except logo already added)

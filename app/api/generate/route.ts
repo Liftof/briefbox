@@ -204,6 +204,14 @@ export async function POST(request: NextRequest) {
     if (!hasPrompt && !hasVariations) {
       return NextResponse.json({ success: false, error: 'Prompt is required' }, { status: 400 });
     }
+    
+    // 🔍 LOGO DEBUG
+    console.log('📥 LOGO DEBUG - Input:');
+    console.log(`   imageUrls: ${imageUrls?.length || 0}, referenceImages: ${referenceImages?.length || 0}`);
+    const logoInContext = Object.entries(imageContextMap || {}).find(([, v]) => 
+      typeof v === 'string' && v.toLowerCase().includes('logo')
+    );
+    console.log(`   Logo in contextMap: ${logoInContext ? `YES (${logoInContext[0].slice(0, 50)}...)` : 'NO ⚠️'}`);
 
     // Filter & Convert URLs
     // 1. Filter valid HTTP/HTTPS or data URI
@@ -265,7 +273,7 @@ export async function POST(request: NextRequest) {
     // CRITICAL: SVG logos get converted to base64, losing their original URL
     // Without this mapping, logo context ("BRAND_LOGO") would be lost!
     const urlMapping: Record<string, string> = {};
-    
+
     for (const url of imageUrls) {
         if (!url || typeof url !== 'string') continue;
         
@@ -449,11 +457,16 @@ The reference is a MOOD BOARD, not a template. Create something ORIGINAL that ca
             
             // If role mentions "LOGO", make it ALL CAPS and VERY EXPLICIT
             if (role.toLowerCase().includes('logo')) {
+                console.log(`   ✅ LOGO FOUND in processed images at position ${idx}`);
                 imageDescriptions.push(`Image ${idx}: [CRITICAL] BRAND LOGO. ${role}. DO NOT MODIFY. DO NOT DISTORT. REPRODUCE EXACTLY AS PROVIDED.`);
             } else {
                 imageDescriptions.push(`Image ${idx}: ${role}`);
             }
         });
+        
+        // Final logo check
+        const logoDescriptions = imageDescriptions.filter(d => d.toLowerCase().includes('logo'));
+        console.log(`   📊 LOGO DEBUG FINAL: ${logoDescriptions.length} logo(s) in prompt context`);
       }
       
       // Add quality handling instructions
