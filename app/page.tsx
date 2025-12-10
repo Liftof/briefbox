@@ -138,11 +138,17 @@ export default async function Home() {
               <span className="text-xs font-mono uppercase tracking-[0.2em] text-gray-400">{locale === 'fr' ? 'Comment ça marche' : 'How it works'}</span>
             </div>
             <h2 className="text-3xl md:text-4xl lg:text-5xl font-light text-gray-900 leading-tight mb-6">
-              Plus simple que d'expliquer<br />
-              <span className="font-semibold">à votre stagiaire</span>
+              {locale === 'fr' ? (
+                <>Plus simple que d'expliquer<br /><span className="font-semibold">à votre stagiaire</span></>
+              ) : (
+                <>Simpler than explaining<br /><span className="font-semibold">to your intern</span></>
+              )}
             </h2>
             <p className="text-gray-500 leading-relaxed text-lg">
-              Pas de formation. Pas de tutoriel de 45 minutes. Si vous savez écrire un SMS, vous savez utiliser Palette.
+              {locale === 'fr' 
+                ? 'Pas de formation. Pas de tutoriel de 45 minutes. Si vous savez écrire un SMS, vous savez utiliser Palette.'
+                : 'No training. No 45-minute tutorial. If you can write a text, you can use Palette.'
+              }
             </p>
           </div>
 
@@ -157,9 +163,12 @@ export default async function Home() {
                     <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
                   </svg>
                 </div>
-                <h3 className="text-xl font-medium text-gray-900 mb-3">Collez votre site web</h3>
+                <h3 className="text-xl font-medium text-gray-900 mb-3">{locale === 'fr' ? 'Collez votre site web' : 'Paste your website'}</h3>
                 <p className="text-gray-500 leading-relaxed">
-                  Palette scanne votre marque : logo, couleurs, typos, ton. Une seule fois, pour toujours.
+                  {locale === 'fr' 
+                    ? 'Palette scanne votre marque : logo, couleurs, typos, ton. Une seule fois, pour toujours.'
+                    : 'Palette scans your brand: logo, colors, fonts, tone. Once, forever.'
+                  }
                 </p>
               </div>
             </div>
@@ -173,9 +182,12 @@ export default async function Home() {
                     <path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                   </svg>
                 </div>
-                <h3 className="text-xl font-medium text-gray-900 mb-3">Dites ce que vous voulez</h3>
+                <h3 className="text-xl font-medium text-gray-900 mb-3">{locale === 'fr' ? 'Dites ce que vous voulez' : 'Say what you want'}</h3>
                 <p className="text-gray-500 leading-relaxed">
-                  "Une story pour le Black Friday". "Un carousel LinkedIn sur notre levée de fonds". En français, comme vous parleriez à un humain.
+                  {locale === 'fr' 
+                    ? '"Une story pour le Black Friday". "Un carousel LinkedIn sur notre levée de fonds". En français, comme vous parleriez à un humain.'
+                    : '"A Black Friday story". "A LinkedIn carousel about our fundraise". In plain English, like you\'d talk to a human.'
+                  }
                 </p>
               </div>
             </div>
@@ -189,9 +201,12 @@ export default async function Home() {
                     <path d="M5 13l4 4L19 7" />
                   </svg>
                 </div>
-                <h3 className="text-xl font-medium text-gray-900 mb-3">Publiez ou ajustez</h3>
+                <h3 className="text-xl font-medium text-gray-900 mb-3">{locale === 'fr' ? 'Publiez ou ajustez' : 'Publish or adjust'}</h3>
                 <p className="text-gray-500 leading-relaxed">
-                  Visuels générés en 60 secondes. Un détail à changer ? Un clic. Pas satisfait ? Régénérez. Gratuit.
+                  {locale === 'fr' 
+                    ? 'Visuels générés en 60 secondes. Un détail à changer ? Un clic. Pas satisfait ? Régénérez. Gratuit.'
+                    : 'Visuals generated in 60 seconds. Need a change? One click. Not happy? Regenerate. Free.'
+                  }
                 </p>
               </div>
             </div>
@@ -210,10 +225,13 @@ export default async function Home() {
         <div className="max-w-6xl mx-auto px-6 relative z-10">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-light text-gray-900 leading-tight mb-4">
-              Ce que nos utilisateurs<br />
-              <span className="font-semibold">créent avec Palette</span>
+              {locale === 'fr' ? (
+                <>Ce que nos utilisateurs<br /><span className="font-semibold">créent avec Palette</span></>
+              ) : (
+                <>What our users<br /><span className="font-semibold">create with Palette</span></>
+              )}
             </h2>
-            <p className="text-gray-500">De vrais visuels, générés en quelques clics.</p>
+            <p className="text-gray-500">{locale === 'fr' ? 'De vrais visuels, générés en quelques clics.' : 'Real visuals, generated in a few clicks.'}</p>
           </div>
           
           {/* Infinite scrolling gallery */}
