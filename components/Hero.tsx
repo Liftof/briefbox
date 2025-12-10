@@ -3,8 +3,10 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth, SignInButton } from '@clerk/nextjs';
+import { useTranslation } from '@/lib/i18n';
 
 export default function Hero() {
+  const { t, locale } = useTranslation();
   const [socialProofCount, setSocialProofCount] = useState(0);
   const [promptText, setPromptText] = useState('');
   const [displayedPrompt, setDisplayedPrompt] = useState('');
@@ -12,7 +14,12 @@ export default function Hero() {
   const [isFocused, setIsFocused] = useState(false);
   const promptInputRef = useRef<HTMLTextAreaElement>(null);
   
-  const defaultPrompt = "Story Instagram Black Friday avec mon logo en haut et photo lifestyle en fond";
+  // Locale-aware default prompts
+  const defaultPrompts = {
+    fr: "Story Instagram Black Friday avec mon logo en haut et photo lifestyle en fond",
+    en: "Instagram Story Black Friday with my logo on top and lifestyle photo in background"
+  };
+  const defaultPrompt = defaultPrompts[locale] || defaultPrompts.fr;
   
   // Typewriter effect
   useEffect(() => {
@@ -28,14 +35,13 @@ export default function Hero() {
         setPromptText(defaultPrompt);
         clearInterval(timer);
       }
-    }, 40); // Speed of typing
+    }, 40);
     
     return () => clearInterval(timer);
-  }, []);
+  }, [defaultPrompt]);
 
   const handlePromptSubmit = () => {
     const text = promptText.trim() || defaultPrompt;
-    // Redirect will be handled by SignInButton or direct navigation
     if (isSignedIn) {
       router.push(`/playground?brief=${encodeURIComponent(text)}`);
     }
@@ -50,7 +56,6 @@ export default function Hero() {
   
   useEffect(() => {
     const calculateDailyCount = () => {
-      // Get current time in Paris timezone
       const parisTime = new Date().toLocaleString('en-US', { timeZone: 'Europe/Paris' });
       const parisDate = new Date(parisTime);
       
@@ -60,44 +65,31 @@ export default function Hero() {
       const day = parisDate.getDate();
       const month = parisDate.getMonth();
       
-      // Create a seed based on the day (for consistent daily variation)
       const daySeed = (day * 31 + month * 12) % 100;
-      
-      // Progress through the day with seconds precision (0 to 1)
       const dayProgress = (hour * 3600 + minute * 60 + second) / (24 * 3600);
       
-      // More dramatic growth curve:
-      // - Slow start in early morning (people sleeping)
-      // - Acceleration during work hours (9h-18h)  
-      // - Slower evening
       let growthMultiplier = 1;
-      if (hour >= 9 && hour < 12) growthMultiplier = 1.3; // Morning peak
-      if (hour >= 12 && hour < 14) growthMultiplier = 0.9; // Lunch dip
-      if (hour >= 14 && hour < 18) growthMultiplier = 1.4; // Afternoon peak
-      if (hour >= 18 && hour < 21) growthMultiplier = 1.1; // Evening
-      if (hour >= 21 || hour < 6) growthMultiplier = 0.5; // Night
+      if (hour >= 9 && hour < 12) growthMultiplier = 1.3;
+      if (hour >= 12 && hour < 14) growthMultiplier = 0.9;
+      if (hour >= 14 && hour < 18) growthMultiplier = 1.4;
+      if (hour >= 18 && hour < 21) growthMultiplier = 1.1;
+      if (hour >= 21 || hour < 6) growthMultiplier = 0.5;
       
-      // Base growth: 89 -> 2847 throughout the day (more dramatic range)
       const baseCount = 89 + Math.floor(dayProgress * 2758 * growthMultiplier);
-      
-      // Daily seed variation (±100)
       const dailyVariation = Math.floor((daySeed / 100) * 200) - 100;
-      
-      // Minute-level micro-bumps (simulates real-time activity)
       const minuteBump = Math.floor((minute % 7) * 3 + (second % 13));
       
       return Math.max(89, Math.min(2999, baseCount + dailyVariation + minuteBump));
     };
     
     setSocialProofCount(calculateDailyCount());
-    
-    // Update every 30 seconds for "live" feeling
     const interval = setInterval(() => {
       setSocialProofCount(calculateDailyCount());
     }, 30 * 1000);
     
     return () => clearInterval(interval);
   }, []);
+
   const [url, setUrl] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { isSignedIn, isLoaded } = useAuth();
@@ -106,12 +98,9 @@ export default function Hero() {
   const handleAnalyze = async () => {
     const trimmedUrl = url.trim();
     if (!trimmedUrl) return;
-
-    // If not signed in, the SignInButton wrapper will handle it
     if (!isSignedIn) return;
 
     setIsLoading(true);
-    // Redirect to playground with URL as query param
     router.push(`/playground?analyzeUrl=${encodeURIComponent(trimmedUrl)}`);
   };
 
@@ -149,7 +138,9 @@ export default function Hero() {
                   <div className="w-2 h-2 bg-amber-400 rounded-full" />
                 </div>
                 <span className="text-sm text-gray-600">
-                  <span className="font-semibold text-gray-900">{socialProofCount.toLocaleString('fr-FR')}</span> visuels générés aujourd'hui
+                  <span className="font-semibold text-gray-900">
+                    {socialProofCount.toLocaleString(locale === 'fr' ? 'fr-FR' : 'en-US')}
+                  </span> {t('landing.hero.badge')}
                 </span>
               </div>
             )}
@@ -157,16 +148,20 @@ export default function Hero() {
             {/* Headline */}
             <h1 className="mb-6 md:mb-8" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
               <span className="block text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-light text-gray-900 leading-[1.1] mb-2">
-                Vos visuels de marque.
+                {t('landing.hero.headline1')}
               </span>
               <span className="block text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-semibold text-gray-900 leading-[1.1]">
-                En 60 secondes.
+                {t('landing.hero.headline2')}
               </span>
             </h1>
 
             {/* Subheadline */}
             <p className="text-lg text-gray-400 leading-relaxed max-w-md mb-10">
-              Importez votre charte, décrivez ce que vous voulez, publiez. Des visuels <span className="text-gray-900 font-medium">pros</span>, <span className="text-gray-900 font-medium">cohérents</span>, <span className="text-gray-900 font-medium">100% à votre image</span> — sans graphiste, sans agence, sans attendre.
+              {locale === 'fr' ? (
+                <>Importez votre charte, décrivez ce que vous voulez, publiez. Des visuels <span className="text-gray-900 font-medium">pros</span>, <span className="text-gray-900 font-medium">cohérents</span>, <span className="text-gray-900 font-medium">100% à votre image</span> — sans graphiste, sans agence, sans attendre.</>
+              ) : (
+                <>Import your brand, describe what you want, publish. <span className="text-gray-900 font-medium">Professional</span>, <span className="text-gray-900 font-medium">consistent</span>, <span className="text-gray-900 font-medium">100% on-brand</span> visuals — no designer, no agency, no waiting.</>
+              )}
             </p>
 
             {/* URL Input */}
@@ -183,7 +178,7 @@ export default function Hero() {
                   </svg>
                   <input
                     type="text"
-                    placeholder="votresite.com"
+                    placeholder={t('landing.hero.placeholder')}
                     value={url}
                     onChange={(e) => setUrl(e.target.value)}
                     onKeyDown={handleKeyDown}
@@ -203,11 +198,11 @@ export default function Hero() {
                           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                         </svg>
-                        <span>Analyse...</span>
+                        <span>{t('landing.hero.ctaLoading')}</span>
                       </>
                     ) : (
                       <>
-                        <span>Analyser</span>
+                        <span>{t('landing.hero.cta')}</span>
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                           <path d="M5 12h14M12 5l7 7-7 7" />
                         </svg>
@@ -220,7 +215,7 @@ export default function Hero() {
                       disabled={!url.trim()}
                       className="bg-gray-900 text-white px-6 py-3 font-medium text-sm hover:bg-black transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                     >
-                      <span>Analyser</span>
+                      <span>{t('landing.hero.cta')}</span>
                       <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                         <path d="M5 12h14M12 5l7 7-7 7" />
                       </svg>
@@ -230,7 +225,7 @@ export default function Hero() {
               </div>
               
               <p className="mt-3 text-xs text-gray-400 pl-1">
-                Essai gratuit • Aucune CB requise • Résultats en 60 secondes
+                {t('landing.hero.subtitle')}
               </p>
             </div>
 
@@ -238,19 +233,19 @@ export default function Hero() {
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-6 pt-8 border-t border-gray-200">
               <div>
                 <div className="text-2xl font-semibold text-gray-900 mb-1">∞</div>
-                <div className="text-xs font-mono uppercase tracking-wider text-gray-400">visuels</div>
+                <div className="text-xs font-mono uppercase tracking-wider text-gray-400">{t('landing.hero.stats.visuals')}</div>
               </div>
               <div>
                 <div className="text-2xl font-semibold text-gray-900 mb-1">4K</div>
-                <div className="text-xs font-mono uppercase tracking-wider text-gray-400">haute déf</div>
+                <div className="text-xs font-mono uppercase tracking-wider text-gray-400">{t('landing.hero.stats.highDef')}</div>
               </div>
               <div>
-                <div className="text-2xl font-semibold text-gray-900 mb-1">1 clic</div>
-                <div className="text-xs font-mono uppercase tracking-wider text-gray-400">pour modifier</div>
+                <div className="text-2xl font-semibold text-gray-900 mb-1">1 {locale === 'fr' ? 'clic' : 'click'}</div>
+                <div className="text-xs font-mono uppercase tracking-wider text-gray-400">{t('landing.hero.stats.oneClick')}</div>
               </div>
               <div>
-                <div className="text-2xl font-semibold text-gray-900 mb-1">0€</div>
-                <div className="text-xs font-mono uppercase tracking-wider text-gray-400">pour tester</div>
+                <div className="text-2xl font-semibold text-gray-900 mb-1">{locale === 'fr' ? '0€' : '$0'}</div>
+                <div className="text-xs font-mono uppercase tracking-wider text-gray-400">{t('landing.hero.stats.free')}</div>
               </div>
             </div>
           </div>
@@ -282,14 +277,14 @@ export default function Hero() {
                       Black<br/>Friday
                     </div>
                     <div className="inline-block bg-white text-gray-900 px-4 py-2 text-sm font-semibold">
-                      -50% MAINTENANT
+                      {locale === 'fr' ? '-50% MAINTENANT' : '-50% NOW'}
                     </div>
                   </div>
 
                   {/* Status badge */}
                   <div className="absolute top-6 right-6 bg-white/10 backdrop-blur-md text-white text-xs font-medium px-3 py-1.5 flex items-center gap-2">
                     <span className="w-1.5 h-1.5 bg-blue-400 rounded-full" />
-                    Généré
+                    {locale === 'fr' ? 'Généré' : 'Generated'}
                   </div>
                 </div>
               </div>
@@ -312,10 +307,14 @@ export default function Hero() {
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
                   <div className={`w-2 h-2 rounded-full transition-colors ${isFocused ? 'bg-blue-500 animate-pulse' : 'bg-gray-400'}`} />
-                  <span className="text-[10px] font-mono uppercase tracking-widest text-gray-400">Votre brief</span>
+                  <span className="text-[10px] font-mono uppercase tracking-widest text-gray-400">
+                    {locale === 'fr' ? 'Votre brief' : 'Your brief'}
+                  </span>
                 </div>
                 {isFocused && (
-                  <span className="text-[9px] font-mono uppercase tracking-wider text-blue-500">Modifiez-moi !</span>
+                  <span className="text-[9px] font-mono uppercase tracking-wider text-blue-500">
+                    {locale === 'fr' ? 'Modifiez-moi !' : 'Edit me!'}
+                  </span>
                 )}
               </div>
               
@@ -326,7 +325,7 @@ export default function Hero() {
                   onChange={(e) => setPromptText(e.target.value)}
                   onKeyDown={handlePromptKeyDown}
                   onBlur={() => !promptText && setIsFocused(false)}
-                  placeholder="Décrivez votre visuel..."
+                  placeholder={locale === 'fr' ? 'Décrivez votre visuel...' : 'Describe your visual...'}
                   className="w-full text-sm text-gray-700 leading-relaxed resize-none outline-none bg-transparent min-h-[60px]"
                   rows={3}
                 />
@@ -342,7 +341,9 @@ export default function Hero() {
                   <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                     <path d="M5 12h14M12 5l7 7-7 7" />
                   </svg>
-                  <span className="font-mono">ENTER pour générer</span>
+                  <span className="font-mono">
+                    {locale === 'fr' ? 'ENTER pour générer' : 'ENTER to generate'}
+                  </span>
                 </div>
                 
                 {isFocused && (
@@ -354,7 +355,7 @@ export default function Hero() {
                       }}
                       className="bg-gray-900 text-white text-xs px-3 py-1.5 hover:bg-black transition-colors"
                     >
-                      Générer →
+                      {locale === 'fr' ? 'Générer →' : 'Generate →'}
                     </button>
                   ) : (
                     <SignInButton mode="modal" forceRedirectUrl={`/playground?brief=${encodeURIComponent(promptText || defaultPrompt)}`}>
@@ -362,7 +363,7 @@ export default function Hero() {
                         onClick={(e) => e.stopPropagation()}
                         className="bg-gray-900 text-white text-xs px-3 py-1.5 hover:bg-black transition-colors"
                       >
-                        Générer →
+                        {locale === 'fr' ? 'Générer →' : 'Generate →'}
                       </button>
                     </SignInButton>
                   )
@@ -374,7 +375,9 @@ export default function Hero() {
             <div className="absolute -right-8 bottom-20 w-56 bg-white border border-gray-200 p-4 shadow-xl transform rotate-3 hover:rotate-0 transition-transform">
               <div className="flex items-center gap-2 mb-3">
                 <div className="w-2 h-2 bg-blue-500 rounded-full" />
-                <span className="text-[10px] font-mono uppercase tracking-widest text-gray-400">Assets chargés</span>
+                <span className="text-[10px] font-mono uppercase tracking-widest text-gray-400">
+                  {locale === 'fr' ? 'Assets chargés' : 'Assets loaded'}
+                </span>
               </div>
               <div className="flex gap-2">
                 <div className="w-10 h-10 bg-gray-900 rounded-lg" />
