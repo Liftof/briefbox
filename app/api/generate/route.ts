@@ -261,6 +261,11 @@ export async function POST(request: NextRequest) {
         console.log('   Style refs:', processedReferenceUrls.map(u => u.startsWith('data:') ? 'data:image...' : u.slice(0, 80)));
     }
 
+    // Track original URL -> processed URL mapping for context preservation
+    // CRITICAL: SVG logos get converted to base64, losing their original URL
+    // Without this mapping, logo context ("BRAND_LOGO") would be lost!
+    const urlMapping: Record<string, string> = {};
+    
     for (const url of imageUrls) {
         if (!url || typeof url !== 'string') continue;
         
@@ -280,6 +285,7 @@ export async function POST(request: NextRequest) {
             const pngUrl = await convertSvgToPng(trimmedUrl);
             if (pngUrl) {
                 processedImageUrls.push(pngUrl);
+                urlMapping[pngUrl] = trimmedUrl; // Map converted -> original
             } else {
                 console.warn('⚠️ Skipping unconvertible SVG data URI');
             }
@@ -297,7 +303,10 @@ export async function POST(request: NextRequest) {
                 // Convert to PNG
                 const pngBuffer = await sharp(buffer).png().toBuffer();
                 const base64 = pngBuffer.toString('base64');
-                processedImageUrls.push(`data:image/png;base64,${base64}`);
+                const convertedUrl = `data:image/png;base64,${base64}`;
+                processedImageUrls.push(convertedUrl);
+                urlMapping[convertedUrl] = trimmedUrl; // Map converted -> original
+                console.log(`   ✅ SVG converted, mapped for context: ${trimmedUrl.slice(0, 50)}...`);
             } catch (e) {
                 console.error(`Error converting image ${trimmedUrl}:`, e);
                 // If conversion fails, skip (SVG won't work on Fal anyway)
@@ -305,6 +314,7 @@ export async function POST(request: NextRequest) {
         } else {
             // Pass through other images (assuming they are JPG/PNG/WEBP)
             processedImageUrls.push(trimmedUrl);
+            urlMapping[trimmedUrl] = trimmedUrl; // Identity mapping
         }
     }
 
@@ -408,23 +418,38 @@ The reference is a MOOD BOARD, not a template. Create something ORIGINAL that ca
         
         processedImageUrls.forEach((url, i) => {
             const idx = startIdx + i;
-            // Check if we have specific context for this image (fuzzy match if needed)
+            // Check if we have specific context for this image
+            // CRITICAL: Use urlMapping to find original URL for SVG->PNG conversions
             let role = "CONTENT ELEMENT";
             
-            // Try exact match first
-            if (imageContextMap[url]) {
+            // Get original URL from mapping (for converted SVGs)
+            const originalUrl = urlMapping[url] || url;
+            
+            // Try exact match with original URL first
+            if (imageContextMap[originalUrl]) {
+                role = imageContextMap[originalUrl];
+            } else if (imageContextMap[url]) {
+                // Try processed URL as fallback
                 role = imageContextMap[url];
             } else {
-                // Try finding key that is part of the url or vice versa (for data uris vs original)
-                const matchingKey = Object.keys(imageContextMap).find(k => url.includes(k) || k.includes(url));
+                // Fuzzy match as last resort
+                const matchingKey = Object.keys(imageContextMap).find(k => 
+                    originalUrl.includes(k) || k.includes(originalUrl) ||
+                    url.includes(k) || k.includes(url)
+                );
                 if (matchingKey) {
                     role = imageContextMap[matchingKey];
                 }
             }
             
+            // Log for debugging
+            if (role !== "CONTENT ELEMENT") {
+                console.log(`   🏷️ Image ${idx} role: ${role.slice(0, 50)}...`);
+            }
+            
             // If role mentions "LOGO", make it ALL CAPS and VERY EXPLICIT
             if (role.toLowerCase().includes('logo')) {
-                imageDescriptions.push(`Image ${idx}: [CRITICAL] BRAND LOGO. ${role}. DO NOT MODIFY. DO NOT DISTORT.`);
+                imageDescriptions.push(`Image ${idx}: [CRITICAL] BRAND LOGO. ${role}. DO NOT MODIFY. DO NOT DISTORT. REPRODUCE EXACTLY AS PROVIDED.`);
             } else {
                 imageDescriptions.push(`Image ${idx}: ${role}`);
             }
@@ -451,7 +476,21 @@ For SaaS, apps, or software products:
   → Show lifestyle/results imagery rather than fake product screens
 - If a real UI screenshot IS provided, you may use it as-is or simplify it, but don't add fictional UI elements`);
       
+      // Add a global logo protection rule at the top
+      const logoRule = `
+🛡️ LOGO PROTECTION RULE (HIGHEST PRIORITY):
+Any image marked as "BRAND LOGO" or "LOGO" MUST be reproduced EXACTLY:
+- Same colors (no color shifting)
+- Same proportions (no stretching/squishing)  
+- Same shapes (no simplification or modification)
+- Same text/typography if present (letter by letter)
+- Place it clearly visible in the composition
+- If the logo is complex, simplify the REST of the image, NOT the logo
+
+`;
+      
       imageContextPrefix = `[IMAGE CONTEXT]
+${logoRule}
 ${imageDescriptions.join('\n')}
 
 `;
