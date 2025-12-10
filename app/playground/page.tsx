@@ -2113,160 +2113,79 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                 <span className="w-1.5 h-1.5 bg-blue-500 rounded-full" />
                 <span className="text-[10px] font-mono uppercase tracking-widest text-gray-400">Angles de contenu</span>
                 </div>
-              <button 
+              <button
                 onClick={() => setShowStyleGallery(true)}
                 className="text-[10px] font-medium text-gray-400 hover:text-gray-900 transition-colors flex items-center gap-1"
               >
                 <span>🎨</span>
                 <span>Style ref</span>
               </button>
-            </div>
+        </div>
             
-            {/* Scrollable pills - Pre-curated editorial hooks from API */}
-            <div className="space-y-2 overflow-x-auto pb-2 -mx-2 px-2" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-              {/* Row 1: Editorial hooks (pre-filtered and curated by API) */}
+            {/* AI-Generated Editorial Hooks ONLY - No mechanical templates */}
+            <div className="overflow-x-auto pb-2 -mx-2 px-2" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
               <div className="flex gap-2 flex-nowrap">
-                {/* Editorial Hooks - already curated, just display */}
-                {brandData.industryInsights?.slice(0, 6).map((insight: any, i: number) => {
+                {/* AI Editorial Hooks - curated and filtered by API */}
+                {brandData.industryInsights?.slice(0, 8).map((insight: any, i: number) => {
                   const hookText = insight.painPoint || insight.hook || insight.fact;
-                  if (!hookText) return null;
+                  if (!hookText || hookText.length < 10) return null;
                   
                   // Type-based styling
-                  const typeEmoji: Record<string, string> = {
-                    'pain_point': '⚡',
-                    'trend': '📈',
-                    'provocation': '🎯',
-                    'social_proof': '💬',
-                    'tip': '💡',
-                    'competitive': '🎯',
+                  const typeStyles: Record<string, { emoji: string; bg: string; border: string; hover: string }> = {
+                    'pain_point': { emoji: '⚡', bg: 'bg-rose-50', border: 'border-rose-200', hover: 'hover:border-rose-400' },
+                    'trend': { emoji: '📈', bg: 'bg-blue-50', border: 'border-blue-200', hover: 'hover:border-blue-400' },
+                    'provocation': { emoji: '🎯', bg: 'bg-purple-50', border: 'border-purple-200', hover: 'hover:border-purple-400' },
+                    'social_proof': { emoji: '💬', bg: 'bg-amber-50', border: 'border-amber-200', hover: 'hover:border-amber-400' },
+                    'tip': { emoji: '💡', bg: 'bg-emerald-50', border: 'border-emerald-200', hover: 'hover:border-emerald-400' },
+                    'competitive': { emoji: '🏆', bg: 'bg-indigo-50', border: 'border-indigo-200', hover: 'hover:border-indigo-400' },
                   };
                   
-                  const typeColor: Record<string, string> = {
-                    'pain_point': 'rose',
-                    'trend': 'blue',
-                    'provocation': 'purple',
-                    'social_proof': 'amber',
-                    'tip': 'gray',
-                    'competitive': 'indigo',
-                  };
-                  
-                  const emoji = typeEmoji[insight.type] || '💡';
-                  const color = typeColor[insight.type] || 'gray';
+                  const style = typeStyles[insight.type] || { emoji: '💡', bg: 'bg-gray-50', border: 'border-gray-200', hover: 'hover:border-gray-400' };
                   
                   return (
-                    <button
-                      key={`insight-${i}`}
-                      onClick={() => {
+                      <button
+                        key={`insight-${i}`}
+                        onClick={() => {
+                        // BUILD A COMPLETE BRIEF with context
+                        const formatHint = aspectRatio === '9:16' ? 'Story/Reel vertical' : 
+                                          aspectRatio === '16:9' ? 'Bannière horizontale' : 
+                                          aspectRatio === '4:5' ? 'Post Instagram' : 'Post carré';
+                        
+                        const completeBrief = `Créez un visuel ${formatHint} pour ${brandData.name || 'la marque'}.
+
+Message principal : "${hookText}"
+${insight.consequence ? `\nSous-titre suggéré : "${insight.consequence}"` : ''}
+
+Style : Professionnel, moderne, avec le logo visible en haut.
+Couleurs : Utiliser la palette de la marque.`;
+                        
+                        setBrief(completeBrief);
                         setSelectedTemplate(insight.type === 'trend' ? 'announcement' : 'stat');
-                        // Use the hook directly - it's already well-formatted
-                        const fullBrief = insight.consequence 
-                          ? `${hookText}\n\n${insight.consequence}`
-                          : hookText;
-                        setBrief(fullBrief);
                       }}
-                      className={`flex-shrink-0 px-3 py-2 border transition-all text-left max-w-[280px] bg-${color}-50/30 border-${color}-200 hover:border-${color}-400 hover:bg-${color}-50`}
+                      className={`flex-shrink-0 px-4 py-3 border transition-all text-left max-w-[300px] ${style.bg} ${style.border} ${style.hover}`}
                     >
                       <div className="flex items-start gap-2">
-                        <span className="text-sm flex-shrink-0">{emoji}</span>
+                        <span className="text-base flex-shrink-0">{style.emoji}</span>
                         <div className="min-w-0">
-                          <span className="text-xs text-gray-700 line-clamp-2">{hookText}</span>
+                          <span className="text-sm text-gray-800 line-clamp-2 font-medium">{hookText}</span>
                           {insight.consequence && (
-                            <span className="text-[10px] text-gray-400 block mt-0.5 truncate">{insight.consequence}</span>
+                            <span className="text-xs text-gray-500 block mt-1 line-clamp-1">{insight.consequence}</span>
                           )}
                   </div>
-                      </div>
+                          </div>
                     </button>
                   );
                 }).filter(Boolean)}
                 
-                {/* Real Stats with better copy */}
-                {brandData.contentNuggets?.realStats?.slice(0, 2).map((stat: string, i: number) => (
-              <button
-                        key={`stat-${i}`}
-              onClick={() => {
-                          setSelectedTemplate('stat');
-                      setBrief(`${stat} — voici comment`);
-                        }}
-                    className={`flex-shrink-0 px-3 py-2 border transition-all text-left max-w-[220px] ${
-                      brief.includes(stat) ? 'bg-blue-50 border-blue-400' : 'bg-white border-gray-200 hover:border-blue-400 hover:bg-blue-50/50'
-                    }`}
-                      >
-                        <div className="flex items-center gap-2">
-                      <span className="text-sm">📊</span>
-                      <span className="text-xs text-gray-700 truncate">{stat.slice(0, 35)}</span>
-                        </div>
-              </button>
-            ))}
-                
-                    {/* Testimonials */}
-                    {brandData.contentNuggets?.testimonials?.slice(0, 2).map((t: any, i: number) => (
-                      <button
-                        key={`quote-${i}`}
-                        onClick={() => {
-                          setSelectedTemplate('quote');
-                      setBrief(`"${t.quote}" — ${t.author}${t.company ? `, ${t.company}` : ''}`);
-                        }}
-                    className="flex-shrink-0 px-3 py-2 bg-white border border-gray-200 hover:border-blue-400 hover:bg-blue-50/50 transition-all text-left max-w-[200px]"
-                      >
-                        <div className="flex items-center gap-2">
-                      <span className="text-sm">💬</span>
-                      <span className="text-xs text-gray-700 truncate italic">"{t.quote?.slice(0, 25)}..."</span>
-        </div>
-                      </button>
-                    ))}
-                  </div>
-              
-              {/* Row 2: Features as hooks, not descriptions */}
-              <div className="flex gap-2 flex-nowrap">
-                {/* Features as hooks */}
-                {brandData.features?.slice(0, 4).map((f: string, i: number) => {
-                  const hooks = [
-                    `Comment ${f.toLowerCase()} change tout`,
-                    `${f} : le secret des pros`,
-                    `Pourquoi ${f.toLowerCase()} fait la différence`,
-                    `${f} en 30 secondes`
-                  ];
-                  return (
-                      <button
-                        key={`feat-${i}`}
-                        onClick={() => {
-                          setSelectedTemplate('product');
-                        setBrief(hooks[i % hooks.length]);
-                        }}
-                      className="flex-shrink-0 px-3 py-1.5 bg-purple-50/50 border border-purple-200 hover:border-purple-400 transition-all text-xs text-purple-700 hover:text-purple-900"
-                      >
-                      ✨ {f.slice(0, 22)}{f.length > 22 ? '...' : ''}
-                      </button>
-                  );
-                })}
-                
-                {/* Key Points as "Why" questions */}
-                {brandData.keyPoints?.slice(0, 2).map((kp: string, i: number) => (
-                      <button
-                    key={`kp-${i}`}
-                        onClick={() => {
-                          setSelectedTemplate('expert');
-                      setBrief(`Pourquoi ${kp.toLowerCase()} ?`);
-                        }}
-                    className="flex-shrink-0 px-3 py-1.5 bg-amber-50/50 border border-amber-200 hover:border-amber-400 transition-all text-xs text-amber-700 hover:text-amber-900"
-                      >
-                    🎯 {kp.slice(0, 20)}{kp.length > 20 ? '...' : ''}
-                      </button>
-                    ))}
-                
-                {/* Quick suggestion - "problem agitation" style */}
-                {brandData.targetAudience && (
-                        <button
-                          onClick={() => {
-                      setSelectedTemplate('stat');
-                      setBrief(`${brandData.targetAudience}, vous en avez marre de... ?`);
-                          }}
-                    className="flex-shrink-0 px-3 py-1.5 bg-rose-50/50 border border-rose-200 hover:border-rose-400 transition-all text-xs text-rose-700 hover:text-rose-900"
-                        >
-                    🎤 Interpeller votre cible
-                        </button>
-                )}
-                  </div>
+                {/* Fallback if no AI insights: Show a helpful message */}
+                {(!brandData.industryInsights || brandData.industryInsights.length === 0) && (
+                  <div className="flex-shrink-0 px-4 py-3 bg-gray-50 border border-dashed border-gray-300 text-center">
+                    <span className="text-xs text-gray-500">
+                      💡 Décrivez votre visuel dans la zone ci-dessous
+                    </span>
+              </div>
+            )}
+              </div>
                           </div>
 
             {/* No data fallback - minimal */}
