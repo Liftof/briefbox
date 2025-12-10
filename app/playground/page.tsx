@@ -1575,12 +1575,15 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
               </div>
               
               <h1 className="text-4xl md:text-5xl font-light text-gray-900 leading-[1.1] mb-4" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
-                Commençons par<br />
-                <span className="font-semibold">votre marque.</span>
+                {locale === 'fr' ? "Commençons par" : "Let's start with"}<br />
+                <span className="font-semibold">{locale === 'fr' ? 'votre marque.' : 'your brand.'}</span>
               </h1>
               
               <p className="text-gray-400 text-lg max-w-md leading-relaxed">
-                On récupère votre logo, vos couleurs, votre ton — en quelques secondes. Ensuite, créez.
+                {locale === 'fr' 
+                  ? "On récupère votre logo, vos couleurs, votre ton — en quelques secondes. Ensuite, créez."
+                  : "We extract your logo, colors, and tone — in seconds. Then, create."
+                }
               </p>
             </div>
 
@@ -1594,7 +1597,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                 {/* Primary URL Input */}
                 <div className="group">
                   <label className="block text-[10px] font-mono uppercase tracking-widest text-gray-400 mb-2">
-                    Site principal *
+                    {locale === 'fr' ? 'Site principal *' : 'Main website *'}
                   </label>
                   <div className="relative">
                 <input
@@ -1620,15 +1623,15 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                     <svg className="w-4 h-4 transition-transform group-open:rotate-90" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                       <path d="M9 5l7 7-7 7" />
                     </svg>
-                    <span className="font-mono text-xs uppercase tracking-wider">Sources additionnelles</span>
-                    <span className="text-[10px] text-gray-300">(optionnel)</span>
+                    <span className="font-mono text-xs uppercase tracking-wider">{locale === 'fr' ? 'Sources additionnelles' : 'Additional sources'}</span>
+                    <span className="text-[10px] text-gray-300">{locale === 'fr' ? '(optionnel)' : '(optional)'}</span>
                   </summary>
                   
                   <div className="mt-6 pt-6 border-t border-gray-100 space-y-4 animate-fade-in">
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <label className="block text-[10px] font-mono uppercase tracking-widest text-gray-300 mb-2">
-                          Réseau social 1
+                          {locale === 'fr' ? 'Réseau social 1' : 'Social network 1'}
                         </label>
                     <input
                         type="text"
@@ -1644,7 +1647,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                 </div>
                       <div>
                         <label className="block text-[10px] font-mono uppercase tracking-widest text-gray-300 mb-2">
-                          Réseau social 2
+                          {locale === 'fr' ? 'Réseau social 2' : 'Social network 2'}
                         </label>
                     <input
                         type="text"
@@ -1662,7 +1665,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
 
                     <div>
                       <label className="block text-[10px] font-mono uppercase tracking-widest text-gray-300 mb-2">
-                        Autres liens (presse, notion, drive...)
+                        {locale === 'fr' ? 'Autres liens (presse, notion, drive...)' : 'Other links (press, notion, drive...)'}
                       </label>
                 <input
                     type="text"
@@ -1678,7 +1681,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                 {/* Action */}
                 <div className="pt-6 flex items-end justify-between">
                   <p className="text-[11px] text-gray-300 max-w-[200px] leading-relaxed">
-                    Vous pourrez enrichir ces sources après l'analyse.
+                    {locale === 'fr' ? "Vous pourrez enrichir ces sources après l'analyse." : "You can add more sources after analysis."}
                   </p>
                   
                 <button
@@ -1687,7 +1690,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                   className="group bg-gray-900 text-white px-8 py-4 font-medium text-sm disabled:opacity-30 disabled:cursor-not-allowed transition-all hover:bg-blue-600"
                 >
                   <span className="flex items-center gap-3">
-                    Scanner la marque
+                    {locale === 'fr' ? 'Scanner la marque' : 'Scan brand'}
                     <svg className="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                       <path d="M5 12h14M12 5l7 7-7 7" />
                     </svg>
@@ -1703,16 +1706,16 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                 <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                   <path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                 </svg>
-                Données sécurisées
+                {locale === 'fr' ? 'Données sécurisées' : 'Secure data'}
               </span>
               <span className="w-1 h-1 bg-gray-200 rounded-full" />
-              <span>~60 secondes</span>
+              <span>~60 {locale === 'fr' ? 'secondes' : 'seconds'}</span>
               <span className="w-1 h-1 bg-gray-200 rounded-full" />
               <button 
                 onClick={() => setStep('playground')} 
                 className="hover:text-gray-500 transition-colors underline underline-offset-2"
               >
-                Passer cette étape
+                {locale === 'fr' ? 'Passer cette étape' : 'Skip this step'}
               </button>
             </div>
           </div>
@@ -2141,7 +2144,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
                 <span className="w-1.5 h-1.5 bg-blue-500 rounded-full" />
-                <span className="text-[10px] font-mono uppercase tracking-widest text-gray-400">Angles de contenu</span>
+                <span className="text-[10px] font-mono uppercase tracking-widest text-gray-400">{locale === 'fr' ? 'Angles de contenu' : 'Content angles'}</span>
                 </div>
               <button
                 onClick={() => setShowStyleGallery(true)}
@@ -2263,15 +2266,15 @@ Couleurs : Utiliser la palette de la marque.`;
               {/* 1. STYLE REFERENCE ZONE - With drop area */}
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">Style à imiter</label>
-                  <button 
+                  <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">{locale === 'fr' ? 'Style à imiter' : 'Style inspiration'}</label>
+                    <button
                     onClick={() => setShowStyleGallery(true)}
                     className="text-[10px] text-blue-600 hover:text-blue-700 flex items-center gap-1"
                   >
-                    ✨ Galerie
-                  </button>
-                    </div>
-                
+                    ✨ {locale === 'fr' ? 'Galerie' : 'Gallery'}
+                    </button>
+            </div>
+
                 {/* Selected styles + Drop zone */}
                 <div className="space-y-2 mb-2">
                   {/* Selected images with note input */}
@@ -2353,7 +2356,7 @@ Couleurs : Utiliser la palette de la marque.`;
                     className="h-10 px-3 rounded bg-gray-900 text-white text-[10px] font-medium hover:bg-gray-800 transition-all flex items-center gap-1.5 flex-shrink-0"
                   >
                     <span>🎨</span>
-                    <span>Galerie</span>
+                    <span>{locale === 'fr' ? 'Galerie' : 'Gallery'}</span>
                   </button>
                 </div>
               </div>
@@ -2542,7 +2545,7 @@ Couleurs : Utiliser la palette de la marque.`;
                 onClick={() => setGeneratedImages([])}
                 className="text-xs text-gray-400 hover:text-gray-600"
               >
-                Effacer
+                {locale === 'fr' ? 'Effacer' : 'Clear'}
               </button>
             </div>
 
@@ -2592,7 +2595,7 @@ Couleurs : Utiliser la palette de la marque.`;
                       setEditPrompt('');
                     }}
                       className="w-11 h-11 bg-white text-gray-900 flex items-center justify-center hover:bg-gray-100 transition-colors shadow-lg"
-                    title="Modifier"
+                    title={locale === 'fr' ? 'Modifier' : 'Edit'}
                   >
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                         <path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -2616,7 +2619,7 @@ Couleurs : Utiliser la palette de la marque.`;
                       }
                     }}
                       className="w-11 h-11 bg-white text-gray-900 flex items-center justify-center hover:bg-gray-100 transition-colors shadow-lg"
-                    title="Télécharger"
+                    title={locale === 'fr' ? 'Télécharger' : 'Download'}
                   >
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                         <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
@@ -2873,7 +2876,7 @@ Couleurs : Utiliser la palette de la marque.`;
               <div className="text-[10px] font-mono uppercase tracking-widest text-blue-600 mb-2">
                 ✏️ Mode édition directe
               </div>
-              <h3 className="text-xl font-semibold mb-2">Modifier cette image</h3>
+              <h3 className="text-xl font-semibold mb-2">{locale === 'fr' ? 'Modifier cette image' : 'Edit this image'}</h3>
               <p className="text-sm text-gray-500 mb-6">
                 Décrivez précisément ce que vous voulez changer. L'IA modifiera l'image en gardant le reste intact.
               </p>
