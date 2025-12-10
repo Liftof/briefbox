@@ -7,6 +7,9 @@ import { useTranslation } from '@/lib/i18n';
 
 export default function Hero() {
   const { t, locale } = useTranslation();
+  const { isSignedIn, isLoaded } = useAuth();
+  const router = useRouter();
+  
   const [socialProofCount, setSocialProofCount] = useState(0);
   const [promptText, setPromptText] = useState('');
   const [displayedPrompt, setDisplayedPrompt] = useState('');
@@ -92,8 +95,6 @@ export default function Hero() {
 
   const [url, setUrl] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const { isSignedIn, isLoaded } = useAuth();
-  const router = useRouter();
 
   const handleAnalyze = async () => {
     const trimmedUrl = url.trim();
