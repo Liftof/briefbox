@@ -3,7 +3,7 @@ import Hero from '@/components/Hero';
 import CtaSection from '@/components/CtaSection';
 import Link from 'next/link';
 import { headers } from 'next/headers';
-import { getServerLocale } from '@/lib/i18n';
+import { getServerLocale } from '@/lib/i18n-server';
 
 export default async function Home() {
   const headersList = await headers();
