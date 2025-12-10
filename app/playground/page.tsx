@@ -9,6 +9,7 @@ import CalendarView from './components/CalendarView';
 import ProjectsView, { addGenerations, loadFeedbackPatterns } from './components/ProjectsView';
 import StrategyView from './components/StrategyView';
 import { TemplateId } from '@/lib/templates';
+import { useTranslation } from '@/lib/i18n';
 
 type Step = 'url' | 'analyzing' | 'logo-confirm' | 'bento' | 'playground';
 
@@ -161,6 +162,7 @@ AVOID: Flat backgrounds, distorted logos, cluttered layout, amateur design, 3D r
 };
 
 function PlaygroundContent() {
+  const { t, locale } = useTranslation();
   const searchParams = useSearchParams();
   const brandId = searchParams.get('brandId');
   const analyzeUrl = searchParams.get('analyzeUrl'); // From Hero input
@@ -169,13 +171,13 @@ function PlaygroundContent() {
   const [step, setStep] = useState<Step>(analyzeUrl ? 'analyzing' : 'url');
   const [activeTab, setActiveTab] = useState('create');
   const [websiteUrl, setWebsiteUrl] = useState('');
-  const [statusMessage, setStatusMessage] = useState('Nous analysons votre identité...');
+  const [statusMessage, setStatusMessage] = useState(locale === 'fr' ? 'Nous analysons votre identité...' : 'Analyzing your brand identity...');
   const [progress, setProgress] = useState(0);
   const [status, setStatus] = useState<'idle' | 'preparing' | 'running' | 'complete' | 'error'>('idle');
   const [loadingStage, setLoadingStage] = useState(0);
   
-  // Fun loading messages that cycle through
-  const LOADING_STAGES = [
+  // Fun loading messages that cycle through (locale-aware)
+  const LOADING_STAGES = locale === 'fr' ? [
     { emoji: '🔍', message: 'Exploration du site...', sub: 'On scrape les pages clés' },
     { emoji: '🎨', message: 'Extraction des couleurs...', sub: 'Palette & identité visuelle' },
     { emoji: '📸', message: 'Analyse des images...', sub: 'Logo, produits, visuels' },
@@ -183,10 +185,18 @@ function PlaygroundContent() {
     { emoji: '🔥', message: 'Enrichissement...', sub: 'Recherche de tendances' },
     { emoji: '📊', message: 'Compilation des insights...', sub: 'Pain points & concurrents' },
     { emoji: '✨', message: 'Finalisation...', sub: 'On prépare votre brief' },
+  ] : [
+    { emoji: '🔍', message: 'Exploring website...', sub: 'Scraping key pages' },
+    { emoji: '🎨', message: 'Extracting colors...', sub: 'Palette & visual identity' },
+    { emoji: '📸', message: 'Analyzing images...', sub: 'Logo, products, visuals' },
+    { emoji: '🧠', message: 'AI is thinking...', sub: 'Smart analysis in progress' },
+    { emoji: '🔥', message: 'Enriching data...', sub: 'Searching for trends' },
+    { emoji: '📊', message: 'Compiling insights...', sub: 'Pain points & competitors' },
+    { emoji: '✨', message: 'Finalizing...', sub: 'Preparing your brief' },
   ];
   
-  // Simulated discoveries that appear during loading
-  const DISCOVERY_ITEMS = [
+  // Simulated discoveries that appear during loading (locale-aware)
+  const DISCOVERY_ITEMS = locale === 'fr' ? [
     { threshold: 10, emoji: '🌐', text: 'Site web détecté' },
     { threshold: 20, emoji: '🖼️', text: 'Logo trouvé' },
     { threshold: 30, emoji: '🎨', text: 'Palette de couleurs extraite' },
@@ -196,16 +206,33 @@ function PlaygroundContent() {
     { threshold: 70, emoji: '📊', text: 'Données marché récupérées' },
     { threshold: 80, emoji: '🔥', text: 'Pain points détectés' },
     { threshold: 90, emoji: '✅', text: 'Brief prêt !' },
+  ] : [
+    { threshold: 10, emoji: '🌐', text: 'Website detected' },
+    { threshold: 20, emoji: '🖼️', text: 'Logo found' },
+    { threshold: 30, emoji: '🎨', text: 'Color palette extracted' },
+    { threshold: 40, emoji: '📝', text: 'Tagline identified' },
+    { threshold: 50, emoji: '🎯', text: 'Target audience analyzed' },
+    { threshold: 60, emoji: '💡', text: 'Key features spotted' },
+    { threshold: 70, emoji: '📊', text: 'Market data retrieved' },
+    { threshold: 80, emoji: '🔥', text: 'Pain points detected' },
+    { threshold: 90, emoji: '✅', text: 'Brief ready!' },
   ];
   
-  // Rotating fun facts
-  const FUN_FACTS = [
+  // Rotating fun facts (locale-aware)
+  const FUN_FACTS = locale === 'fr' ? [
     "💡 On analyse jusqu'à 10 pages de votre site pour extraire le maximum d'insights.",
     "🎨 Les couleurs sont extraites directement de votre logo pour une cohérence parfaite.",
     "🔥 On recherche les tendances de votre industrie en temps réel.",
     "🧠 Notre IA analyse même les captures d'écran de votre site.",
     "📊 On identifie vos concurrents pour mieux vous positionner.",
     "✨ Chaque génération crée 2 versions : fidèle et créative.",
+  ] : [
+    "💡 We analyze up to 10 pages of your site to extract maximum insights.",
+    "🎨 Colors are extracted directly from your logo for perfect consistency.",
+    "🔥 We search for trends in your industry in real time.",
+    "🧠 Our AI even analyzes screenshots from your site.",
+    "📊 We identify your competitors for better positioning.",
+    "✨ Each generation creates 2 versions: faithful and creative.",
   ];
   
   const [currentFact, setCurrentFact] = useState(0);
@@ -1933,14 +1960,17 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                           </svg>
-                          Chargement...
+                          {locale === 'fr' ? 'Chargement...' : 'Loading...'}
                         </span>
                       ) : (
                         <span className="flex items-center justify-center gap-2">
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                             <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" strokeLinecap="round" strokeLinejoin="round" />
                           </svg>
-                          {currentLogo ? 'Uploader le vrai logo' : 'Uploader votre logo'}
+                          {currentLogo 
+                            ? (locale === 'fr' ? 'Uploader le vrai logo' : 'Upload correct logo')
+                            : (locale === 'fr' ? 'Uploader votre logo' : 'Upload your logo')
+                          }
                         </span>
                       )}
                     </button>
@@ -1957,14 +1987,14 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                             </svg>
-                            Chargement...
+                            {locale === 'fr' ? 'Chargement...' : 'Loading...'}
                           </span>
                         ) : (
                           <span className="flex items-center justify-center gap-2">
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                               <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round" />
                             </svg>
-                            C'est le bon
+                            {locale === 'fr' ? "C'est le bon" : "That's it"}
                           </span>
                         )}
                       </button>
@@ -1977,11 +2007,11 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                       // Clear logo and continue
                       setBrandData((prev: any) => ({ ...prev, logo: null }));
                       setStep('bento');
-                      showToast('Vous pourrez ajouter un logo plus tard', 'info');
+                      showToast(locale === 'fr' ? 'Vous pourrez ajouter un logo plus tard' : 'You can add a logo later', 'info');
                     }}
                     className="w-full mt-3 px-4 py-2 text-xs text-gray-400 hover:text-gray-600 transition-colors"
                   >
-                    Je n'ai pas de logo pour l'instant →
+                    {locale === 'fr' ? "Je n'ai pas de logo pour l'instant →" : "I don't have a logo yet →"}
                   </button>
                 </div>
             </div>
@@ -2453,7 +2483,7 @@ Couleurs : Utiliser la palette de la marque.`;
               ) : (
                 <>
                   <span className="text-blue-400 text-lg">✦</span>
-                  <span>Générer 2 visuels</span>
+                  <span>{locale === 'fr' ? 'Générer 2 visuels' : 'Generate 2 visuals'}</span>
                   <svg className="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                     <path d="M5 12h14M12 5l7 7-7 7" />
                   </svg>
@@ -2505,7 +2535,7 @@ Couleurs : Utiliser la palette de la marque.`;
           <div className="mb-8">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
-                <span className="text-sm font-medium text-gray-700">Vos créations</span>
+                <span className="text-sm font-medium text-gray-700">{locale === 'fr' ? 'Vos créations' : 'Your creations'}</span>
                 <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs font-medium">{generatedImages.length}</span>
               </div>
               <button
@@ -2604,7 +2634,7 @@ Couleurs : Utiliser la palette de la marque.`;
         {generatedImages.length === 0 && status === 'idle' && brief.trim() && uploadedImages.length > 0 && (
           <div className="text-center py-8 border-t border-gray-100">
             <p className="text-sm text-gray-400">
-              ✨ Cliquez sur <span className="font-medium text-gray-600">"Générer 2 visuels"</span> pour créer
+              ✨ {locale === 'fr' ? 'Cliquez sur' : 'Click'} <span className="font-medium text-gray-600">{locale === 'fr' ? '"Générer 2 visuels"' : '"Generate 2 visuals"'}</span> {locale === 'fr' ? 'pour créer' : 'to create'}
             </p>
           </div>
         )}
