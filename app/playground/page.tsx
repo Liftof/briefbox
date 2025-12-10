@@ -1166,7 +1166,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
           return {
             id: `edit-${createId()}-${index}`,
             url,
-            aspectRatio: img?.aspect_ratio || aspectRatio
+            aspectRatio: aspectRatio // Always use user-selected ratio
           };
         })
         .filter(Boolean) as GeneratedImage[];
@@ -1441,6 +1441,8 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
         throw new Error(payload.error || 'Impossible de générer des visuels');
       }
 
+      // Force the USER-SELECTED aspect ratio on all generated images
+      // This ensures consistent display - no guessing from API response
       const rawImages = (payload.images || [])
         .map((img: any, index: number) => {
           const url = typeof img === 'string' ? img : img?.url || img?.image;
@@ -1448,7 +1450,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
           return {
             id: `${createId()}-${index}`,
             url,
-            aspectRatio: img?.aspect_ratio || img?.metadata?.aspect_ratio || aspectRatio
+            aspectRatio: aspectRatio // Always use user-selected ratio
           };
         })
         .filter(Boolean) as GeneratedImage[];
@@ -2600,7 +2602,12 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
               💡 Une faute d'orthographe, un logo à corriger ou un détail à changer ? Cliquez sur ✏️ pour modifier n'importe quelle image.
             </p>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* Grid adapts based on aspect ratio - vertical ratios get more width */}
+            <div className={`grid gap-4 ${
+              aspectRatio === '9:16' ? 'grid-cols-2 sm:grid-cols-3' : 
+              aspectRatio === '16:9' || aspectRatio === '21:9' ? 'grid-cols-1' : 
+              'grid-cols-1 sm:grid-cols-2'
+            }`}>
               {generatedImages.map((img) => {
                 // Map aspect ratio to CSS class
                 const aspectClasses: Record<string, string> = {
