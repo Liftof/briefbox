@@ -3,8 +3,10 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth, SignInButton } from '@clerk/nextjs';
+import { useTranslation } from '@/lib/i18n';
 
 export default function CtaSection() {
+  const { locale } = useTranslation();
   const [url, setUrl] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { isSignedIn, isLoaded } = useAuth();
@@ -35,11 +37,17 @@ export default function CtaSection() {
       
       <div className="max-w-3xl mx-auto px-6 text-center relative z-10">
         <h2 className="text-3xl sm:text-4xl md:text-5xl font-light mb-6 leading-tight">
-          Prêt à créer<br />
-          <span className="font-semibold">en 60 secondes ?</span>
+          {locale === 'fr' ? (
+            <>Prêt à créer<br /><span className="font-semibold">en 60 secondes ?</span></>
+          ) : (
+            <>Ready to create<br /><span className="font-semibold">in 60 seconds?</span></>
+          )}
         </h2>
         <p className="text-lg text-gray-400 mb-10 max-w-xl mx-auto">
-          Votre premier visuel est gratuit. Sans carte bancaire.
+          {locale === 'fr' 
+            ? 'Votre premier visuel est gratuit. Sans carte bancaire.'
+            : 'Your first visual is free. No credit card required.'
+          }
         </p>
         
         {/* URL Input */}
@@ -72,11 +80,11 @@ export default function CtaSection() {
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                     </svg>
-                    <span>Chargement...</span>
+                    <span>{locale === 'fr' ? 'Chargement...' : 'Loading...'}</span>
                   </>
                 ) : (
                   <>
-                    <span>Générer mon premier visuel</span>
+                    <span>{locale === 'fr' ? 'Générer mon premier visuel' : 'Generate my first visual'}</span>
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                       <path d="M5 12h14M12 5l7 7-7 7" />
                     </svg>
@@ -89,7 +97,7 @@ export default function CtaSection() {
                   disabled={!url.trim()}
                   className="bg-white text-gray-900 px-6 py-3 font-medium text-sm hover:bg-gray-100 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
-                  <span>Générer mon premier visuel</span>
+                  <span>{locale === 'fr' ? 'Générer mon premier visuel' : 'Generate my first visual'}</span>
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                     <path d="M5 12h14M12 5l7 7-7 7" />
                   </svg>
@@ -99,7 +107,7 @@ export default function CtaSection() {
           </div>
           
           <p className="mt-4 text-sm text-white/40">
-            Gratuit • Aucune CB requise
+            {locale === 'fr' ? 'Gratuit • Aucune CB requise' : 'Free • No credit card required'}
           </p>
         </div>
       </div>

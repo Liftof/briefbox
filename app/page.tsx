@@ -467,49 +467,61 @@ export default async function Home() {
           <div className="space-y-4">
             <details className="group border border-gray-200 bg-white">
               <summary className="flex justify-between items-center p-6 cursor-pointer select-none">
-                <span className="font-medium text-gray-900">Comment ça marche sans agence ?</span>
+                <span className="font-medium text-gray-900">{locale === 'fr' ? 'Comment ça marche sans agence ?' : 'How does it work without an agency?'}</span>
                 <svg className="w-4 h-4 text-gray-400 transition-transform group-open:rotate-45" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                   <path d="M12 5v14M5 12h14" />
                 </svg>
               </summary>
               <div className="px-6 pb-6 text-sm text-gray-500 leading-relaxed border-t border-gray-100 pt-4">
-                Palette fait le travail d'un directeur artistique. Entrez votre site, on récupère votre charte, et vous générez des visuels pro qui respectent votre identité.
+                {locale === 'fr' 
+                  ? "Palette fait le travail d'un directeur artistique. Entrez votre site, on récupère votre charte, et vous générez des visuels pro qui respectent votre identité."
+                  : "Palette does the work of an art director. Enter your site, we extract your brand guidelines, and you generate pro visuals that respect your identity."
+                }
               </div>
             </details>
 
             <details className="group border border-gray-200 bg-white">
               <summary className="flex justify-between items-center p-6 cursor-pointer select-none">
-                <span className="font-medium text-gray-900">Quels formats sont supportés ?</span>
+                <span className="font-medium text-gray-900">{locale === 'fr' ? 'Quels formats sont supportés ?' : 'Which formats are supported?'}</span>
                 <svg className="w-4 h-4 text-gray-400 transition-transform group-open:rotate-45" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                   <path d="M12 5v14M5 12h14" />
                 </svg>
               </summary>
               <div className="px-6 pb-6 text-sm text-gray-500 leading-relaxed border-t border-gray-100 pt-4">
-                Instagram (Stories, Posts), LinkedIn, Facebook, Twitter/X, Pinterest. Chaque export est optimisé pour la plateforme.
+                {locale === 'fr' 
+                  ? "Instagram (Stories, Posts), LinkedIn, Facebook, Twitter/X, Pinterest. Chaque export est optimisé pour la plateforme."
+                  : "Instagram (Stories, Posts), LinkedIn, Facebook, Twitter/X, Pinterest. Each export is optimized for the platform."
+                }
               </div>
             </details>
 
             <details className="group border border-gray-200 bg-white">
               <summary className="flex justify-between items-center p-6 cursor-pointer select-none">
-                <span className="font-medium text-gray-900">Les visuels sont-ils libres de droits ?</span>
+                <span className="font-medium text-gray-900">{locale === 'fr' ? 'Les visuels sont-ils libres de droits ?' : 'Are the visuals royalty-free?'}</span>
                 <svg className="w-4 h-4 text-gray-400 transition-transform group-open:rotate-45" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                   <path d="M12 5v14M5 12h14" />
                 </svg>
               </summary>
               <div className="px-6 pb-6 text-sm text-gray-500 leading-relaxed border-t border-gray-100 pt-4">
-                Oui, absolument. Vous détenez 100% des droits commerciaux sur toutes les images générées.
+                {locale === 'fr' 
+                  ? "Oui, absolument. Vous détenez 100% des droits commerciaux sur toutes les images générées."
+                  : "Yes, absolutely. You own 100% commercial rights to all generated images."
+                }
               </div>
             </details>
 
             <details className="group border border-gray-200 bg-white">
               <summary className="flex justify-between items-center p-6 cursor-pointer select-none">
-                <span className="font-medium text-gray-900">Et si je ne suis pas satisfait ?</span>
+                <span className="font-medium text-gray-900">{locale === 'fr' ? 'Et si je ne suis pas satisfait ?' : "What if I'm not satisfied?"}</span>
                 <svg className="w-4 h-4 text-gray-400 transition-transform group-open:rotate-45" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                   <path d="M12 5v14M5 12h14" />
                 </svg>
               </summary>
               <div className="px-6 pb-6 text-sm text-gray-500 leading-relaxed border-t border-gray-100 pt-4">
-                Régénérez autant de fois que vous voulez. Modifiez un détail en un clic. Et si vraiment ça ne va pas, on rembourse sans poser de questions.
+                {locale === 'fr' 
+                  ? "Régénérez autant de fois que vous voulez. Modifiez un détail en un clic. Et si vraiment ça ne va pas, on rembourse sans poser de questions."
+                  : "Regenerate as many times as you want. Modify a detail in one click. And if it really doesn't work, we refund no questions asked."
+                }
               </div>
             </details>
           </div>
