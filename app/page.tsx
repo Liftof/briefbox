@@ -329,11 +329,17 @@ export default async function Home() {
               <span className="text-xs font-mono uppercase tracking-[0.2em] text-gray-400">{locale === 'fr' ? 'Tarifs' : 'Pricing'}</span>
             </div>
             <h2 className="text-3xl md:text-4xl font-light text-gray-900 leading-tight mb-4">
-              Moins cher qu'un café par jour.<br />
-              <span className="font-semibold">Pour tous vos visuels.</span>
+              {locale === 'fr' ? (
+                <>Moins cher qu'un café par jour.<br /><span className="font-semibold">Pour tous vos visuels.</span></>
+              ) : (
+                <>Cheaper than a coffee a day.<br /><span className="font-semibold">For all your visuals.</span></>
+              )}
             </h2>
             <p className="text-gray-500 max-w-xl mx-auto">
-              Pas de devis. Pas de "ça dépend du scope". Tous les visuels en 2K haute résolution.
+              {locale === 'fr' 
+                ? 'Pas de devis. Pas de "ça dépend du scope". Tous les visuels en 2K haute résolution.'
+                : 'No quotes. No "it depends on scope". All visuals in 2K high resolution.'
+              }
             </p>
           </div>
 
@@ -343,30 +349,30 @@ export default async function Home() {
               <div className="flex items-center justify-between mb-4">
                 <div className="text-xs font-mono uppercase tracking-widest text-gray-400">{locale === 'fr' ? 'Starter' : 'Starter'}</div>
               </div>
-              <div className="text-4xl font-light text-gray-900 mb-2">Gratuit</div>
-              <p className="text-sm text-gray-500 mb-8">Pour voir si ça marche vraiment</p>
+              <div className="text-4xl font-light text-gray-900 mb-2">{locale === 'fr' ? 'Gratuit' : 'Free'}</div>
+              <p className="text-sm text-gray-500 mb-8">{locale === 'fr' ? 'Pour voir si ça marche vraiment' : 'To see if it really works'}</p>
               
               <ul className="space-y-3 mb-8">
                 <li className="flex items-center gap-3 text-sm text-gray-600">
                   <span className="text-blue-500">✓</span>
-                  3 générations offertes
+                  {locale === 'fr' ? '3 générations offertes' : '3 free generations'}
                 </li>
                 <li className="flex items-center gap-3 text-sm text-gray-600">
                   <span className="text-blue-500">✓</span>
-                  Analyse de marque complète
+                  {locale === 'fr' ? 'Analyse de marque complète' : 'Full brand analysis'}
                 </li>
                 <li className="flex items-center gap-3 text-sm text-gray-600">
                   <span className="text-blue-500">✓</span>
-                  Export 2K haute résolution
+                  {locale === 'fr' ? 'Export 2K haute résolution' : '2K high resolution export'}
                 </li>
                 <li className="flex items-center gap-3 text-sm text-gray-300">
                   <span>✗</span>
-                  Galerie d'inspirations
+                  {locale === 'fr' ? "Galerie d'inspirations" : "Inspiration gallery"}
                 </li>
               </ul>
               
               <Link href="/playground" className="block w-full py-3 text-center text-sm font-medium text-gray-900 border border-gray-200 hover:border-gray-900 transition-colors">
-                Tester gratuitement
+                {locale === 'fr' ? 'Tester gratuitement' : 'Try for free'}
               </Link>
             </div>
 
@@ -377,64 +383,64 @@ export default async function Home() {
               </div>
               
               <div className="text-xs font-mono uppercase tracking-widest text-blue-400 mb-4">Pro</div>
-              <div className="text-4xl font-light text-white mb-2">19€<span className="text-lg text-gray-500">/mois</span></div>
-              <p className="text-sm text-gray-400 mb-8">Pour ceux qui publient chaque semaine</p>
+              <div className="text-4xl font-light text-white mb-2">{locale === 'fr' ? '19€' : '$19'}<span className="text-lg text-gray-500">/{locale === 'fr' ? 'mois' : 'mo'}</span></div>
+              <p className="text-sm text-gray-400 mb-8">{locale === 'fr' ? 'Pour ceux qui publient chaque semaine' : 'For those who publish weekly'}</p>
               
-              <div className="text-xs font-mono text-gray-500 mb-6">50 crédits/mois</div>
+              <div className="text-xs font-mono text-gray-500 mb-6">{locale === 'fr' ? '50 crédits/mois' : '50 credits/mo'}</div>
               
               <ul className="space-y-3 mb-8">
                 <li className="flex items-center gap-3 text-sm text-gray-300">
                   <span className="text-blue-400">✓</span>
-                  50 générations/mois
+                  {locale === 'fr' ? '50 générations/mois' : '50 generations/mo'}
                 </li>
                 <li className="flex items-center gap-3 text-sm text-gray-300">
                   <span className="text-blue-400">✓</span>
-                  Galerie d'inspirations complète
+                  {locale === 'fr' ? "Galerie d'inspirations complète" : 'Full inspiration gallery'}
                 </li>
                 <li className="flex items-center gap-3 text-sm text-gray-300">
                   <span className="text-blue-400">✓</span>
-                  Tous les ratios et formats
+                  {locale === 'fr' ? 'Tous les ratios et formats' : 'All ratios and formats'}
                 </li>
                 <li className="flex items-center gap-3 text-sm text-gray-300">
                   <span className="text-blue-400">✓</span>
-                  Historique illimité
+                  {locale === 'fr' ? 'Historique illimité' : 'Unlimited history'}
                 </li>
               </ul>
               
               <button className="w-full py-3 text-center text-sm font-medium bg-white text-gray-900 hover:bg-gray-100 transition-colors">
-                Essai gratuit 7 jours
+                {locale === 'fr' ? 'Essai gratuit 7 jours' : '7-day free trial'}
               </button>
             </div>
 
             {/* Business */}
             <div className="bg-white border border-gray-200 p-8">
               <div className="text-xs font-mono uppercase tracking-widest text-gray-400 mb-4">Business</div>
-              <div className="text-4xl font-light text-gray-900 mb-2">49€<span className="text-lg text-gray-400">/mois</span></div>
-              <p className="text-sm text-gray-500 mb-8">Pour les équipes qui produisent</p>
+              <div className="text-4xl font-light text-gray-900 mb-2">{locale === 'fr' ? '49€' : '$49'}<span className="text-lg text-gray-400">/{locale === 'fr' ? 'mois' : 'mo'}</span></div>
+              <p className="text-sm text-gray-500 mb-8">{locale === 'fr' ? 'Pour les équipes qui produisent' : 'For teams that produce'}</p>
               
-              <div className="text-xs font-mono text-gray-400 mb-6">150 crédits/mois</div>
+              <div className="text-xs font-mono text-gray-400 mb-6">{locale === 'fr' ? '150 crédits/mois' : '150 credits/mo'}</div>
               
               <ul className="space-y-3 mb-8">
                 <li className="flex items-center gap-3 text-sm text-gray-600">
                   <span className="text-blue-500">✓</span>
-                  150 générations/mois
+                  {locale === 'fr' ? '150 générations/mois' : '150 generations/mo'}
                 </li>
                 <li className="flex items-center gap-3 text-sm text-gray-600">
                   <span className="text-blue-500">✓</span>
-                  Tout du plan Pro
+                  {locale === 'fr' ? 'Tout du plan Pro' : 'Everything in Pro'}
                 </li>
                 <li className="flex items-center gap-3 text-sm text-gray-600">
                   <span className="text-blue-500">✓</span>
-                  3 membres d'équipe
+                  {locale === 'fr' ? "3 membres d'équipe" : '3 team members'}
                 </li>
                 <li className="flex items-center gap-3 text-sm text-gray-600">
                   <span className="text-blue-500">✓</span>
-                  Support prioritaire
+                  {locale === 'fr' ? 'Support prioritaire' : 'Priority support'}
                 </li>
               </ul>
               
               <button className="block w-full py-3 text-center text-sm font-medium text-gray-900 border border-gray-200 hover:border-gray-900 transition-colors">
-                Contacter les ventes
+                {locale === 'fr' ? 'Contacter les ventes' : 'Contact sales'}
               </button>
             </div>
           </div>
@@ -450,8 +456,11 @@ export default async function Home() {
               <span className="text-xs font-mono uppercase tracking-[0.2em] text-gray-400">{locale === 'fr' ? 'FAQ' : 'FAQ'}</span>
             </div>
             <h2 className="text-3xl md:text-4xl font-light text-gray-900 leading-tight">
-              Questions<br />
-              <span className="font-semibold">fréquentes</span>
+              {locale === 'fr' ? (
+                <>Questions<br /><span className="font-semibold">fréquentes</span></>
+              ) : (
+                <>Frequently<br /><span className="font-semibold">asked questions</span></>
+              )}
             </h2>
           </div>
 
