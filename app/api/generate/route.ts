@@ -147,6 +147,14 @@ async function generateWithGoogle(
     console.log(`   📸 Sending ${parts.length - 1} images to Google AI`);
     console.log(`   📏 Target size: ${finalSize}`);
     
+    // 🔍 LOGO DEBUG: Check which images were successfully converted
+    console.log(`   🔍 Image order sent to Gemini:`);
+    imagesToProcess.forEach((url, i) => {
+      const wasConverted = imageDataResults[i] !== null;
+      const urlPreview = url.startsWith('data:') ? `data:${url.slice(5, 25)}...` : url.slice(0, 60) + '...';
+      console.log(`      ${i + 1}. ${wasConverted ? '✅' : '❌'} ${urlPreview}`);
+    });
+    
     const result = await model.generateContent({
       contents: [{ role: "user", parts }]
     });
