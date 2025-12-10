@@ -50,24 +50,38 @@ async function transformToEditorialAngles(
         "model": "anthropic/claude-3-haiku", // Fast & cheap for this task
         "messages": [{
           "role": "user",
-          "content": `Tu es un expert en content marketing. Transforme ces données brutes en ANGLES ÉDITORIAUX percutants pour ${brandContext.name} (cible: ${brandContext.targetAudience}).
+          "content": `Tu es un expert en content marketing. Transforme ces données brutes en ANGLES ÉDITORIAUX pour les réseaux sociaux de ${brandContext.name}.
+
+⚠️ PERSPECTIVE CRITIQUE:
+La cible sont les CLIENTS de ${brandContext.name}, donc: ${brandContext.targetAudience}
+Ces angles seront utilisés pour créer des posts sur les réseaux sociaux de ${brandContext.name}.
+Donc ils doivent PARLER AUX ${brandContext.targetAudience.toUpperCase()}, pas parler DE l'industrie ${brandContext.industry}.
+
+EXEMPLE de ce qu'il NE FAUT PAS faire:
+❌ "Le marché du ${brandContext.industry} atteindra 500 milliards" (personne ne s'en fiche)
+❌ "L'industrie ${brandContext.industry} connaît une croissance de 15%" (ennuyeux)
+
+EXEMPLE de ce qu'il FAUT faire:
+✅ "Vous passez 2h/jour sur des tâches répétitives ? Voici comment..." (parle AU client)
+✅ "73% des ${brandContext.targetAudience} galèrent avec X. Et vous ?" (interpelle)
 
 DONNÉES BRUTES:
 ${rawInsights.map((r, i) => `${i + 1}. [${r.type}] ${r.text}`).join('\n')}
 
 RÈGLES:
-- Chaque angle doit INTERPELLER la cible (${brandContext.targetAudience})
+- Chaque angle doit INTERPELLER directement les ${brandContext.targetAudience}
+- Utilise "vous/votre" pour s'adresser au lecteur
 - Formule comme une question, une provocation, ou un hook émotionnel
-- PAS de stats génériques sur le marché ou l'industrie
-- PAS de "le marché atteindra X milliards"
+- IGNORE toute stat sur la taille du marché, la croissance de l'industrie, etc.
 - Garde uniquement ce qui PARLE à la cible au quotidien
 
 Retourne un JSON array avec max 4 angles:
 [
-  { "painPoint": "L'angle reformulé comme hook", "consequence": "L'impact sur la cible", "type": "pain_point|trend|social_proof" }
+  { "painPoint": "L'angle reformulé comme hook", "consequence": "L'impact concret pour la cible", "type": "pain_point|trend|social_proof" }
 ]
 
-Si une donnée brute n'est pas pertinente pour la cible, IGNORE-LA. Mieux vaut 1-2 bons angles que 4 mauvais.
+Si une donnée brute n'est pas pertinente pour ${brandContext.targetAudience}, IGNORE-LA.
+Mieux vaut 1-2 bons angles que 4 mauvais.
 Retourne UNIQUEMENT le JSON array, rien d'autre.`
         }],
         "max_tokens": 500,
