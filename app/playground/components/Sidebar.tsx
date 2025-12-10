@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import { useTranslation } from '@/lib/i18n';
 
 interface SidebarProps {
   activeTab: string;
@@ -20,13 +21,14 @@ export default function Sidebar({
   isCollapsed,
   toggleCollapse
 }: SidebarProps) {
+  const { t, locale } = useTranslation();
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
 
   const menuItems = [
-    { id: 'create', icon: '✦', label: 'Créer' },
-    { id: 'projects', icon: '◫', label: 'Projets' },
-    { id: 'calendar', icon: '▤', label: 'Calendrier', disabled: true },
-    { id: 'stats', icon: '◔', label: 'Stats', disabled: true },
+    { id: 'create', icon: '✦', label: t('playground.sidebar.create') },
+    { id: 'projects', icon: '◫', label: t('playground.sidebar.projects') },
+    { id: 'calendar', icon: '▤', label: t('playground.sidebar.calendar'), disabled: true },
+    { id: 'stats', icon: '◔', label: t('playground.sidebar.stats'), disabled: true },
   ];
 
   return (
@@ -83,7 +85,7 @@ export default function Sidebar({
                     )}
                     {!isCollapsed && isDisabled && (
                       <span className="ml-auto text-[9px] font-mono uppercase tracking-wider text-gray-300 bg-gray-100 px-1.5 py-0.5 rounded">
-                        soon
+                        {t('playground.sidebar.soon')}
                       </span>
                     )}
                   </button>
@@ -92,7 +94,7 @@ export default function Sidebar({
                   {isCollapsed && hoveredItem === item.id && (
                     <div className="absolute left-full top-1/2 -translate-y-1/2 ml-2 bg-gray-900 text-white text-xs font-medium px-2.5 py-1.5 rounded-md whitespace-nowrap z-50 shadow-lg">
                       {item.label}
-                      {isDisabled && <span className="text-gray-400 ml-1">(bientôt)</span>}
+                      {isDisabled && <span className="text-gray-400 ml-1">({t('playground.sidebar.soon')})</span>}
                       <div className="absolute right-full top-1/2 -translate-y-1/2 border-4 border-transparent border-r-gray-900" />
                     </div>
                   )}
@@ -124,10 +126,10 @@ export default function Sidebar({
                 {!isCollapsed && (
                   <div className="flex-1 min-w-0 text-left">
                     <div className="text-sm font-medium text-gray-900 truncate">
-                      {brandData.name || 'Ma marque'}
+                      {brandData.name || t('playground.sidebar.myBrand')}
                     </div>
                     <div className="text-[10px] text-gray-400 truncate">
-                      {brandData.tagline || 'Cliquez pour modifier'}
+                      {brandData.tagline || (locale === 'fr' ? 'Cliquez pour modifier' : 'Click to edit')}
                     </div>
                   </div>
                 )}
@@ -160,8 +162,8 @@ export default function Sidebar({
                 <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-sky-600 rounded flex-shrink-0" />
                 {!isCollapsed && (
                   <div className="text-left">
-                    <div className="text-xs font-medium text-gray-900">Plan Starter</div>
-                    <div className="text-[10px] text-gray-500">3 générations gratuites</div>
+                    <div className="text-xs font-medium text-gray-900">{locale === 'fr' ? 'Plan Starter' : 'Starter Plan'}</div>
+                    <div className="text-[10px] text-gray-500">{locale === 'fr' ? '3 générations gratuites' : '3 free generations'}</div>
                   </div>
                 )}
               </div>
