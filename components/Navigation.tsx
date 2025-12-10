@@ -3,8 +3,10 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { SignInButton, UserButton, useUser } from '@clerk/nextjs';
+import { useTranslation } from '@/lib/i18n';
 
 export default function Navigation() {
+  const { locale } = useTranslation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const { isSignedIn, isLoaded } = useUser();
@@ -34,10 +36,10 @@ export default function Navigation() {
             {/* Desktop menu */}
             <div className="hidden md:flex items-center gap-8">
               <a href="#fonctionnement" className="text-sm text-gray-500 hover:text-gray-900 transition-colors">
-                Fonctionnement
+                {locale === 'fr' ? 'Fonctionnement' : 'How it works'}
               </a>
               <a href="#tarifs" className="text-sm text-gray-500 hover:text-gray-900 transition-colors">
-                Tarifs
+                {locale === 'fr' ? 'Tarifs' : 'Pricing'}
               </a>
               
               <div className="flex items-center gap-4 pl-4 border-l border-gray-200">
@@ -48,7 +50,7 @@ export default function Navigation() {
                     ) : (
                       <SignInButton mode="modal">
                         <button className="text-sm text-gray-500 hover:text-gray-900 transition-colors">
-                          Connexion
+                          {locale === 'fr' ? 'Connexion' : 'Sign in'}
                         </button>
                       </SignInButton>
                     )}
@@ -92,23 +94,23 @@ export default function Navigation() {
               className="py-4 text-lg text-gray-900 border-b border-gray-100"
               onClick={() => setIsMenuOpen(false)}
             >
-              Fonctionnement
+              {locale === 'fr' ? 'Fonctionnement' : 'How it works'}
             </a>
             <a
               href="#tarifs"
               className="py-4 text-lg text-gray-900 border-b border-gray-100"
               onClick={() => setIsMenuOpen(false)}
             >
-              Tarifs
+              {locale === 'fr' ? 'Tarifs' : 'Pricing'}
             </a>
             
             <div className="py-4 flex items-center justify-between border-b border-gray-100">
-              <span className="text-lg text-gray-900">Compte</span>
+              <span className="text-lg text-gray-900">{locale === 'fr' ? 'Compte' : 'Account'}</span>
               {isSignedIn ? (
                 <UserButton afterSignOutUrl="/" />
               ) : (
                 <SignInButton mode="modal">
-                  <button className="text-gray-900 font-medium">Connexion</button>
+                  <button className="text-gray-900 font-medium">{locale === 'fr' ? 'Connexion' : 'Sign in'}</button>
                 </SignInButton>
               )}
             </div>
