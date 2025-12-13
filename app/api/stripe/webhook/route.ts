@@ -22,7 +22,7 @@ function getStripe(): Stripe {
 const PLAN_CREDITS = {
   free: 3,
   pro: 50,
-  business: 150,
+  premium: 150,
 } as const;
 
 export async function POST(request: NextRequest) {
@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
       case 'checkout.session.completed': {
         const session = event.data.object as Stripe.Checkout.Session;
         const clerkId = session.metadata?.clerkId;
-        const plan = session.metadata?.plan as 'pro' | 'business';
+        const plan = session.metadata?.plan as 'pro' | 'premium';
 
         if (!clerkId || !plan) {
           console.error('Missing metadata in checkout session');
@@ -90,7 +90,7 @@ export async function POST(request: NextRequest) {
         const subscriptionResponse = await getStripe().subscriptions.retrieve(subscriptionId);
         const subscription = subscriptionResponse as any;
         const clerkId = subscription.metadata?.clerkId;
-        const plan = subscription.metadata?.plan as 'pro' | 'business';
+        const plan = subscription.metadata?.plan as 'pro' | 'premium';
 
         if (!clerkId || !plan) {
           console.error('Missing metadata in subscription');

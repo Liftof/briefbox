@@ -5,7 +5,7 @@ import { useState, useEffect, useCallback } from 'react';
 export interface CreditsInfo {
   remaining: number;
   total: number;
-  plan: 'free' | 'pro' | 'business';
+  plan: 'free' | 'pro' | 'premium';
   canGenerate: boolean;
   resetAt: string | null;
   isTeamCredits: boolean;
@@ -74,12 +74,12 @@ export function useCredits() {
 export const PLAN_NAMES = {
   free: 'Starter',
   pro: 'Pro',
-  business: 'Business',
+  premium: 'Premium',
 } as const;
 
 // Plan colors
 export const PLAN_COLORS = {
   free: 'text-gray-600',
   pro: 'text-blue-600',
-  business: 'text-purple-600',
+  premium: 'text-purple-600',
 } as const;

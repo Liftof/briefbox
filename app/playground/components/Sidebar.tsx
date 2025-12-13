@@ -187,7 +187,7 @@ export default function Sidebar({
             }}
             className={`block bg-gradient-to-br ${
               credits?.plan === 'pro' ? 'from-blue-50 to-blue-100 border-blue-200' :
-              credits?.plan === 'business' ? 'from-purple-50 to-purple-100 border-purple-200' :
+              credits?.plan === 'premium' ? 'from-purple-50 to-purple-100 border-purple-200' :
               'from-gray-50 to-gray-100 border-gray-200'
             } border rounded-lg hover:shadow-sm transition-all ${
               isCollapsed ? 'p-2' : 'p-3'
@@ -196,7 +196,7 @@ export default function Sidebar({
             <div className={`flex items-center ${isCollapsed ? 'justify-center' : 'gap-3'}`}>
               <div className={`w-8 h-8 rounded flex-shrink-0 flex items-center justify-center text-white text-xs font-bold ${
                 credits?.plan === 'pro' ? 'bg-gradient-to-br from-blue-500 to-blue-600' :
-                credits?.plan === 'business' ? 'bg-gradient-to-br from-purple-500 to-purple-600' :
+                credits?.plan === 'premium' ? 'bg-gradient-to-br from-purple-500 to-purple-600' :
                 'bg-gradient-to-br from-gray-400 to-gray-500'
               }`}>
                 {creditsLoading ? '...' : credits?.remaining ?? '?'}

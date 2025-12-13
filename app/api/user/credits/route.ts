@@ -8,7 +8,7 @@ import { eq, and } from 'drizzle-orm';
 const PLAN_CREDITS = {
   free: 3,
   pro: 50,
-  business: 150,
+  premium: 150,
 } as const;
 
 // GET - Check current credits
@@ -49,7 +49,7 @@ export async function GET() {
       
       if (team) {
         credits = team.creditsPool;
-        total = PLAN_CREDITS.business;
+        total = PLAN_CREDITS.premium;
         isTeamCredits = true;
       }
     }

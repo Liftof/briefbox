@@ -13,7 +13,7 @@ import { eq } from "drizzle-orm";
 const PLAN_CREDITS = {
   free: 3,
   pro: 50,
-  business: 150,
+  premium: 150,
 } as const;
 
 // Helper: Check and consume credits
@@ -45,7 +45,7 @@ async function checkAndConsumeCredits(clerkId: string): Promise<{
             allowed: false, 
             error: 'Crédits équipe épuisés. Passez au plan supérieur.',
             remaining: 0,
-            plan: 'business',
+            plan: 'premium',
           };
         }
 
@@ -54,7 +54,7 @@ async function checkAndConsumeCredits(clerkId: string): Promise<{
           .set({ creditsPool: team.creditsPool - 1 })
           .where(eq(teams.id, user.teamId));
 
-        return { allowed: true, remaining: team.creditsPool - 1, plan: 'business' };
+        return { allowed: true, remaining: team.creditsPool - 1, plan: 'premium' };
       }
     }
 

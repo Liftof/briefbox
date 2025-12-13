@@ -412,9 +412,9 @@ export default async function Home() {
               </button>
             </div>
 
-            {/* Business */}
+            {/* Premium */}
             <div className="bg-white border border-gray-200 p-8">
-              <div className="text-xs font-mono uppercase tracking-widest text-gray-400 mb-4">Business</div>
+              <div className="text-xs font-mono uppercase tracking-widest text-gray-400 mb-4">Premium</div>
               <div className="text-4xl font-light text-gray-900 mb-2">{locale === 'fr' ? '49€' : '$49'}<span className="text-lg text-gray-400">/{locale === 'fr' ? 'mois' : 'mo'}</span></div>
               <p className="text-sm text-gray-500 mb-8">{locale === 'fr' ? 'Pour les équipes qui produisent' : 'For teams that produce'}</p>
               

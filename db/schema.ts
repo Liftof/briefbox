@@ -5,7 +5,7 @@ import { pgTable, serial, text, timestamp, jsonb, boolean, integer } from 'drizz
 // ============================================
 
 // Plans disponibles
-export type PlanType = 'free' | 'pro' | 'business';
+export type PlanType = 'free' | 'pro' | 'premium';
 
 // Table des Utilisateurs (extension de Clerk)
 export const users = pgTable('users', {

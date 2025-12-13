@@ -22,7 +22,7 @@ function getStripe(): Stripe {
 // Price IDs from Stripe Dashboard
 const PRICE_IDS = {
   pro_monthly: process.env.STRIPE_PRICE_PRO_MONTHLY!,
-  business_monthly: process.env.STRIPE_PRICE_BUSINESS_MONTHLY!,
+  premium_monthly: process.env.STRIPE_PRICE_PREMIUM_MONTHLY!,
 };
 
 // POST - Create Stripe checkout session
@@ -34,9 +34,9 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { plan } = body; // 'pro' or 'business'
+    const { plan } = body; // 'pro' or 'premium'
 
-    if (!plan || !['pro', 'business'].includes(plan)) {
+    if (!plan || !['pro', 'premium'].includes(plan)) {
       return NextResponse.json({ error: 'Invalid plan' }, { status: 400 });
     }
 
@@ -78,11 +78,11 @@ export async function POST(request: NextRequest) {
     }
 
     // Get price ID
-    const priceId = plan === 'pro' ? PRICE_IDS.pro_monthly : PRICE_IDS.business_monthly;
+    const priceId = plan === 'pro' ? PRICE_IDS.pro_monthly : PRICE_IDS.premium_monthly;
 
     if (!priceId) {
       return NextResponse.json({ 
-        error: 'Stripe price not configured. Please set STRIPE_PRICE_PRO_MONTHLY and STRIPE_PRICE_BUSINESS_MONTHLY environment variables.' 
+        error: 'Stripe price not configured. Please set STRIPE_PRICE_PRO_MONTHLY and STRIPE_PRICE_PREMIUM_MONTHLY environment variables.' 
       }, { status: 500 });
     }
 

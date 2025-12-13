@@ -8,7 +8,7 @@ import { eq } from 'drizzle-orm';
 const PLAN_CREDITS = {
   free: 3,
   pro: 50,
-  business: 150,
+  premium: 150,
 } as const;
 
 // GET - Get or create user profile
