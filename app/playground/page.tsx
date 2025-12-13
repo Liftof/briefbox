@@ -8,6 +8,7 @@ import StyleGallery from './components/StyleGallery'; // NEW
 import CalendarView from './components/CalendarView';
 import ProjectsView, { addGenerations, loadFeedbackPatterns } from './components/ProjectsView';
 import StrategyView from './components/StrategyView';
+import { UpgradePopup, CreditsToast } from './components/CreditsWidget';
 import { TemplateId } from '@/lib/templates';
 import { useTranslation } from '@/lib/i18n';
 
@@ -286,6 +287,12 @@ function PlaygroundContent() {
   const [lightboxImage, setLightboxImage] = useState<GeneratedImage | null>(null);
   const [isThinking, setIsThinking] = useState(false);
   const [contentLanguage, setContentLanguage] = useState<'fr' | 'en' | 'es' | 'de'>('fr');
+  
+  // Credits & Upgrade popup state
+  const [showUpgradePopup, setShowUpgradePopup] = useState(false);
+  const [creditsUsed, setCreditsUsed] = useState(0); // Track how many credits user has consumed
+  const [showCreditsToast, setShowCreditsToast] = useState(false);
+  const [lastCreditsRemaining, setLastCreditsRemaining] = useState<number | null>(null);
   const [aspectRatio, setAspectRatio] = useState<string>('1:1');
   const [resolution, setResolution] = useState<'2K' | '4K'>('2K');
   
@@ -1547,6 +1554,30 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
       setStatus('complete');
       setProgress(100);
       showToast('Visuels générés et sauvegardés', 'success');
+      
+      // ====== CREDITS & UPGRADE POPUP LOGIC ======
+      const creditsRemaining = payload.creditsRemaining;
+      const plan = payload.plan;
+      
+      if (creditsRemaining !== undefined && plan === 'free') {
+        setLastCreditsRemaining(creditsRemaining);
+        setCreditsUsed(3 - creditsRemaining); // 3 is the free tier limit
+        
+        // Show toast for credits feedback
+        if (creditsRemaining <= 2) {
+          setShowCreditsToast(true);
+          setTimeout(() => setShowCreditsToast(false), 4000);
+        }
+        
+        // Show upgrade popup when credits are low or exhausted
+        if (creditsRemaining === 0) {
+          // Delay popup slightly so user can see their generation first
+          setTimeout(() => setShowUpgradePopup(true), 1500);
+        } else if (creditsRemaining === 1) {
+          // Show a softer reminder after they've used 2 of 3 credits
+          setTimeout(() => setShowUpgradePopup(true), 3000);
+        }
+      }
     } catch (error: any) {
       console.error('Generation error', error);
       setStatus('error');
@@ -3137,6 +3168,21 @@ Couleurs : Utiliser la palette de la marque.`;
           {renderContent()}
         </main>
       </div>
+      
+      {/* Upgrade Popup */}
+      <UpgradePopup 
+        isOpen={showUpgradePopup} 
+        onClose={() => setShowUpgradePopup(false)}
+        creditsUsed={creditsUsed}
+        locale={locale}
+      />
+      
+      {/* Credits Toast */}
+      <CreditsToast 
+        creditsRemaining={lastCreditsRemaining ?? 3}
+        isVisible={showCreditsToast}
+        locale={locale}
+      />
     </div>
   );
 }
