@@ -2894,14 +2894,50 @@ Couleurs : Utiliser la palette de la marque.`;
                 placeholder="Ex: Change le fond en bleu nuit, ajoute un effet de lumière sur le produit, mets le logo en blanc..."
               />
 
+              {/* Quick Logo Fix Button */}
+              {brandData?.logo && (
+                <div className="mb-6 p-4 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 bg-white rounded-lg border border-amber-300 p-1 flex-shrink-0">
+                      <img src={brandData.logo} className="w-full h-full object-contain" alt="Logo" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-amber-900">
+                        {locale === 'fr' ? 'Logo mal reproduit ?' : 'Logo badly reproduced?'}
+                      </p>
+                      <p className="text-xs text-amber-700">
+                        {locale === 'fr' ? 'Cliquez ici pour le corriger automatiquement' : 'Click here to fix it automatically'}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => {
+                        // Add logo to reference images and set prompt
+                        if (brandData.logo && !editAdditionalImages.includes(brandData.logo)) {
+                          setEditAdditionalImages(prev => [brandData.logo, ...prev].slice(0, 3));
+                        }
+                        setEditPrompt(locale === 'fr' 
+                          ? 'Remplace le logo actuel par le logo officiel fourni. Reproduis-le exactement comme dans l\'image de référence, sans le modifier ni le styliser.'
+                          : 'Replace the current logo with the official logo provided. Reproduce it exactly as shown in the reference image, without modifying or stylizing it.'
+                        );
+                      }}
+                      className="px-4 py-2 bg-amber-500 text-white text-sm font-medium rounded-lg hover:bg-amber-600 transition-colors flex items-center gap-2"
+                    >
+                      🔧 {locale === 'fr' ? 'Réparer' : 'Fix'}
+                    </button>
+                  </div>
+                </div>
+              )}
+
               {/* Additional Images for Editing */}
               <div className="mb-6">
                 <div className="flex items-center justify-between mb-2">
-                  <label className="text-[10px] font-mono uppercase tracking-widest text-gray-400">Images de référence (optionnel)</label>
+                  <label className="text-[10px] font-mono uppercase tracking-widest text-gray-400">Images de référence</label>
                   <span className="text-[10px] text-gray-400">{editAdditionalImages.length}/3</span>
                 </div>
                 <p className="text-[10px] text-gray-400 mb-2">
-                  💡 Pour remplacer le logo : uploadez votre logo ici et écrivez "remplace le logo"
+                  {locale === 'fr' 
+                    ? '💡 Ajoutez des images pour guider la modification (ex: nouveau logo, produit, texture...)'
+                    : '💡 Add images to guide the edit (e.g., new logo, product, texture...)'}
                 </p>
                 
                 <div className="grid grid-cols-4 gap-2">

@@ -16,12 +16,13 @@ const PLAN_CREDITS = {
   premium: 150,
 } as const;
 
-// Helper: Check and consume credits
-async function checkAndConsumeCredits(clerkId: string): Promise<{ 
+// Helper: Check and consume credits (1 credit = 1 image)
+async function checkAndConsumeCredits(clerkId: string, numImages: number = 1): Promise<{ 
   allowed: boolean; 
   error?: string; 
   remaining?: number;
   plan?: string;
+  creditsConsumed?: number;
 }> {
   try {
     const user = await db.query.users.findFirst({
@@ -30,7 +31,14 @@ async function checkAndConsumeCredits(clerkId: string): Promise<{
 
     // If user doesn't exist in DB yet, allow with free tier limit
     if (!user) {
-      return { allowed: true, remaining: PLAN_CREDITS.free - 1, plan: 'free' };
+      const remaining = PLAN_CREDITS.free - numImages;
+      return { 
+        allowed: remaining >= 0, 
+        remaining: Math.max(0, remaining), 
+        plan: 'free',
+        creditsConsumed: numImages,
+        error: remaining < 0 ? `Pas assez de crédits. Vous avez besoin de ${numImages} crédits.` : undefined,
+      };
     }
 
     // Check if user is part of a team (use team credits)
@@ -40,42 +48,52 @@ async function checkAndConsumeCredits(clerkId: string): Promise<{
       });
 
       if (team) {
-        if (team.creditsPool <= 0) {
+        if (team.creditsPool < numImages) {
           return { 
             allowed: false, 
-            error: 'Crédits équipe épuisés. Passez au plan supérieur.',
-            remaining: 0,
+            error: `Crédits équipe insuffisants. ${team.creditsPool} restant(s), ${numImages} requis.`,
+            remaining: team.creditsPool,
             plan: 'premium',
           };
         }
 
-        // Consume team credit
+        // Consume team credits (1 per image)
         await db.update(teams)
-          .set({ creditsPool: team.creditsPool - 1 })
+          .set({ creditsPool: team.creditsPool - numImages })
           .where(eq(teams.id, user.teamId));
 
-        return { allowed: true, remaining: team.creditsPool - 1, plan: 'premium' };
+        return { 
+          allowed: true, 
+          remaining: team.creditsPool - numImages, 
+          plan: 'premium',
+          creditsConsumed: numImages,
+        };
       }
     }
 
-    // Use personal credits
-    if (user.creditsRemaining <= 0) {
+    // Use personal credits (1 per image)
+    if (user.creditsRemaining < numImages) {
       return { 
         allowed: false, 
         error: user.plan === 'free' 
-          ? 'Vos 3 générations gratuites sont épuisées. Passez au plan Pro !' 
-          : 'Crédits mensuels épuisés. Attendez le prochain cycle ou passez au plan supérieur.',
-        remaining: 0,
+          ? `Crédits gratuits insuffisants. ${user.creditsRemaining} restant(s), ${numImages} requis. Passez au plan Pro !` 
+          : `Crédits mensuels insuffisants. ${user.creditsRemaining} restant(s), ${numImages} requis.`,
+        remaining: user.creditsRemaining,
         plan: user.plan,
       };
     }
 
-    // Consume credit
+    // Consume credits (1 per image)
     await db.update(users)
-      .set({ creditsRemaining: user.creditsRemaining - 1 })
+      .set({ creditsRemaining: user.creditsRemaining - numImages })
       .where(eq(users.clerkId, clerkId));
 
-    return { allowed: true, remaining: user.creditsRemaining - 1, plan: user.plan };
+    return { 
+      allowed: true, 
+      remaining: user.creditsRemaining - numImages, 
+      plan: user.plan,
+      creditsConsumed: numImages,
+    };
   } catch (error) {
     console.error('Credit check error:', error);
     // On error, allow generation (fail open for better UX)
@@ -260,22 +278,10 @@ async function generateWithGoogle(
 }
 
 export async function POST(request: NextRequest) {
-  // ====== AUTHENTICATION & CREDITS CHECK ======
+  // ====== AUTHENTICATION ======
   const { userId } = await auth();
   if (!userId) {
     return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
-  }
-
-  // Check credits before generation
-  const creditCheck = await checkAndConsumeCredits(userId);
-  if (!creditCheck.allowed) {
-    return NextResponse.json({ 
-      success: false, 
-      error: creditCheck.error,
-      creditsRemaining: creditCheck.remaining,
-      plan: creditCheck.plan,
-      upgradeRequired: true,
-    }, { status: 402 }); // Payment Required
   }
 
   // ====== GOOGLE AI IS NOW THE PRIMARY (AND ONLY) GENERATOR ======
@@ -285,7 +291,6 @@ export async function POST(request: NextRequest) {
   }
   
   console.log(`🔑 Google AI configured (key ends: ...${GOOGLE_AI_API_KEY.slice(-6)})`);
-  console.log(`💳 Credits check passed. Remaining: ${creditCheck.remaining}`);
 
   try {
     const body = await request.json();
@@ -309,6 +314,22 @@ export async function POST(request: NextRequest) {
     if (!hasPrompt && !hasVariations) {
       return NextResponse.json({ success: false, error: 'Prompt is required' }, { status: 400 });
     }
+    
+    // ====== CREDITS CHECK (1 credit = 1 image) ======
+    const requestedImages = Math.min(numImages, 4); // Cap at 4 images max
+    const creditCheck = await checkAndConsumeCredits(userId, requestedImages);
+    
+    if (!creditCheck.allowed) {
+      return NextResponse.json({ 
+        success: false, 
+        error: creditCheck.error,
+        creditsRemaining: creditCheck.remaining,
+        plan: creditCheck.plan,
+        upgradeRequired: true,
+      }, { status: 402 }); // Payment Required
+    }
+    
+    console.log(`💳 Credits: ${requestedImages} consumed, ${creditCheck.remaining} remaining (plan: ${creditCheck.plan})`);
     
     // 🔍 LOGO DEBUG
     console.log('📥 LOGO DEBUG - Input:');
@@ -431,9 +452,23 @@ export async function POST(request: NextRequest) {
         }
     }
 
-    // Combine reference images FIRST (they define style), then content images
-    // Reference images are prioritized to ensure the model picks up the style
-    const allImageUrls = [...processedReferenceUrls, ...processedImageUrls];
+    // CRITICAL FIX: Logo must be FIRST for the model to prioritize it
+    // Extract logo from processed images (it's marked in imageContextMap)
+    const logoUrl = processedImageUrls.find(url => {
+      const originalUrl = urlMapping[url] || url;
+      const context = imageContextMap[originalUrl] || imageContextMap[url] || '';
+      return context.toLowerCase().includes('logo') && context.toLowerCase().includes('brand');
+    });
+    
+    // Build final order: LOGO FIRST, then style refs, then other content
+    const contentWithoutLogo = processedImageUrls.filter(url => url !== logoUrl);
+    const allImageUrls = [
+      ...(logoUrl ? [logoUrl] : []), // Logo first if exists
+      ...processedReferenceUrls,      // Style refs second
+      ...contentWithoutLogo           // Other content last
+    ];
+    
+    console.log(`🎯 IMAGE ORDER: Logo=${logoUrl ? 'Position 1' : 'NOT FOUND'}, StyleRefs=${processedReferenceUrls.length}, Content=${contentWithoutLogo.length}`);
     
     // For Flux Pro, we don't strictly need images, but we process them in case we switch back
     // or if we implement a specific img2img endpoint later.
@@ -501,12 +536,34 @@ export async function POST(request: NextRequest) {
     // Build image context prefix for the prompt
     // This helps the model understand what each image is for
     let imageContextPrefix = '';
-    // ... (keep existing prompt context building logic if valuable for future or other models) ...
-    if (processedReferenceUrls.length > 0 || processedImageUrls.length > 0) {
+    
+    // NEW: Track image positions based on new order (Logo first, then refs, then content)
+    const hasLogo = !!logoUrl;
+    const logoPosition = hasLogo ? 1 : 0;
+    const styleRefStart = logoPosition + 1;
+    const styleRefEnd = styleRefStart + processedReferenceUrls.length - 1;
+    const contentStart = styleRefEnd + 1;
+    
+    if (allImageUrls.length > 0) {
       const imageDescriptions: string[] = [];
       
+      // Describe logo if present (always position 1)
+      if (hasLogo) {
+        imageDescriptions.push(`Image 1: ⚠️⚠️⚠️ BRAND LOGO ⚠️⚠️⚠️
+THIS IS THE OFFICIAL LOGO. REPRODUCE IT EXACTLY AS SHOWN:
+- Copy pixel by pixel - no modifications
+- Same colors, shapes, proportions
+- Do not stylize, simplify, or redraw
+- Place prominently in the final image
+TREAT THIS AS A SACRED ELEMENT - DO NOT ALTER.`);
+      }
+      
+      // Describe style refs
       if (processedReferenceUrls.length > 0) {
-        imageDescriptions.push(`🎨 [STYLE INSPIRATION] Images 1-${processedReferenceUrls.length} are visual INSPIRATION (not templates to copy).
+        const refRange = processedReferenceUrls.length === 1 
+          ? `Image ${styleRefStart}` 
+          : `Images ${styleRefStart}-${styleRefEnd}`;
+        imageDescriptions.push(`🎨 [STYLE INSPIRATION] ${refRange} ${processedReferenceUrls.length === 1 ? 'is' : 'are'} visual INSPIRATION (not templates to copy).
 
 GET INSPIRED BY:
 → The general composition approach (how elements are arranged)
@@ -518,21 +575,16 @@ GET INSPIRED BY:
 ⚠️ BUT ALWAYS PRIORITIZE THE CLIENT'S BRAND:
 ✅ Use the CLIENT'S colors from the brand palette (not the reference colors)
 ✅ Use the CLIENT'S typography style (not the reference fonts)
-✅ Use the CLIENT'S logo exactly as provided
+✅ Use the CLIENT'S logo exactly as provided (Image 1)
 ✅ Match the CLIENT'S brand personality and tone
 
 The reference is a MOOD BOARD, not a template. Create something ORIGINAL that captures a similar vibe while being 100% true to the client's brand identity.`);
       }
       
-      if (processedImageUrls.length > 0) {
-        const startIdx = processedReferenceUrls.length + 1;
-        // processedImageUrls contains the final content images. 
-        // We need to map them back to their roles if available.
-        
-        processedImageUrls.forEach((url, i) => {
-            const idx = startIdx + i;
-            // Check if we have specific context for this image
-            // CRITICAL: Use urlMapping to find original URL for SVG->PNG conversions
+      // Describe content images (excluding logo which is already described)
+      if (contentWithoutLogo.length > 0) {
+        contentWithoutLogo.forEach((url, i) => {
+            const idx = contentStart + i;
             let role = "CONTENT ELEMENT";
             
             // Get original URL from mapping (for converted SVGs)
@@ -542,7 +594,6 @@ The reference is a MOOD BOARD, not a template. Create something ORIGINAL that ca
             if (imageContextMap[originalUrl]) {
                 role = imageContextMap[originalUrl];
             } else if (imageContextMap[url]) {
-                // Try processed URL as fallback
                 role = imageContextMap[url];
             } else {
                 // Fuzzy match as last resort
@@ -560,25 +611,14 @@ The reference is a MOOD BOARD, not a template. Create something ORIGINAL that ca
                 console.log(`   🏷️ Image ${idx} role: ${role.slice(0, 50)}...`);
             }
             
-            // If role mentions "LOGO", make it ALL CAPS and VERY EXPLICIT
-            if (role.toLowerCase().includes('logo')) {
-                console.log(`   ✅ LOGO FOUND in processed images at position ${idx}`);
-                imageDescriptions.push(`Image ${idx}: ⚠️⚠️⚠️ BRAND LOGO ⚠️⚠️⚠️
-THIS IS THE OFFICIAL LOGO. REPRODUCE IT EXACTLY AS SHOWN:
-- Copy pixel by pixel - no modifications
-- Same colors, shapes, proportions
-- Do not stylize, simplify, or redraw
-- Place prominently in the final image
-TREAT THIS AS A SACRED ELEMENT - DO NOT ALTER.`);
-            } else {
+            // Skip logo context (already handled above)
+            if (!role.toLowerCase().includes('brand_logo')) {
                 imageDescriptions.push(`Image ${idx}: ${role}`);
             }
         });
-        
-        // Final logo check
-        const logoDescriptions = imageDescriptions.filter(d => d.toLowerCase().includes('logo'));
-        console.log(`   📊 LOGO DEBUG FINAL: ${logoDescriptions.length} logo(s) in prompt context`);
       }
+      
+      console.log(`   📊 IMAGE CONTEXT: Logo=${hasLogo ? 'Pos 1' : 'NONE'}, StyleRefs=${processedReferenceUrls.length}, Content=${contentWithoutLogo.length}`);
       
       // Add quality handling instructions
       imageDescriptions.push(`
@@ -600,11 +640,11 @@ For SaaS, apps, or software products:
   → Show lifestyle/results imagery rather than fake product screens
 - If a real UI screenshot IS provided, you may use it as-is or simplify it, but don't add fictional UI elements`);
       
-      // Add a global logo protection rule at the top
-      const logoRule = `
+      // Add logo protection rule ONLY if logo exists
+      const logoRule = hasLogo ? `
 🛡️🛡️🛡️ LOGO PROTECTION - ABSOLUTE RULE 🛡️🛡️🛡️
 
-THE FIRST IMAGE (Image 1) IS THE BRAND LOGO. THIS IS NON-NEGOTIABLE:
+IMAGE 1 IS THE BRAND LOGO. THIS IS NON-NEGOTIABLE:
 
 1. COPY IT EXACTLY - pixel-perfect reproduction
 2. DO NOT modify colors, shapes, proportions, or any detail
@@ -617,11 +657,10 @@ Think of the logo as a PHOTOGRAPH of a physical object - you can resize it, but 
 
 FAILURE TO PRESERVE THE LOGO EXACTLY WILL RUIN THE BRAND'S IDENTITY.
 
-`;
+` : '';
       
       imageContextPrefix = `[IMAGE CONTEXT]
-${logoRule}
-${imageDescriptions.join('\n')}
+${logoRule}${imageDescriptions.join('\n')}
 
 `;
     }
