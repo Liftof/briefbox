@@ -1,9 +1,84 @@
-import { pgTable, serial, text, timestamp, jsonb, boolean } from 'drizzle-orm/pg-core';
+import { pgTable, serial, text, timestamp, jsonb, boolean, integer } from 'drizzle-orm/pg-core';
+
+// ============================================
+// USERS & SUBSCRIPTIONS
+// ============================================
+
+// Plans disponibles
+export type PlanType = 'free' | 'pro' | 'business';
+
+// Table des Utilisateurs (extension de Clerk)
+export const users = pgTable('users', {
+  id: serial('id').primaryKey(),
+  clerkId: text('clerk_id').notNull().unique(), // ID Clerk
+  email: text('email').notNull(),
+  name: text('name'),
+  avatarUrl: text('avatar_url'),
+  
+  // Subscription
+  plan: text('plan').$type<PlanType>().default('free').notNull(),
+  creditsRemaining: integer('credits_remaining').default(3).notNull(), // 3 pour free, 50 pro, 150 business
+  creditsResetAt: timestamp('credits_reset_at'), // Prochaine date de reset mensuel
+  
+  // Stripe
+  stripeCustomerId: text('stripe_customer_id'),
+  stripeSubscriptionId: text('stripe_subscription_id'),
+  stripePriceId: text('stripe_price_id'),
+  stripeCurrentPeriodEnd: timestamp('stripe_current_period_end'),
+  
+  // Team (optionnel)
+  teamId: integer('team_id'), // Sera une foreign key vers teams
+  
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+});
+
+// ============================================
+// TEAMS (pour le plan Business)
+// ============================================
+
+export const teams = pgTable('teams', {
+  id: serial('id').primaryKey(),
+  name: text('name').notNull(),
+  ownerId: text('owner_id').notNull(), // Clerk ID du propriétaire
+  
+  // Pool de crédits partagé pour l'équipe
+  creditsPool: integer('credits_pool').default(150).notNull(),
+  creditsResetAt: timestamp('credits_reset_at'),
+  
+  // Stripe (pour facturation de l'équipe)
+  stripeCustomerId: text('stripe_customer_id'),
+  stripeSubscriptionId: text('stripe_subscription_id'),
+  
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+});
+
+export type TeamRole = 'owner' | 'admin' | 'member';
+
+export const teamMembers = pgTable('team_members', {
+  id: serial('id').primaryKey(),
+  teamId: integer('team_id').notNull().references(() => teams.id),
+  userId: text('user_id').notNull(), // Clerk ID
+  role: text('role').$type<TeamRole>().default('member').notNull(),
+  
+  // Invitation
+  invitedBy: text('invited_by'), // Clerk ID de l'inviteur
+  invitedAt: timestamp('invited_at').defaultNow(),
+  acceptedAt: timestamp('accepted_at'),
+  
+  createdAt: timestamp('created_at').defaultNow(),
+});
+
+// ============================================
+// BRANDS
+// ============================================
 
 // Table des Marques (Le profil identité)
 export const brands = pgTable('brands', {
   id: serial('id').primaryKey(),
   userId: text('user_id'), // L'ID de l'utilisateur (via Clerk)
+  teamId: integer('team_id').references(() => teams.id), // Optionnel: pour partager avec l'équipe
   
   // Infos de base
   name: text('name').notNull(),
@@ -112,7 +187,7 @@ export const generations = pgTable('generations', {
   id: serial('id').primaryKey(),
   brandId: serial('brand_id').references(() => brands.id),
   campaignId: serial('campaign_id').references(() => campaigns.id), // Lien vers une campagne spécifique
-  userId: text('user_id'), // Pour accès rapide
+  userId: text('user_id').notNull(), // Pour accès rapide
   
   type: text('type'), // 'teaser', 'boom', 'social_post', 'edit'
   prompt: text('prompt'), // Le prompt utilisé
@@ -121,6 +196,28 @@ export const generations = pgTable('generations', {
   // Métadonnées
   format: text('format'), // '1:1', '9:16'
   liked: boolean('liked').default(false),
+  templateId: text('template_id'), // ID du template utilisé
+  brandName: text('brand_name'), // Nom de la marque (dénormalisé pour affichage rapide)
   
+  // Organisation
+  folderId: text('folder_id'), // Dossier utilisateur (optionnel)
+  
+  // Feedback utilisateur
+  feedback: jsonb('feedback').$type<{
+    rating: 1 | 2 | 3;
+    comment?: string;
+    timestamp: string;
+  }>(),
+  
+  createdAt: timestamp('created_at').defaultNow(),
+});
+
+// Table des Dossiers utilisateur (pour organiser les générations)
+export const folders = pgTable('folders', {
+  id: serial('id').primaryKey(),
+  externalId: text('external_id').notNull(), // ID client-side compatible (folder_xxx)
+  userId: text('user_id').notNull(),
+  name: text('name').notNull(),
+  color: text('color').default('#6B7280'),
   createdAt: timestamp('created_at').defaultNow(),
 });

@@ -78,7 +78,7 @@ export async function POST(request: Request) {
                 headers: {
                     "Authorization": `Bearer ${process.env.OPENROUTER_API_KEY}`,
                     "Content-Type": "application/json",
-                    "HTTP-Referer": "https://palette.vercel.app",
+                    "HTTP-Referer": "https://thepalette.app",
                     "X-Title": "Palette"
                 },
                 body: JSON.stringify({

@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useTranslation } from '@/lib/i18n';
+import { useCredits, PLAN_NAMES } from '@/lib/useCredits';
 
 interface SidebarProps {
   activeTab: string;
@@ -23,6 +24,7 @@ export default function Sidebar({
 }: SidebarProps) {
   const { t, locale } = useTranslation();
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
+  const { credits, loading: creditsLoading } = useCredits();
 
   const menuItems = [
     { id: 'create', icon: '✦', label: t('playground.sidebar.create') },
@@ -155,19 +157,66 @@ export default function Sidebar({
               )}
             </button>
           ) : (
-            <div className={`bg-gradient-to-br from-gray-50 to-gray-100 border border-gray-200 rounded-lg ${
+            <Link 
+            href="/api/stripe/checkout"
+            onClick={async (e) => {
+              e.preventDefault();
+              if (credits?.plan === 'free') {
+                // Redirect to checkout for pro plan
+                try {
+                  const res = await fetch('/api/stripe/checkout', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ plan: 'pro' }),
+                  });
+                  const data = await res.json();
+                  if (data.url) window.location.href = data.url;
+                } catch (err) {
+                  console.error('Checkout error:', err);
+                }
+              } else {
+                // Redirect to billing portal
+                try {
+                  const res = await fetch('/api/stripe/portal', { method: 'POST' });
+                  const data = await res.json();
+                  if (data.url) window.location.href = data.url;
+                } catch (err) {
+                  console.error('Portal error:', err);
+                }
+              }
+            }}
+            className={`block bg-gradient-to-br ${
+              credits?.plan === 'pro' ? 'from-blue-50 to-blue-100 border-blue-200' :
+              credits?.plan === 'business' ? 'from-purple-50 to-purple-100 border-purple-200' :
+              'from-gray-50 to-gray-100 border-gray-200'
+            } border rounded-lg hover:shadow-sm transition-all ${
               isCollapsed ? 'p-2' : 'p-3'
-            }`}>
-              <div className={`flex items-center ${isCollapsed ? 'justify-center' : 'gap-3'}`}>
-                <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-sky-600 rounded flex-shrink-0" />
-                {!isCollapsed && (
-                  <div className="text-left">
-                    <div className="text-xs font-medium text-gray-900">{locale === 'fr' ? 'Plan Starter' : 'Starter Plan'}</div>
-                    <div className="text-[10px] text-gray-500">{locale === 'fr' ? '3 générations gratuites' : '3 free generations'}</div>
-                  </div>
-                )}
+            }`}
+          >
+            <div className={`flex items-center ${isCollapsed ? 'justify-center' : 'gap-3'}`}>
+              <div className={`w-8 h-8 rounded flex-shrink-0 flex items-center justify-center text-white text-xs font-bold ${
+                credits?.plan === 'pro' ? 'bg-gradient-to-br from-blue-500 to-blue-600' :
+                credits?.plan === 'business' ? 'bg-gradient-to-br from-purple-500 to-purple-600' :
+                'bg-gradient-to-br from-gray-400 to-gray-500'
+              }`}>
+                {creditsLoading ? '...' : credits?.remaining ?? '?'}
               </div>
+              {!isCollapsed && (
+                <div className="text-left">
+                  <div className="text-xs font-medium text-gray-900">
+                    {locale === 'fr' ? 'Plan ' : ''}{PLAN_NAMES[credits?.plan || 'free']}
+                  </div>
+                  <div className="text-[10px] text-gray-500">
+                    {creditsLoading ? '...' : (
+                      credits?.plan === 'free' 
+                        ? (locale === 'fr' ? `${credits?.remaining ?? 0} crédit${(credits?.remaining ?? 0) !== 1 ? 's' : ''} restant${(credits?.remaining ?? 0) !== 1 ? 's' : ''}` : `${credits?.remaining ?? 0} credit${(credits?.remaining ?? 0) !== 1 ? 's' : ''} left`)
+                        : (locale === 'fr' ? `${credits?.remaining ?? 0}/${credits?.total ?? 0} ce mois` : `${credits?.remaining ?? 0}/${credits?.total ?? 0} this month`)
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
+          </Link>
           )}
         </div>
 

@@ -1,9 +1,87 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { NextRequest, NextResponse } from "next/server";
 import sharp from "sharp";
+import { auth } from "@clerk/nextjs/server";
+import { db } from "@/db";
+import { users, teams } from "@/db/schema";
+import { eq } from "drizzle-orm";
 
 // NOTE: Fal has been removed - we now use Google AI (Gemini 3 Pro) exclusively
 // This is cheaper ($0.067/image vs $0.15) and supports more features (14 images, thinking)
+
+// Credit limits per plan
+const PLAN_CREDITS = {
+  free: 3,
+  pro: 50,
+  business: 150,
+} as const;
+
+// Helper: Check and consume credits
+async function checkAndConsumeCredits(clerkId: string): Promise<{ 
+  allowed: boolean; 
+  error?: string; 
+  remaining?: number;
+  plan?: string;
+}> {
+  try {
+    const user = await db.query.users.findFirst({
+      where: eq(users.clerkId, clerkId),
+    });
+
+    // If user doesn't exist in DB yet, allow with free tier limit
+    if (!user) {
+      return { allowed: true, remaining: PLAN_CREDITS.free - 1, plan: 'free' };
+    }
+
+    // Check if user is part of a team (use team credits)
+    if (user.teamId) {
+      const team = await db.query.teams.findFirst({
+        where: eq(teams.id, user.teamId),
+      });
+
+      if (team) {
+        if (team.creditsPool <= 0) {
+          return { 
+            allowed: false, 
+            error: 'Crédits équipe épuisés. Passez au plan supérieur.',
+            remaining: 0,
+            plan: 'business',
+          };
+        }
+
+        // Consume team credit
+        await db.update(teams)
+          .set({ creditsPool: team.creditsPool - 1 })
+          .where(eq(teams.id, user.teamId));
+
+        return { allowed: true, remaining: team.creditsPool - 1, plan: 'business' };
+      }
+    }
+
+    // Use personal credits
+    if (user.creditsRemaining <= 0) {
+      return { 
+        allowed: false, 
+        error: user.plan === 'free' 
+          ? 'Vos 3 générations gratuites sont épuisées. Passez au plan Pro !' 
+          : 'Crédits mensuels épuisés. Attendez le prochain cycle ou passez au plan supérieur.',
+        remaining: 0,
+        plan: user.plan,
+      };
+    }
+
+    // Consume credit
+    await db.update(users)
+      .set({ creditsRemaining: user.creditsRemaining - 1 })
+      .where(eq(users.clerkId, clerkId));
+
+    return { allowed: true, remaining: user.creditsRemaining - 1, plan: user.plan };
+  } catch (error) {
+    console.error('Credit check error:', error);
+    // On error, allow generation (fail open for better UX)
+    return { allowed: true };
+  }
+}
 
 // Initialize Google AI
 const GOOGLE_AI_API_KEY = process.env.GOOGLE_AI_API_KEY;
@@ -182,6 +260,24 @@ async function generateWithGoogle(
 }
 
 export async function POST(request: NextRequest) {
+  // ====== AUTHENTICATION & CREDITS CHECK ======
+  const { userId } = await auth();
+  if (!userId) {
+    return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+  }
+
+  // Check credits before generation
+  const creditCheck = await checkAndConsumeCredits(userId);
+  if (!creditCheck.allowed) {
+    return NextResponse.json({ 
+      success: false, 
+      error: creditCheck.error,
+      creditsRemaining: creditCheck.remaining,
+      plan: creditCheck.plan,
+      upgradeRequired: true,
+    }, { status: 402 }); // Payment Required
+  }
+
   // ====== GOOGLE AI IS NOW THE PRIMARY (AND ONLY) GENERATOR ======
   if (!GOOGLE_AI_API_KEY || !genAI) {
     console.error("❌ Error: GOOGLE_AI_API_KEY is missing in environment variables.");
@@ -189,6 +285,7 @@ export async function POST(request: NextRequest) {
   }
   
   console.log(`🔑 Google AI configured (key ends: ...${GOOGLE_AI_API_KEY.slice(-6)})`);
+  console.log(`💳 Credits check passed. Remaining: ${creditCheck.remaining}`);
 
   try {
     const body = await request.json();
@@ -706,7 +803,9 @@ ${imageDescriptions.join('\n')}
           images: normalizedImages,
           generatedCount: normalizedImages.length,
           requestedCount: actualNumImages,
-          aspectRatio // Also return it at top level for reference
+          aspectRatio, // Also return it at top level for reference
+          creditsRemaining: creditCheck.remaining,
+          plan: creditCheck.plan,
         });
     } catch (falError: any) {
         // Catch Fal specific errors

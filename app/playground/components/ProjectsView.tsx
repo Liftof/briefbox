@@ -1,48 +1,31 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { 
+  useGenerations as useGenerationsHook,
+  type Generation,
+  type Folder,
+  type GenerationFeedback,
+} from '@/lib/useGenerations';
 
-// Types for generations and folders
-export interface GenerationFeedback {
-  rating: 1 | 2 | 3; // 1=bad, 2=ok, 3=good
-  comment?: string;
-  timestamp: string;
-}
+// Re-export types for backward compatibility
+export type { Generation, Folder, GenerationFeedback };
 
-export interface Generation {
-  id: string;
-  url: string;
-  prompt?: string;
-  templateId?: string;
-  brandName?: string;
-  createdAt: string;
-  folderId?: string;
-  feedback?: GenerationFeedback;
-}
+// Re-export functions for backward compatibility (used by playground)
+export { addGeneration, addGenerations } from '@/lib/useGenerations';
 
-export interface Folder {
-  id: string;
-  name: string;
-  color: string;
-  createdAt: string;
-}
-
-// LocalStorage keys
-const GENERATIONS_KEY = 'palette_generations';
-const FOLDERS_KEY = 'palette_folders';
+// Feedback patterns (kept in localStorage for now - user preferences)
 const FEEDBACK_PATTERNS_KEY = 'palette_feedback_patterns';
 
-// Feedback patterns for learning
 export interface FeedbackPatterns {
-  likedStyles: string[];      // Styles/templates user rates highly
-  dislikedStyles: string[];   // Styles user rates poorly
-  likedKeywords: string[];    // Keywords from highly rated prompts
-  dislikedKeywords: string[]; // Keywords from poorly rated prompts
+  likedStyles: string[];
+  dislikedStyles: string[];
+  likedKeywords: string[];
+  dislikedKeywords: string[];
   avgRatingByTemplate: Record<string, { total: number; count: number }>;
   lastUpdated: string;
 }
 
-// Load/save feedback patterns
 export const loadFeedbackPatterns = (): FeedbackPatterns => {
   if (typeof window === 'undefined') return getDefaultPatterns();
   try {
@@ -67,45 +50,36 @@ const saveFeedbackPatterns = (patterns: FeedbackPatterns) => {
   localStorage.setItem(FEEDBACK_PATTERNS_KEY, JSON.stringify(patterns));
 };
 
-// Update feedback patterns when user rates
 const updateFeedbackPatterns = (generation: Generation, rating: 1 | 2 | 3, comment?: string) => {
   const patterns = loadFeedbackPatterns();
   
-  // Extract keywords from prompt
   const promptKeywords = generation.prompt 
     ? generation.prompt.toLowerCase().split(/\s+/).filter(w => w.length > 4)
     : [];
   
   const templateId = generation.templateId || 'unknown';
   
-  // Update template averages
   if (!patterns.avgRatingByTemplate[templateId]) {
     patterns.avgRatingByTemplate[templateId] = { total: 0, count: 0 };
   }
   patterns.avgRatingByTemplate[templateId].total += rating;
   patterns.avgRatingByTemplate[templateId].count += 1;
   
-  // Learn from ratings
   if (rating === 3) {
-    // User loved it - learn from this
     if (templateId && !patterns.likedStyles.includes(templateId)) {
       patterns.likedStyles.push(templateId);
     }
-    // Remove from disliked if present
     patterns.dislikedStyles = patterns.dislikedStyles.filter(s => s !== templateId);
-    // Add keywords
     promptKeywords.forEach(kw => {
       if (!patterns.likedKeywords.includes(kw)) {
         patterns.likedKeywords.push(kw);
       }
     });
   } else if (rating === 1) {
-    // User didn't like it
     if (templateId && !patterns.dislikedStyles.includes(templateId)) {
       patterns.dislikedStyles.push(templateId);
     }
     patterns.likedStyles = patterns.likedStyles.filter(s => s !== templateId);
-    // Add to disliked keywords
     promptKeywords.forEach(kw => {
       if (!patterns.dislikedKeywords.includes(kw)) {
         patterns.dislikedKeywords.push(kw);
@@ -113,17 +87,13 @@ const updateFeedbackPatterns = (generation: Generation, rating: 1 | 2 | 3, comme
     });
   }
   
-  // Parse comment for insights
   if (comment) {
     const commentLower = comment.toLowerCase();
-    
-    // Simple sentiment patterns (French)
     const positivePatterns = ['j\'aime', 'super', 'parfait', 'excellent', 'bien', 'top', 'nice', 'love'];
     const negativePatterns = ['pas bien', 'moche', 'nul', 'mauvais', 'horrible', 'non', 'déteste', 'trop'];
     
     positivePatterns.forEach(p => {
       if (commentLower.includes(p)) {
-        // Extract what they liked
         const context = commentLower.split(p)[1]?.split(/[.,!?]/)[0]?.trim();
         if (context && context.length > 2 && !patterns.likedKeywords.includes(context)) {
           patterns.likedKeywords.push(context);
@@ -147,66 +117,6 @@ const updateFeedbackPatterns = (generation: Generation, rating: 1 | 2 | 3, comme
   return patterns;
 };
 
-// Helper to load from localStorage
-const loadGenerations = (): Generation[] => {
-  if (typeof window === 'undefined') return [];
-  try {
-    const data = localStorage.getItem(GENERATIONS_KEY);
-    return data ? JSON.parse(data) : [];
-  } catch {
-    return [];
-  }
-};
-
-const loadFolders = (): Folder[] => {
-  if (typeof window === 'undefined') return [];
-  try {
-    const data = localStorage.getItem(FOLDERS_KEY);
-    return data ? JSON.parse(data) : [];
-  } catch {
-    return [];
-  }
-};
-
-// Helper to save to localStorage
-const saveGenerations = (generations: Generation[]) => {
-  if (typeof window === 'undefined') return;
-  localStorage.setItem(GENERATIONS_KEY, JSON.stringify(generations));
-};
-
-const saveFolders = (folders: Folder[]) => {
-  if (typeof window === 'undefined') return;
-  localStorage.setItem(FOLDERS_KEY, JSON.stringify(folders));
-};
-
-// Export function to add a generation (called from playground)
-export const addGeneration = (gen: Omit<Generation, 'id' | 'createdAt'>) => {
-  const generations = loadGenerations();
-  const newGen: Generation = {
-    ...gen,
-    id: `gen_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
-    createdAt: new Date().toISOString(),
-  };
-  generations.unshift(newGen);
-  // No limit - save all generations
-  saveGenerations(generations);
-  return newGen;
-};
-
-// Export function to add multiple generations at once
-export const addGenerations = (gens: Omit<Generation, 'id' | 'createdAt'>[]) => {
-  const generations = loadGenerations();
-  const newGens = gens.map((gen, i) => ({
-    ...gen,
-    id: `gen_${Date.now()}_${i}_${Math.random().toString(36).slice(2, 8)}`,
-    createdAt: new Date().toISOString(),
-  }));
-  generations.unshift(...newGens);
-  // No limit - save all generations
-  saveGenerations(generations);
-  return newGens;
-};
-
 const FOLDER_COLORS = [
   { name: 'Gris', value: '#6B7280' },
   { name: 'Rouge', value: '#EF4444' },
@@ -221,8 +131,18 @@ const FOLDER_COLORS = [
 const ITEMS_PER_PAGE = 20;
 
 export default function ProjectsView() {
-  const [generations, setGenerations] = useState<Generation[]>([]);
-  const [folders, setFolders] = useState<Folder[]>([]);
+  // Use the hook for data management (API + localStorage fallback)
+  const {
+    generations,
+    folders,
+    loading,
+    updateGeneration,
+    deleteGeneration,
+    createFolder,
+    deleteFolder,
+    refresh,
+  } = useGenerationsHook();
+
   const [showNewFolder, setShowNewFolder] = useState(false);
   const [newFolderName, setNewFolderName] = useState('');
   const [newFolderColor, setNewFolderColor] = useState(FOLDER_COLORS[0].value);
@@ -235,23 +155,17 @@ export default function ProjectsView() {
   const [feedbackGenId, setFeedbackGenId] = useState<string | null>(null);
   const [feedbackComment, setFeedbackComment] = useState('');
 
-  // Load data on mount
+  // Listen for new generations
   useEffect(() => {
-    setGenerations(loadGenerations());
-    setFolders(loadFolders());
-    
-    // Listen for new generations
-    const handleStorageChange = () => {
-      setGenerations(loadGenerations());
+    const handleUpdate = () => {
+      refresh();
     };
-    window.addEventListener('storage', handleStorageChange);
-    window.addEventListener('generations-updated', handleStorageChange);
+    window.addEventListener('generations-updated', handleUpdate);
     
     return () => {
-      window.removeEventListener('storage', handleStorageChange);
-      window.removeEventListener('generations-updated', handleStorageChange);
+      window.removeEventListener('generations-updated', handleUpdate);
     };
-  }, []);
+  }, [refresh]);
 
   // Filter generations - all without folder
   const unorganizedGenerations = generations.filter(g => !g.folderId);
@@ -265,65 +179,36 @@ export default function ProjectsView() {
     generations.filter(g => g.folderId === folderId);
 
   // Create folder
-  const handleCreateFolder = () => {
+  const handleCreateFolder = async () => {
     if (!newFolderName.trim()) return;
     
-    const newFolder: Folder = {
-      id: `folder_${Date.now()}`,
-      name: newFolderName.trim(),
-      color: newFolderColor,
-      createdAt: new Date().toISOString(),
-    };
-    
-    const updated = [...folders, newFolder];
-    setFolders(updated);
-    saveFolders(updated);
+    await createFolder(newFolderName.trim(), newFolderColor);
     setShowNewFolder(false);
     setNewFolderName('');
   };
 
   // Delete folder
-  const handleDeleteFolder = (folderId: string) => {
-    // Move generations back to unorganized
-    const updatedGens = generations.map(g => 
-      g.folderId === folderId ? { ...g, folderId: undefined } : g
-    );
-    setGenerations(updatedGens);
-    saveGenerations(updatedGens);
-    
-    const updatedFolders = folders.filter(f => f.id !== folderId);
-    setFolders(updatedFolders);
-    saveFolders(updatedFolders);
-    
+  const handleDeleteFolder = async (folderId: string) => {
+    await deleteFolder(folderId);
     if (selectedFolder === folderId) setSelectedFolder(null);
   };
 
   // Drag & drop to folder
-  const handleDrop = (folderId: string) => {
+  const handleDrop = async (folderId: string) => {
     if (!draggedGen) return;
     
-    const updated = generations.map(g => 
-      g.id === draggedGen ? { ...g, folderId } : g
-    );
-    setGenerations(updated);
-    saveGenerations(updated);
+    await updateGeneration(draggedGen, { folderId });
     setDraggedGen(null);
   };
 
   // Remove from folder
-  const handleRemoveFromFolder = (genId: string) => {
-    const updated = generations.map(g => 
-      g.id === genId ? { ...g, folderId: undefined } : g
-    );
-    setGenerations(updated);
-    saveGenerations(updated);
+  const handleRemoveFromFolder = async (genId: string) => {
+    await updateGeneration(genId, { folderId: undefined });
   };
 
   // Delete generation
-  const handleDeleteGeneration = (genId: string) => {
-    const updated = generations.filter(g => g.id !== genId);
-    setGenerations(updated);
-    saveGenerations(updated);
+  const handleDeleteGeneration = async (genId: string) => {
+    await deleteGeneration(genId);
   };
 
   // Format date
@@ -343,7 +228,7 @@ export default function ProjectsView() {
   };
 
   // Handle feedback rating
-  const handleFeedback = (genId: string, rating: 1 | 2 | 3, comment?: string) => {
+  const handleFeedback = async (genId: string, rating: 1 | 2 | 3, comment?: string) => {
     const gen = generations.find(g => g.id === genId);
     if (!gen) return;
     
@@ -353,14 +238,10 @@ export default function ProjectsView() {
       timestamp: new Date().toISOString()
     };
     
-    // Update the generation with feedback
-    const updated = generations.map(g => 
-      g.id === genId ? { ...g, feedback } : g
-    );
-    setGenerations(updated);
-    saveGenerations(updated);
+    // Update the generation with feedback via API
+    await updateGeneration(genId, { feedback });
     
-    // Update patterns for learning
+    // Update patterns for learning (kept local)
     updateFeedbackPatterns(gen, rating, feedback.comment);
     
     // Reset UI
@@ -400,6 +281,18 @@ export default function ProjectsView() {
       </div>
     );
   };
+
+  // Show loading state
+  if (loading) {
+    return (
+      <div className="animate-fade-in flex items-center justify-center py-20">
+        <div className="text-center">
+          <div className="w-8 h-8 border-2 border-gray-300 border-t-gray-900 rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-gray-500 text-sm">Chargement de vos créations...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="animate-fade-in">

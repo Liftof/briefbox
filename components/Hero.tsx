@@ -24,9 +24,17 @@ export default function Hero() {
   };
   const defaultPrompt = defaultPrompts[locale] || defaultPrompts.fr;
   
-  // Typewriter effect
+  // Typewriter effect - only run on large screens where it's visible
   useEffect(() => {
     if (!isTyping) return;
+    
+    // Skip animation on mobile (matches Tailwind's lg breakpoint)
+    const isLargeScreen = window.matchMedia('(min-width: 1024px)').matches;
+    if (!isLargeScreen) {
+      setIsTyping(false);
+      setPromptText(defaultPrompt);
+      return;
+    }
     
     let index = 0;
     const timer = setInterval(() => {
