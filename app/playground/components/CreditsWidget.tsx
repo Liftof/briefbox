@@ -87,7 +87,7 @@ export default function CreditsWidget({ isCollapsed = false, locale = 'fr' }: Cr
               <div>
                 <div className="flex items-center gap-2">
                   <span className="text-[10px] font-mono uppercase tracking-wider text-gray-400">
-                    / {credits?.total ?? 3} {locale === 'fr' ? 'crédits' : 'credits'}
+                    {locale === 'fr' ? 'crédits' : 'credits'}
                   </span>
                 </div>
                 <div className="text-xs text-gray-500">
