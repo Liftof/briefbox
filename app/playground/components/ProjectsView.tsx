@@ -14,9 +14,7 @@ export type { Generation, Folder, GenerationFeedback };
 // Re-export functions for backward compatibility (used by playground)
 export { addGeneration, addGenerations } from '@/lib/useGenerations';
 
-// Feedback patterns (kept in localStorage for now - user preferences)
-const FEEDBACK_PATTERNS_KEY = 'palette_feedback_patterns';
-
+// Simplified feedback patterns (for backward compatibility)
 export interface FeedbackPatterns {
   likedStyles: string[];
   dislikedStyles: string[];
@@ -26,17 +24,8 @@ export interface FeedbackPatterns {
   lastUpdated: string;
 }
 
-export const loadFeedbackPatterns = (): FeedbackPatterns => {
-  if (typeof window === 'undefined') return getDefaultPatterns();
-  try {
-    const data = localStorage.getItem(FEEDBACK_PATTERNS_KEY);
-    return data ? JSON.parse(data) : getDefaultPatterns();
-  } catch {
-    return getDefaultPatterns();
-  }
-};
-
-const getDefaultPatterns = (): FeedbackPatterns => ({
+// Simplified - just returns empty patterns now
+export const loadFeedbackPatterns = (): FeedbackPatterns => ({
   likedStyles: [],
   dislikedStyles: [],
   likedKeywords: [],
@@ -44,78 +33,6 @@ const getDefaultPatterns = (): FeedbackPatterns => ({
   avgRatingByTemplate: {},
   lastUpdated: new Date().toISOString()
 });
-
-const saveFeedbackPatterns = (patterns: FeedbackPatterns) => {
-  if (typeof window === 'undefined') return;
-  localStorage.setItem(FEEDBACK_PATTERNS_KEY, JSON.stringify(patterns));
-};
-
-const updateFeedbackPatterns = (generation: Generation, rating: 1 | 2 | 3, comment?: string) => {
-  const patterns = loadFeedbackPatterns();
-  
-  const promptKeywords = generation.prompt 
-    ? generation.prompt.toLowerCase().split(/\s+/).filter(w => w.length > 4)
-    : [];
-  
-  const templateId = generation.templateId || 'unknown';
-  
-  if (!patterns.avgRatingByTemplate[templateId]) {
-    patterns.avgRatingByTemplate[templateId] = { total: 0, count: 0 };
-  }
-  patterns.avgRatingByTemplate[templateId].total += rating;
-  patterns.avgRatingByTemplate[templateId].count += 1;
-  
-  if (rating === 3) {
-    if (templateId && !patterns.likedStyles.includes(templateId)) {
-      patterns.likedStyles.push(templateId);
-    }
-    patterns.dislikedStyles = patterns.dislikedStyles.filter(s => s !== templateId);
-    promptKeywords.forEach(kw => {
-      if (!patterns.likedKeywords.includes(kw)) {
-        patterns.likedKeywords.push(kw);
-      }
-    });
-  } else if (rating === 1) {
-    if (templateId && !patterns.dislikedStyles.includes(templateId)) {
-      patterns.dislikedStyles.push(templateId);
-    }
-    patterns.likedStyles = patterns.likedStyles.filter(s => s !== templateId);
-    promptKeywords.forEach(kw => {
-      if (!patterns.dislikedKeywords.includes(kw)) {
-        patterns.dislikedKeywords.push(kw);
-      }
-    });
-  }
-  
-  if (comment) {
-    const commentLower = comment.toLowerCase();
-    const positivePatterns = ['j\'aime', 'super', 'parfait', 'excellent', 'bien', 'top', 'nice', 'love'];
-    const negativePatterns = ['pas bien', 'moche', 'nul', 'mauvais', 'horrible', 'non', 'déteste', 'trop'];
-    
-    positivePatterns.forEach(p => {
-      if (commentLower.includes(p)) {
-        const context = commentLower.split(p)[1]?.split(/[.,!?]/)[0]?.trim();
-        if (context && context.length > 2 && !patterns.likedKeywords.includes(context)) {
-          patterns.likedKeywords.push(context);
-        }
-      }
-    });
-    
-    negativePatterns.forEach(p => {
-      if (commentLower.includes(p)) {
-        const context = commentLower.split(p)[1]?.split(/[.,!?]/)[0]?.trim();
-        if (context && context.length > 2 && !patterns.dislikedKeywords.includes(context)) {
-          patterns.dislikedKeywords.push(context);
-        }
-      }
-    });
-  }
-  
-  patterns.lastUpdated = new Date().toISOString();
-  saveFeedbackPatterns(patterns);
-  
-  return patterns;
-};
 
 const FOLDER_COLORS = [
   { name: 'Gris', value: '#6B7280' },
@@ -151,9 +68,8 @@ export default function ProjectsView() {
   const [lightboxImage, setLightboxImage] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   
-  // Feedback UI state
-  const [feedbackGenId, setFeedbackGenId] = useState<string | null>(null);
-  const [feedbackComment, setFeedbackComment] = useState('');
+  // Favorites filter
+  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
 
   // Listen for new generations
   useEffect(() => {
@@ -167,13 +83,19 @@ export default function ProjectsView() {
     };
   }, [refresh]);
 
-  // Filter generations - all without folder
-  const unorganizedGenerations = generations.filter(g => !g.folderId);
+  // Filter generations - all without folder, optionally only favorites
+  const unorganizedGenerations = generations
+    .filter(g => !g.folderId)
+    .filter(g => !showFavoritesOnly || g.feedback?.rating === 3);
+  
   const totalPages = Math.ceil(unorganizedGenerations.length / ITEMS_PER_PAGE);
   
   // Paginated recent generations
   const recentGenerations = unorganizedGenerations
     .slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+  
+  // Count favorites
+  const favoritesCount = generations.filter(g => g.feedback?.rating === 3).length;
 
   const folderGenerations = (folderId: string) => 
     generations.filter(g => g.folderId === folderId);
@@ -227,58 +149,39 @@ export default function ProjectsView() {
     return date.toLocaleDateString('fr-FR');
   };
 
-  // Handle feedback rating
-  const handleFeedback = async (genId: string, rating: 1 | 2 | 3, comment?: string) => {
+  // Toggle favorite
+  const handleToggleFavorite = async (genId: string) => {
     const gen = generations.find(g => g.id === genId);
     if (!gen) return;
     
-    const feedback: GenerationFeedback = {
-      rating,
-      comment: comment || feedbackComment || undefined,
-      timestamp: new Date().toISOString()
-    };
+    const isFavorite = gen.feedback?.rating === 3;
+    const feedback: GenerationFeedback = isFavorite 
+      ? { rating: 1, timestamp: new Date().toISOString() } // Unfavorite
+      : { rating: 3, timestamp: new Date().toISOString() }; // Favorite
     
-    // Update the generation with feedback via API
     await updateGeneration(genId, { feedback });
-    
-    // Update patterns for learning (kept local)
-    updateFeedbackPatterns(gen, rating, feedback.comment);
-    
-    // Reset UI
-    setFeedbackGenId(null);
-    setFeedbackComment('');
   };
 
-  // Render stars for rating
-  const renderRatingStars = (gen: Generation, isCompact = false) => {
-    const currentRating = gen.feedback?.rating;
-    const starSize = isCompact ? 'text-xs' : 'text-sm';
+  // Render favorite heart button
+  const renderFavoriteButton = (gen: Generation, isCompact = false) => {
+    const isFavorite = gen.feedback?.rating === 3;
+    const size = isCompact ? 'w-4 h-4' : 'w-5 h-5';
     
     return (
-      <div className={`flex items-center gap-0.5 ${isCompact ? 'scale-90' : ''}`}>
-        {[1, 2, 3].map((star) => (
-          <button
-            key={star}
-            onClick={(e) => {
-              e.stopPropagation();
-              if (currentRating === star) {
-                // Click same star opens comment
-                setFeedbackGenId(gen.id);
-              } else {
-                handleFeedback(gen.id, star as 1 | 2 | 3);
-              }
-            }}
-            className={`${starSize} transition-all hover:scale-110 ${
-              currentRating && currentRating >= star 
-                ? star === 1 ? 'text-red-400' : star === 2 ? 'text-amber-400' : 'text-blue-400'
-                : 'text-gray-300 hover:text-gray-400'
-            }`}
-            title={star === 1 ? 'Pas bien' : star === 2 ? 'Moyen' : 'Super !'}
-          >
-            ★
-          </button>
-        ))}
-      </div>
+      <button
+        onClick={(e) => {
+          e.stopPropagation();
+          handleToggleFavorite(gen.id);
+        }}
+        className={`transition-all hover:scale-110 ${
+          isFavorite ? 'text-red-500' : 'text-gray-300 hover:text-red-400'
+        }`}
+        title={isFavorite ? 'Retirer des favoris' : 'Ajouter aux favoris'}
+      >
+        <svg className={size} fill={isFavorite ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+        </svg>
+      </button>
     );
   };
 
@@ -307,88 +210,34 @@ export default function ProjectsView() {
         </div>
       )}
 
-      {/* Feedback Comment Popup */}
-      {feedbackGenId && (
-        <div 
-          className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
-          onClick={() => setFeedbackGenId(null)}
-        >
-          <div 
-            className="bg-white p-6 max-w-md w-full shadow-xl"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-semibold text-gray-900">Votre avis</h3>
-              <button 
-                onClick={() => setFeedbackGenId(null)}
-                className="text-gray-400 hover:text-gray-600"
-              >×</button>
-            </div>
-            
-            {/* Current rating display */}
-            {(() => {
-              const gen = generations.find(g => g.id === feedbackGenId);
-              return gen ? (
-                <div className="flex items-center gap-3 mb-4">
-                  <span className="text-sm text-gray-500">Note :</span>
-                  {renderRatingStars(gen)}
-                </div>
-              ) : null;
-            })()}
-            
-            <textarea
-              value={feedbackComment}
-              onChange={(e) => setFeedbackComment(e.target.value)}
-              placeholder="Qu'est-ce qui vous plaît ou déplaît ? (optionnel)"
-              className="w-full p-3 border border-gray-200 text-sm resize-none focus:outline-none focus:border-gray-400"
-              rows={3}
-            />
-            
-            <div className="flex items-center gap-2 mt-4">
-              <button
-                onClick={() => {
-                  const gen = generations.find(g => g.id === feedbackGenId);
-                  if (gen && gen.feedback?.rating) {
-                    handleFeedback(feedbackGenId, gen.feedback.rating, feedbackComment);
-                  }
-                  setFeedbackGenId(null);
-                }}
-                className="flex-1 py-2 bg-gray-900 text-white text-sm font-medium hover:bg-black"
-              >
-                Enregistrer
-              </button>
-              <button
-                onClick={() => setFeedbackGenId(null)}
-                className="px-4 py-2 text-sm text-gray-500 hover:text-gray-700"
-              >
-                Annuler
-              </button>
-            </div>
-            
-            {/* Quick comment suggestions */}
-            <div className="mt-3 flex flex-wrap gap-1">
-              {['Couleurs parfaites', 'Trop chargé', 'Texte illisible', 'Super composition', 'Pas assez pro'].map(suggestion => (
-                <button
-                  key={suggestion}
-                  onClick={() => setFeedbackComment(prev => prev ? `${prev}, ${suggestion.toLowerCase()}` : suggestion)}
-                  className="px-2 py-1 text-[10px] bg-gray-100 text-gray-600 hover:bg-gray-200"
-                >
-                  {suggestion}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Header */}
       <header className="flex items-center justify-between mb-8">
         <div>
            <h2 className="text-2xl font-bold mb-1">Mes Projets</h2>
           <p className="text-gray-500 text-sm">
             {generations.length} génération{generations.length !== 1 ? 's' : ''} · {folders.length} dossier{folders.length !== 1 ? 's' : ''}
+            {favoritesCount > 0 && ` · ${favoritesCount} favori${favoritesCount !== 1 ? 's' : ''}`}
           </p>
         </div>
+        
+        {/* Favorites filter */}
+        {favoritesCount > 0 && (
+          <button
+            onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-colors ${
+              showFavoritesOnly 
+                ? 'bg-red-50 border-red-200 text-red-600' 
+                : 'bg-white border-gray-200 text-gray-600 hover:border-gray-300'
+            }`}
+          >
+            <svg className="w-4 h-4" fill={showFavoritesOnly ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+            </svg>
+            <span className="text-sm font-medium">
+              {showFavoritesOnly ? 'Tous' : 'Favoris'}
+            </span>
+          </button>
+        )}
       </header>
 
       {/* Recent Generations Section */}
@@ -410,7 +259,7 @@ export default function ProjectsView() {
                   onDragEnd={() => setDraggedGen(null)}
                   className={`relative aspect-square bg-gray-100 border border-gray-200 overflow-hidden group cursor-move hover:border-gray-400 transition-all ${
                     draggedGen === gen.id ? 'opacity-50 scale-95' : ''
-                  } ${gen.feedback?.rating === 3 ? 'ring-2 ring-blue-400' : ''}`}
+                  } ${gen.feedback?.rating === 3 ? 'ring-2 ring-red-400' : ''}`}
                 >
                   <img 
                     src={gen.url} 
@@ -419,19 +268,12 @@ export default function ProjectsView() {
                     onClick={() => setLightboxImage(gen.url)}
                   />
                   
-                  {/* Persistent rating indicator (if rated) */}
-                  {gen.feedback?.rating && (
-                    <div className="absolute bottom-1 left-1 px-1.5 py-0.5 bg-black/70 backdrop-blur-sm flex items-center gap-0.5">
-                      {[1, 2, 3].map((star) => (
-                        <span
-                          key={star}
-                          className={`text-[10px] ${
-                            gen.feedback!.rating >= star 
-                              ? star === 1 ? 'text-red-400' : star === 2 ? 'text-amber-400' : 'text-blue-400'
-                              : 'text-gray-500'
-                          }`}
-                        >★</span>
-                      ))}
+                  {/* Favorite indicator (if favorited) */}
+                  {gen.feedback?.rating === 3 && (
+                    <div className="absolute top-1 left-1 p-1 bg-black/60 backdrop-blur-sm rounded-full">
+                      <svg className="w-3 h-3 text-red-500" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                      </svg>
                     </div>
                   )}
                   
@@ -439,34 +281,11 @@ export default function ProjectsView() {
                   <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
                     {/* Bottom info */}
                     <div className="absolute bottom-0 left-0 right-0 p-2">
-                      <div className="flex items-center justify-between mb-1">
-                        <div className="text-[9px] text-white/60 font-mono truncate">
-                          {gen.templateId || 'custom'}
-                        </div>
+                      <div className="flex items-center justify-between">
                         <div className="text-[10px] text-white/80">
                           {formatDate(gen.createdAt)}
                         </div>
-                      </div>
-                      
-                      {/* Rating stars - always visible on hover */}
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-1">
-                          <span className="text-[8px] text-white/50 uppercase">Note:</span>
-                          {renderRatingStars(gen, true)}
-                        </div>
-                        {gen.feedback?.comment && (
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setFeedbackGenId(gen.id);
-                              setFeedbackComment(gen.feedback?.comment || '');
-                            }}
-                            className="text-[9px] text-white/70 hover:text-white"
-                            title={gen.feedback.comment}
-                          >
-                            💬
-                          </button>
-                        )}
+                        {renderFavoriteButton(gen, true)}
                       </div>
                     </div>
                   </div>
@@ -476,13 +295,16 @@ export default function ProjectsView() {
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        setFeedbackGenId(gen.id);
-                        setFeedbackComment(gen.feedback?.comment || '');
+                        handleToggleFavorite(gen.id);
                       }}
-                      className="w-6 h-6 bg-white/90 flex items-center justify-center text-xs hover:bg-white"
-                      title="Donner mon avis"
+                      className={`w-6 h-6 bg-white/90 flex items-center justify-center hover:bg-white transition-colors ${
+                        gen.feedback?.rating === 3 ? 'text-red-500' : 'text-gray-400'
+                      }`}
+                      title={gen.feedback?.rating === 3 ? "Retirer des favoris" : "Ajouter aux favoris"}
                     >
-                      ✎
+                      <svg className="w-4 h-4" fill={gen.feedback?.rating === 3 ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                      </svg>
                     </button>
                     <a 
                       href={gen.url} 

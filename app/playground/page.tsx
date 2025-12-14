@@ -9,6 +9,7 @@ import CalendarView from './components/CalendarView';
 import ProjectsView, { addGenerations, loadFeedbackPatterns } from './components/ProjectsView';
 import StrategyView from './components/StrategyView';
 import { UpgradePopup, CreditsToast, UpgradeInline } from './components/CreditsWidget';
+import MobileNav from './components/MobileNav';
 import { useCredits } from '@/lib/useCredits';
 import { TemplateId } from '@/lib/templates';
 import { useTranslation } from '@/lib/i18n';
@@ -2612,27 +2613,118 @@ Couleurs : Utiliser la palette de la marque.`;
             RESULTS SECTION
             ═══════════════════════════════════════════════════════════════════════════ */}
         
-        {/* Loading State */}
+        {/* Loading State - Enhanced with brand colors */}
         {(status === 'preparing' || status === 'running') && (
           <div className="mb-8">
-            <div className="flex items-center gap-2 mb-4">
-              <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
-              <span className="text-sm text-gray-500">Création en cours...</span>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              {[1, 2].map((i) => (
-                <div key={i} className="aspect-square bg-gray-100 border border-gray-200 relative overflow-hidden">
-                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/60 to-transparent" style={{ animation: 'shimmer 2s infinite' }} />
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="text-center">
-                      <svg className="w-10 h-10 text-gray-300 mx-auto mb-2" fill="none" stroke="currentColor" strokeWidth="1" viewBox="0 0 24 24">
-                        <path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                      </svg>
-                      <span className="text-xs text-gray-400">~30 secondes</span>
-        </div>
-                  </div>
+            {/* Status header */}
+            <div className="flex items-center gap-3 mb-4">
+              <div className="relative">
+                <div 
+                  className="w-10 h-10 rounded-xl flex items-center justify-center"
+                  style={{ backgroundColor: brandData?.colors?.[0] || '#3B82F6' }}
+                >
+                  <svg className="w-5 h-5 text-white animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                  </svg>
                 </div>
-              ))}
+                <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white animate-pulse" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-gray-900">
+                  {locale === 'fr' ? 'Création de vos visuels...' : 'Creating your visuals...'}
+                </p>
+                <p className="text-xs text-gray-500">
+                  {statusMessage || (locale === 'fr' ? '~30 secondes' : '~30 seconds')}
+                </p>
+              </div>
+            </div>
+            
+            {/* Skeleton cards with brand gradient */}
+            <div className={`grid gap-4 ${
+              aspectRatio === '9:16' ? 'grid-cols-2 sm:grid-cols-3' : 
+              aspectRatio === '16:9' || aspectRatio === '21:9' ? 'grid-cols-1' : 
+              'grid-cols-1 sm:grid-cols-2'
+            }`}>
+              {[1, 2].map((i) => {
+                const aspectClasses: Record<string, string> = {
+                  '1:1': 'aspect-square',
+                  '4:5': 'aspect-[4/5]',
+                  '9:16': 'aspect-[9/16]',
+                  '16:9': 'aspect-[16/9]',
+                  '21:9': 'aspect-[21/9]',
+                  '3:2': 'aspect-[3/2]',
+                };
+                const aspectClass = aspectClasses[aspectRatio] || 'aspect-square';
+                
+                return (
+                  <div 
+                    key={i} 
+                    className={`${aspectClass} rounded-xl relative overflow-hidden border border-gray-200`}
+                    style={{ 
+                      background: `linear-gradient(135deg, ${brandData?.colors?.[0] || '#f3f4f6'}15, ${brandData?.colors?.[1] || '#e5e7eb'}25)` 
+                    }}
+                  >
+                    {/* Shimmer effect */}
+                    <div 
+                      className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent" 
+                      style={{ animation: 'shimmer 2s infinite' }} 
+                    />
+                    
+                    {/* Content preview */}
+                    <div className="absolute inset-0 flex flex-col items-center justify-center p-6">
+                      {/* Brand logo preview if available */}
+                      {brandData?.logo && (
+                        <div className="w-16 h-16 mb-4 opacity-20">
+                          <img src={brandData.logo} className="w-full h-full object-contain" alt="" />
+                        </div>
+                      )}
+                      
+                      {/* Skeleton lines */}
+                      <div className="space-y-2 w-full max-w-[60%]">
+                        <div className="h-3 bg-gray-200/50 rounded-full animate-pulse" />
+                        <div className="h-3 bg-gray-200/50 rounded-full w-3/4 mx-auto animate-pulse" style={{ animationDelay: '0.2s' }} />
+                      </div>
+                      
+                      {/* Progress indicator */}
+                      <div className="mt-6 flex items-center gap-2">
+                        <div className="flex gap-1">
+                          {[0, 1, 2].map((dot) => (
+                            <div 
+                              key={dot}
+                              className="w-1.5 h-1.5 rounded-full bg-gray-400 animate-bounce"
+                              style={{ animationDelay: `${dot * 0.2}s` }}
+                            />
+                          ))}
+                        </div>
+                        <span className="text-[10px] text-gray-400 font-medium">
+                          {locale === 'fr' ? `Visuel ${i}/2` : `Visual ${i}/2`}
+                        </span>
+                      </div>
+                    </div>
+                    
+                    {/* Color bar at bottom using brand colors */}
+                    <div className="absolute bottom-0 left-0 right-0 h-1 flex">
+                      {(brandData?.colors || ['#3B82F6', '#8B5CF6', '#EC4899']).slice(0, 4).map((color: string, idx: number) => (
+                        <div 
+                          key={idx} 
+                          className="flex-1 animate-pulse" 
+                          style={{ backgroundColor: color, animationDelay: `${idx * 0.3}s` }} 
+                        />
+                      ))}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            
+            {/* Fun fact during loading */}
+            <div className="mt-4 text-center">
+              <p className="text-xs text-gray-400 italic">
+                💡 {locale === 'fr' 
+                  ? 'Chaque génération crée 2 versions : fidèle et créative' 
+                  : 'Each generation creates 2 versions: faithful and creative'}
+              </p>
             </div>
           </div>
         )}
@@ -3225,26 +3317,72 @@ Couleurs : Utiliser la palette de la marque.`;
 
       {/* Sidebar - hidden on mobile */}
       {step !== 'url' && step !== 'analyzing' && step !== 'bento' && (
-        <div className="hidden md:block">
-        <Sidebar 
-            activeTab={activeTab} 
-            setActiveTab={setActiveTab} 
-            brandData={brandData} 
-            onEditBrand={() => setStep('bento')} 
-            isCollapsed={isSidebarCollapsed}
-            toggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-            userBrands={userBrands}
-            selectedBrandId={selectedBrandId}
-            onSwitchBrand={switchBrand}
-            onAddBrand={() => setStep('url')}
-        />
-        </div>
+        <>
+          {/* Desktop Sidebar */}
+          <div className="hidden md:block">
+            <Sidebar 
+                activeTab={activeTab} 
+                setActiveTab={setActiveTab} 
+                brandData={brandData} 
+                onEditBrand={() => setStep('bento')} 
+                isCollapsed={isSidebarCollapsed}
+                toggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+                userBrands={userBrands}
+                selectedBrandId={selectedBrandId}
+                onSwitchBrand={switchBrand}
+                onAddBrand={() => setStep('url')}
+                onRescrape={() => {
+                  // Re-scrape current brand
+                  if (brandData?.url) {
+                    setWebsiteUrl(brandData.url);
+                    setStep('analyzing');
+                    handleAnalyzeBrandWithUrl(brandData.url);
+                  }
+                }}
+                onDeleteBrand={async (brandId) => {
+                  try {
+                    const res = await fetch('/api/brands', {
+                      method: 'DELETE',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ brandId }),
+                    });
+                    const data = await res.json();
+                    if (data.success) {
+                      showToast(locale === 'fr' ? 'Marque supprimée' : 'Brand deleted', 'success');
+                      refreshBrands();
+                      // If we deleted the current brand, reset to URL step
+                      if (brandId === selectedBrandId) {
+                        setBrandData(null);
+                        setSelectedBrandId(null);
+                        setStep('url');
+                      }
+                    } else {
+                      showToast(data.error || 'Erreur', 'error');
+                    }
+                  } catch (err) {
+                    showToast('Erreur de suppression', 'error');
+                  }
+                }}
+            />
+          </div>
+          
+          {/* Mobile Navigation */}
+          <MobileNav
+            activeTab={activeTab}
+            setActiveTab={setActiveTab}
+            brandData={brandData}
+            onEditBrand={() => setStep('bento')}
+            locale={locale}
+          />
+        </>
       )}
 
       <div className={`flex-1 transition-all duration-300 ease-out overflow-x-hidden ${step !== 'url' && step !== 'analyzing' && step !== 'bento' ? (isSidebarCollapsed ? 'md:ml-[80px]' : 'md:ml-[240px]') : 'w-full'}`}>
         <main className={`mx-auto min-h-screen flex flex-col justify-center transition-all duration-500 ${
             step === 'bento' 
-                ? 'w-full px-4 md:px-12 py-8 max-w-[1920px]' 
+                ? 'w-full px-4 md:px-12 py-8 max-w-[1920px]'
+                : step !== 'url' && step !== 'analyzing' 
+                  ? 'max-w-[900px] p-6 md:p-10 pt-20 pb-24 md:pt-10 md:pb-10' // Mobile: padding for header/nav 
                 : 'max-w-[900px] p-6 md:p-10'
         }`}>
           {renderContent()}

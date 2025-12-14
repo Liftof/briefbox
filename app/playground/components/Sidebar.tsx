@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useTranslation } from '@/lib/i18n';
 import CreditsWidget from './CreditsWidget';
 import { BrandSummary } from '@/lib/useBrands';
+import { useCredits } from '@/lib/useCredits';
 
 interface SidebarProps {
   activeTab: string;
@@ -18,6 +19,8 @@ interface SidebarProps {
   selectedBrandId?: number | null;
   onSwitchBrand?: (brand: BrandSummary) => void;
   onAddBrand?: () => void;
+  onRescrape?: () => void;
+  onDeleteBrand?: (brandId: number) => void;
 }
 
 // Fallback labels if translations fail
@@ -39,10 +42,16 @@ export default function Sidebar({
   selectedBrandId,
   onSwitchBrand,
   onAddBrand,
+  onRescrape,
+  onDeleteBrand,
 }: SidebarProps) {
   const { t, locale } = useTranslation();
+  const { credits } = useCredits();
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
   const [showBrandPicker, setShowBrandPicker] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  
+  const isFree = credits?.plan === 'free';
 
   // Use translated labels with fallback
   const getLabel = (id: keyof typeof MENU_LABELS) => {
@@ -268,10 +277,102 @@ export default function Sidebar({
                     </svg>
                   </div>
                   <span className="text-sm">
-                    {locale === 'fr' ? 'Modifier la marque actuelle' : 'Edit current brand'}
+                    {locale === 'fr' ? 'Modifier la marque' : 'Edit brand'}
                   </span>
                 </button>
               )}
+              
+              {/* Re-scrape brand (Pro+ only) */}
+              {brandData && (
+                <button
+                  onClick={() => {
+                    if (isFree) {
+                      alert(locale === 'fr' ? 'Passez à Pro pour actualiser votre marque' : 'Upgrade to Pro to refresh your brand');
+                    } else {
+                      onRescrape?.();
+                      setShowBrandPicker(false);
+                    }
+                  }}
+                  className={`w-full flex items-center gap-3 p-3 hover:bg-gray-50 transition-colors border-t border-gray-100 ${
+                    isFree ? 'text-gray-300' : 'text-blue-600'
+                  }`}
+                >
+                  <div className={`w-6 h-6 rounded border flex items-center justify-center ${
+                    isFree ? 'border-gray-200' : 'border-blue-200'
+                  }`}>
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                  </div>
+                  <span className="text-sm flex items-center gap-2">
+                    {locale === 'fr' ? 'Actualiser' : 'Refresh'}
+                    {isFree && (
+                      <span className="text-[9px] bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded font-medium">PRO</span>
+                    )}
+                  </span>
+                </button>
+              )}
+              
+              {/* Delete brand */}
+              {brandData && selectedBrandId && (
+                <button
+                  onClick={() => setShowDeleteConfirm(true)}
+                  className="w-full flex items-center gap-3 p-3 hover:bg-red-50 transition-colors border-t border-gray-100 text-red-500"
+                >
+                  <div className="w-6 h-6 rounded border border-red-200 flex items-center justify-center">
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                  </div>
+                  <span className="text-sm">
+                    {locale === 'fr' ? 'Supprimer' : 'Delete'}
+                  </span>
+                </button>
+              )}
+            </div>
+          )}
+          
+          {/* Delete Confirmation Modal */}
+          {showDeleteConfirm && (
+            <div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4" onClick={() => setShowDeleteConfirm(false)}>
+              <div className="bg-white rounded-xl p-6 max-w-sm w-full shadow-2xl" onClick={e => e.stopPropagation()}>
+                <div className="text-center">
+                  <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                    {locale === 'fr' ? 'Supprimer cette marque ?' : 'Delete this brand?'}
+                  </h3>
+                  <p className="text-sm text-gray-500 mb-6">
+                    {locale === 'fr' 
+                      ? `"${brandData?.name}" sera définitivement supprimée. Cette action est irréversible.`
+                      : `"${brandData?.name}" will be permanently deleted. This action cannot be undone.`
+                    }
+                  </p>
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => setShowDeleteConfirm(false)}
+                      className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-colors"
+                    >
+                      {locale === 'fr' ? 'Annuler' : 'Cancel'}
+                    </button>
+                    <button
+                      onClick={() => {
+                        if (selectedBrandId) {
+                          onDeleteBrand?.(selectedBrandId);
+                        }
+                        setShowDeleteConfirm(false);
+                        setShowBrandPicker(false);
+                      }}
+                      className="flex-1 px-4 py-2.5 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors"
+                    >
+                      {locale === 'fr' ? 'Supprimer' : 'Delete'}
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
           )}
         </div>

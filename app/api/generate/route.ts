@@ -5,6 +5,7 @@ import { auth } from "@clerk/nextjs/server";
 import { db } from "@/db";
 import { users, teams } from "@/db/schema";
 import { eq } from "drizzle-orm";
+import { rateLimitByUser } from "@/lib/rateLimit";
 
 // NOTE: Fal has been removed - we now use Google AI (Gemini 3 Pro) exclusively
 // This is cheaper ($0.067/image vs $0.15) and supports more features (14 images, thinking)
@@ -282,6 +283,16 @@ export async function POST(request: NextRequest) {
   const { userId } = await auth();
   if (!userId) {
     return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+  }
+
+  // ====== RATE LIMITING ======
+  const rateLimitResult = rateLimitByUser(userId, 'generate');
+  if (!rateLimitResult.success) {
+    return NextResponse.json({ 
+      success: false, 
+      error: 'Trop de requêtes. Réessayez dans quelques secondes.',
+      retryAfter: Math.ceil((rateLimitResult.reset - Date.now()) / 1000),
+    }, { status: 429 });
   }
 
   // ====== GOOGLE AI IS NOW THE PRIMARY (AND ONLY) GENERATOR ======

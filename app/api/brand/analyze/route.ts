@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
+import { auth } from '@clerk/nextjs/server';
 import getColors from 'get-image-colors';
 import sharp from 'sharp';
+import { rateLimitByUser } from '@/lib/rateLimit';
 
 // Content nugget types for editorial extraction
 interface ContentNugget {
@@ -926,6 +928,21 @@ function mergeColorPalettes(aiColors: string[], extractedColors: string[]): stri
 
 export async function POST(request: Request) {
   try {
+    // ====== AUTHENTICATION ======
+    const { userId } = await auth();
+    if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // ====== RATE LIMITING ======
+    const rateLimitResult = rateLimitByUser(userId, 'analyze');
+    if (!rateLimitResult.success) {
+      return NextResponse.json({ 
+        error: 'Trop de requêtes. Réessayez dans quelques secondes.',
+        retryAfter: Math.ceil((rateLimitResult.reset - Date.now()) / 1000),
+      }, { status: 429 });
+    }
+
     const reqBody = await request.json();
     let url = reqBody.url;
     const socialLinks = reqBody.socialLinks || [];
