@@ -2668,7 +2668,7 @@ Couleurs : Utiliser la palette de la marque.`;
               ) : (
                 <>
                   <span className="text-blue-400 text-lg">✦</span>
-                  <span>{locale === 'fr' ? 'Générer 2 visuels' : 'Generate 2 visuals'}</span>
+                  <span>{locale === 'fr' ? 'Générer' : 'Generate'}</span>
                   <svg className="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                     <path d="M5 12h14M12 5l7 7-7 7" />
                   </svg>
@@ -3364,7 +3364,7 @@ Couleurs : Utiliser la palette de la marque.`;
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                     <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                   </svg>
-                  Télécharger
+                  {locale === 'fr' ? 'Télécharger' : 'Download'}
                 </button>
 
                 {/* Edit/Modify */}
@@ -3379,7 +3379,7 @@ Couleurs : Utiliser la palette de la marque.`;
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                     <path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                   </svg>
-                  Modifier
+                  {locale === 'fr' ? 'Modifier' : 'Edit'}
                 </button>
 
                 {/* Re-generate (iterate) */}
@@ -3396,14 +3396,17 @@ Couleurs : Utiliser la palette de la marque.`;
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                     <path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                   </svg>
-                  Ré-générer
+                  {locale === 'fr' ? 'Ré-générer' : 'Re-generate'}
                 </button>
               </div>
 
               {/* Tips */}
               <div className="mt-auto pt-4 border-t border-white/10">
                 <p className="text-gray-500 text-xs leading-relaxed">
-                  💡 Cliquez sur "Modifier" pour corriger une faute, remplacer un logo, ou ajuster un détail.
+                  {locale === 'fr' 
+                    ? '💡 Cliquez sur "Modifier" pour corriger une faute, remplacer un logo, ou ajuster un détail.'
+                    : '💡 Click "Edit" to fix a typo, replace a logo, or adjust a detail.'
+                  }
                 </p>
               </div>
             </div>

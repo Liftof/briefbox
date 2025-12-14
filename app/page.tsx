@@ -282,32 +282,47 @@ export default async function Home() {
         <div className="max-w-4xl mx-auto px-6">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-light text-gray-900 leading-tight">
-              <span className="font-semibold">"Oui mais..."</span>
+              <span className="font-semibold">{locale === 'fr' ? '"Oui mais..."' : '"But wait..."'}</span>
             </h2>
           </div>
           
           <div className="space-y-8">
             {/* Objection 1 */}
             <div className="border border-gray-200 p-6 md:p-8">
-              <h3 className="text-lg font-medium text-gray-900 mb-3">"Ça fait des trucs moches, non ?"</h3>
+              <h3 className="text-lg font-medium text-gray-900 mb-3">
+                {locale === 'fr' ? '"Ça fait des trucs moches, non ?"' : '"Does it make ugly stuff?"'}
+              </h3>
               <p className="text-gray-500 leading-relaxed">
-                Palette ne génère pas d'images génériques. Elle apprend <span className="text-gray-900 font-medium">votre marque</span>. Vos couleurs. Votre style. C'est pour ça que le résultat ressemble à vous, pas à une banque d'images.
+                {locale === 'fr' 
+                  ? <>Palette ne génère pas d'images génériques. Elle apprend <span className="text-gray-900 font-medium">votre marque</span>. Vos couleurs. Votre style. C'est pour ça que le résultat ressemble à vous, pas à une banque d'images.</>
+                  : <>Palette doesn't generate generic images. It learns <span className="text-gray-900 font-medium">your brand</span>. Your colors. Your style. That's why the result looks like you, not a stock photo.</>
+                }
               </p>
             </div>
             
             {/* Objection 2 */}
             <div className="border border-gray-200 p-6 md:p-8">
-              <h3 className="text-lg font-medium text-gray-900 mb-3">"J'ai déjà Canva"</h3>
+              <h3 className="text-lg font-medium text-gray-900 mb-3">
+                {locale === 'fr' ? '"J\'ai déjà Canva"' : '"I already have Canva"'}
+              </h3>
               <p className="text-gray-500 leading-relaxed">
-                Canva vous donne des templates. Palette vous donne <span className="text-gray-900 font-medium">vos visuels</span>. La différence ? Personne ne reconnaît que c'est généré.
+                {locale === 'fr'
+                  ? <>Canva vous donne des templates. Palette vous donne <span className="text-gray-900 font-medium">vos visuels</span>. La différence ? Personne ne reconnaît que c'est généré.</>
+                  : <>Canva gives you templates. Palette gives you <span className="text-gray-900 font-medium">your visuals</span>. The difference? No one can tell it's generated.</>
+                }
               </p>
             </div>
             
             {/* Objection 3 */}
             <div className="border border-gray-200 p-6 md:p-8">
-              <h3 className="text-lg font-medium text-gray-900 mb-3">"Mon agence connaît ma marque"</h3>
+              <h3 className="text-lg font-medium text-gray-900 mb-3">
+                {locale === 'fr' ? '"Mon agence connaît ma marque"' : '"My agency knows my brand"'}
+              </h3>
               <p className="text-gray-500 leading-relaxed">
-                Après 6 mois et 15 000€ de factures, peut-être. Palette comprend votre marque <span className="text-gray-900 font-medium">en 60 secondes</span>. Et elle n'oublie jamais.
+                {locale === 'fr'
+                  ? <>Après 6 mois et 15 000€ de factures, peut-être. Palette comprend votre marque <span className="text-gray-900 font-medium">en 60 secondes</span>. Et elle n'oublie jamais.</>
+                  : <>After 6 months and $15,000 in invoices, maybe. Palette understands your brand <span className="text-gray-900 font-medium">in 60 seconds</span>. And it never forgets.</>
+                }
               </p>
             </div>
           </div>

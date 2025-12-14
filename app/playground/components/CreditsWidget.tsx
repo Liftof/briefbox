@@ -22,9 +22,13 @@ export default function CreditsWidget({ isCollapsed = false, locale = 'fr' }: Cr
       const data = await res.json();
       if (data.url) {
         window.location.href = data.url;
+      } else if (data.error) {
+        console.error('Checkout error:', data.error);
+        alert(`Erreur: ${data.error}`);
       }
     } catch (err) {
       console.error('Checkout error:', err);
+      alert('Erreur de connexion. Réessayez.');
     }
   };
 
@@ -157,9 +161,13 @@ export function UpgradePopup({ isOpen, onClose, creditsRemaining, locale = 'fr' 
       const data = await res.json();
       if (data.url) {
         window.location.href = data.url;
+      } else if (data.error) {
+        console.error('Checkout error:', data.error);
+        alert(`Erreur: ${data.error}`);
       }
     } catch (err) {
       console.error('Checkout error:', err);
+      alert('Erreur de connexion. Réessayez.');
     } finally {
       setIsLoading(false);
     }
@@ -324,9 +332,13 @@ export function UpgradeInline({ creditsRemaining, plan, locale = 'fr' }: Upgrade
       const data = await res.json();
       if (data.url) {
         window.location.href = data.url;
+      } else if (data.error) {
+        console.error('Checkout error:', data.error);
+        alert(`Erreur: ${data.error}`);
       }
     } catch (err) {
       console.error('Checkout error:', err);
+      alert('Erreur de connexion. Réessayez.');
     } finally {
       setIsLoading(false);
     }
