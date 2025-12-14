@@ -1344,6 +1344,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
         .map(img => ({
           url: img.url,
           prompt: `[EDIT] ${editInstruction}`,
+          brandId: brandData?.id || undefined,
           brandName: brandData?.name,
         }));
       
@@ -1636,14 +1637,15 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
       const generationsToSave = normalized
         .filter(img => !img.skipSave) // Don't save data URLs to localStorage
         .map(img => ({
-        url: img.url,
-        prompt: finalPrompt,
-        templateId: selectedTemplate || undefined,
-        brandName: targetBrand?.name,
-      }));
+          url: img.url,
+          prompt: finalPrompt,
+          templateId: selectedTemplate || undefined,
+          brandId: brandData?.id || undefined,
+          brandName: brandData?.name,
+        }));
       
       if (generationsToSave.length > 0) {
-      addGenerations(generationsToSave);
+        addGenerations(generationsToSave);
       }
       
       // Trigger update event for ProjectsView

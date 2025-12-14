@@ -14,6 +14,7 @@ export interface Generation {
   url: string;
   prompt?: string;
   templateId?: string;
+  brandId?: number;
   brandName?: string;
   createdAt: string;
   folderId?: string;

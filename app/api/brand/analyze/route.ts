@@ -3,6 +3,9 @@ import { auth } from '@clerk/nextjs/server';
 import getColors from 'get-image-colors';
 import sharp from 'sharp';
 import { rateLimitByUser } from '@/lib/rateLimit';
+import { db } from '@/db';
+import { brands } from '@/db/schema';
+import { eq, and, like } from 'drizzle-orm';
 
 // Content nugget types for editorial extraction
 interface ContentNugget {
@@ -956,6 +959,33 @@ export async function POST(request: Request) {
       url = 'https://' + url;
     }
 
+    // Normalize URL for comparison (remove trailing slash, www, protocol variations)
+    const normalizeUrl = (u: string) => {
+      try {
+        const parsed = new URL(u);
+        return parsed.hostname.replace(/^www\./, '') + parsed.pathname.replace(/\/$/, '');
+      } catch {
+        return u.toLowerCase().replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/$/, '');
+      }
+    };
+    const normalizedUrl = normalizeUrl(url);
+
+    // Check if this URL already exists for this user
+    const existingBrands = await db.query.brands.findMany({
+      where: eq(brands.userId, userId),
+    });
+    
+    const existingBrand = existingBrands.find(b => 
+      b.url && normalizeUrl(b.url) === normalizedUrl
+    );
+
+    // If brand exists and we're not forcing a re-scrape, return existing brand ID
+    // The frontend can then decide to load it or re-scrape
+    const forceRescrape = reqBody.forceRescrape === true;
+    
+    // Store existing brand ID to include in response (for update instead of create)
+    let existingBrandId: number | null = existingBrand?.id || null;
+
     // Gather all URLs to scrape (Website + Socials + Other)
     const urlsToScrape = [url, ...socialLinks, ...otherLinks].filter(
         (u) => u && typeof u === 'string' && u.startsWith('http')
@@ -1576,9 +1606,11 @@ export async function POST(request: Request) {
           success: true,
           brand: {
             ...fallbackData,
+            id: existingBrandId, // Include existing brand ID if found
             url: url,
             images: uniqueImages.length > 0 ? uniqueImages : [fallbackData.logo].filter(Boolean)
-          }
+          },
+          isUpdate: !!existingBrandId,
        });
     }
 
@@ -2247,6 +2279,7 @@ FORMAT: Return ONLY a valid JSON array:
       success: true,
       brand: {
         ...brandData,
+        id: existingBrandId, // Include existing brand ID if found (for update instead of create)
         url: url,
         images: uniqueFinalImages,
         labeledImages: labeledImages,
@@ -2257,7 +2290,8 @@ FORMAT: Return ONLY a valid JSON array:
             pagesScraped: mergedContentNuggets._meta.pagesScraped,
             nuggetsExtracted: mergedContentNuggets._meta.extractedNuggets
         }
-      }
+      },
+      isUpdate: !!existingBrandId, // Let frontend know if this is an update
     });
 
   } catch (error: any) {
