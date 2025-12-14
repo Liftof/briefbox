@@ -427,28 +427,41 @@ function PlaygroundContent() {
     // Background generation removed for cost optimization
   };
 
-  // Auto-load last used brand if user has brands and no explicit URL params
+  // FAST PATH: Check localStorage immediately for returning users
+  // This runs before the API fetch completes
   useEffect(() => {
-    // Skip if we have explicit URL params or still loading brands or already checked
-    if (brandId || analyzeUrl || brandsLoading || hasCheckedBrands) return;
+    // Skip if we have explicit URL params or already checked
+    if (brandId || analyzeUrl || hasCheckedBrands) return;
     
-    // Mark as checked to prevent repeated checks
+    // Check localStorage immediately (no API wait)
+    const lastUsedId = getLastUsedBrandId();
+    
+    if (lastUsedId) {
+      // User has used a brand before - load it immediately
+      console.log('⚡ Fast path: Loading last brand from localStorage:', lastUsedId);
+      setHasCheckedBrands(true);
+      setSelectedBrandId(lastUsedId);
+      loadBrandById(lastUsedId, false); // Skip bento for returning users
+    }
+    // If no lastUsedId, wait for API to check if user has any brands at all
+  }, [brandId, analyzeUrl, hasCheckedBrands]);
+  
+  // SLOW PATH: Wait for API if no localStorage brand found
+  useEffect(() => {
+    // Skip if we have explicit URL params or already handled
+    if (brandId || analyzeUrl || hasCheckedBrands || brandsLoading) return;
+    
+    // API finished loading and we haven't handled yet
     setHasCheckedBrands(true);
     
-    // If user has existing brands, load the last used one (or first available)
     if (userBrands.length > 0) {
-      const lastUsedId = getLastUsedBrandId();
-      const brandToLoad = userBrands.find(b => b.id === lastUsedId) || userBrands[0];
-      
-      if (brandToLoad) {
-        console.log('🏷️ Auto-loading existing brand:', brandToLoad.name);
-        setSelectedBrandId(brandToLoad.id);
-        
-        // Load the full brand data, skip bento for returning users
-        loadBrandById(brandToLoad.id, false);
-      }
+      // User has brands but no localStorage - load the first one
+      const brandToLoad = userBrands[0];
+      console.log('🏷️ Loading first available brand:', brandToLoad.name);
+      setSelectedBrandId(brandToLoad.id);
+      loadBrandById(brandToLoad.id, false);
     } else {
-      // No brands - show onboarding (URL input)
+      // No brands at all - show onboarding
       setStep('url');
     }
   }, [brandsLoading, userBrands, brandId, analyzeUrl, hasCheckedBrands]);
