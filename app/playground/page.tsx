@@ -8,6 +8,7 @@ import StyleGallery from './components/StyleGallery'; // NEW
 import CalendarView from './components/CalendarView';
 import ProjectsView, { addGenerations, loadFeedbackPatterns } from './components/ProjectsView';
 import RecentVisuals from './components/RecentVisuals';
+import SettingsView from './components/SettingsView';
 import { useGenerations, Generation } from '@/lib/useGenerations';
 import StrategyView from './components/StrategyView';
 import { UpgradePopup, CreditsToast, UpgradeInline } from './components/CreditsWidget';
@@ -2240,6 +2241,10 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
 
     if (activeTab === 'projects') {
       return <ProjectsView />;
+    }
+
+    if (activeTab === 'settings') {
+      return <SettingsView locale={locale} />;
     }
 
     // Strategy view merged into Create - angles carousel at top of the page

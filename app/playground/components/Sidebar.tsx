@@ -51,6 +51,7 @@ export default function Sidebar({
     projects: locale === 'fr' ? 'Projets' : 'Projects',
     calendar: locale === 'fr' ? 'Calendrier' : 'Calendar',
     stats: locale === 'fr' ? 'Stats' : 'Stats',
+    settings: locale === 'fr' ? 'Réglages' : 'Settings',
     soon: locale === 'fr' ? 'bientôt' : 'soon',
   };
 
@@ -59,6 +60,7 @@ export default function Sidebar({
     { id: 'projects', icon: '◫', label: labels.projects },
     { id: 'calendar', icon: '▤', label: labels.calendar, disabled: true },
     { id: 'stats', icon: '◔', label: labels.stats, disabled: true },
+    { id: 'settings', icon: '⚙', label: labels.settings },
   ];
 
   return (
