@@ -164,6 +164,20 @@ async function processBatchJob(job: typeof batchGenerationQueue.$inferSelect) {
         .where(eq(batchGenerationQueue.id, job.id));
     }
 
+    // For Pro/Premium users: consume 1 credit from their monthly quota
+    // (Daily visual is part of the subscription, not a gift!)
+    if (user.plan === 'pro' || user.plan === 'premium') {
+      if (user.creditsRemaining < 1) {
+        throw new Error('No credits remaining for daily visual');
+      }
+      
+      await db.update(users)
+        .set({ creditsRemaining: user.creditsRemaining - 1 })
+        .where(eq(users.clerkId, job.userId));
+      
+      console.log(`💳 Consumed 1 credit for daily visual (${user.creditsRemaining - 1} remaining)`);
+    }
+
     // Generate a smart prompt based on brand
     const prompt = generateSmartBatchPrompt(brand);
 

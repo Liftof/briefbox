@@ -972,8 +972,8 @@ function PlaygroundContent() {
       setSelectedTemplate(smartPrompt.templateId);
       showToast(
         locale === 'fr' 
-          ? '✨ Vous avez 2 crédits offerts ! Cliquez sur Générer pour créer.' 
-          : '✨ You have 2 free credits! Click Generate to create.', 
+          ? '✨ Cliquez sur Générer pour créer votre premier visuel !' 
+          : '✨ Click Generate to create your first visual!', 
         'success'
       );
     } else {
@@ -1691,7 +1691,9 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
         updateCreditsRemaining(creditsRemaining);
         
         if (plan === 'free') {
-          setCreditsUsed(2 - creditsRemaining); // 2 is the free tier limit
+          // Free tier can be 1 or 2 credits depending on early bird status
+          const maxFreeCredits = creditsInfo?.isEarlyBird ? 2 : 1;
+          setCreditsUsed(maxFreeCredits - creditsRemaining);
         }
         
         // Show toast for credits feedback (only for free users with low credits)
@@ -3465,7 +3467,7 @@ Couleurs : Utiliser la palette de la marque.`;
       
       {/* Credits Toast (subtle notification) */}
       <CreditsToast 
-        creditsRemaining={lastCreditsRemaining ?? 3}
+        creditsRemaining={lastCreditsRemaining ?? 1}
         isVisible={showCreditsToast}
         locale={locale}
       />

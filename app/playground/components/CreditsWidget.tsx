@@ -137,11 +137,11 @@ export default function CreditsWidget({ isCollapsed = false, locale = 'fr' }: Cr
 interface UpgradePopupProps {
   isOpen: boolean;
   onClose: () => void;
-  creditsUsed: number;
+  creditsRemaining: number;
   locale?: 'fr' | 'en';
 }
 
-export function UpgradePopup({ isOpen, onClose, creditsUsed, locale = 'fr' }: UpgradePopupProps) {
+export function UpgradePopup({ isOpen, onClose, creditsRemaining, locale = 'fr' }: UpgradePopupProps) {
   const [isLoading, setIsLoading] = useState(false);
 
   if (!isOpen) return null;
@@ -165,7 +165,7 @@ export function UpgradePopup({ isOpen, onClose, creditsUsed, locale = 'fr' }: Up
     }
   };
 
-  const isBlocked = creditsUsed >= 3;
+  const isBlocked = creditsRemaining <= 0;
 
   return (
     <div 
@@ -188,10 +188,10 @@ export function UpgradePopup({ isOpen, onClose, creditsUsed, locale = 'fr' }: Up
             {locale === 'fr'
               ? (isBlocked 
                   ? 'Passez à Pro pour continuer à créer.' 
-                  : `Plus que ${2 - creditsUsed} création${2 - creditsUsed > 1 ? 's' : ''} gratuite${2 - creditsUsed > 1 ? 's' : ''}.`)
+                  : `Plus que ${creditsRemaining} création${creditsRemaining > 1 ? 's' : ''} gratuite${creditsRemaining > 1 ? 's' : ''}.`)
               : (isBlocked 
                   ? 'Go Pro to keep creating.' 
-                  : `${2 - creditsUsed} free creation${2 - creditsUsed > 1 ? 's' : ''} left.`)
+                  : `${creditsRemaining} free creation${creditsRemaining > 1 ? 's' : ''} left.`)
             }
           </p>
         </div>
@@ -288,7 +288,7 @@ export function CreditsToast({ creditsRemaining, isVisible, locale = 'fr' }: Cre
       text-sm font-medium
     `}>
       <div className="flex items-center gap-3">
-        <span className="font-mono">{creditsRemaining}/2</span>
+        <span className="font-mono">{creditsRemaining} crédit{creditsRemaining > 1 ? 's' : ''}</span>
         <span className="text-gray-400">—</span>
         <span>{message}</span>
       </div>
@@ -359,10 +359,10 @@ export function UpgradeInline({ creditsRemaining, plan, locale = 'fr' }: Upgrade
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-3 mb-1">
             <span className={`font-mono text-2xl font-bold ${isBlocked ? 'text-white' : 'text-gray-900'}`}>
-              {creditsRemaining}/2
+              {creditsRemaining}
             </span>
             <span className={`text-xs font-mono uppercase tracking-wider ${isBlocked ? 'text-gray-500' : 'text-gray-400'}`}>
-              {locale === 'fr' ? 'crédits' : 'credits'}
+              {locale === 'fr' ? `crédit${creditsRemaining > 1 ? 's' : ''} restant${creditsRemaining > 1 ? 's' : ''}` : `credit${creditsRemaining > 1 ? 's' : ''} left`}
             </span>
           </div>
           <p className={`text-sm ${isBlocked ? 'text-gray-400' : 'text-gray-500'}`}>

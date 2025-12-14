@@ -355,7 +355,7 @@ export default async function Home() {
               <ul className="space-y-3 mb-8">
                 <li className="flex items-center gap-3 text-sm text-gray-600">
                   <span className="text-blue-500">✓</span>
-                  {locale === 'fr' ? '2 visuels offerts à l\'inscription' : '2 free visuals on signup'}
+                  {locale === 'fr' ? '1 visuel offert à l\'inscription' : '1 free visual on signup'}
                 </li>
                 <li className="flex items-center gap-3 text-sm text-gray-600">
                   <span className="text-blue-500">✓</span>

@@ -69,27 +69,23 @@ export async function GET() {
       // Check if this user qualifies as early bird (first 30 of the day)
       const isEarlyBird = await checkAndIncrementDailySignups();
       
+      // Early birds get 2 credits (1 auto + 1 manual)
+      // Non-early birds get 1 credit only (auto-consumed, nothing left)
+      const creditsForNewUser = isEarlyBird ? 2 : 1;
+      
       const result = await db.insert(users).values({
         clerkId: userId,
         email: clerkUser?.emailAddresses?.[0]?.emailAddress || '',
         name: clerkUser?.firstName ? `${clerkUser.firstName} ${clerkUser.lastName || ''}`.trim() : null,
         avatarUrl: clerkUser?.imageUrl || null,
         plan: 'free',
-        creditsRemaining: PLAN_CREDITS.free,
+        creditsRemaining: creditsForNewUser,
         isEarlyBird,
       }).returning();
       
       user = result[0];
       
-      // Queue batch generation for 24h later (reactivation)
-      const scheduledFor = new Date(Date.now() + 24 * 60 * 60 * 1000); // +24h
-      await db.insert(batchGenerationQueue).values({
-        userId,
-        status: 'pending',
-        scheduledFor,
-      });
-      
-      console.log(`📝 New user created: ${userId}, earlyBird: ${isEarlyBird}`);
+      console.log(`📝 New user created: ${userId}, earlyBird: ${isEarlyBird}, credits: ${creditsForNewUser}`);
     }
 
     return NextResponse.json({

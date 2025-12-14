@@ -236,7 +236,7 @@ export default function Hero() {
               <p className="mt-3 text-xs text-gray-400 pl-1 flex items-center gap-2">
                 <span className="inline-flex items-center gap-1.5 bg-green-50 text-green-700 px-2 py-0.5 rounded-full text-[10px] font-medium">
                   <span className="w-1.5 h-1.5 bg-green-500 rounded-full"></span>
-                  {locale === 'fr' ? '2 visuels offerts' : '2 free visuals'}
+                  {locale === 'fr' ? '1 visuel offert' : '1 free visual'}
                 </span>
                 {t('landing.hero.subtitle')}
               </p>
