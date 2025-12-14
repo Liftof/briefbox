@@ -109,8 +109,8 @@ export default async function Home() {
                     <div className="flex items-start gap-4">
                       <div className="w-8 h-8 bg-amber-400 rounded-full flex items-center justify-center text-white text-sm flex-shrink-0 shadow-lg shadow-amber-400/30">✓</div>
                       <div>
-                        <div className="font-medium text-gray-900 mb-1">{locale === 'fr' ? '19€/mois. Tout compris.' : '$19/mo. All included.'}</div>
-                        <div className="text-sm text-gray-500 leading-relaxed">{locale === 'fr' ? 'Pas de surprise. Pas de devis. Pas de "ça dépend".' : 'No surprises. No quotes. No "it depends".'}</div>
+                        <div className="font-medium text-gray-900 mb-1">{locale === 'fr' ? '19€/mois + 1 visuel/jour offert' : '$19/mo + 1 free visual/day'}</div>
+                        <div className="text-sm text-gray-500 leading-relaxed">{locale === 'fr' ? 'Chaque matin, un nouveau visuel prêt à publier. Sans rien faire.' : 'Every morning, a new visual ready to publish. Automatically.'}</div>
                       </div>
                     </div>
                     <div className="flex items-start gap-4">
@@ -355,7 +355,7 @@ export default async function Home() {
               <ul className="space-y-3 mb-8">
                 <li className="flex items-center gap-3 text-sm text-gray-600">
                   <span className="text-blue-500">✓</span>
-                  {locale === 'fr' ? '3 générations offertes' : '3 free generations'}
+                  {locale === 'fr' ? '2 visuels offerts à l\'inscription' : '2 free visuals on signup'}
                 </li>
                 <li className="flex items-center gap-3 text-sm text-gray-600">
                   <span className="text-blue-500">✓</span>
@@ -367,12 +367,12 @@ export default async function Home() {
                 </li>
                 <li className="flex items-center gap-3 text-sm text-gray-300">
                   <span>✗</span>
-                  {locale === 'fr' ? "Galerie d'inspirations" : "Inspiration gallery"}
+                  {locale === 'fr' ? "Visuel quotidien automatique" : "Daily automatic visual"}
                 </li>
               </ul>
               
               <Link href="/playground" className="block w-full py-3 text-center text-sm font-medium text-gray-900 border border-gray-200 hover:border-gray-900 transition-colors">
-                {locale === 'fr' ? 'Tester gratuitement' : 'Try for free'}
+                {locale === 'fr' ? 'Créer mon premier visuel' : 'Create my first visual'}
               </Link>
             </div>
 
@@ -389,6 +389,10 @@ export default async function Home() {
               <div className="text-xs font-mono text-gray-500 mb-6">{locale === 'fr' ? '50 crédits/mois' : '50 credits/mo'}</div>
               
               <ul className="space-y-3 mb-8">
+                <li className="flex items-center gap-3 text-sm text-gray-300">
+                  <span className="text-amber-400">★</span>
+                  <span className="text-white font-medium">{locale === 'fr' ? '1 visuel offert chaque matin' : '1 free visual every morning'}</span>
+                </li>
                 <li className="flex items-center gap-3 text-sm text-gray-300">
                   <span className="text-blue-400">✓</span>
                   {locale === 'fr' ? '50 générations/mois' : '50 generations/mo'}
@@ -421,6 +425,10 @@ export default async function Home() {
               <div className="text-xs font-mono text-gray-400 mb-6">{locale === 'fr' ? '150 crédits/mois' : '150 credits/mo'}</div>
               
               <ul className="space-y-3 mb-8">
+                <li className="flex items-center gap-3 text-sm text-gray-600">
+                  <span className="text-amber-500">★</span>
+                  <span className="font-medium text-gray-900">{locale === 'fr' ? '1 visuel offert chaque matin' : '1 free visual every morning'}</span>
+                </li>
                 <li className="flex items-center gap-3 text-sm text-gray-600">
                   <span className="text-blue-500">✓</span>
                   {locale === 'fr' ? '150 générations/mois' : '150 generations/mo'}

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/db';
 import { batchGenerationQueue, brands, users, generations } from '@/db/schema';
-import { eq, and, lte, sql } from 'drizzle-orm';
+import { eq, and, lte, sql, or, inArray } from 'drizzle-orm';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { put } from '@vercel/blob';
 
@@ -12,7 +12,7 @@ const genAI = process.env.GOOGLE_AI_API_KEY
 
 // Batch processing - cheaper but slower (up to 24h)
 // Price: ~$0.067/image vs $0.134/image for standard
-const BATCH_SIZE = 10; // Process 10 at a time
+const BATCH_SIZE = 50; // Process 50 at a time (more for daily subscribers)
 
 export async function POST(request: NextRequest) {
   try {
@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Find pending batch jobs that are scheduled for now or earlier
+    // STEP 1: Process existing pending jobs (new user reactivation)
     const pendingJobs = await db.query.batchGenerationQueue.findMany({
       where: and(
         eq(batchGenerationQueue.status, 'pending'),
@@ -33,18 +33,77 @@ export async function POST(request: NextRequest) {
       limit: BATCH_SIZE,
     });
 
-    if (!pendingJobs.length) {
+    // STEP 2: Generate daily visuals for Pro/Premium subscribers
+    // Find all active Pro/Premium users with at least one brand
+    const paidUsers = await db.query.users.findMany({
+      where: or(
+        eq(users.plan, 'pro'),
+        eq(users.plan, 'premium')
+      ),
+    });
+
+    console.log(`📦 Found ${pendingJobs.length} pending jobs + ${paidUsers.length} paid subscribers`);
+
+    // Queue daily jobs for paid users (if not already queued today)
+    const today = new Date().toISOString().split('T')[0];
+    let dailyJobsCreated = 0;
+
+    for (const user of paidUsers) {
+      // Check if we already have a job for this user today
+      const existingTodayJob = await db.query.batchGenerationQueue.findFirst({
+        where: and(
+          eq(batchGenerationQueue.userId, user.clerkId),
+          sql`DATE(${batchGenerationQueue.scheduledFor}) = ${today}`
+        ),
+      });
+
+      if (!existingTodayJob) {
+        // Get user's primary brand
+        const userBrand = await db.query.brands.findFirst({
+          where: eq(brands.userId, user.clerkId),
+          orderBy: (brands, { desc }) => [desc(brands.updatedAt)],
+        });
+
+        if (userBrand) {
+          // Create daily generation job (scheduled for now)
+          await db.insert(batchGenerationQueue).values({
+            userId: user.clerkId,
+            brandId: userBrand.id,
+            status: 'pending',
+            scheduledFor: new Date(),
+            prompt: `daily-${today}`, // Mark as daily job
+          });
+          dailyJobsCreated++;
+        }
+      }
+    }
+
+    if (dailyJobsCreated > 0) {
+      console.log(`📅 Created ${dailyJobsCreated} new daily jobs for paid subscribers`);
+    }
+
+    // Refetch pending jobs including newly created daily ones
+    const allPendingJobs = await db.query.batchGenerationQueue.findMany({
+      where: and(
+        eq(batchGenerationQueue.status, 'pending'),
+        lte(batchGenerationQueue.scheduledFor, new Date())
+      ),
+      limit: BATCH_SIZE,
+    });
+
+    if (!allPendingJobs.length) {
       return NextResponse.json({ 
         success: true, 
         message: 'No pending batch jobs',
-        processed: 0 
+        processed: 0,
+        dailyJobsCreated,
       });
     }
 
-    console.log(`📦 Processing ${pendingJobs.length} batch generation jobs...`);
+    console.log(`📦 Processing ${allPendingJobs.length} total batch jobs...`);
 
     const results = await Promise.allSettled(
-      pendingJobs.map(job => processBatchJob(job))
+      allPendingJobs.map(job => processBatchJob(job))
     );
 
     const successful = results.filter(r => r.status === 'fulfilled').length;
@@ -52,9 +111,10 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      processed: pendingJobs.length,
+      processed: allPendingJobs.length,
       successful,
       failed,
+      dailyJobsCreated,
     });
 
   } catch (error: any) {
