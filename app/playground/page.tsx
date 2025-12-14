@@ -7,6 +7,8 @@ import BentoGrid from './components/BentoGrid';
 import StyleGallery from './components/StyleGallery'; // NEW
 import CalendarView from './components/CalendarView';
 import ProjectsView, { addGenerations, loadFeedbackPatterns } from './components/ProjectsView';
+import RecentVisuals from './components/RecentVisuals';
+import { useGenerations, Generation } from '@/lib/useGenerations';
 import StrategyView from './components/StrategyView';
 import { UpgradePopup, CreditsToast, UpgradeInline } from './components/CreditsWidget';
 import MobileNav from './components/MobileNav';
@@ -307,6 +309,9 @@ function PlaygroundContent() {
   const [showUpgradePopup, setShowUpgradePopup] = useState(false);
   const [creditsUsed, setCreditsUsed] = useState(0); // Track how many credits user has consumed
   const [showCreditsToast, setShowCreditsToast] = useState(false);
+  
+  // Recent generations for the bottom section
+  const { generations: recentGenerations, refresh: refreshGenerations } = useGenerations();
   const [lastCreditsRemaining, setLastCreditsRemaining] = useState<number | null>(null);
   const [aspectRatio, setAspectRatio] = useState<string>('1:1');
   const [resolution, setResolution] = useState<'2K' | '4K'>('2K');
@@ -2920,10 +2925,25 @@ Couleurs : Utiliser la palette de la marque.`;
         {generatedImages.length === 0 && status === 'idle' && brief.trim() && uploadedImages.length > 0 && (
           <div className="text-center py-8 border-t border-gray-100">
             <p className="text-sm text-gray-400">
-              ✨ {locale === 'fr' ? 'Cliquez sur' : 'Click'} <span className="font-medium text-gray-600">{locale === 'fr' ? '"Générer 2 visuels"' : '"Generate 2 visuals"'}</span> {locale === 'fr' ? 'pour créer' : 'to create'}
+              ✨ {locale === 'fr' ? 'Cliquez sur' : 'Click'} <span className="font-medium text-gray-600">{locale === 'fr' ? '"Générer"' : '"Generate"'}</span> {locale === 'fr' ? 'pour créer' : 'to create'}
             </p>
           </div>
         )}
+
+        {/* Recent Visuals - bottom section */}
+        <RecentVisuals
+          generations={recentGenerations}
+          onViewAll={() => setActiveTab('projects')}
+          onImageClick={(gen) => {
+            // Convert Generation to GeneratedImage format for lightbox
+            setLightboxImage({
+              id: gen.id,
+              url: gen.url,
+              aspectRatio: '1:1', // Default, we don't store this in generations
+            });
+          }}
+          locale={locale}
+        />
       </div>
     );
   };

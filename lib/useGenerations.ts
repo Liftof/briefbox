@@ -19,6 +19,8 @@ export interface Generation {
   createdAt: string;
   folderId?: string;
   feedback?: GenerationFeedback;
+  type?: string; // 'daily' for daily batch visuals
+  liked?: boolean;
 }
 
 export interface Folder {
