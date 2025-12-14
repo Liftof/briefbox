@@ -261,7 +261,7 @@ function PlaygroundContent() {
     return () => clearInterval(interval);
   }, [step]);
   
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true); // Collapsed by default
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false); // Open by default on desktop
 
   const [brandData, setBrandData] = useState<any | null>(null);
   // Backgrounds/textures generation removed for cost optimization
@@ -303,7 +303,7 @@ function PlaygroundContent() {
   const [contentLanguage, setContentLanguage] = useState<'fr' | 'en' | 'es' | 'de'>('fr');
   
   // Credits & Upgrade state
-  const { credits: creditsInfo } = useCredits();
+  const { credits: creditsInfo, updateRemaining: updateCreditsRemaining, refresh: refreshCredits } = useCredits();
   const [showUpgradePopup, setShowUpgradePopup] = useState(false);
   const [creditsUsed, setCreditsUsed] = useState(0); // Track how many credits user has consumed
   const [showCreditsToast, setShowCreditsToast] = useState(false);
@@ -1660,6 +1660,10 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
       
       if (creditsRemaining !== undefined) {
         setLastCreditsRemaining(creditsRemaining);
+        
+        // Update the credits hook so sidebar shows correct count
+        updateCreditsRemaining(creditsRemaining);
+        
         if (plan === 'free') {
           setCreditsUsed(3 - creditsRemaining); // 3 is the free tier limit
         }

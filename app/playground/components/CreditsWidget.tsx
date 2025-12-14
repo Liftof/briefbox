@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useCredits, PLAN_NAMES } from '@/lib/useCredits';
 
 interface CreditsWidgetProps {
@@ -40,31 +40,15 @@ export default function CreditsWidget({ isCollapsed = false, locale = 'fr' }: Cr
     }
   };
 
-  // Gradient based on credits remaining
-  const getGradient = () => {
-    if (!credits) return 'from-gray-100 to-gray-200';
-    const ratio = credits.remaining / credits.total;
-    if (ratio > 0.5) return 'from-blue-50 to-blue-100';
-    if (ratio > 0.2) return 'from-amber-50 to-amber-100';
-    return 'from-red-50 to-red-100';
-  };
-
-  const getTextColor = () => {
-    if (!credits) return 'text-gray-600';
-    const ratio = credits.remaining / credits.total;
-    if (ratio > 0.5) return 'text-blue-600';
-    if (ratio > 0.2) return 'text-amber-600';
-    return 'text-red-600';
-  };
-
   if (loading) {
     return (
-      <div className={`bg-gray-100 rounded-lg animate-pulse ${isCollapsed ? 'w-10 h-10 mx-auto' : 'h-16'}`} />
+      <div className={`bg-gray-100 animate-pulse ${isCollapsed ? 'w-10 h-10 mx-auto' : 'h-14'}`} />
     );
   }
 
   const isFree = credits?.plan === 'free';
   const isLow = credits && credits.remaining <= 1;
+  const ratio = (credits?.remaining ?? 0) / (credits?.total ?? 3);
 
   return (
     <div
@@ -73,71 +57,70 @@ export default function CreditsWidget({ isCollapsed = false, locale = 'fr' }: Cr
       onMouseLeave={() => setIsHovered(false)}
       className={`
         relative cursor-pointer transition-all duration-200
-        bg-gradient-to-br ${getGradient()}
-        border border-gray-200 rounded-xl
-        hover:shadow-md hover:scale-[1.02]
+        border border-gray-200 bg-white
+        hover:border-gray-900
         ${isCollapsed ? 'p-2' : 'p-3'}
       `}
     >
       {/* Collapsed view */}
       {isCollapsed ? (
         <div className={`
-          w-8 h-8 rounded-lg flex items-center justify-center text-sm font-bold
-          ${credits?.plan === 'pro' ? 'bg-blue-500 text-white' :
-            credits?.plan === 'premium' ? 'bg-purple-500 text-white' :
-            'bg-gray-400 text-white'}
+          w-8 h-8 flex items-center justify-center text-sm font-mono font-bold
+          ${isLow ? 'text-red-600' : 'text-gray-900'}
         `}>
           {credits?.remaining ?? '?'}
         </div>
       ) : (
         <>
           {/* Expanded view */}
-          <div className="flex items-center gap-3">
-            {/* Credits circle */}
-            <div className={`
-              w-10 h-10 rounded-xl flex items-center justify-center text-sm font-bold
-              ${credits?.plan === 'pro' ? 'bg-blue-500 text-white' :
-                credits?.plan === 'premium' ? 'bg-purple-500 text-white' :
-                'bg-gray-500 text-white'}
-            `}>
-              {credits?.remaining ?? '?'}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              {/* Credits count */}
+              <div className={`
+                text-2xl font-mono font-bold tabular-nums
+                ${isLow ? 'text-red-600' : 'text-gray-900'}
+              `}>
+                {credits?.remaining ?? 0}
+              </div>
+              
+              {/* Info */}
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-mono uppercase tracking-wider text-gray-400">
+                    / {credits?.total ?? 3} {locale === 'fr' ? 'crédits' : 'credits'}
+                  </span>
+                </div>
+                <div className="text-xs text-gray-500">
+                  {PLAN_NAMES[credits?.plan || 'free']}
+                </div>
+              </div>
             </div>
             
-            {/* Info */}
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-semibold text-gray-900">
-                  {PLAN_NAMES[credits?.plan || 'free']}
-                </span>
-                {isFree && (
-                  <span className="text-[10px] bg-blue-500 text-white px-1.5 py-0.5 rounded font-medium">
-                    {locale === 'fr' ? 'Upgrade' : 'Upgrade'}
-                  </span>
-                )}
+            {/* Upgrade arrow */}
+            {isFree && (
+              <div className="text-gray-300 group-hover:text-gray-900">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path d="M5 12h14M12 5l7 7-7 7" />
+                </svg>
               </div>
-              <div className={`text-[11px] ${getTextColor()}`}>
-                {credits?.remaining ?? 0} / {credits?.total ?? 3} {locale === 'fr' ? 'crédits' : 'credits'}
-              </div>
-            </div>
+            )}
           </div>
 
           {/* Progress bar */}
-          <div className="mt-2 h-1 bg-gray-200 rounded-full overflow-hidden">
+          <div className="mt-2 h-0.5 bg-gray-100 overflow-hidden">
             <div 
-              className={`h-full transition-all duration-500 rounded-full ${
-                credits?.plan === 'pro' ? 'bg-blue-500' :
-                credits?.plan === 'premium' ? 'bg-purple-500' :
-                isLow ? 'bg-red-500' : 'bg-gray-500'
+              className={`h-full transition-all duration-500 ${
+                isLow ? 'bg-red-500' : 'bg-gray-900'
               }`}
-              style={{ width: `${((credits?.remaining ?? 0) / (credits?.total ?? 3)) * 100}%` }}
+              style={{ width: `${ratio * 100}%` }}
             />
           </div>
 
           {/* Hover CTA */}
           {isHovered && isFree && (
-            <div className="absolute inset-0 bg-blue-500/95 rounded-xl flex items-center justify-center">
-              <span className="text-white text-sm font-medium">
-                {locale === 'fr' ? '→ Passer à Pro' : '→ Go Pro'}
+            <div className="absolute inset-0 bg-gray-900 flex items-center justify-center">
+              <span className="text-white text-xs font-medium tracking-wide">
+                {locale === 'fr' ? 'UPGRADE →' : 'UPGRADE →'}
               </span>
             </div>
           )}
@@ -182,114 +165,74 @@ export function UpgradePopup({ isOpen, onClose, creditsUsed, locale = 'fr' }: Up
     }
   };
 
-  const content = {
-    fr: {
-      title: creditsUsed >= 3 ? 'Vos crédits gratuits sont épuisés !' : 'Vous aimez ce que vous voyez ?',
-      subtitle: creditsUsed >= 3 
-        ? 'Passez à Pro pour continuer à créer des visuels incroyables.'
-        : `Plus que ${3 - creditsUsed} création${3 - creditsUsed > 1 ? 's' : ''} gratuite${3 - creditsUsed > 1 ? 's' : ''} ! Passez à Pro pour générer sans limite.`,
-      pro: {
-        name: 'Pro',
-        price: '19€/mois',
-        credits: '50 visuels/mois',
-        features: ['Tous les formats', 'Historique illimité', 'Support prioritaire'],
-        cta: 'Passer à Pro →',
-      },
-      premium: {
-        name: 'Premium',
-        price: '49€/mois',
-        credits: '150 visuels/mois',
-        features: ['Tout de Pro', '3 membres', 'API access'],
-        cta: 'Passer à Premium →',
-      },
-      later: 'Plus tard',
-    },
-    en: {
-      title: creditsUsed >= 3 ? 'Your free credits are gone!' : 'Loving what you see?',
-      subtitle: creditsUsed >= 3 
-        ? 'Go Pro to keep creating amazing visuals.'
-        : `Only ${3 - creditsUsed} free creation${3 - creditsUsed > 1 ? 's' : ''} left! Go Pro for unlimited generation.`,
-      pro: {
-        name: 'Pro',
-        price: '$19/mo',
-        credits: '50 visuals/mo',
-        features: ['All formats', 'Unlimited history', 'Priority support'],
-        cta: 'Go Pro →',
-      },
-      premium: {
-        name: 'Premium',
-        price: '$49/mo',
-        credits: '150 visuals/mo',
-        features: ['Everything in Pro', '3 team members', 'API access'],
-        cta: 'Go Premium →',
-      },
-      later: 'Maybe later',
-    },
-  };
-
-  const t = content[locale];
   const isBlocked = creditsUsed >= 3;
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div 
+      className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4"
+      onClick={!isBlocked ? onClose : undefined}
+    >
       <div 
-        className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full overflow-hidden animate-in fade-in zoom-in-95 duration-200"
+        className="bg-white max-w-lg w-full overflow-hidden animate-in fade-in zoom-in-95 duration-200 border border-gray-200"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 p-8 text-center text-white">
-          <div className="text-4xl mb-3">✨</div>
-          <h2 className="text-2xl font-bold mb-2">{t.title}</h2>
-          <p className="text-white/80">{t.subtitle}</p>
+        <div className="p-8 text-center border-b border-gray-100">
+          <h2 className="text-xl font-light text-gray-900 mb-2">
+            {locale === 'fr' 
+              ? (isBlocked ? 'Crédits épuisés' : 'Vous aimez ce que vous voyez ?')
+              : (isBlocked ? 'Credits exhausted' : 'Loving what you see?')
+            }
+          </h2>
+          <p className="text-sm text-gray-500">
+            {locale === 'fr'
+              ? (isBlocked 
+                  ? 'Passez à Pro pour continuer à créer.' 
+                  : `Plus que ${3 - creditsUsed} création${3 - creditsUsed > 1 ? 's' : ''} gratuite${3 - creditsUsed > 1 ? 's' : ''}.`)
+              : (isBlocked 
+                  ? 'Go Pro to keep creating.' 
+                  : `${3 - creditsUsed} free creation${3 - creditsUsed > 1 ? 's' : ''} left.`)
+            }
+          </p>
         </div>
 
         {/* Plans */}
         <div className="p-6 grid md:grid-cols-2 gap-4">
           {/* Pro */}
-          <div className="border-2 border-blue-200 rounded-xl p-5 hover:border-blue-400 transition-colors bg-blue-50/50">
+          <button
+            onClick={() => handleUpgrade('pro')}
+            disabled={isLoading}
+            className="group text-left p-5 border border-gray-200 hover:border-gray-900 transition-colors disabled:opacity-50"
+          >
             <div className="flex items-center justify-between mb-3">
-              <span className="font-bold text-lg text-gray-900">{t.pro.name}</span>
-              <span className="text-blue-600 font-semibold">{t.pro.price}</span>
+              <span className="font-medium text-gray-900">Pro</span>
+              <span className="text-sm font-mono text-gray-500">19€</span>
             </div>
-            <div className="text-sm text-gray-500 mb-4">{t.pro.credits}</div>
-            <ul className="space-y-2 mb-5">
-              {t.pro.features.map((f, i) => (
-                <li key={i} className="flex items-center gap-2 text-sm text-gray-600">
-                  <span className="text-blue-500">✓</span> {f}
-                </li>
-              ))}
-            </ul>
-            <button
-              onClick={() => handleUpgrade('pro')}
-              disabled={isLoading}
-              className="w-full py-3 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 transition-colors disabled:opacity-50"
-            >
-              {isLoading ? '...' : t.pro.cta}
-            </button>
-          </div>
+            <div className="text-xs text-gray-400 mb-3">
+              {locale === 'fr' ? '50 visuels/mois' : '50 visuals/mo'}
+            </div>
+            <div className="text-xs text-gray-900 group-hover:translate-x-1 transition-transform">
+              {locale === 'fr' ? 'Choisir Pro →' : 'Choose Pro →'}
+            </div>
+          </button>
 
           {/* Premium */}
-          <div className="border-2 border-purple-200 rounded-xl p-5 hover:border-purple-400 transition-colors bg-purple-50/50">
+          <button
+            onClick={() => handleUpgrade('premium')}
+            disabled={isLoading}
+            className="group text-left p-5 border border-gray-200 hover:border-gray-900 transition-colors disabled:opacity-50"
+          >
             <div className="flex items-center justify-between mb-3">
-              <span className="font-bold text-lg text-gray-900">{t.premium.name}</span>
-              <span className="text-purple-600 font-semibold">{t.premium.price}</span>
+              <span className="font-medium text-gray-900">Premium</span>
+              <span className="text-sm font-mono text-gray-500">49€</span>
             </div>
-            <div className="text-sm text-gray-500 mb-4">{t.premium.credits}</div>
-            <ul className="space-y-2 mb-5">
-              {t.premium.features.map((f, i) => (
-                <li key={i} className="flex items-center gap-2 text-sm text-gray-600">
-                  <span className="text-purple-500">✓</span> {f}
-                </li>
-              ))}
-            </ul>
-            <button
-              onClick={() => handleUpgrade('premium')}
-              disabled={isLoading}
-              className="w-full py-3 bg-purple-500 text-white rounded-lg font-medium hover:bg-purple-600 transition-colors disabled:opacity-50"
-            >
-              {isLoading ? '...' : t.premium.cta}
-            </button>
-          </div>
+            <div className="text-xs text-gray-400 mb-3">
+              {locale === 'fr' ? '150 visuels/mois + équipe' : '150 visuals/mo + team'}
+            </div>
+            <div className="text-xs text-gray-900 group-hover:translate-x-1 transition-transform">
+              {locale === 'fr' ? 'Choisir Premium →' : 'Choose Premium →'}
+            </div>
+          </button>
         </div>
 
         {/* Footer */}
@@ -297,9 +240,9 @@ export function UpgradePopup({ isOpen, onClose, creditsUsed, locale = 'fr' }: Up
           <div className="px-6 pb-6 text-center">
             <button
               onClick={onClose}
-              className="text-gray-400 hover:text-gray-600 text-sm transition-colors"
+              className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
             >
-              {t.later}
+              {locale === 'fr' ? 'Plus tard' : 'Maybe later'}
             </button>
           </div>
         )}
@@ -321,30 +264,34 @@ interface CreditsToastProps {
 export function CreditsToast({ creditsRemaining, isVisible, locale = 'fr' }: CreditsToastProps) {
   if (!isVisible) return null;
 
-  const messages = {
+  const messages: Record<'fr' | 'en', Record<number, string>> = {
     fr: {
-      2: "🎨 Super ! Plus que 2 créations gratuites.",
-      1: "⚡ Dernière création gratuite ! Pensez à upgrader.",
-      0: "🔒 Crédits épuisés. Passez à Pro pour continuer !",
+      2: "Plus que 2 créations gratuites",
+      1: "Dernière création gratuite",
+      0: "Crédits épuisés",
     },
     en: {
-      2: "🎨 Great! 2 free creations left.",
-      1: "⚡ Last free creation! Consider upgrading.",
-      0: "🔒 No credits left. Go Pro to continue!",
+      2: "2 free creations left",
+      1: "Last free creation",
+      0: "No credits left",
     },
   };
 
-  const message = messages[locale][creditsRemaining as 0 | 1 | 2] || '';
+  const message = messages[locale][creditsRemaining] || '';
   if (!message) return null;
 
   return (
     <div className={`
       fixed bottom-4 right-4 z-50
-      bg-gray-900 text-white px-4 py-3 rounded-xl shadow-lg
+      bg-gray-900 text-white px-4 py-3 
       animate-in slide-in-from-bottom-4 fade-in duration-300
-      ${creditsRemaining === 0 ? 'bg-red-600' : creditsRemaining === 1 ? 'bg-amber-600' : 'bg-gray-900'}
+      text-sm font-medium
     `}>
-      <span className="text-sm font-medium">{message}</span>
+      <div className="flex items-center gap-3">
+        <span className="font-mono">{creditsRemaining}/3</span>
+        <span className="text-gray-400">—</span>
+        <span>{message}</span>
+      </div>
     </div>
   );
 }
@@ -387,76 +334,42 @@ export function UpgradeInline({ creditsRemaining, plan, locale = 'fr' }: Upgrade
 
   const isBlocked = creditsRemaining === 0;
 
-  const content = {
-    fr: {
-      blocked: {
-        title: 'Crédits épuisés',
-        subtitle: 'Passez à Pro pour continuer à créer',
-        cta: 'Débloquer Pro — 19€/mois',
-        features: '50 visuels/mois • Tous formats • Historique illimité',
-      },
-      warning: {
-        title: 'Dernier crédit !',
-        subtitle: 'Après cette génération, il faudra upgrader',
-        cta: 'Passer à Pro →',
-        features: '50 visuels/mois',
-      },
-    },
-    en: {
-      blocked: {
-        title: 'Credits exhausted',
-        subtitle: 'Go Pro to keep creating',
-        cta: 'Unlock Pro — $19/mo',
-        features: '50 visuals/mo • All formats • Unlimited history',
-      },
-      warning: {
-        title: 'Last credit!',
-        subtitle: 'After this generation, you\'ll need to upgrade',
-        cta: 'Go Pro →',
-        features: '50 visuals/mo',
-      },
-    },
-  };
-
-  const t = content[locale][isBlocked ? 'blocked' : 'warning'];
-
   return (
     <div className={`
-      relative overflow-hidden rounded-xl border-2 transition-all
+      relative border transition-all
       ${isBlocked 
-        ? 'bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 border-gray-700' 
-        : 'bg-gradient-to-r from-amber-50 to-orange-50 border-amber-200'
+        ? 'bg-gray-900 border-gray-800' 
+        : 'bg-gray-50 border-gray-200'
       }
     `}>
       {/* Dismiss button (only if not blocked) */}
       {!isBlocked && (
         <button
           onClick={() => setIsDismissed(true)}
-          className="absolute top-2 right-2 w-6 h-6 flex items-center justify-center text-amber-400 hover:text-amber-600 transition-colors"
+          className="absolute top-3 right-3 text-gray-300 hover:text-gray-500 transition-colors"
         >
-          ×
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+          </svg>
         </button>
       )}
       
-      <div className="p-4 md:p-6 flex flex-col md:flex-row items-start md:items-center gap-4">
-        {/* Icon */}
-        <div className={`
-          w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0
-          ${isBlocked ? 'bg-blue-500' : 'bg-amber-500'}
-        `}>
-          <span className="text-2xl">{isBlocked ? '🚀' : '⚡'}</span>
-        </div>
-        
+      <div className="p-5 flex flex-col md:flex-row items-start md:items-center gap-4">
         {/* Content */}
         <div className="flex-1 min-w-0">
-          <h3 className={`font-semibold ${isBlocked ? 'text-white' : 'text-gray-900'}`}>
-            {t.title}
-          </h3>
-          <p className={`text-sm mt-0.5 ${isBlocked ? 'text-gray-300' : 'text-amber-700'}`}>
-            {t.subtitle}
-          </p>
-          <p className={`text-xs mt-1 ${isBlocked ? 'text-gray-400' : 'text-amber-600/70'}`}>
-            {t.features}
+          <div className="flex items-center gap-3 mb-1">
+            <span className={`font-mono text-2xl font-bold ${isBlocked ? 'text-white' : 'text-gray-900'}`}>
+              {creditsRemaining}/3
+            </span>
+            <span className={`text-xs font-mono uppercase tracking-wider ${isBlocked ? 'text-gray-500' : 'text-gray-400'}`}>
+              {locale === 'fr' ? 'crédits' : 'credits'}
+            </span>
+          </div>
+          <p className={`text-sm ${isBlocked ? 'text-gray-400' : 'text-gray-500'}`}>
+            {locale === 'fr'
+              ? (isBlocked ? 'Passez à Pro pour continuer à créer' : 'Dernier crédit ! Pensez à upgrader')
+              : (isBlocked ? 'Go Pro to keep creating' : 'Last credit! Consider upgrading')
+            }
           </p>
         </div>
         
@@ -465,15 +378,18 @@ export function UpgradeInline({ creditsRemaining, plan, locale = 'fr' }: Upgrade
           onClick={handleUpgrade}
           disabled={isLoading}
           className={`
-            px-6 py-3 rounded-lg font-medium text-sm whitespace-nowrap transition-all
+            px-6 py-3 text-sm font-medium whitespace-nowrap transition-all
             ${isBlocked 
-              ? 'bg-blue-500 text-white hover:bg-blue-600' 
-              : 'bg-amber-500 text-white hover:bg-amber-600'
+              ? 'bg-white text-gray-900 hover:bg-gray-100' 
+              : 'bg-gray-900 text-white hover:bg-black'
             }
             disabled:opacity-50
           `}
         >
-          {isLoading ? '...' : t.cta}
+          {isLoading 
+            ? '...' 
+            : (locale === 'fr' ? 'Pro — 19€/mois →' : 'Pro — $19/mo →')
+          }
         </button>
       </div>
     </div>
