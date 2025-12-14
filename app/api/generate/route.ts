@@ -12,7 +12,7 @@ import { rateLimitByUser } from "@/lib/rateLimit";
 
 // Credit limits per plan
 const PLAN_CREDITS = {
-  free: 3,
+  free: 2, // Reduced from 3 to 2
   pro: 50,
   premium: 150,
 } as const;

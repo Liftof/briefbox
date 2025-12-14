@@ -6,7 +6,7 @@ import { eq, and } from 'drizzle-orm';
 
 // Credit limits per plan
 const PLAN_CREDITS = {
-  free: 3,
+  free: 2, // Reduced from 3 to 2
   pro: 50,
   premium: 150,
 } as const;
@@ -33,6 +33,8 @@ export async function GET() {
           plan: 'free',
           canGenerate: true,
           resetAt: null,
+          isTeamCredits: false,
+          isEarlyBird: false, // Will be set properly when user is created
         },
       });
     }
@@ -63,6 +65,7 @@ export async function GET() {
         canGenerate: credits > 0,
         resetAt: user.creditsResetAt?.toISOString(),
         isTeamCredits,
+        isEarlyBird: user.isEarlyBird ?? false,
       },
     });
 

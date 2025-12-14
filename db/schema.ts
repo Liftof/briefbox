@@ -1,4 +1,4 @@
-import { pgTable, serial, text, timestamp, jsonb, boolean, integer } from 'drizzle-orm/pg-core';
+import { pgTable, serial, text, timestamp, jsonb, boolean, integer, date } from 'drizzle-orm/pg-core';
 
 // ============================================
 // USERS & SUBSCRIPTIONS
@@ -17,8 +17,11 @@ export const users = pgTable('users', {
   
   // Subscription
   plan: text('plan').$type<PlanType>().default('free').notNull(),
-  creditsRemaining: integer('credits_remaining').default(3).notNull(), // 3 pour free, 50 pro, 150 business
+  creditsRemaining: integer('credits_remaining').default(2).notNull(), // 2 pour free, 50 pro, 150 premium
   creditsResetAt: timestamp('credits_reset_at'), // Prochaine date de reset mensuel
+  
+  // Early Bird System (auto-gen for first 30 signups/day)
+  isEarlyBird: boolean('is_early_bird').default(false),
   
   // Stripe
   stripeCustomerId: text('stripe_customer_id'),
@@ -220,4 +223,32 @@ export const folders = pgTable('folders', {
   name: text('name').notNull(),
   color: text('color').default('#6B7280'),
   createdAt: timestamp('created_at').defaultNow(),
+});
+
+// ============================================
+// EARLY BIRD SYSTEM
+// ============================================
+
+// Daily signup counter for early bird detection (first 30/day get auto-gen)
+export const dailySignupCounts = pgTable('daily_signup_counts', {
+  id: serial('id').primaryKey(),
+  date: date('date').notNull().unique(),
+  count: integer('count').default(0).notNull(),
+  createdAt: timestamp('created_at').defaultNow(),
+});
+
+// Batch generation queue (for 24h reactivation feature)
+export type BatchStatus = 'pending' | 'processing' | 'completed' | 'failed';
+
+export const batchGenerationQueue = pgTable('batch_generation_queue', {
+  id: serial('id').primaryKey(),
+  userId: text('user_id').notNull(),
+  brandId: integer('brand_id').references(() => brands.id),
+  status: text('status').$type<BatchStatus>().default('pending').notNull(),
+  scheduledFor: timestamp('scheduled_for').notNull(), // signup + 24h
+  prompt: text('prompt'),
+  resultUrl: text('result_url'),
+  error: text('error'),
+  createdAt: timestamp('created_at').defaultNow(),
+  processedAt: timestamp('processed_at'),
 });

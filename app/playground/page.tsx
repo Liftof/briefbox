@@ -946,21 +946,44 @@ function PlaygroundContent() {
     setActiveTab('create');
     
     // Auto-generate visuals based on smart bento data
-      const smartPrompt = buildSmartWelcomePrompt(brandData);
+    const smartPrompt = buildSmartWelcomePrompt(brandData);
+    
+    // Check if user is early bird (first 30 signups of the day)
+    const isEarlyBird = creditsInfo?.isEarlyBird ?? false;
+    
+    if (smartPrompt && allImages.length > 0 && isEarlyBird) {
+      // Early bird gets 1 FREE auto-generation
+      setBrief(smartPrompt.brief);
+      setSelectedTemplate(smartPrompt.templateId);
+      showToast(
+        locale === 'fr' 
+          ? '🎁 Génération offerte en cours...' 
+          : '🎁 Free generation in progress...', 
+        'success'
+      );
       
-    if (smartPrompt && allImages.length > 0) {
-      // We have good data from bento - auto-generate!
-        setBrief(smartPrompt.brief);
-        setSelectedTemplate(smartPrompt.templateId);
-      showToast('🚀 Génération automatique lancée...', 'success');
-        
-        // Small delay to let UI update
+      // Small delay to let UI update
       setTimeout(() => {
-          handleGenerate(smartPrompt.brief, false, brandData, allImages.slice(0, 6));
+        handleGenerate(smartPrompt.brief, false, brandData, allImages.slice(0, 6), undefined, 1); // 1 image only
       }, 800);
-      } else {
+    } else if (smartPrompt && allImages.length > 0) {
+      // Not early bird - just set up the prompt, user triggers manually
+      setBrief(smartPrompt.brief);
+      setSelectedTemplate(smartPrompt.templateId);
+      showToast(
+        locale === 'fr' 
+          ? '✨ Vous avez 2 crédits offerts ! Cliquez sur Générer pour créer.' 
+          : '✨ You have 2 free credits! Click Generate to create.', 
+        'success'
+      );
+    } else {
       // No good data - show helpful message
-      showToast('Décrivez ce que vous voulez communiquer', 'info');
+      showToast(
+        locale === 'fr' 
+          ? 'Décrivez ce que vous voulez communiquer' 
+          : 'Describe what you want to communicate', 
+        'info'
+      );
     }
   };
 
@@ -1278,7 +1301,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
           negativePrompt: 'blurry, low quality, watermark, distorted',
           imageUrls: allImages, // Base image first, then style refs
           referenceImages: styleReferences, // Also mark them as style refs
-          numImages: 2,
+          numImages: 1, // 1 credit = 1 image
           aspectRatio,
           resolution
         })
@@ -1375,7 +1398,8 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
     useCurrentBrief = true,
     brandOverride?: any,
     referenceOverride?: string[],
-    templateOverride?: TemplateId
+    templateOverride?: TemplateId,
+    numImagesToGenerate: number = 1 // Default to 1 image (1 credit = 1 image)
   ) => {
     const finalPrompt = (customPrompt && customPrompt.trim()) || (useCurrentBrief ? brief.trim() : '');
     if (!finalPrompt) {
@@ -1571,7 +1595,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
           imageUrls: imagesToUse,
           referenceImages: styleReferenceImages, // Style reference images
           imageContextMap: imageContextMap, // NEW: Pass explicit roles
-          numImages: 2, // Reduced to 2 for cost optimization
+          numImages: numImagesToGenerate, // 1 credit = 1 image
           aspectRatio,
           resolution // 2K by default, 4K for pro users
         })
@@ -1667,7 +1691,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
         updateCreditsRemaining(creditsRemaining);
         
         if (plan === 'free') {
-          setCreditsUsed(3 - creditsRemaining); // 3 is the free tier limit
+          setCreditsUsed(2 - creditsRemaining); // 2 is the free tier limit
         }
         
         // Show toast for credits feedback (only for free users with low credits)

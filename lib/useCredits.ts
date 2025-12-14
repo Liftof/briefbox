@@ -9,6 +9,7 @@ export interface CreditsInfo {
   canGenerate: boolean;
   resetAt: string | null;
   isTeamCredits: boolean;
+  isEarlyBird: boolean; // For first 30 signups/day - get auto-generation
 }
 
 export function useCredits() {
@@ -23,12 +24,13 @@ export function useCredits() {
         if (res.status === 401) {
           // Not logged in, use defaults
           setCredits({
-            remaining: 3,
-            total: 3,
+            remaining: 2,
+            total: 2,
             plan: 'free',
             canGenerate: true,
             resetAt: null,
             isTeamCredits: false,
+            isEarlyBird: false,
           });
           return;
         }
@@ -40,12 +42,13 @@ export function useCredits() {
       setError(err.message);
       // Default fallback
       setCredits({
-        remaining: 3,
-        total: 3,
+        remaining: 2,
+        total: 2,
         plan: 'free',
         canGenerate: true,
         resetAt: null,
         isTeamCredits: false,
+        isEarlyBird: false,
       });
     } finally {
       setLoading(false);
