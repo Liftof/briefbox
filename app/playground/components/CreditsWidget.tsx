@@ -348,3 +348,134 @@ export function CreditsToast({ creditsRemaining, isVisible, locale = 'fr' }: Cre
     </div>
   );
 }
+
+// ============================================
+// UPGRADE INLINE CARD (replaces popup - more subtle)
+// ============================================
+
+interface UpgradeInlineProps {
+  creditsRemaining: number;
+  plan: string;
+  locale?: 'fr' | 'en';
+}
+
+export function UpgradeInline({ creditsRemaining, plan, locale = 'fr' }: UpgradeInlineProps) {
+  const [isLoading, setIsLoading] = useState(false);
+  const [isDismissed, setIsDismissed] = useState(false);
+  
+  // Don't show if not free plan, or has more than 1 credit, or dismissed
+  if (plan !== 'free' || creditsRemaining > 1 || isDismissed) return null;
+
+  const handleUpgrade = async () => {
+    setIsLoading(true);
+    try {
+      const res = await fetch('/api/stripe/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ plan: 'pro' }),
+      });
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      }
+    } catch (err) {
+      console.error('Checkout error:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const isBlocked = creditsRemaining === 0;
+
+  const content = {
+    fr: {
+      blocked: {
+        title: 'Crédits épuisés',
+        subtitle: 'Passez à Pro pour continuer à créer',
+        cta: 'Débloquer Pro — 19€/mois',
+        features: '50 visuels/mois • Tous formats • Historique illimité',
+      },
+      warning: {
+        title: 'Dernier crédit !',
+        subtitle: 'Après cette génération, il faudra upgrader',
+        cta: 'Passer à Pro →',
+        features: '50 visuels/mois',
+      },
+    },
+    en: {
+      blocked: {
+        title: 'Credits exhausted',
+        subtitle: 'Go Pro to keep creating',
+        cta: 'Unlock Pro — $19/mo',
+        features: '50 visuals/mo • All formats • Unlimited history',
+      },
+      warning: {
+        title: 'Last credit!',
+        subtitle: 'After this generation, you\'ll need to upgrade',
+        cta: 'Go Pro →',
+        features: '50 visuals/mo',
+      },
+    },
+  };
+
+  const t = content[locale][isBlocked ? 'blocked' : 'warning'];
+
+  return (
+    <div className={`
+      relative overflow-hidden rounded-xl border-2 transition-all
+      ${isBlocked 
+        ? 'bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 border-gray-700' 
+        : 'bg-gradient-to-r from-amber-50 to-orange-50 border-amber-200'
+      }
+    `}>
+      {/* Dismiss button (only if not blocked) */}
+      {!isBlocked && (
+        <button
+          onClick={() => setIsDismissed(true)}
+          className="absolute top-2 right-2 w-6 h-6 flex items-center justify-center text-amber-400 hover:text-amber-600 transition-colors"
+        >
+          ×
+        </button>
+      )}
+      
+      <div className="p-4 md:p-6 flex flex-col md:flex-row items-start md:items-center gap-4">
+        {/* Icon */}
+        <div className={`
+          w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0
+          ${isBlocked ? 'bg-blue-500' : 'bg-amber-500'}
+        `}>
+          <span className="text-2xl">{isBlocked ? '🚀' : '⚡'}</span>
+        </div>
+        
+        {/* Content */}
+        <div className="flex-1 min-w-0">
+          <h3 className={`font-semibold ${isBlocked ? 'text-white' : 'text-gray-900'}`}>
+            {t.title}
+          </h3>
+          <p className={`text-sm mt-0.5 ${isBlocked ? 'text-gray-300' : 'text-amber-700'}`}>
+            {t.subtitle}
+          </p>
+          <p className={`text-xs mt-1 ${isBlocked ? 'text-gray-400' : 'text-amber-600/70'}`}>
+            {t.features}
+          </p>
+        </div>
+        
+        {/* CTA */}
+        <button
+          onClick={handleUpgrade}
+          disabled={isLoading}
+          className={`
+            px-6 py-3 rounded-lg font-medium text-sm whitespace-nowrap transition-all
+            ${isBlocked 
+              ? 'bg-blue-500 text-white hover:bg-blue-600' 
+              : 'bg-amber-500 text-white hover:bg-amber-600'
+            }
+            disabled:opacity-50
+          `}
+        >
+          {isLoading ? '...' : t.cta}
+        </button>
+      </div>
+    </div>
+  );
+}

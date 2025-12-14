@@ -8,9 +8,11 @@ import StyleGallery from './components/StyleGallery'; // NEW
 import CalendarView from './components/CalendarView';
 import ProjectsView, { addGenerations, loadFeedbackPatterns } from './components/ProjectsView';
 import StrategyView from './components/StrategyView';
-import { UpgradePopup, CreditsToast } from './components/CreditsWidget';
+import { UpgradePopup, CreditsToast, UpgradeInline } from './components/CreditsWidget';
+import { useCredits } from '@/lib/useCredits';
 import { TemplateId } from '@/lib/templates';
 import { useTranslation } from '@/lib/i18n';
+import { useBrands, BrandSummary, getLastUsedBrandId, setLastUsedBrandId } from '@/lib/useBrands';
 
 type Step = 'url' | 'analyzing' | 'logo-confirm' | 'bento' | 'playground';
 
@@ -167,6 +169,10 @@ function PlaygroundContent() {
   const searchParams = useSearchParams();
   const brandId = searchParams.get('brandId');
   const analyzeUrl = searchParams.get('analyzeUrl'); // From Hero input
+  
+  // Multi-brand system
+  const { brands: userBrands, loading: brandsLoading, refresh: refreshBrands } = useBrands();
+  const [selectedBrandId, setSelectedBrandId] = useState<number | null>(null);
 
   const [showStyleGallery, setShowStyleGallery] = useState(false); // NEW
   const [step, setStep] = useState<Step>(analyzeUrl ? 'analyzing' : 'url');
@@ -288,7 +294,8 @@ function PlaygroundContent() {
   const [isThinking, setIsThinking] = useState(false);
   const [contentLanguage, setContentLanguage] = useState<'fr' | 'en' | 'es' | 'de'>('fr');
   
-  // Credits & Upgrade popup state
+  // Credits & Upgrade state
+  const { credits: creditsInfo } = useCredits();
   const [showUpgradePopup, setShowUpgradePopup] = useState(false);
   const [creditsUsed, setCreditsUsed] = useState(0); // Track how many credits user has consumed
   const [showCreditsToast, setShowCreditsToast] = useState(false);
@@ -412,6 +419,69 @@ function PlaygroundContent() {
     // Background generation removed for cost optimization
   };
 
+  // Auto-load last used brand if user has brands and no explicit URL params
+  useEffect(() => {
+    // Skip if we have explicit URL params or still loading brands
+    if (brandId || analyzeUrl || brandsLoading) return;
+    
+    // If user has existing brands, load the last used one (or first available)
+    if (userBrands.length > 0) {
+      const lastUsedId = getLastUsedBrandId();
+      const brandToLoad = userBrands.find(b => b.id === lastUsedId) || userBrands[0];
+      
+      if (brandToLoad) {
+        console.log('🏷️ Auto-loading existing brand:', brandToLoad.name);
+        setSelectedBrandId(brandToLoad.id);
+        
+        // Load the full brand data
+        loadBrandById(brandToLoad.id);
+      }
+    }
+  }, [brandsLoading, userBrands, brandId, analyzeUrl]);
+  
+  // Helper: Load a brand by ID
+  const loadBrandById = async (id: number, showBento = true) => {
+    setStep('analyzing');
+    setStatusMessage(locale === 'fr' ? 'Chargement de la marque...' : 'Loading brand...');
+    setProgress(5);
+    
+    const timer = setInterval(() => {
+      setProgress((prev) => prev >= 90 ? prev : prev + Math.random() * 15);
+    }, 500);
+
+    try {
+      const response = await fetch(`/api/brand/${id}`);
+      const data = await response.json();
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || 'Failed to load brand');
+      }
+      
+      clearInterval(timer);
+      setProgress(100);
+      hydrateBrand(data.brand);
+      setSelectedBrandId(id);
+      setLastUsedBrandId(id);
+      
+      // Go to bento or directly to playground
+      setTimeout(() => {
+        setStep(showBento ? 'bento' : 'playground');
+        setActiveTab('create');
+      }, 300);
+      
+    } catch (error: any) {
+      clearInterval(timer);
+      console.error('Brand load error', error);
+      showToast(error.message || 'Erreur pendant le chargement', 'error');
+      setStep('url');
+    }
+  };
+  
+  // Switch to a different brand
+  const switchBrand = (brand: BrandSummary) => {
+    if (brand.id === selectedBrandId) return;
+    loadBrandById(brand.id, false); // Don't show bento when switching
+  };
+
   useEffect(() => {
     if (!brandId) return;
 
@@ -440,6 +510,8 @@ function PlaygroundContent() {
         clearInterval(timer);
         setProgress(100);
         hydrateBrand(data.brand);
+        setSelectedBrandId(parseInt(brandId));
+        setLastUsedBrandId(parseInt(brandId));
         
         // Small delay to show 100% before switching
         setTimeout(() => {
@@ -1555,28 +1627,23 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
       setProgress(100);
       showToast('Visuels générés et sauvegardés', 'success');
       
-      // ====== CREDITS & UPGRADE POPUP LOGIC ======
+      // ====== CREDITS TRACKING (inline upgrade card, no popup) ======
       const creditsRemaining = payload.creditsRemaining;
       const plan = payload.plan;
       
-      if (creditsRemaining !== undefined && plan === 'free') {
+      if (creditsRemaining !== undefined) {
         setLastCreditsRemaining(creditsRemaining);
-        setCreditsUsed(3 - creditsRemaining); // 3 is the free tier limit
+        if (plan === 'free') {
+          setCreditsUsed(3 - creditsRemaining); // 3 is the free tier limit
+        }
         
-        // Show toast for credits feedback
-        if (creditsRemaining <= 2) {
+        // Show toast for credits feedback (only for free users with low credits)
+        if (plan === 'free' && creditsRemaining <= 1) {
           setShowCreditsToast(true);
           setTimeout(() => setShowCreditsToast(false), 4000);
         }
         
-        // Show upgrade popup when credits are low or exhausted
-        if (creditsRemaining === 0) {
-          // Delay popup slightly so user can see their generation first
-          setTimeout(() => setShowUpgradePopup(true), 1500);
-        } else if (creditsRemaining === 1) {
-          // Show a softer reminder after they've used 2 of 3 credits
-          setTimeout(() => setShowUpgradePopup(true), 3000);
-        }
+        // Note: Popup removed - now using inline upgrade card instead
       }
     } catch (error: any) {
       console.error('Generation error', error);
@@ -2670,6 +2737,17 @@ Couleurs : Utiliser la palette de la marque.`;
           </div>
         )}
 
+        {/* Upgrade Inline Card - shows when credits are low */}
+        {generatedImages.length > 0 && status === 'idle' && lastCreditsRemaining !== null && (
+          <div className="mb-8">
+            <UpgradeInline 
+              creditsRemaining={lastCreditsRemaining} 
+              plan={creditsInfo?.plan || 'free'} 
+              locale={locale} 
+            />
+          </div>
+        )}
+
         {/* Empty state hint - subtle, at the bottom */}
         {generatedImages.length === 0 && status === 'idle' && brief.trim() && uploadedImages.length > 0 && (
           <div className="text-center py-8 border-t border-gray-100">
@@ -3155,6 +3233,10 @@ Couleurs : Utiliser la palette de la marque.`;
             onEditBrand={() => setStep('bento')} 
             isCollapsed={isSidebarCollapsed}
             toggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+            userBrands={userBrands}
+            selectedBrandId={selectedBrandId}
+            onSwitchBrand={switchBrand}
+            onAddBrand={() => setStep('url')}
         />
         </div>
       )}
@@ -3169,15 +3251,7 @@ Couleurs : Utiliser la palette de la marque.`;
         </main>
       </div>
       
-      {/* Upgrade Popup */}
-      <UpgradePopup 
-        isOpen={showUpgradePopup} 
-        onClose={() => setShowUpgradePopup(false)}
-        creditsUsed={creditsUsed}
-        locale={locale}
-      />
-      
-      {/* Credits Toast */}
+      {/* Credits Toast (subtle notification) */}
       <CreditsToast 
         creditsRemaining={lastCreditsRemaining ?? 3}
         isVisible={showCreditsToast}
