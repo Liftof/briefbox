@@ -15,7 +15,7 @@ import { TemplateId } from '@/lib/templates';
 import { useTranslation } from '@/lib/i18n';
 import { useBrands, BrandSummary, getLastUsedBrandId, setLastUsedBrandId } from '@/lib/useBrands';
 
-type Step = 'url' | 'analyzing' | 'logo-confirm' | 'bento' | 'playground';
+type Step = 'loading' | 'url' | 'analyzing' | 'logo-confirm' | 'bento' | 'playground';
 
 // Template definitions for the UI
 const TEMPLATES = [
@@ -176,7 +176,14 @@ function PlaygroundContent() {
   const [selectedBrandId, setSelectedBrandId] = useState<number | null>(null);
 
   const [showStyleGallery, setShowStyleGallery] = useState(false); // NEW
-  const [step, setStep] = useState<Step>(analyzeUrl ? 'analyzing' : 'url');
+  
+  // Determine initial step:
+  // - If we have URL params → go to analyzing
+  // - Otherwise start with 'loading' to check if user has existing brands
+  const [step, setStep] = useState<Step>(
+    analyzeUrl ? 'analyzing' : brandId ? 'analyzing' : 'loading' as Step
+  );
+  const [hasCheckedBrands, setHasCheckedBrands] = useState(false);
   const [activeTab, setActiveTab] = useState('create');
   const [websiteUrl, setWebsiteUrl] = useState('');
   const [statusMessage, setStatusMessage] = useState(locale === 'fr' ? 'Nous analysons votre identité...' : 'Analyzing your brand identity...');
@@ -422,8 +429,11 @@ function PlaygroundContent() {
 
   // Auto-load last used brand if user has brands and no explicit URL params
   useEffect(() => {
-    // Skip if we have explicit URL params or still loading brands
-    if (brandId || analyzeUrl || brandsLoading) return;
+    // Skip if we have explicit URL params or still loading brands or already checked
+    if (brandId || analyzeUrl || brandsLoading || hasCheckedBrands) return;
+    
+    // Mark as checked to prevent repeated checks
+    setHasCheckedBrands(true);
     
     // If user has existing brands, load the last used one (or first available)
     if (userBrands.length > 0) {
@@ -434,11 +444,14 @@ function PlaygroundContent() {
         console.log('🏷️ Auto-loading existing brand:', brandToLoad.name);
         setSelectedBrandId(brandToLoad.id);
         
-        // Load the full brand data
-        loadBrandById(brandToLoad.id);
+        // Load the full brand data, skip bento for returning users
+        loadBrandById(brandToLoad.id, false);
       }
+    } else {
+      // No brands - show onboarding (URL input)
+      setStep('url');
     }
-  }, [brandsLoading, userBrands, brandId, analyzeUrl]);
+  }, [brandsLoading, userBrands, brandId, analyzeUrl, hasCheckedBrands]);
   
   // Helper: Load a brand by ID
   const loadBrandById = async (id: number, showBento = true) => {
@@ -1659,6 +1672,20 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
   };
 
   const renderContent = () => {
+    // Loading state - checking if user has existing brands
+    if (step === 'loading') {
+      return (
+        <div className="min-h-[85vh] flex items-center justify-center animate-fade-in">
+          <div className="text-center">
+            <div className="w-10 h-10 border-2 border-gray-200 border-t-gray-900 rounded-full animate-spin mx-auto mb-4" />
+            <p className="text-gray-500 text-sm">
+              {locale === 'fr' ? 'Chargement...' : 'Loading...'}
+            </p>
+          </div>
+        </div>
+      );
+    }
+    
     if (step === 'url') {
       return (
         <div className="min-h-[85vh] flex items-center justify-center animate-fade-in relative">
@@ -3316,7 +3343,7 @@ Couleurs : Utiliser la palette de la marque.`;
       )}
 
       {/* Sidebar - hidden on mobile */}
-      {step !== 'url' && step !== 'analyzing' && step !== 'bento' && (
+      {step !== 'loading' && step !== 'url' && step !== 'analyzing' && step !== 'bento' && (
         <>
           {/* Desktop Sidebar */}
           <div className="hidden md:block">
@@ -3377,11 +3404,11 @@ Couleurs : Utiliser la palette de la marque.`;
         </>
       )}
 
-      <div className={`flex-1 transition-all duration-300 ease-out overflow-x-hidden ${step !== 'url' && step !== 'analyzing' && step !== 'bento' ? (isSidebarCollapsed ? 'md:ml-[80px]' : 'md:ml-[240px]') : 'w-full'}`}>
+      <div className={`flex-1 transition-all duration-300 ease-out overflow-x-hidden ${step !== 'loading' && step !== 'url' && step !== 'analyzing' && step !== 'bento' ? (isSidebarCollapsed ? 'md:ml-[80px]' : 'md:ml-[240px]') : 'w-full'}`}>
         <main className={`mx-auto min-h-screen flex flex-col justify-center transition-all duration-500 ${
             step === 'bento' 
                 ? 'w-full px-4 md:px-12 py-8 max-w-[1920px]'
-                : step !== 'url' && step !== 'analyzing' 
+                : step !== 'loading' && step !== 'url' && step !== 'analyzing' 
                   ? 'max-w-[900px] p-6 md:p-10 pt-20 pb-24 md:pt-10 md:pb-10' // Mobile: padding for header/nav 
                 : 'max-w-[900px] p-6 md:p-10'
         }`}>
