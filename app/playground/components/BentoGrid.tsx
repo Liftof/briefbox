@@ -526,7 +526,7 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
         </div>
       )}
 
-      {/* Header - Simple */}
+      {/* Header - With validate button */}
       <header className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-4">
           {onBack && (
@@ -543,10 +543,18 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
             </a>
           </div>
         </div>
-        <div className="flex items-center gap-2 text-xs text-gray-400">
-          <span className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
-          Brand Identity
-        </div>
+        
+        {/* Validate button in header - always visible */}
+        <button
+          onClick={onValidate}
+          className="group flex items-center gap-2 px-4 py-2 bg-gray-900 text-white text-sm font-medium transition-all hover:bg-blue-600"
+        >
+          <span className="w-1.5 h-1.5 bg-blue-400 rounded-full group-hover:bg-white" />
+          {locale === 'fr' ? 'Valider & Créer' : 'Validate & Create'}
+          <svg className="w-4 h-4 transition-transform group-hover:translate-x-0.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+            <path d="M5 12h14M12 5l7 7-7 7" />
+          </svg>
+        </button>
       </header>
 
       {/* ═══════════════════════════════════════════════════════════════════════════
