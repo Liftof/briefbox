@@ -2275,24 +2275,37 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
             </select>
             {/* Resolution Toggle */}
             <div className="flex items-center border border-gray-200">
-              {RESOLUTIONS.map(res => (
-                <button
-                  key={res.value}
-                  onClick={() => setResolution(res.value)}
-                  className={`text-xs px-3 py-2 transition-colors relative ${
-                    resolution === res.value 
-                      ? 'bg-gray-900 text-white' 
-                      : 'bg-white text-gray-500 hover:text-gray-900'
-                  }`}
-                >
-                  {res.label}
-                  {res.badge && resolution !== res.value && (
-                    <span className="absolute -top-1 -right-1 text-[8px] bg-blue-500 text-white px-1 rounded">
-                      {res.badge}
-                    </span>
-                  )}
-                </button>
-              ))}
+              {RESOLUTIONS.map(res => {
+                const isPro = creditsInfo?.plan === 'pro' || creditsInfo?.plan === 'premium';
+                const isLocked = res.value === '4K' && !isPro;
+                
+                return (
+                  <button
+                    key={res.value}
+                    onClick={() => {
+                      if (isLocked) {
+                        showToast(locale === 'fr' ? '4K réservé aux abonnés Pro' : '4K is for Pro subscribers', 'info');
+                        return;
+                      }
+                      setResolution(res.value);
+                    }}
+                    className={`text-xs px-3 py-2 transition-colors relative ${
+                      resolution === res.value 
+                        ? 'bg-gray-900 text-white' 
+                        : isLocked
+                          ? 'bg-gray-50 text-gray-300 cursor-not-allowed'
+                          : 'bg-white text-gray-500 hover:text-gray-900'
+                    }`}
+                  >
+                    {res.label}
+                    {res.badge && isLocked && (
+                      <span className="absolute -top-1 -right-1 text-[8px] bg-blue-500 text-white px-1 rounded">
+                        {res.badge}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
             </div>
             {/* Language Toggle */}
             <select
@@ -2323,19 +2336,10 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
         {brandData && (
           <div className="mb-6">
             {/* Section header */}
-            <div className="flex items-center justify-between mb-3">
-              <div className="flex items-center gap-2">
-                <span className="w-1.5 h-1.5 bg-blue-500 rounded-full" />
-                <span className="text-[10px] font-mono uppercase tracking-widest text-gray-400">{locale === 'fr' ? 'Angles de contenu' : 'Content angles'}</span>
-                </div>
-              <button
-                onClick={() => setShowStyleGallery(true)}
-                className="text-[10px] font-medium text-gray-400 hover:text-gray-900 transition-colors flex items-center gap-1"
-              >
-                <span>🎨</span>
-                <span>Style ref</span>
-              </button>
-        </div>
+            <div className="flex items-center gap-2 mb-3">
+              <span className="w-1.5 h-1.5 bg-blue-500 rounded-full" />
+              <span className="text-[10px] font-mono uppercase tracking-widest text-gray-400">{locale === 'fr' ? 'Angles de contenu' : 'Content angles'}</span>
+            </div>
             
             {/* AI-Generated Editorial Hooks ONLY - No mechanical templates */}
             <div className="overflow-x-auto pb-2 -mx-2 px-2" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
