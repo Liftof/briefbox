@@ -23,14 +23,6 @@ interface SidebarProps {
   onDeleteBrand?: (brandId: number) => void;
 }
 
-// Fallback labels if translations fail
-const MENU_LABELS = {
-  create: { fr: 'Créer', en: 'Create' },
-  projects: { fr: 'Projets', en: 'Projects' },
-  calendar: { fr: 'Calendrier', en: 'Calendar' },
-  stats: { fr: 'Stats', en: 'Stats' },
-};
-
 export default function Sidebar({ 
   activeTab, 
   setActiveTab, 
@@ -53,21 +45,20 @@ export default function Sidebar({
   
   const isFree = credits?.plan === 'free';
 
-  // Use translated labels with fallback
-  const getLabel = (id: keyof typeof MENU_LABELS) => {
-    const translated = t(`playground.sidebar.${id}`);
-    // If translation returns the key itself, use fallback
-    if (translated.includes('playground.sidebar.')) {
-      return MENU_LABELS[id][locale] || MENU_LABELS[id].fr;
-    }
-    return translated;
+  // Direct labels - no need for translation system, we have locale
+  const labels = {
+    create: locale === 'fr' ? 'Créer' : 'Create',
+    projects: locale === 'fr' ? 'Projets' : 'Projects',
+    calendar: locale === 'fr' ? 'Calendrier' : 'Calendar',
+    stats: locale === 'fr' ? 'Stats' : 'Stats',
+    soon: locale === 'fr' ? 'bientôt' : 'soon',
   };
 
   const menuItems = [
-    { id: 'create', icon: '✦', label: getLabel('create') },
-    { id: 'projects', icon: '◫', label: getLabel('projects') },
-    { id: 'calendar', icon: '▤', label: getLabel('calendar'), disabled: true },
-    { id: 'stats', icon: '◔', label: getLabel('stats'), disabled: true },
+    { id: 'create', icon: '✦', label: labels.create },
+    { id: 'projects', icon: '◫', label: labels.projects },
+    { id: 'calendar', icon: '▤', label: labels.calendar, disabled: true },
+    { id: 'stats', icon: '◔', label: labels.stats, disabled: true },
   ];
 
   return (
@@ -124,7 +115,7 @@ export default function Sidebar({
                     )}
                     {!isCollapsed && isDisabled && (
                       <span className="ml-auto text-[9px] font-mono uppercase tracking-wider text-gray-300 bg-gray-100 px-1.5 py-0.5 rounded">
-                        {t('playground.sidebar.soon')}
+                        {labels.soon}
                       </span>
                     )}
                   </button>
@@ -133,7 +124,7 @@ export default function Sidebar({
                   {isCollapsed && hoveredItem === item.id && (
                     <div className="absolute left-full top-1/2 -translate-y-1/2 ml-2 bg-gray-900 text-white text-xs font-medium px-2.5 py-1.5 rounded-md whitespace-nowrap z-50 shadow-lg">
                       {item.label}
-                      {isDisabled && <span className="text-gray-400 ml-1">({t('playground.sidebar.soon')})</span>}
+                      {isDisabled && <span className="text-gray-400 ml-1">({labels.soon})</span>}
                       <div className="absolute right-full top-1/2 -translate-y-1/2 border-4 border-transparent border-r-gray-900" />
                     </div>
                   )}

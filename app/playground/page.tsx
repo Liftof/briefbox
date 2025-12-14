@@ -498,7 +498,7 @@ function PlaygroundContent() {
     } catch (error: any) {
       clearInterval(timer);
       console.error('Brand load error', error);
-      showToast(error.message || 'Erreur pendant le chargement', 'error');
+      showToast(error.message || (locale === 'fr' ? 'Erreur pendant le chargement' : 'Error loading'), 'error');
       setStep('url');
     }
   };
@@ -515,7 +515,7 @@ function PlaygroundContent() {
     let cancelled = false;
     const fetchBrand = async () => {
       setStep('analyzing');
-      setStatusMessage('Chargement de la marque...');
+      setStatusMessage(locale === 'fr' ? 'Chargement de la marque...' : 'Loading brand...');
       
       // Simulate initial progress
       setProgress(5);
@@ -550,7 +550,7 @@ function PlaygroundContent() {
         if (!cancelled) {
           clearInterval(timer);
           console.error('Brand load error', error);
-          showToast(error.message || 'Erreur pendant le chargement', 'error');
+          showToast(error.message || 'Error loading', 'error');
           setStep('url');
         }
       }
@@ -980,10 +980,10 @@ function PlaygroundContent() {
       if (!response.ok || !data.success) {
         throw new Error(data.error || 'Sauvegarde impossible');
       }
-      showToast('Marque sauvegardée', 'success');
+      showToast(locale === 'fr' ? 'Marque sauvegardée' : 'Brand saved', 'success');
     } catch (error: any) {
       console.error('Save brand error', error);
-      showToast(error.message || 'Erreur pendant la sauvegarde', 'error');
+      showToast(error.message || (locale === 'fr' ? 'Erreur pendant la sauvegarde' : 'Error saving'), 'error');
     }
   };
 
@@ -1071,7 +1071,7 @@ function PlaygroundContent() {
       setIsUploadingLogo(false);
     };
     reader.onerror = () => {
-      showToast('Erreur lors du chargement du logo', 'error');
+      showToast(locale === 'fr' ? 'Erreur lors du chargement du logo' : 'Error loading logo', 'error');
       setIsUploadingLogo(false);
     };
     reader.readAsDataURL(file);
@@ -1120,7 +1120,7 @@ function PlaygroundContent() {
       const data = await response.json();
       if (data.success && data.brandId) {
         setBrandData((prev: any) => ({ ...prev, id: data.brandId }));
-        showToast('Marque sauvegardée !', 'success');
+        showToast(locale === 'fr' ? 'Marque sauvegardée !' : 'Brand saved!', 'success');
       }
     } catch (error) {
       console.error('Error saving brand:', error);
@@ -1170,7 +1170,7 @@ function PlaygroundContent() {
       showToast('Source ajoutée', 'success');
     } catch (error: any) {
       console.error('Add source error', error);
-      showToast(error.message || 'Erreur pendant l\'ajout de la source', 'error');
+      showToast(error.message || (locale === 'fr' ? 'Erreur pendant l\'ajout de la source' : 'Error adding source'), 'error');
     } finally {
       setIsAddingSource(false);
     }
@@ -1360,7 +1360,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
     } catch (error: any) {
       console.error('Edit error:', error);
       setStatus('error');
-      showToast(error.message || 'Erreur pendant la modification', 'error');
+      showToast(error.message || (locale === 'fr' ? 'Erreur pendant la modification' : 'Error editing'), 'error');
     } finally {
       setTimeout(() => {
         setStatus('idle');
@@ -1617,12 +1617,12 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
               } else {
                 // Upload failed - return null to filter out
                 console.error('❌ Blob upload failed:', uploadResult.error);
-                showToast('Erreur de sauvegarde - image non persistée', 'error');
+                showToast(locale === 'fr' ? 'Erreur de sauvegarde' : 'Save error', 'error');
                 return { ...img, url: img.url, skipSave: true }; // Mark to skip localStorage
               }
             } catch (e) {
               console.error('❌ Blob upload error:', e);
-              showToast('Erreur de sauvegarde cloud', 'error');
+              showToast(locale === 'fr' ? 'Erreur de sauvegarde' : 'Save error', 'error');
               return { ...img, url: img.url, skipSave: true };
             }
           }
@@ -1652,7 +1652,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
       setGeneratedImages((prev) => [...normalized, ...prev].slice(0, 16));
       setStatus('complete');
       setProgress(100);
-      showToast('Visuels générés et sauvegardés', 'success');
+      showToast(locale === 'fr' ? 'Visuels générés et sauvegardés' : 'Visuals generated and saved', 'success');
       
       // ====== CREDITS TRACKING (inline upgrade card, no popup) ======
       const creditsRemaining = payload.creditsRemaining;
@@ -1679,7 +1679,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
     } catch (error: any) {
       console.error('Generation error', error);
       setStatus('error');
-      showToast(error.message || 'Erreur pendant la génération', 'error');
+      showToast(error.message || (locale === 'fr' ? 'Erreur pendant la génération' : 'Error generating'), 'error');
     } finally {
       setTimeout(() => {
         setStatus('idle');
@@ -2225,8 +2225,8 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
               <span className="text-white text-lg">✦</span>
           </div>
             <div className="min-w-0">
-              <h1 className="text-lg font-semibold text-gray-900 truncate">{brandData?.name || 'Marque'}</h1>
-              <span className="text-xs text-gray-400">Créez vos visuels</span>
+              <h1 className="text-lg font-semibold text-gray-900 truncate">{brandData?.name || (locale === 'fr' ? 'Marque' : 'Brand')}</h1>
+              <span className="text-xs text-gray-400">{locale === 'fr' ? 'Créez vos visuels' : 'Create your visuals'}</span>
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-2">
@@ -2559,7 +2559,7 @@ Couleurs : Utiliser la palette de la marque.`;
                             ? 'border-2 border-blue-500 ring-2 ring-blue-200' 
                             : 'border border-gray-200 opacity-50 hover:opacity-100 hover:border-gray-400'
                         }`}
-                        title={isSelected ? 'Cliquez pour retirer' : 'Cliquez pour ajouter'}
+                        title={isSelected ? (locale === 'fr' ? 'Cliquez pour retirer' : 'Click to remove') : (locale === 'fr' ? 'Cliquez pour ajouter' : 'Click to add')}
                       >
                         <img src={labeledImg.url} className="w-full h-full object-cover" />
                         {isClientLogo && (
@@ -2630,7 +2630,7 @@ Couleurs : Utiliser la palette de la marque.`;
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
                   </svg>
-                  <span>Génération en cours...</span>
+                  <span>{locale === 'fr' ? 'Génération en cours...' : 'Generating...'}</span>
                 </>
               ) : (
                 <>
@@ -2815,14 +2815,18 @@ Couleurs : Utiliser la palette de la marque.`;
                 return (
               <div
                 key={img.id}
+                onClick={() => setLightboxImage(img)}
                   className={`bg-gray-100 overflow-hidden relative group cursor-pointer border border-gray-200 hover:border-gray-400 transition-all hover:shadow-xl ${aspectClass}`}
               >
                 <img src={img.url} className="w-full h-full object-cover" />
                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all flex items-center justify-center gap-3 opacity-0 group-hover:opacity-100">
                   <button
-                    onClick={() => setLightboxImage(img)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setLightboxImage(img);
+                    }}
                       className="w-11 h-11 bg-white text-gray-900 flex items-center justify-center hover:bg-gray-100 transition-colors shadow-lg"
-                    title="Voir"
+                    title={locale === 'fr' ? 'Voir' : 'View'}
                   >
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                         <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
@@ -3401,10 +3405,10 @@ Couleurs : Utiliser la palette de la marque.`;
                         setStep('url');
                       }
                     } else {
-                      showToast(data.error || 'Erreur', 'error');
+                      showToast(data.error || (locale === 'fr' ? 'Erreur' : 'Error'), 'error');
                     }
                   } catch (err) {
-                    showToast('Erreur de suppression', 'error');
+                    showToast(locale === 'fr' ? 'Erreur de suppression' : 'Delete error', 'error');
                   }
                 }}
             />
@@ -3445,7 +3449,7 @@ Couleurs : Utiliser la palette de la marque.`;
 
 export default function Playground() {
   return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Chargement...</div>}>
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}>
       <PlaygroundContent />
     </Suspense>
   );

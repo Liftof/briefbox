@@ -505,7 +505,7 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
           <div className="bg-white w-full max-w-lg max-h-[70vh] flex flex-col shadow-2xl border border-gray-200">
             <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-              <h2 className="text-sm font-medium text-gray-900 uppercase tracking-wider">Changer le logo</h2>
+              <h2 className="text-sm font-medium text-gray-900 uppercase tracking-wider">{locale === 'fr' ? 'Changer le logo' : 'Change logo'}</h2>
               <button onClick={() => setLogoSelectorOpen(false)} className="text-gray-400 hover:text-gray-900">×</button>
             </div>
             <div className="flex-1 overflow-y-auto p-6">
@@ -563,7 +563,7 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
       <section className="mb-10">
         <div className="flex items-center gap-3 mb-6">
           <span className="w-2 h-2 bg-gray-900 rounded-full" />
-          <h3 className="text-lg font-semibold text-gray-900">Identité & Direction Artistique</h3>
+          <h3 className="text-lg font-semibold text-gray-900">{locale === 'fr' ? 'Identité & Direction Artistique' : 'Identity & Art Direction'}</h3>
         </div>
 
         {/* MOBILE-RESPONSIVE: stack on mobile, grid on desktop */}
@@ -582,7 +582,7 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
               )}
               <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center z-20">
                 <span className="text-white text-xs font-medium flex items-center gap-1">
-                  <span className="text-blue-400">✎</span> Changer
+                  <span className="text-blue-400">✎</span> {locale === 'fr' ? 'Changer' : 'Change'}
                 </span>
               </div>
             </button>
