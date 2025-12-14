@@ -2254,9 +2254,15 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
         {/* Header Bar */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-gray-100">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gray-900 flex items-center justify-center flex-shrink-0">
-              <span className="text-white text-lg">✦</span>
-          </div>
+            {brandData?.logo ? (
+              <div className="w-10 h-10 bg-white border border-gray-200 flex items-center justify-center flex-shrink-0 overflow-hidden">
+                <img src={brandData.logo} alt={brandData.name || 'Logo'} className="w-8 h-8 object-contain" />
+              </div>
+            ) : (
+              <div className="w-10 h-10 bg-gray-900 flex items-center justify-center flex-shrink-0">
+                <span className="text-white text-lg">✦</span>
+              </div>
+            )}
             <div className="min-w-0">
               <h1 className="text-lg font-semibold text-gray-900 truncate">{brandData?.name || (locale === 'fr' ? 'Marque' : 'Brand')}</h1>
               <span className="text-xs text-gray-400">{locale === 'fr' ? 'Créez vos visuels' : 'Create your visuals'}</span>
