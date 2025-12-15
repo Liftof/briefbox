@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
+import { auth, currentUser } from '@clerk/nextjs/server';
 import { db } from '@/db';
-import { users, teams, teamMembers } from '@/db/schema';
-import { eq, and } from 'drizzle-orm';
+import { users, teams, teamMembers, dailySignupCounts } from '@/db/schema';
+import { eq, and, sql } from 'drizzle-orm';
 
 // Credit limits per plan
 const PLAN_CREDITS = {
@@ -10,6 +10,41 @@ const PLAN_CREDITS = {
   pro: 50,
   premium: 150,
 } as const;
+
+// Early bird limit per day
+const EARLY_BIRD_LIMIT = 30;
+
+// Helper: Get today's date as YYYY-MM-DD string
+function getTodayDateString(): string {
+  return new Date().toISOString().split('T')[0];
+}
+
+// Helper: Check and increment daily signup count, returns if user is early bird
+async function checkAndIncrementDailySignups(): Promise<boolean> {
+  const today = getTodayDateString();
+  
+  let dailyCount = await db.query.dailySignupCounts.findFirst({
+    where: eq(dailySignupCounts.date, today),
+  });
+  
+  if (!dailyCount) {
+    const result = await db.insert(dailySignupCounts)
+      .values({ date: today, count: 1 })
+      .onConflictDoUpdate({
+        target: dailySignupCounts.date,
+        set: { count: sql`${dailySignupCounts.count} + 1` }
+      })
+      .returning();
+    return result[0].count <= EARLY_BIRD_LIMIT;
+  }
+  
+  const result = await db.update(dailySignupCounts)
+    .set({ count: dailyCount.count + 1 })
+    .where(eq(dailySignupCounts.date, today))
+    .returning();
+  
+  return result[0].count <= EARLY_BIRD_LIMIT;
+}
 
 // GET - Check current credits
 export async function GET() {
@@ -19,24 +54,30 @@ export async function GET() {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const user = await db.query.users.findFirst({
+    let user = await db.query.users.findFirst({
       where: eq(users.clerkId, userId),
     });
 
+    // IMPORTANT: Create user if not exists (ensures early bird is properly set)
     if (!user) {
-      // User not in DB yet, return free plan defaults
-      return NextResponse.json({
-        success: true,
-        credits: {
-          remaining: PLAN_CREDITS.free,
-          total: PLAN_CREDITS.free,
-          plan: 'free',
-          canGenerate: true,
-          resetAt: null,
-          isTeamCredits: false,
-          isEarlyBird: false, // Will be set properly when user is created
-        },
-      });
+      const clerkUser = await currentUser();
+      
+      // Check if this user qualifies as early bird (first 30 of the day)
+      const isEarlyBird = await checkAndIncrementDailySignups();
+      const creditsForNewUser = isEarlyBird ? 2 : 1;
+      
+      const result = await db.insert(users).values({
+        clerkId: userId,
+        email: clerkUser?.emailAddresses?.[0]?.emailAddress || '',
+        name: clerkUser?.firstName ? `${clerkUser.firstName} ${clerkUser.lastName || ''}`.trim() : null,
+        avatarUrl: clerkUser?.imageUrl || null,
+        plan: 'free',
+        creditsRemaining: creditsForNewUser,
+        isEarlyBird,
+      }).returning();
+      
+      user = result[0];
+      console.log(`📝 [Credits API] New user created: ${userId}, earlyBird: ${isEarlyBird}, credits: ${creditsForNewUser}`);
     }
 
     // Check if user is part of a team with shared credits
