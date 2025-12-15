@@ -420,6 +420,62 @@ export async function POST(request: NextRequest) {
     const fontsStr = fonts.length > 0 ? fonts.join(', ') : 'Sans-serif (modern)';
     const aesthetic = Array.isArray(brand.aesthetic) ? brand.aesthetic.join(', ') : (brand.aesthetic || 'Modern, Professional');
     const toneVoice = Array.isArray(brand.toneVoice) ? brand.toneVoice.join(', ') : (brand.toneVoice || 'Confident, Clear');
+    
+    // Smart visual motifs fallback - ARTISTIC, not generic stock
+    const getArtisticMotifs = (industry: string): string[] => {
+      const industryLower = (industry || '').toLowerCase();
+      
+      // Artistic, textured, editorial-quality motifs per industry
+      const ARTISTIC_MOTIFS: Record<string, string[]> = {
+        // Tech/SaaS - avoid cliché tech graphics
+        'saas': ['Macro textures of materials (paper, fabric, concrete)', 'Dramatic lighting on simple objects', 'Negative space with bold typography'],
+        'tech': ['Abstract light refractions', 'Close-up of hands interacting', 'Architectural geometry and shadows'],
+        'software': ['Gradient color fields (editorial style)', 'Minimalist object photography', 'Typography as hero element'],
+        'fintech': ['Metallic textures and reflections', 'Precision close-ups (watch mechanisms, tools)', 'Clean geometric compositions'],
+        
+        // Services/Consulting
+        'consulting': ['Natural textures (wood, stone, linen)', 'Thoughtful portraits with depth', 'Editorial-style flat lays'],
+        'agency': ['Bold color blocking', 'Kinetic blur and movement', 'Collage and layered compositions'],
+        'legal': ['Classic textures (leather, paper, ink)', 'Architectural details and symmetry', 'Warm, trusted lighting'],
+        
+        // Food/Hospitality
+        'restaurant': ['Steam and movement in food', 'Ingredient close-ups with texture', 'Warm ambient lighting'],
+        'food': ['Messy, authentic plating', 'Hands in action (cooking, serving)', 'Natural light and shadows'],
+        'hotel': ['Soft fabrics and textiles close-up', 'Golden hour lighting', 'Intimate detail shots'],
+        
+        // Health/Wellness
+        'health': ['Soft natural light', 'Human touch and connection', 'Organic textures and materials'],
+        'wellness': ['Water and light play', 'Botanical close-ups', 'Calm, breathing space'],
+        'fitness': ['Motion blur and energy', 'Sweat and texture details', 'Dynamic angles and crops'],
+        
+        // Retail/E-commerce
+        'ecommerce': ['Product hero with dramatic shadows', 'Texture and material close-ups', 'Lifestyle context (not catalog)'],
+        'fashion': ['Fabric draping and movement', 'Artistic crop and framing', 'Editorial mood lighting'],
+        'beauty': ['Skin texture and glow', 'Product as art object', 'Soft reflections and gradients'],
+        
+        // Creative/Arts
+        'design': ['Process and making-of details', 'Material explorations', 'Bold typographic statements'],
+        'photography': ['Light and shadow play', 'Unexpected crops and angles', 'Film grain and texture'],
+        'art': ['Brushstrokes and texture close-ups', 'Color field compositions', 'Imperfect, human touches'],
+        
+        // Default - universally artistic
+        'default': ['Dramatic lighting and shadows', 'Texture close-ups (any material)', 'Negative space with intention', 'Human elements (hands, silhouettes)']
+      };
+      
+      // Find matching industry
+      for (const [key, motifs] of Object.entries(ARTISTIC_MOTIFS)) {
+        if (industryLower.includes(key)) {
+          return motifs;
+        }
+      }
+      
+      return ARTISTIC_MOTIFS.default;
+    };
+    
+    // Use brand motifs if available, otherwise generate artistic fallback
+    const visualMotifs = (brand.visualMotifs?.length > 0) 
+      ? brand.visualMotifs 
+      : getArtisticMotifs(brand.industry || '');
 
     // PREPARE BRAND KNOWLEDGE (Stats, Testimonials, Values)
     // This allows the model to use real data even if not explicitly in the brief
@@ -442,9 +498,9 @@ export async function POST(request: NextRequest) {
         brandKnowledge.push(`CUSTOMER PAIN POINTS: ${brand.painPoints.join(', ')}`);
     }
     
-    if (brand.visualMotifs?.length > 0) {
-        brandKnowledge.push(`BRAND VISUAL MOTIFS: ${brand.visualMotifs.join(', ')}`);
-    }
+    // Always add visual motifs (either from brand or artistic fallback)
+    brandKnowledge.push(`VISUAL MOTIFS (artistic direction): ${visualMotifs.join(', ')}`);
+    console.log(`🎨 Visual motifs: ${visualMotifs.join(', ')} ${brand.visualMotifs?.length > 0 ? '(from brand)' : '(artistic fallback)'}`);
 
     const knowledgeContext = brandKnowledge.length > 0 
         ? `\n\nBRAND KNOWLEDGE & DATA (Use these facts/quotes if relevant to the brief):\n${brandKnowledge.join('\n')}`
@@ -638,13 +694,13 @@ DESIGN GUIDELINES (AVOID GENERIC VISUALS):
 - LOGO: respect the client's logo, be precise in its reproduction
 - ASSETS: Use the provided image as the HERO element. Integrate it naturally into a scene or layout. Do NOT just crop the image.
 - COLOR: Use the brand palette with restraint. Specifically use ${primaryColor} as a primary accent.
-- BRAND VISUAL MOTIFS: Incorporate these elements subtlety if possible: ${brand.visualMotifs?.join(', ') || 'None'}.
+- ARTISTIC DIRECTION: Incorporate these visual motifs subtly: ${visualMotifs.join(', ')}. Favor TEXTURE, CLOSE-UPS, and EDITORIAL photography over generic stock imagery.
 - LOGO PROTECTION (CRITICAL): A logo image is provided in the input. YOU MUST USE THIS EXACT LOGO. Do NOT generate a fake logo. Do NOT distort, warp, or modify the provided logo. It must remain perfectly legible.
 - STYLE REFERENCES: If style reference images are provided, capture their MOOD, LIGHTING, and COMPOSITION only. Do NOT copy the specific objects or content of the reference.
 - TYPOGRAPHY & TEXT: PERFECT SPELLING IS MANDATORY. Double-check all generated text for correctness. No typos, no gibberish. Use professional kerning and spacing.
 - QUALITY: Editorial quality, sharp details, professional lighting. Avoid "stock photo" look, avoid 3D render artifacts, avoid generic tech graphics.
 
-SPECIFIC AVOIDANCE LIST:
+SPECIFIC AVOIDANCE LIST (CRITICAL - These scream "AI" or "Stock"):
 - No "businessmen shaking hands"
 - No "generic team meeting around laptop"
 - No "abstract blue nodes network"
@@ -652,6 +708,20 @@ SPECIFIC AVOIDANCE LIST:
 - No "rocket ship launching"
 - No "puzzle pieces"
 - No "busy backgrounds with too much text"
+- No overly clean/perfect "3D render" aesthetic
+- No floating objects in space
+- No generic isometric illustrations
+- No "glowing lines connecting dots"
+- No cheesy gradients (purple-to-blue tech cliché)
+
+🎨 INSTEAD, GO FOR:
+- Real textures you can almost feel (paper, fabric, concrete, metal)
+- Imperfect, human details (a crease, a shadow, a reflection)
+- Editorial photography vibes (Kinfolk, Cereal, Monocle magazine)
+- Bold typography as the main visual element
+- Extreme close-ups that create intrigue
+- Intentional negative space
+- Warm, natural lighting over "studio perfect"
 
 🚫 FOR SAAS/TECH PRODUCTS - CRITICAL:
 - DO NOT invent fake UI screens, dashboards, or app interfaces
