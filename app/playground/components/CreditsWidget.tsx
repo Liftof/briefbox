@@ -1,15 +1,17 @@
 'use client';
 
 import { useState } from 'react';
-import { useCredits, PLAN_NAMES } from '@/lib/useCredits';
+import { useCredits, PLAN_NAMES, CreditsInfo } from '@/lib/useCredits';
 
 interface CreditsWidgetProps {
   isCollapsed?: boolean;
   locale?: 'fr' | 'en';
+  creditsOverride?: CreditsInfo | null; // Pass from parent to keep in sync
 }
 
-export default function CreditsWidget({ isCollapsed = false, locale = 'fr' }: CreditsWidgetProps) {
-  const { credits, loading } = useCredits();
+export default function CreditsWidget({ isCollapsed = false, locale = 'fr', creditsOverride }: CreditsWidgetProps) {
+  const { credits: hookCredits, loading } = useCredits();
+  const credits = creditsOverride ?? hookCredits; // Use override if provided
   const [isHovered, setIsHovered] = useState(false);
 
   const handleUpgrade = async () => {

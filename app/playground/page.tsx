@@ -1684,7 +1684,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
       setGeneratedImages((prev) => [...normalized, ...prev].slice(0, 16));
       setStatus('complete');
       setProgress(100);
-      showToast(locale === 'fr' ? 'Visuels générés et sauvegardés' : 'Visuals generated and saved', 'success');
+      showToast(locale === 'fr' ? 'Visuel généré et sauvegardé !' : 'Visual generated and saved!', 'success');
       
       // ====== CREDITS TRACKING (inline upgrade card, no popup) ======
       const creditsRemaining = payload.creditsRemaining;
@@ -3477,6 +3477,7 @@ Couleurs : Utiliser la palette de la marque.`;
                     showToast(locale === 'fr' ? 'Erreur de suppression' : 'Delete error', 'error');
                   }
                 }}
+                creditsInfo={creditsInfo}
             />
           </div>
           

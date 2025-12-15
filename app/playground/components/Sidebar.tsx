@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useTranslation } from '@/lib/i18n';
 import CreditsWidget from './CreditsWidget';
 import { BrandSummary } from '@/lib/useBrands';
-import { useCredits } from '@/lib/useCredits';
+import { useCredits, CreditsInfo } from '@/lib/useCredits';
 
 interface SidebarProps {
   activeTab: string;
@@ -21,6 +21,8 @@ interface SidebarProps {
   onAddBrand?: () => void;
   onRescrape?: () => void;
   onDeleteBrand?: (brandId: number) => void;
+  // Credits sync
+  creditsInfo?: CreditsInfo | null;
 }
 
 export default function Sidebar({ 
@@ -36,9 +38,11 @@ export default function Sidebar({
   onAddBrand,
   onRescrape,
   onDeleteBrand,
+  creditsInfo,
 }: SidebarProps) {
   const { t, locale } = useTranslation();
-  const { credits } = useCredits();
+  const { credits: hookCredits } = useCredits();
+  const credits = creditsInfo ?? hookCredits; // Use passed credits if available
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
   const [showBrandPicker, setShowBrandPicker] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -138,7 +142,7 @@ export default function Sidebar({
 
         {/* Credits Widget - Always visible */}
         <div className={`border-t border-gray-100 ${isCollapsed ? 'p-2' : 'p-3'}`}>
-          <CreditsWidget isCollapsed={isCollapsed} locale={locale} />
+          <CreditsWidget isCollapsed={isCollapsed} locale={locale} creditsOverride={credits} />
         </div>
 
         {/* Brand Selector */}
