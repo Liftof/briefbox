@@ -979,8 +979,16 @@ function PlaygroundContent() {
     // Auto-generate visuals based on smart bento data
     const smartPrompt = buildSmartWelcomePrompt(brandData);
     
+    // IMPORTANT: Refresh credits to get accurate isEarlyBird status
+    // This ensures we have the latest data after user creation
+    await refreshCredits();
+    
     // Check if user is early bird (first 30 signups of the day)
-    const isEarlyBird = creditsInfo?.isEarlyBird ?? false;
+    // Note: We need to fetch fresh data since creditsInfo might be stale
+    const freshCredits = await fetch('/api/user/credits').then(r => r.json()).catch(() => null);
+    const isEarlyBird = freshCredits?.credits?.isEarlyBird ?? creditsInfo?.isEarlyBird ?? false;
+    
+    console.log('🐦 Early bird check:', { isEarlyBird, freshCredits: freshCredits?.credits?.isEarlyBird, cachedCredits: creditsInfo?.isEarlyBird });
     
     if (smartPrompt && allImages.length > 0 && isEarlyBird) {
       // Early bird gets 1 FREE auto-generation
