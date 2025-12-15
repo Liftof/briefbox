@@ -405,13 +405,22 @@ function PlaygroundContent() {
     // setBackgrounds removed - textures disabled
     setVisualIdeas(Array.isArray(brand.visualConcepts) ? brand.visualConcepts : []);
 
-    const labeled = Array.isArray(brand.labeledImages) ? brand.labeledImages : [];
-    const prioritized = labeled
-      .filter((img: any) => ['main_logo', 'product'].includes(img.category))
-      .map((img: any) => img.url);
+    // SYNC images with same priority as handleValidateBento
+    // This ensures returning users get the same quality images as new users
+    const labeledImages = Array.isArray(brand.labeledImages) ? brand.labeledImages : [];
+    
+    // Priority order: logo first, then reference, product, app_ui, others
+    const logoImg = brand.logo ? [brand.logo] : [];
+    const referenceImgs = labeledImages.filter((img: any) => img.category === 'reference').map((img: any) => img.url);
+    const productImgs = labeledImages.filter((img: any) => img.category === 'product').map((img: any) => img.url);
+    const appImgs = labeledImages.filter((img: any) => img.category === 'app_ui').map((img: any) => img.url);
+    const otherImgs = labeledImages.filter((img: any) => !['main_logo', 'reference', 'product', 'app_ui'].includes(img.category)).map((img: any) => img.url);
+    
+    // Combine in priority order with fallback to legacy images array
     const fallback = Array.isArray(brand.images) ? brand.images : [];
-    const selection = Array.from(new Set([...prioritized, ...fallback].filter(Boolean)));
-    setUploadedImages(selection.slice(0, 6));
+    const allImages = [...new Set([...logoImg, ...referenceImgs, ...productImgs, ...appImgs, ...otherImgs, ...fallback])].filter(Boolean);
+    
+    setUploadedImages(allImages.slice(0, 8)); // Same limit as handleValidateBento
 
     // New: Use suggestedPosts (template-based) if available
     if (brand.suggestedPosts?.length && !brief) {
