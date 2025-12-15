@@ -279,13 +279,13 @@ export function CreditsToast({ creditsRemaining, isVisible, locale = 'fr' }: Cre
 
   const messages: Record<'fr' | 'en', Record<number, string>> = {
     fr: {
-      2: "Plus que 2 créations gratuites",
-      1: "Dernière création gratuite",
+      2: "Plus que 2 crédits gratuits",
+      1: "Dernier crédit gratuit",
       0: "Crédits épuisés",
     },
     en: {
-      2: "2 free creations left",
-      1: "Last free creation",
+      2: "2 free credits left",
+      1: "Last free credit",
       0: "No credits left",
     },
   };

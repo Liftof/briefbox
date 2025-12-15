@@ -244,14 +244,14 @@ function PlaygroundContent() {
     "🔥 On recherche les tendances de votre industrie en temps réel.",
     "🧠 Notre IA analyse même les captures d'écran de votre site.",
     "📊 On identifie vos concurrents pour mieux vous positionner.",
-    "✨ Chaque génération crée 2 versions : fidèle et créative.",
+    "✨ 1 crédit = 1 visuel unique, adapté à votre marque.",
   ] : [
     "💡 We analyze up to 10 pages of your site to extract maximum insights.",
     "🎨 Colors are extracted directly from your logo for perfect consistency.",
     "🔥 We search for trends in your industry in real time.",
     "🧠 Our AI even analyzes screenshots from your site.",
     "📊 We identify your competitors for better positioning.",
-    "✨ Each generation creates 2 versions: faithful and creative.",
+    "✨ 1 credit = 1 unique visual, tailored to your brand.",
   ];
   
   const [currentFact, setCurrentFact] = useState(0);
@@ -1516,7 +1516,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
           console.log('🎬 Creative Director:', promptVariations ? `${promptVariations.length} variations` : 'single prompt');
           console.log('🚫 Negative prompt:', negativePrompt.substring(0, 50) + '...');
           setProgress(30);
-          setStatusMessage('✨ 2 créations en cours, veuillez patienter');
+          setStatusMessage(locale === 'fr' ? '✨ Création en cours, veuillez patienter' : '✨ Creating your visual, please wait');
         } else {
           console.warn('Creative Director fallback:', cdData.error);
           finalGenerationPrompt = buildFallbackPrompt(finalPrompt, targetBrand);
@@ -2855,8 +2855,8 @@ Couleurs : Utiliser la palette de la marque.`;
             <div className="mt-4 text-center">
               <p className="text-xs text-gray-400 italic">
                 💡 {locale === 'fr' 
-                  ? 'Chaque génération crée 2 versions : fidèle et créative' 
-                  : 'Each generation creates 2 versions: faithful and creative'}
+                  ? '1 crédit = 1 visuel unique créé par l\'IA' 
+                  : '1 credit = 1 unique AI-generated visual'}
               </p>
             </div>
           </div>
