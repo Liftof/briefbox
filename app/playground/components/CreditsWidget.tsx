@@ -63,8 +63,10 @@ export default function CreditsWidget({ isCollapsed = false, locale = 'fr', cred
       onMouseLeave={() => setIsHovered(false)}
       className={`
         relative cursor-pointer transition-all duration-200
-        border border-gray-200 bg-white
-        hover:border-gray-900
+        ${isFree 
+          ? 'border-2 border-blue-500 bg-blue-50 hover:bg-blue-100 hover:border-blue-600' 
+          : 'border border-gray-200 bg-white hover:border-gray-900'
+        }
         ${isCollapsed ? 'p-2' : 'p-3'}
       `}
     >
@@ -102,10 +104,11 @@ export default function CreditsWidget({ isCollapsed = false, locale = 'fr', cred
               </div>
             </div>
             
-            {/* Upgrade arrow */}
+            {/* Upgrade button */}
             {isFree && (
-              <div className="text-gray-300 group-hover:text-gray-900">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <div className="flex items-center gap-1.5 text-blue-600 font-medium text-xs">
+                <span>{locale === 'fr' ? 'Upgrade' : 'Upgrade'}</span>
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                   <path d="M5 12h14M12 5l7 7-7 7" />
                 </svg>
               </div>
