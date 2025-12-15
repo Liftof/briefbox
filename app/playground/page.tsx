@@ -444,11 +444,13 @@ function PlaygroundContent() {
     const lastUsedId = getLastUsedBrandId();
     
     if (lastUsedId) {
-      // User has used a brand before - load it immediately
+      // User has used a brand before - go directly to playground
       console.log('⚡ Fast path: Loading last brand from localStorage:', lastUsedId);
       setHasCheckedBrands(true);
       setSelectedBrandId(lastUsedId);
-      loadBrandById(lastUsedId, false); // Skip bento for returning users
+      setStep('playground'); // Go to playground immediately
+      setActiveTab('create');
+      loadBrandById(lastUsedId, false, true); // Load data in background
     }
     // If no lastUsedId, wait for API to check if user has any brands at all
   }, [brandId, analyzeUrl, hasCheckedBrands]);
@@ -462,11 +464,13 @@ function PlaygroundContent() {
     setHasCheckedBrands(true);
     
     if (userBrands.length > 0) {
-      // User has brands but no localStorage - load the first one
+      // User has brands but no localStorage - go to playground immediately
       const brandToLoad = userBrands[0];
       console.log('🏷️ Loading first available brand:', brandToLoad.name);
       setSelectedBrandId(brandToLoad.id);
-      loadBrandById(brandToLoad.id, false);
+      setStep('playground'); // Go to playground immediately
+      setActiveTab('create');
+      loadBrandById(brandToLoad.id, false, true); // Load data in background
     } else {
       // No brands at all - show onboarding
       setStep('url');
@@ -474,14 +478,19 @@ function PlaygroundContent() {
   }, [brandsLoading, userBrands, brandId, analyzeUrl, hasCheckedBrands]);
   
   // Helper: Load a brand by ID
-  const loadBrandById = async (id: number, showBento = true) => {
-    setStep('analyzing');
-    setStatusMessage(locale === 'fr' ? 'Chargement de la marque...' : 'Loading brand...');
-    setProgress(5);
+  // silent = true → don't show loading screen (for returning users)
+  const loadBrandById = async (id: number, showBento = true, silent = false) => {
+    let timer: NodeJS.Timeout | null = null;
     
-    const timer = setInterval(() => {
-      setProgress((prev) => prev >= 90 ? prev : prev + Math.random() * 15);
-    }, 500);
+    if (!silent) {
+      setStep('analyzing');
+      setStatusMessage(locale === 'fr' ? 'Chargement de la marque...' : 'Loading brand...');
+      setProgress(5);
+      
+      timer = setInterval(() => {
+        setProgress((prev) => prev >= 90 ? prev : prev + Math.random() * 15);
+      }, 500);
+    }
 
     try {
       const response = await fetch(`/api/brand/${id}`);
@@ -490,20 +499,26 @@ function PlaygroundContent() {
         throw new Error(data.error || 'Failed to load brand');
       }
       
-      clearInterval(timer);
+      if (timer) clearInterval(timer);
       setProgress(100);
       hydrateBrand(data.brand);
       setSelectedBrandId(id);
       setLastUsedBrandId(id);
       
       // Go to bento or directly to playground
-      setTimeout(() => {
+      if (silent) {
+        // Direct transition for returning users
         setStep(showBento ? 'bento' : 'playground');
         setActiveTab('create');
-      }, 300);
+      } else {
+        setTimeout(() => {
+          setStep(showBento ? 'bento' : 'playground');
+          setActiveTab('create');
+        }, 300);
+      }
       
     } catch (error: any) {
-      clearInterval(timer);
+      if (timer) clearInterval(timer);
       console.error('Brand load error', error);
       showToast(error.message || (locale === 'fr' ? 'Erreur pendant le chargement' : 'Error loading'), 'error');
       setStep('url');
