@@ -186,6 +186,7 @@ function PlaygroundContent() {
   const [step, setStep] = useState<Step>(
     analyzeUrl ? 'analyzing' : brandId ? 'analyzing' : 'loading' as Step
   );
+  const [stepBeforeBento, setStepBeforeBento] = useState<Step | null>(null); // Remember where to go back from bento
   const [hasCheckedBrands, setHasCheckedBrands] = useState(false);
   const [activeTab, setActiveTab] = useState('create');
   const [websiteUrl, setWebsiteUrl] = useState('');
@@ -2228,8 +2229,13 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
           onValidate={handleValidateBento}
           onAddSource={() => setShowSourceManager(true)}
           onBack={() => {
-            // Go back to URL input to restart analysis or change URL
-            setStep('url');
+            // Go back to previous step (create if coming from Identité button, url if new analysis)
+            if (stepBeforeBento && stepBeforeBento !== 'bento') {
+              setStep(stepBeforeBento);
+              setStepBeforeBento(null);
+            } else {
+              setStep('url');
+            }
           }}
         />
       );
@@ -2329,14 +2335,17 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
               ))}
             </select>
           <button
-            onClick={() => setStep('bento')}
+            onClick={() => {
+              setStepBeforeBento(step); // Remember current step
+              setStep('bento');
+            }}
               className="px-3 py-2 border border-gray-200 text-xs text-gray-500 hover:text-gray-900 hover:border-gray-400 transition-colors flex items-center gap-2"
           >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
               <path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
               <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
             </svg>
-            Identité
+            {locale === 'fr' ? 'Identité' : 'Identity'}
           </button>
           </div>
         </div>
@@ -3438,7 +3447,10 @@ Couleurs : Utiliser la palette de la marque.`;
                 activeTab={activeTab} 
                 setActiveTab={setActiveTab} 
                 brandData={brandData} 
-                onEditBrand={() => setStep('bento')} 
+                onEditBrand={() => {
+                  setStepBeforeBento(step);
+                  setStep('bento');
+                }} 
                 isCollapsed={isSidebarCollapsed}
                 toggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
                 userBrands={userBrands}
