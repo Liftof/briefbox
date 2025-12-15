@@ -416,6 +416,8 @@ export async function POST(request: NextRequest) {
     const colors = Array.isArray(brand.colors) ? brand.colors : ['#000000'];
     const primaryColor = colors[0] || '#000000';
     const secondaryColor = colors[1] || '#ffffff';
+    const fonts = Array.isArray(brand.fonts) ? brand.fonts : ['Sans-serif'];
+    const fontsStr = fonts.length > 0 ? fonts.join(', ') : 'Sans-serif (modern)';
     const aesthetic = Array.isArray(brand.aesthetic) ? brand.aesthetic.join(', ') : (brand.aesthetic || 'Modern, Professional');
     const toneVoice = Array.isArray(brand.toneVoice) ? brand.toneVoice.join(', ') : (brand.toneVoice || 'Confident, Clear');
 
@@ -628,7 +630,7 @@ Brand: ${brandName}
 Aesthetic: ${aesthetic}
 Tone: ${toneVoice}
 Colors: ${colors.join(', ')}
-Fonts: Sans-serif (modern), Helvetica Neue
+Fonts: ${fontsStr} (use these exact fonts or closest visual equivalent)
 
 DESIGN GUIDELINES (AVOID GENERIC VISUALS):
 - COMPOSITION: Use asymmetrical layouts, extreme close-ups, or bold negative space. Avoid standard "centered text on image" templates.
