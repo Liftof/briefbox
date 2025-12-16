@@ -680,6 +680,16 @@ function PlaygroundContent() {
         hydrateBrand(data.brand);
         setStatus('idle');
         
+        // If brand already exists for this user, skip onboarding and go to bento
+        if (data.isUpdate && data.brand?.id) {
+          setTimeout(() => {
+            setSelectedBrandId(data.brand.id);
+            setStep('bento');
+            showToast(locale === 'fr' ? 'Cette marque existe déjà — la voici !' : 'This brand already exists — here it is!', 'info');
+          }, 300);
+          return; // Success! Exit the retry loop
+        }
+        
         setTimeout(() => {
             setStep('logo-confirm');
             if (data.brand?.logo) {
@@ -759,6 +769,16 @@ function PlaygroundContent() {
       setProgress(100);
       hydrateBrand(data.brand);
       setStatus('idle');
+      
+      // If brand already exists for this user, skip onboarding and go to bento
+      if (data.isUpdate && data.brand?.id) {
+        setTimeout(() => {
+          setSelectedBrandId(data.brand.id);
+          setStep('bento');
+          showToast(locale === 'fr' ? 'Cette marque existe déjà — la voici !' : 'This brand already exists — here it is!', 'info');
+        }, 300);
+        return; // Success!
+      }
       
       setTimeout(() => {
           setStep('logo-confirm');

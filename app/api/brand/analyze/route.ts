@@ -979,9 +979,46 @@ export async function POST(request: Request) {
       b.url && normalizeUrl(b.url) === normalizedUrl
     );
 
-    // If brand exists and we're not forcing a re-scrape, return existing brand ID
-    // The frontend can then decide to load it or re-scrape
+    // If brand exists and we're not forcing a re-scrape, return existing brand data immediately
+    // This saves API costs and time - no need to re-scrape
     const forceRescrape = reqBody.forceRescrape === true;
+    
+    if (existingBrand && !forceRescrape) {
+      console.log(`♻️ Brand already exists for this URL, returning existing data (id: ${existingBrand.id})`);
+      return NextResponse.json({
+        success: true,
+        brand: {
+          id: existingBrand.id,
+          name: existingBrand.name,
+          url: existingBrand.url,
+          logo: existingBrand.logo,
+          colors: existingBrand.colors,
+          fonts: existingBrand.fonts,
+          values: existingBrand.values,
+          aesthetic: existingBrand.aesthetic,
+          toneVoice: existingBrand.toneVoice,
+          description: existingBrand.description,
+          tagline: existingBrand.tagline,
+          industry: existingBrand.industry,
+          targetAudience: existingBrand.targetAudience,
+          uniqueValueProposition: existingBrand.uniqueValueProposition,
+          features: existingBrand.features,
+          services: existingBrand.services,
+          keyPoints: existingBrand.keyPoints,
+          labeledImages: existingBrand.labeledImages,
+          images: (existingBrand.labeledImages as any[])?.map((img: any) => img.url) || [],
+          visualMotifs: existingBrand.visualMotifs,
+          vocabulary: existingBrand.vocabulary,
+          painPoints: existingBrand.painPoints,
+          backgroundPrompts: existingBrand.backgroundPrompts,
+          suggestedPosts: existingBrand.suggestedPosts,
+          industryInsights: existingBrand.industryInsights,
+          contentNuggets: existingBrand.contentNuggets,
+          editorialHooks: existingBrand.editorialHooks,
+        },
+        isUpdate: true,
+      });
+    }
     
     // Store existing brand ID to include in response (for update instead of create)
     let existingBrandId: number | null = existingBrand?.id || null;
