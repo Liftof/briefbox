@@ -4,7 +4,8 @@ import { useState, useEffect, useRef, Suspense, ChangeEvent, useCallback } from 
 import { useSearchParams } from 'next/navigation';
 import Sidebar from './components/Sidebar';
 import BentoGrid from './components/BentoGrid';
-import StyleGallery from './components/StyleGallery'; // NEW
+import StyleGallery from './components/StyleGallery';
+import AssetManager from './components/AssetManager';
 import CalendarView from './components/CalendarView';
 import ProjectsView, { addGenerations, loadFeedbackPatterns } from './components/ProjectsView';
 import RecentVisuals from './components/RecentVisuals';
@@ -178,7 +179,8 @@ function PlaygroundContent() {
   const { brands: userBrands, loading: brandsLoading, refresh: refreshBrands } = useBrands();
   const [selectedBrandId, setSelectedBrandId] = useState<number | null>(null);
 
-  const [showStyleGallery, setShowStyleGallery] = useState(false); // NEW
+  const [showStyleGallery, setShowStyleGallery] = useState(false);
+  const [showAssetManager, setShowAssetManager] = useState(false);
   
   // Determine initial step:
   // - If we have URL params → go to analyzing
@@ -2513,203 +2515,174 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
             />
           </div>
 
-          {/* Sources Row - Side by side layout */}
+          {/* Sources Row - Side by side layout - REDESIGNED */}
           <div className="p-5">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               
-              {/* 1. STYLE REFERENCE ZONE - With drop area */}
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">{locale === 'fr' ? 'Style à imiter' : 'Style inspiration'}</label>
-                    <button
-                    onClick={() => setShowStyleGallery(true)}
-                    className="text-[10px] text-blue-600 hover:text-blue-700 flex items-center gap-1"
-                  >
-                    ✨ {locale === 'fr' ? 'Galerie' : 'Gallery'}
-                    </button>
-            </div>
-
-                {/* Selected styles + Drop zone */}
-                <div className="space-y-2 mb-2">
-                  {/* Selected images with note input */}
-                  {styleRefImages.map((ref, i) => (
-                    <div key={i} className="flex gap-2 items-start">
-                      <div className="relative h-14 w-14 flex-shrink-0 rounded-lg overflow-hidden border-2 border-blue-400">
-                        <img src={ref.url} className="w-full h-full object-cover" />
+              {/* 1. STYLE INSPIRATION ZONE - Clear CTA */}
+              <div className="space-y-3">
+                <label className="text-xs font-medium text-gray-500 uppercase tracking-wider block">
+                  {locale === 'fr' ? 'Inspiration visuelle' : 'Visual inspiration'}
+                </label>
+                
+                {/* Selected styles display */}
+                {styleRefImages.length > 0 && (
+                  <div className="flex gap-2 flex-wrap mb-3">
+                    {styleRefImages.map((ref, i) => (
+                      <div key={i} className="relative group">
+                        <div className="h-16 w-16 rounded-lg overflow-hidden border-2 border-purple-400 shadow-sm">
+                          <img src={ref.url} className="w-full h-full object-cover" alt="" />
+                        </div>
                         <button
                           onClick={() => setStyleRefImages(prev => prev.filter((_, idx) => idx !== i))}
-                          className="absolute top-0.5 right-0.5 w-4 h-4 bg-black/60 text-white rounded-full flex items-center justify-center hover:bg-red-500 text-[9px]"
+                          className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-lg text-xs"
                         >×</button>
+                        {ref.note && (
+                          <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-1.5 py-0.5 bg-purple-600 text-white text-[8px] rounded-full max-w-[60px] truncate">
+                            {ref.note}
+                          </div>
+                        )}
                       </div>
-                      <input
-                        type="text"
-                        placeholder="Ex: J'aime le placement du texte..."
-                        value={ref.note || ''}
-                        onChange={(e) => {
-                          setStyleRefImages(prev => prev.map((r, idx) => 
-                            idx === i ? { ...r, note: e.target.value } : r
-                          ));
-                        }}
-                        className="flex-1 text-xs border border-gray-200 rounded px-2 py-1.5 placeholder:text-gray-300 focus:border-blue-400 focus:outline-none"
-                      />
-                  </div>
-                ))}
-                  
-                  {/* Drop zone - always visible if less than 3 */}
-                  {styleRefImages.length < 3 && (
-                    <label className="h-12 w-full border-2 border-dashed border-gray-200 rounded-lg flex items-center justify-center gap-2 cursor-pointer hover:border-blue-400 hover:bg-blue-50/50 transition-all">
-                      <svg className="w-4 h-4 text-gray-300" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                        <path d="M12 4v16m8-8H4" />
-                      </svg>
-                      <span className="text-[10px] text-gray-400">Ajouter une inspiration</span>
-                <input 
-                  type="file" 
-                  accept="image/*" 
-                  className="hidden" 
-                  onChange={(e) => {
-                          if (e.target.files?.[0]) {
-                        const reader = new FileReader();
-                        reader.onload = (ev) => {
-                          if (typeof ev.target?.result === 'string') {
-                                setStyleRefImages(prev => [...prev, { url: ev.target!.result as string }].slice(0, 3));
-                          }
-                        };
-                            reader.readAsDataURL(e.target.files[0]);
-                    }
-                  }} 
-                />
-                    </label>
-                  )}
-              </div>
-
-                {/* Quick picks from curated gallery */}
-                <div className="flex gap-1.5 items-center">
-                  {[
-                    { url: '/inspirations/ref-7.jpeg', label: 'Playful' },
-                    { url: '/inspirations/ref-2.jpeg', label: 'Clean' },
-                    { url: '/inspirations/ref-5.jpeg', label: 'Bold' },
-                    { url: '/inspirations/ref-8.jpeg', label: 'Dark' },
-                  ].filter(s => !styleRefImages.some(sel => sel.url.includes(s.url))).slice(0, 4).map((style, i) => (
-                    <div 
-                      key={i}
-                      onClick={() => {
-                        const absoluteUrl = `${window.location.origin}${style.url}`;
-                        setStyleRefImages(prev => [...prev, { url: absoluteUrl }].slice(0, 3));
-                      }}
-                      className="relative h-10 w-10 rounded overflow-hidden cursor-pointer border border-gray-200 hover:border-blue-400 transition-all group flex-shrink-0"
-                    >
-                      <img src={style.url} className="w-full h-full object-cover" />
-                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                        <span className="text-white text-[8px] font-medium">+</span>
-                      </div>
-                    </div>
-                  ))}
-                  {/* Gallery button */}
-                  <button
-                    onClick={() => setShowStyleGallery(true)}
-                    className="h-10 px-3 rounded bg-gray-900 text-white text-[10px] font-medium hover:bg-gray-800 transition-all flex items-center gap-1.5 flex-shrink-0"
-                  >
-                    <span>🎨</span>
-                    <span>{locale === 'fr' ? 'Galerie' : 'Gallery'}</span>
-                  </button>
-                </div>
-              </div>
-
-              {/* 2. BRAND ASSETS ZONE - Clickable to select/deselect */}
-              <div>
-                <div className="flex items-center justify-between mb-2">
-                  <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">Assets à utiliser</label>
-                  <span className="text-[10px] text-gray-400">Cliquez pour sélectionner</span>
-                </div>
-                
-                {/* All available brand assets - clickable to toggle */}
-                <div className="flex gap-2 flex-wrap">
-                  {/* Logo - always selected, can't be deselected */}
-                  {brandData?.logo && (
-                    <div 
-                      className="relative h-14 w-14 rounded border-2 border-blue-500 overflow-hidden flex-shrink-0 cursor-default"
-                      style={{
-                        backgroundImage: `linear-gradient(45deg, #f0f0f0 25%, transparent 25%), linear-gradient(-45deg, #f0f0f0 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #f0f0f0 75%), linear-gradient(-45deg, transparent 75%, #f0f0f0 75%)`,
-                        backgroundSize: '6px 6px',
-                        backgroundPosition: '0 0, 0 3px, 3px -3px, -3px 0px'
-                      }}
-                      title="Logo (toujours inclus)"
-                    >
-                      <img src={brandData.logo} className="w-full h-full object-contain p-1" alt="Logo" />
-                      <div className="absolute bottom-0 left-0 right-0 bg-blue-600 text-white text-[6px] text-center py-0.5 font-bold">
-                        LOGO ✓
-                  </div>
+                    ))}
                   </div>
                 )}
+                
+                {/* Two clear options */}
+                <div className="flex gap-2">
+                  {/* Gallery button - Primary CTA */}
+                  <button
+                    onClick={() => setShowStyleGallery(true)}
+                    className="flex-1 h-14 bg-gradient-to-br from-purple-500 to-pink-500 text-white rounded-lg flex items-center justify-center gap-2 hover:from-purple-600 hover:to-pink-600 transition-all shadow-sm"
+                  >
+                    <span className="text-xl">🎨</span>
+                    <div className="text-left">
+                      <span className="text-sm font-medium block">{locale === 'fr' ? "Galerie d'inspiration" : 'Inspiration gallery'}</span>
+                      <span className="text-[10px] text-white/70">{locale === 'fr' ? 'Styles prêts à utiliser' : 'Ready-to-use styles'}</span>
+                    </div>
+                  </button>
+                  
+                  {/* Upload custom - Secondary */}
+                  <label className="w-14 h-14 rounded-lg border-2 border-dashed border-gray-300 flex flex-col items-center justify-center cursor-pointer hover:border-purple-400 hover:bg-purple-50/50 transition-all flex-shrink-0">
+                    <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                      <path d="M12 4v16m8-8H4" />
+                    </svg>
+                    <span className="text-[8px] text-gray-400 mt-0.5">{locale === 'fr' ? 'Perso' : 'Custom'}</span>
+                    <input 
+                      type="file" 
+                      accept="image/*" 
+                      className="hidden" 
+                      onChange={(e) => {
+                        if (e.target.files?.[0]) {
+                          const reader = new FileReader();
+                          reader.onload = (ev) => {
+                            if (typeof ev.target?.result === 'string') {
+                              setStyleRefImages(prev => [...prev, { url: ev.target!.result as string }].slice(0, 3));
+                            }
+                          };
+                          reader.readAsDataURL(e.target.files[0]);
+                        }
+                      }} 
+                    />
+                  </label>
+                </div>
+                
+                {/* Optional note for style refs */}
+                {styleRefImages.length > 0 && (
+                  <input
+                    type="text"
+                    placeholder={locale === 'fr' ? "Ce qui vous plaît dans ce style... (optionnel)" : "What you like about this style... (optional)"}
+                    value={styleRefImages[0]?.note || ''}
+                    onChange={(e) => {
+                      setStyleRefImages(prev => prev.map((r, idx) => 
+                        idx === 0 ? { ...r, note: e.target.value } : r
+                      ));
+                    }}
+                    className="w-full text-xs border border-gray-200 rounded-lg px-3 py-2 placeholder:text-gray-300 focus:border-purple-400 focus:outline-none"
+                  />
+                )}
+              </div>
 
-                  {/* Other available assets from labeledImages - click to toggle selection, double-click to toggle mode */}
-                  {brandData?.labeledImages?.filter((li: any) => li.url !== brandData?.logo && li.category !== 'icon').slice(0, 8).map((labeledImg: any, i: number) => {
-                    const isSelected = uploadedImages.includes(labeledImg.url);
-                    const isClientLogo = labeledImg.category === 'client_logo';
-                    const mode = assetModes[labeledImg.url] || (labeledImg.category === 'app_ui' ? 'exact' : 'inspire');
-                    const isExact = mode === 'exact';
+              {/* 2. BRAND ASSETS ZONE - With Asset Manager */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    {locale === 'fr' ? 'Visuels de la marque' : 'Brand visuals'}
+                  </label>
+                  <span className="text-[10px] text-gray-400">
+                    {uploadedImages.length} {locale === 'fr' ? 'sélectionné(s)' : 'selected'}
+                  </span>
+                </div>
+                
+                {/* Selected assets preview */}
+                <div className="flex gap-2 items-center flex-wrap">
+                  {/* Logo - always first */}
+                  {brandData?.logo && (
+                    <div 
+                      className="relative h-14 w-14 rounded-lg border-2 border-blue-500 overflow-hidden flex-shrink-0"
+                      style={{
+                        backgroundImage: `linear-gradient(45deg, #f0f0f0 25%, transparent 25%), linear-gradient(-45deg, #f0f0f0 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #f0f0f0 75%), linear-gradient(-45deg, transparent 75%, #f0f0f0 75%)`,
+                        backgroundSize: '8px 8px',
+                        backgroundPosition: '0 0, 0 4px, 4px -4px, -4px 0px'
+                      }}
+                      title={locale === 'fr' ? 'Logo (toujours inclus)' : 'Logo (always included)'}
+                    >
+                      <img src={brandData.logo} className="w-full h-full object-contain p-1" alt="Logo" />
+                      <div className="absolute bottom-0 left-0 right-0 bg-blue-600 text-white text-[7px] text-center py-0.5 font-bold">
+                        LOGO
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Other selected assets (up to 4 shown) */}
+                  {uploadedImages.filter(img => img !== brandData?.logo).slice(0, 4).map((imgUrl, i) => {
+                    const labelObj = brandData?.labeledImages?.find((li: any) => li.url === imgUrl);
+                    const mode = assetModes[imgUrl] || (labelObj?.category === 'app_ui' ? 'exact' : 'inspire');
                     
                     return (
                       <div 
-                        key={i} 
-                        onClick={() => {
-                          if (isSelected) {
-                            setUploadedImages(prev => prev.filter(img => img !== labeledImg.url));
-                          } else {
-                            setUploadedImages(prev => [...prev, labeledImg.url]);
-                          }
-                        }}
-                        className={`relative h-14 w-14 rounded overflow-hidden cursor-pointer transition-all group ${
-                          isSelected 
-                            ? 'border-2 border-blue-500 ring-2 ring-blue-200' 
-                            : 'border border-gray-200 opacity-50 hover:opacity-100 hover:border-gray-400'
-                        }`}
-                        title={isSelected ? (locale === 'fr' ? 'Cliquez pour retirer' : 'Click to remove') : (locale === 'fr' ? 'Cliquez pour ajouter' : 'Click to add')}
+                        key={i}
+                        onClick={() => setUploadedImages(prev => prev.filter(img => img !== imgUrl))}
+                        className="relative h-14 w-14 rounded-lg border-2 border-blue-500 overflow-hidden cursor-pointer group"
+                        title={locale === 'fr' ? 'Cliquez pour retirer' : 'Click to remove'}
                       >
-                        <img src={labeledImg.url} className="w-full h-full object-cover" />
-                        {isClientLogo && (
-                          <div className="absolute bottom-0 left-0 right-0 bg-blue-600 text-white text-[6px] text-center py-0.5">REF</div>
-                        )}
-                        {isSelected && (
-                          <>
-                            <div className="absolute top-0.5 right-0.5 w-4 h-4 bg-blue-500 text-white rounded-full flex items-center justify-center text-[10px]">✓</div>
-                            {/* Mode toggle - appears on hover */}
-                <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setAssetModes(prev => ({
-                                  ...prev,
-                                  [labeledImg.url]: isExact ? 'inspire' : 'exact'
-                                }));
-                              }}
-                              className={`absolute bottom-0 left-0 right-0 text-[6px] text-center py-0.5 font-medium transition-all ${
-                                isExact 
-                                  ? 'bg-orange-500 text-white' 
-                                  : 'bg-purple-500 text-white'
-                              }`}
-                              title={isExact ? 'Copie exacte - cliquez pour permettre réinterprétation' : 'Réinterprétable - cliquez pour copie exacte'}
-                            >
-                              {isExact ? '📋 EXACT' : '✨ LIBRE'}
-                            </button>
-                          </>
-                        )}
+                        <img src={imgUrl} className="w-full h-full object-cover" alt="" />
+                        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                          <span className="text-white text-lg">×</span>
+                        </div>
+                        <div className={`absolute bottom-0 left-0 right-0 text-[7px] text-center py-0.5 font-bold ${
+                          mode === 'exact' ? 'bg-orange-500 text-white' : 'bg-purple-500 text-white'
+                        }`}>
+                          {mode === 'exact' ? 'EXACT' : 'LIBRE'}
+                        </div>
                       </div>
                     );
                   })}
                   
-                  {/* Upload more button */}
-                  <label className="h-14 w-14 rounded border border-dashed border-gray-300 flex flex-col items-center justify-center cursor-pointer hover:border-blue-400 hover:bg-blue-50/50 transition-all flex-shrink-0">
-                    <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                  <path d="M12 4v16m8-8H4" />
-                </svg>
-                    <span className="text-[8px] text-gray-400 mt-0.5">Upload</span>
-                    <input type="file" multiple accept="image/*" className="hidden" onChange={handleImageUpload} />
-                  </label>
+                  {/* "+X more" indicator */}
+                  {uploadedImages.filter(img => img !== brandData?.logo).length > 4 && (
+                    <div className="h-14 w-14 rounded-lg bg-gray-100 flex items-center justify-center text-gray-500 text-sm font-medium">
+                      +{uploadedImages.filter(img => img !== brandData?.logo).length - 4}
+                    </div>
+                  )}
+                  
+                  {/* Manage assets button */}
+                  <button
+                    onClick={() => setShowAssetManager(true)}
+                    className="h-14 px-4 rounded-lg bg-gray-900 text-white flex items-center gap-2 hover:bg-gray-800 transition-all"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                      <path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    <div className="text-left">
+                      <span className="text-xs font-medium block">{locale === 'fr' ? 'Gérer' : 'Manage'}</span>
+                      <span className="text-[9px] text-gray-400">{brandData?.images?.length || 0} {locale === 'fr' ? 'dispo' : 'avail.'}</span>
+                    </div>
+                  </button>
                 </div>
                 
                 <input ref={fileInputRef} type="file" multiple accept="image/*" className="hidden" onChange={handleImageUpload} />
               </div>
-              </div>
+            </div>
             </div>
 
           {/* Generate Button */}
@@ -3043,20 +3016,80 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
         ))}
       </div>
 
-      {/* Style Gallery Modal */}
+      {/* Style Gallery Modal - Enhanced with multi-select */}
       <StyleGallery 
         isOpen={showStyleGallery} 
         onClose={() => setShowStyleGallery(false)}
+        multiSelect={true}
+        selectedStyles={styleRefImages}
+        onMultiSelect={(styles) => {
+          // Convert relative URLs to absolute URLs for Fal API
+          const absoluteStyles = styles.map(s => ({
+            ...s,
+            url: s.url.startsWith('/') ? `${window.location.origin}${s.url}` : s.url
+          }));
+          console.log('🎨 Style refs selected:', absoluteStyles.length);
+          setStyleRefImages(absoluteStyles.slice(0, 3));
+          showToast(locale === 'fr' ? 'Styles mis à jour' : 'Styles updated', 'success');
+        }}
         onSelect={(url) => {
-          // Convert relative URL to absolute URL for Fal API
+          // Fallback for single select mode
           const absoluteUrl = url.startsWith('/') 
             ? `${window.location.origin}${url}` 
             : url;
           console.log('🎨 Style ref selected:', absoluteUrl);
-          // Add selected inspiration to styleRefImages
           setStyleRefImages(prev => [{ url: absoluteUrl }, ...prev].slice(0, 3));
-          showToast('Style ajouté aux références', 'success');
+          showToast(locale === 'fr' ? 'Style ajouté' : 'Style added', 'success');
         }}
+        locale={locale as 'fr' | 'en'}
+      />
+
+      {/* Asset Manager Modal */}
+      <AssetManager
+        isOpen={showAssetManager}
+        onClose={() => setShowAssetManager(false)}
+        images={brandData?.images || []}
+        labeledImages={brandData?.labeledImages || []}
+        selectedImages={uploadedImages}
+        logoUrl={brandData?.logo}
+        onSelectionChange={(selected) => {
+          setUploadedImages(selected);
+          showToast(locale === 'fr' ? `${selected.length} visuels sélectionnés` : `${selected.length} visuals selected`, 'success');
+        }}
+        onLabelChange={(imageUrl, newLabel) => {
+          // Update labeledImages in brandData
+          if (brandData) {
+            const newLabeledImages = [...(brandData.labeledImages || [])];
+            const existingIndex = newLabeledImages.findIndex((li: any) => li.url === imageUrl);
+            if (existingIndex >= 0) {
+              newLabeledImages[existingIndex] = { url: imageUrl, category: newLabel };
+            } else {
+              newLabeledImages.push({ url: imageUrl, category: newLabel });
+            }
+            setBrandData({ ...brandData, labeledImages: newLabeledImages });
+          }
+        }}
+        onImport={(files) => {
+          // Add new files to brandData.images and brandData.labeledImages
+          if (brandData) {
+            const newImages = [...(brandData.images || []), ...files.map(f => f.url)];
+            const newLabeledImages = [...(brandData.labeledImages || []), ...files.map(f => ({ url: f.url, category: f.tag }))];
+            setBrandData({ ...brandData, images: newImages, labeledImages: newLabeledImages });
+            showToast(locale === 'fr' ? `${files.length} image(s) importée(s)` : `${files.length} image(s) imported`, 'success');
+          }
+        }}
+        onDelete={(imageUrl) => {
+          // Remove from brandData
+          if (brandData) {
+            const newImages = (brandData.images || []).filter((img: string) => img !== imageUrl);
+            const newLabeledImages = (brandData.labeledImages || []).filter((li: any) => li.url !== imageUrl);
+            setBrandData({ ...brandData, images: newImages, labeledImages: newLabeledImages });
+            // Also remove from selection
+            setUploadedImages(prev => prev.filter(img => img !== imageUrl));
+            showToast(locale === 'fr' ? 'Image supprimée' : 'Image deleted', 'info');
+          }
+        }}
+        locale={locale as 'fr' | 'en'}
       />
 
       {showSourceManager && (
