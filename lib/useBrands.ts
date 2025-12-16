@@ -23,7 +23,7 @@ export function useBrands() {
       setLoading(true);
       const res = await fetch('/api/brands');
       const data = await res.json();
-      
+
       if (data.success) {
         setBrands(data.brands || []);
       } else {
@@ -59,4 +59,10 @@ export function getLastUsedBrandId(): number | null {
 export function setLastUsedBrandId(id: number) {
   if (typeof window === 'undefined') return;
   localStorage.setItem('palette_last_brand_id', id.toString());
+}
+
+// Clear the last used brand (when 403 Forbidden or brand deleted)
+export function clearLastUsedBrandId() {
+  if (typeof window === 'undefined') return;
+  localStorage.removeItem('palette_last_brand_id');
 }

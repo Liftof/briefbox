@@ -16,7 +16,7 @@ import MobileNav from './components/MobileNav';
 import { useCredits } from '@/lib/useCredits';
 import { TemplateId } from '@/lib/templates';
 import { useTranslation } from '@/lib/i18n';
-import { useBrands, BrandSummary, getLastUsedBrandId, setLastUsedBrandId } from '@/lib/useBrands';
+import { useBrands, BrandSummary, getLastUsedBrandId, setLastUsedBrandId, clearLastUsedBrandId } from '@/lib/useBrands';
 import { getTagInfo, getTagOptions as getTagOptionsList, EDITABLE_TAGS } from '@/lib/tagStyles';
 
 type Step = 'loading' | 'url' | 'analyzing' | 'logo-confirm' | 'bento' | 'playground';
@@ -519,6 +519,17 @@ function PlaygroundContent() {
     try {
       const response = await fetch(`/api/brand/${id}`);
       const data = await response.json();
+
+      // Handle 403 Forbidden - brand belongs to different user
+      // This happens when localStorage has stale data from previous user
+      if (response.status === 403) {
+        console.log('⚠️ Brand belongs to different user, clearing localStorage');
+        clearLastUsedBrandId();
+        if (timer) clearInterval(timer);
+        setStep('url'); // Redirect to URL screen silently
+        return;
+      }
+
       if (!response.ok || !data.success) {
         throw new Error(data.error || 'Failed to load brand');
       }
@@ -544,6 +555,10 @@ function PlaygroundContent() {
     } catch (error: any) {
       if (timer) clearInterval(timer);
       console.error('Brand load error', error);
+      // If loading failed due to forbidden, clear stale localStorage
+      if (error.message?.includes('Forbidden')) {
+        clearLastUsedBrandId();
+      }
       showToast(error.message || (locale === 'fr' ? 'Erreur pendant le chargement' : 'Error loading'), 'error');
       setStep('url');
     }
@@ -2349,6 +2364,9 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
     }
 
     if (step === 'bento') {
+      // First time setup if we came from URL analysis (not from playground editing)
+      const isFirstTime = stepBeforeBento !== 'playground';
+
       return (
         <BentoGrid
           brandData={brandData || {}}
@@ -2357,6 +2375,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
           onUpdate={setBrandData}
           onValidate={handleValidateBento}
           onAddSource={() => setShowSourceManager(true)}
+          isFirstTimeSetup={isFirstTime}
           onBack={() => {
             // Go back to previous step (create if coming from Identité button, url if new analysis)
             if (stepBeforeBento && stepBeforeBento !== 'bento') {
@@ -3122,7 +3141,11 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
 
   return (
     <div className="min-h-screen bg-[#F9F9F9] text-[#414141] font-sans selection:bg-black selection:text-white flex">
-      <div className="toast-container fixed top-6 right-6 z-50 flex flex-col gap-2 pointer-events-none">
+      {/* Toast container - center-top on bento to avoid covering validate button */}
+      <div className={`toast-container fixed z-50 flex flex-col gap-2 pointer-events-none ${step === 'bento'
+        ? 'top-6 left-1/2 -translate-x-1/2'
+        : 'top-6 right-6'
+        }`}>
         {toasts.map((toast) => (
           <div
             key={toast.id}

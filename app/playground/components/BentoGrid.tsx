@@ -146,8 +146,8 @@ function ImportPopup({ isOpen, onClose, onImport, forReferences = false, locale 
 
         <div
           className={`m-6 border-2 border-dashed rounded-lg p-8 text-center transition-all cursor-pointer ${isDragging
-              ? (forReferences ? 'border-purple-500 bg-purple-50' : 'border-blue-500 bg-blue-50')
-              : 'border-gray-300 hover:border-gray-400'
+            ? (forReferences ? 'border-purple-500 bg-purple-50' : 'border-blue-500 bg-blue-50')
+            : 'border-gray-300 hover:border-gray-400'
             }`}
           onDrop={handleDrop}
           onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
@@ -212,8 +212,8 @@ function ImportPopup({ isOpen, onClose, onImport, forReferences = false, locale 
             onClick={handleImport}
             disabled={pendingFiles.length === 0}
             className={`px-6 py-2 text-sm font-medium ${pendingFiles.length > 0
-                ? (forReferences ? 'bg-purple-500 text-white hover:bg-purple-600' : 'bg-blue-500 text-white hover:bg-blue-600')
-                : 'bg-gray-200 text-gray-400'
+              ? (forReferences ? 'bg-purple-500 text-white hover:bg-purple-600' : 'bg-blue-500 text-white hover:bg-blue-600')
+              : 'bg-gray-200 text-gray-400'
               }`}
           >{locale === 'fr' ? 'Importer' : 'Import'} {pendingFiles.length > 0 && `(${pendingFiles.length})`}</button>
         </div>
@@ -365,14 +365,15 @@ function AddItemInput({ placeholder, onAdd, locale = 'fr' }: { placeholder: stri
   );
 }
 
-export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBackgrounds = false, onUpdate, onValidate, onAddSource, onBack }: {
+export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBackgrounds = false, onUpdate, onValidate, onAddSource, onBack, isFirstTimeSetup = false }: {
   brandData: any,
   backgrounds?: string[],
   isGeneratingBackgrounds?: boolean,
   onUpdate: (data: any) => void,
   onValidate: () => void,
   onAddSource?: () => void,
-  onBack?: () => void
+  onBack?: () => void,
+  isFirstTimeSetup?: boolean
 }) {
   const { locale } = useTranslation();
   const localizedTags = getTagOptions(locale);
@@ -550,7 +551,9 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
           <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
             <path d="M5 13l4 4L19 7" />
           </svg>
-          {locale === 'fr' ? 'Sauvegarder' : 'Save'}
+          {isFirstTimeSetup
+            ? (locale === 'fr' ? 'Valider et créer' : 'Validate & create')
+            : (locale === 'fr' ? 'Sauvegarder' : 'Save')}
           <svg className="w-4 h-4 transition-transform group-hover:translate-x-0.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
             <path d="M5 12h14M12 5l7 7-7 7" />
           </svg>
@@ -1019,7 +1022,9 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
             <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
               <path d="M5 13l4 4L19 7" />
             </svg>
-            {locale === 'fr' ? 'Sauvegarder et continuer' : 'Save and continue'}
+            {isFirstTimeSetup
+              ? (locale === 'fr' ? 'Valider et créer' : 'Validate & create')
+              : (locale === 'fr' ? 'Sauvegarder et continuer' : 'Save and continue')}
             <svg className="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
               <path d="M5 12h14M12 5l7 7-7 7" />
             </svg>
