@@ -81,13 +81,13 @@ RÈGLES:
 - IGNORE toute stat sur la taille du marché, la croissance de l'industrie, etc.
 - Garde uniquement ce qui PARLE à la cible au quotidien
 
-Retourne un JSON array avec max 4 angles:
+Retourne un JSON array avec 6-8 angles (MINIMUM 6):
 [
   { "painPoint": "L'angle reformulé comme hook", "consequence": "L'impact concret pour la cible", "type": "pain_point|trend|social_proof" }
 ]
 
-Si une donnée brute n'est pas pertinente pour ${brandContext.targetAudience}, IGNORE-LA.
-Mieux vaut 1-2 bons angles que 4 mauvais.
+IMPORTANT: Génère AU MOINS 6 angles différents. Varie les types (pain_point, trend, social_proof).
+Si une donnée brute n'est pas assez spécifique, reformule-la pour la rendre percutante.
 Retourne UNIQUEMENT le JSON array, rien d'autre.`
         }],
         "max_tokens": 500,
@@ -1309,61 +1309,14 @@ export async function POST(request: Request) {
            }
         ],
         "editorialHooks": [
+           "GENERATE EXACTLY 8 HOOKS - This is MANDATORY",
            {
-             "hook": "Concrete pain point hook in the SAME LANGUAGE as detectedLanguage. Max 60 chars.",
-             "subtext": "How the brand's product/service solves this pain. Max 80 chars.",
+             "hook": "Pain point question that speaks to targetAudience (SAME LANGUAGE as detectedLanguage). Max 60 chars.",
+             "subtext": "How THIS brand's product solves the pain. Reference a specific feature. Max 80 chars.",
              "emotion": "curiosity | frustration | relief | urgency"
-           }
+           },
+           "... 7 more hooks with different angles (mix of curiosity, frustration, relief, urgency)"
         ],
-        "_editorialHooks_RULES": {
-          "GENERATE_8_HOOKS": true,
-          "LANGUAGE": "SAME AS 'detectedLanguage' FIELD (French if 'fr', English if 'en')",
-          "CRITICAL_CONTEXT_TO_USE": [
-            "Use 'targetAudience' to know WHO you're speaking to",
-            "Use 'features' and 'services' to understand WHAT the brand offers",
-            "Use 'painPoints' to find the problems they solve",
-            "Use 'uniqueValueProposition' to understand the main benefit",
-            "Use 'vocabulary' to speak the target's language",
-            "Use 'industry' to understand the context"
-          ],
-          "HOOK_FORMULA": "[Target's daily frustration] + [Hint that solution exists]",
-          "SUBTEXT_FORMULA": "[How this brand specifically helps] OR [Consequence of not solving]",
-          "TONE_ADAPTATION_BY_INDUSTRY": {
-            "FORMAL_INDUSTRIES": ["M&A", "Finance", "Law", "Banking", "Consulting", "Enterprise", "Healthcare", "Insurance"],
-            "CASUAL_INDUSTRIES": ["Fashion", "Food", "Lifestyle", "Entertainment", "Gaming", "Fitness", "Beauty", "Travel"],
-            "RULE": "Adapt tone to match the industry: FORMAL = professional, data-driven hooks. CASUAL = punchy, emotional, fun hooks."
-          },
-          "EXAMPLES_FORMAL_FRENCH": [
-            {"hook": "Vos dossiers M&A prennent 3 mois de trop ?", "subtext": "Accélérez le closing avec une due diligence automatisée."},
-            {"hook": "La compliance vous coûte 40% de votre temps ?", "subtext": "Automatisez les contrôles réglementaires."}
-          ],
-          "EXAMPLES_CASUAL_FRENCH": [
-            {"hook": "Encore 2h à formater des visuels ?", "subtext": "Générez-les en 60 secondes, à votre image."},
-            {"hook": "Vos posts sont beaux... mais engagent-ils ?", "subtext": "Des visuels qui font scroller."}
-          ],
-          "EXAMPLES_FORMAL_ENGLISH": [
-            {"hook": "Your M&A deals taking 3 months too long?", "subtext": "Accelerate closing with automated due diligence."},
-            {"hook": "Compliance eating 40% of your time?", "subtext": "Automate regulatory checks."}
-          ],
-          "EXAMPLES_CASUAL_ENGLISH": [
-            {"hook": "Still spending 2h formatting visuals?", "subtext": "Generate them in 60 seconds, on-brand."},
-            {"hook": "Your posts look great... but do they convert?", "subtext": "Visuals that make people stop scrolling."}
-          ],
-          "FORBIDDEN_PATTERNS": [
-            "Market size/growth stats",
-            "Industry projections (by 2030...)",
-            "Generic tech trends (AI is transforming...)",
-            "Company adoption rates",
-            "Anything not related to THIS brand's product/service"
-          ],
-          "QUALITY_CHECK": [
-            "Each hook must be answerable by THIS brand's product",
-            "If the hook could apply to ANY company, it's too generic - REJECT IT",
-            "The subtext must reference a specific feature or benefit from the scraped data",
-            "ALL hooks must be in the SAME language as the website (detectedLanguage)",
-            "ADAPT TONE: Formal for B2B/Finance/Law, Casual for Fashion/Lifestyle/Consumer"
-          ]
-        },
         "contentNuggets": {
            "realStats": ["Statistiques réelles trouvées sur le site"],
            "testimonials": [{"quote": "Citation client", "author": "Nom", "company": "Entreprise"}],
@@ -1443,27 +1396,42 @@ export async function POST(request: Request) {
          - Each post MUST have an "intent" explaining WHY this post is strategic for the END USER
          - Be SPECIFIC: not "amélioration" but "+47% en 3 mois"
          
-      8. **PAIN POINTS (CRITICAL - 8 REQUIRED, PRODUCT-SPECIFIC, ADAPTED TONE):**
+      8. **EDITORIAL HOOKS (CRITICAL - EXACTLY 8 REQUIRED):**
          
-         ⚠️ LANGUAGE: Generate hooks in the SAME LANGUAGE as 'detectedLanguage' (French OR English).
+         The "editorialHooks" array MUST contain EXACTLY 8 hooks. Not 2, not 4, but 8.
+         These hooks will be used as marketing angles for social media visuals.
+         
+         ⚠️ LANGUAGE: Write ALL hooks in the SAME LANGUAGE as 'detectedLanguage' (French if 'fr', English if 'en').
          
          ⚠️ TONE ADAPTATION BY INDUSTRY:
          - FORMAL INDUSTRIES (M&A, Finance, Law, Consulting, Healthcare, Enterprise B2B):
            → Professional, data-driven hooks. Focus on ROI, efficiency, compliance, risk.
-           → Example: "La compliance vous coûte 40% de votre temps ?"
+           → Example FR: "La compliance vous coûte 40% de votre temps ?"
+           → Example EN: "Compliance eating 40% of your time?"
          - CASUAL INDUSTRIES (Fashion, Food, Lifestyle, Gaming, Beauty, Consumer):
-           → Punchy, emotional, fun hooks. Use emojis sparingly, be relatable.
-           → Example: "Vos posts sont beaux... mais engagent-ils ?"
+           → Punchy, emotional, fun hooks. Be relatable.
+           → Example FR: "Vos posts sont beaux... mais engagent-ils ?"
+           → Example EN: "Your posts look great... but do they convert?"
          
-         ⚠️ GOLDEN RULE: Each hook must be DIRECTLY related to what THIS brand sells.
+         ⚠️ GOLDEN RULE: Each hook must be DIRECTLY answerable by THIS brand's product/service.
          
-         🔍 MANDATORY CONTEXT TO USE:
-         - 'detectedLanguage': Write hooks in THIS language
-         - 'industry': Adapt tone (formal vs casual)
-         - 'targetAudience': WHO are you speaking to?
-         - 'features' & 'services': WHAT does the brand offer?
-         - 'painPoints': Problems extracted from the site - EXPAND on these!
-         - 'toneVoice': Match the brand's communication style
+         🔍 MANDATORY - Use these fields to craft relevant hooks:
+         - 'targetAudience': WHO you're speaking to (e.g., "Marketing managers")
+         - 'features' & 'services': WHAT the brand offers
+         - 'painPoints': Problems they solve - EXPAND these into hooks!
+         - 'uniqueValueProposition': The main benefit
+         
+         📋 REQUIRED VARIETY - Include a mix of these emotions:
+         - 2-3 hooks with emotion: "frustration" (problems they face)
+         - 2-3 hooks with emotion: "curiosity" (questions that intrigue)
+         - 1-2 hooks with emotion: "relief" (how solution helps)
+         - 1-2 hooks with emotion: "urgency" (why act now)
+         
+         ❌ FORBIDDEN:
+         - Market size stats ("The market will reach $X billion")
+         - Industry projections ("By 2030...")
+         - Generic tech trends ("AI is transforming...")
+         - Anything that could apply to ANY company
          
          ✅ EACH HOOK MUST PASS THIS TEST:
          1. "Is this frustration solvable by THIS brand's product?" → If not, REJECT
@@ -1620,6 +1588,13 @@ export async function POST(request: Request) {
             text = jsonMatch[0];
         }
         brandData = JSON.parse(text);
+        
+        // DEBUG: Log editorial hooks generation
+        console.log(`📝 LLM generated editorialHooks: ${brandData.editorialHooks?.length || 0} hooks`);
+        if (brandData.editorialHooks?.length) {
+          console.log(`   First hook: "${brandData.editorialHooks[0]?.hook?.slice(0, 50)}..."`);
+          console.log(`   Emotions: ${brandData.editorialHooks.map((h: any) => h.emotion).join(', ')}`);
+        }
     } catch (e) {
         console.error("Failed to parse JSON:", text.slice(0, 200));
         // Fallback data on parse error - extract what we can from metadata
@@ -2217,29 +2192,42 @@ FORMAT: Return ONLY a valid JSON array:
     }
 
     // ═══════════════════════════════════════════════════════════════════════════
-    // STEP D: MAP editorialHooks to industryInsights (ONLY pain points, no market stats)
+    // STEP D: MAP editorialHooks to industryInsights 
+    // IMPORTANT: editorialHooks come from LLM with quality rules already applied
+    // We apply LIGHTER filtering here - only reject truly empty/broken hooks
     // ═══════════════════════════════════════════════════════════════════════════
     if (Array.isArray(brandData.editorialHooks) && brandData.editorialHooks.length > 0) {
-      // Map editorial hooks to industryInsights format, filtering out any garbage
+      console.log(`📝 Processing ${brandData.editorialHooks.length} editorial hooks from LLM...`);
+      
+      // Light filter for LLM hooks - they're already quality-controlled by the prompt
+      // Only reject empty, too short, or obviously broken hooks
+      const lightFilterHook = (h: any): boolean => {
+        const text = h.hook || '';
+        if (text.length < 10) return false; // Too short to be useful
+        if (!text.includes(' ')) return false; // Single word = broken
+        return true;
+      };
+      
       const hooksAsInsights = brandData.editorialHooks
-        .filter((h: any) => h.hook && h.hook.length > 15)
-        .filter((h: any) => filterInsight({ painPoint: h.hook })) // Apply same filter
+        .filter(lightFilterHook)
         .map((h: any) => ({
           painPoint: h.hook,
           consequence: h.subtext || '',
-          type: 'pain_point', // Force type to pain_point only
+          type: h.emotion === 'urgency' ? 'trend' : 'pain_point', // Map emotion to type
           emotion: h.emotion,
         }));
       
-      // ONLY use editorial hooks, no fallback to other insights (they're often garbage)
+      // Take up to 8 hooks - they're curated by LLM, trust them
       brandData.industryInsights = hooksAsInsights.slice(0, 8);
       
-      console.log(`✅ Mapped ${hooksAsInsights.length} pain point hooks to industryInsights`);
+      console.log(`✅ Mapped ${hooksAsInsights.length} LLM editorial hooks to industryInsights (kept ${brandData.industryInsights.length})`);
     } else {
-      // Filter existing insights if no hooks
+      // Fallback: Filter raw insights if no LLM hooks available
+      console.log(`⚠️ No editorial hooks from LLM, filtering raw industryInsights...`);
       brandData.industryInsights = (brandData.industryInsights || [])
-        .filter(filterInsight)
+        .filter(filterInsight) // Apply aggressive filter only to raw data
         .slice(0, 8);
+      console.log(`   Kept ${brandData.industryInsights.length} raw insights after filtering`);
     }
 
     return NextResponse.json({
