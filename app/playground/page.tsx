@@ -180,6 +180,7 @@ function PlaygroundContent() {
 
   const [showStyleGallery, setShowStyleGallery] = useState(false);
   const [showAssetManager, setShowAssetManager] = useState(false);
+  const [showAllAngles, setShowAllAngles] = useState(false);
   
   // Determine initial step:
   // - If we have URL params → go to analyzing
@@ -1954,13 +1955,26 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
               </span>
               <span className="w-1 h-1 bg-gray-200 rounded-full" />
               <span>~60 {locale === 'fr' ? 'secondes' : 'seconds'}</span>
-              <span className="w-1 h-1 bg-gray-200 rounded-full" />
-              <button 
-                onClick={() => setStep('playground')} 
-                className="hover:text-gray-500 transition-colors underline underline-offset-2"
-              >
-                {locale === 'fr' ? 'Passer cette étape' : 'Skip this step'}
-              </button>
+              {/* Only show skip if user has existing brands */}
+              {userBrands.length > 0 && (
+                <>
+                  <span className="w-1 h-1 bg-gray-200 rounded-full" />
+                  <button 
+                    onClick={() => {
+                      // Load the first available brand instead of going to empty playground
+                      const brandToLoad = userBrands[0];
+                      if (brandToLoad) {
+                        loadBrandById(brandToLoad.id, false, true);
+                      } else {
+                        setStep('playground');
+                      }
+                    }} 
+                    className="hover:text-gray-500 transition-colors underline underline-offset-2"
+                  >
+                    {locale === 'fr' ? 'Retour à mes marques' : 'Back to my brands'}
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -2411,85 +2425,88 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
         </div>
 
         {/* ═══════════════════════════════════════════════════════════════════════════
-            ANGLES CAROUSEL - Scrollable horizontal pills, always visible
+            ANGLES CAROUSEL - Collapsed by default, shows 4 items + "voir plus"
             ═══════════════════════════════════════════════════════════════════════════ */}
-        {brandData && (
+        {brandData && brandData.industryInsights?.length > 0 && (
           <div className="mb-6">
             {/* Section header */}
             <div className="flex items-center gap-2 mb-3">
               <span className="w-1.5 h-1.5 bg-blue-500 rounded-full" />
-              <span className="text-[10px] font-mono uppercase tracking-widest text-gray-400">{locale === 'fr' ? 'Angles de contenu' : 'Content angles'}</span>
+              <span className="text-[10px] font-mono uppercase tracking-widest text-gray-400">{locale === 'fr' ? 'Idées de contenu' : 'Content ideas'}</span>
             </div>
             
-            {/* AI-Generated Editorial Hooks ONLY - No mechanical templates */}
-            <div className="overflow-x-auto pb-2 -mx-2 px-2" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-              <div className="flex gap-2 flex-nowrap">
-                {/* AI Editorial Hooks - curated and filtered by API */}
-                {brandData.industryInsights?.slice(0, 8).map((insight: any, i: number) => {
-                  const hookText = insight.painPoint || insight.hook || insight.fact;
-                  if (!hookText || hookText.length < 10) return null;
-                  
-                  // Type-based styling
-                  const typeStyles: Record<string, { emoji: string; bg: string; border: string; hover: string }> = {
-                    'pain_point': { emoji: '⚡', bg: 'bg-rose-50', border: 'border-rose-200', hover: 'hover:border-rose-400' },
-                    'trend': { emoji: '📈', bg: 'bg-blue-50', border: 'border-blue-200', hover: 'hover:border-blue-400' },
-                    'provocation': { emoji: '🎯', bg: 'bg-purple-50', border: 'border-purple-200', hover: 'hover:border-purple-400' },
-                    'social_proof': { emoji: '💬', bg: 'bg-amber-50', border: 'border-amber-200', hover: 'hover:border-amber-400' },
-                    'tip': { emoji: '💡', bg: 'bg-emerald-50', border: 'border-emerald-200', hover: 'hover:border-emerald-400' },
-                    'competitive': { emoji: '🏆', bg: 'bg-indigo-50', border: 'border-indigo-200', hover: 'hover:border-indigo-400' },
-                  };
-                  
-                  const style = typeStyles[insight.type] || { emoji: '💡', bg: 'bg-gray-50', border: 'border-gray-200', hover: 'hover:border-gray-400' };
-                  
-                  return (
+            {/* AI-Generated Editorial Hooks - Collapsed with "voir plus" */}
+            {(() => {
+              const validInsights = brandData.industryInsights?.filter((insight: any) => {
+                const hookText = insight.painPoint || insight.hook || insight.fact;
+                return hookText && hookText.length >= 10;
+              }) || [];
+              
+              const visibleInsights = showAllAngles ? validInsights : validInsights.slice(0, 4);
+              const hasMore = validInsights.length > 4;
+              
+              // Type-based styling
+              const typeStyles: Record<string, { emoji: string; bg: string; border: string; hover: string }> = {
+                'pain_point': { emoji: '⚡', bg: 'bg-rose-50', border: 'border-rose-200', hover: 'hover:border-rose-400' },
+                'trend': { emoji: '📈', bg: 'bg-blue-50', border: 'border-blue-200', hover: 'hover:border-blue-400' },
+                'provocation': { emoji: '🎯', bg: 'bg-purple-50', border: 'border-purple-200', hover: 'hover:border-purple-400' },
+                'social_proof': { emoji: '💬', bg: 'bg-amber-50', border: 'border-amber-200', hover: 'hover:border-amber-400' },
+                'tip': { emoji: '💡', bg: 'bg-emerald-50', border: 'border-emerald-200', hover: 'hover:border-emerald-400' },
+                'competitive': { emoji: '🏆', bg: 'bg-indigo-50', border: 'border-indigo-200', hover: 'hover:border-indigo-400' },
+              };
+              
+              return (
+                <div className="flex flex-wrap gap-2">
+                  {visibleInsights.map((insight: any, i: number) => {
+                    const hookText = insight.painPoint || insight.hook || insight.fact;
+                    const style = typeStyles[insight.type] || { emoji: '💡', bg: 'bg-gray-50', border: 'border-gray-200', hover: 'hover:border-gray-400' };
+                    
+                    return (
                       <button
                         key={`insight-${i}`}
                         onClick={() => {
-                        // SIMPLE BRIEF: Just the hook text + subtitle
-                        // Format/ratio is handled separately by the selector and API
-                        const simpleBrief = insight.consequence 
-                          ? `${hookText}\n\n${insight.consequence}`
-                          : hookText;
-                        
-                        setBrief(simpleBrief);
-                        setSelectedTemplate(insight.type === 'trend' ? 'announcement' : 'stat');
-                      }}
-                      className={`flex-shrink-0 px-4 py-3 border transition-all text-left max-w-[300px] ${style.bg} ${style.border} ${style.hover}`}
+                          const simpleBrief = insight.consequence 
+                            ? `${hookText}\n\n${insight.consequence}`
+                            : hookText;
+                          setBrief(simpleBrief);
+                          setSelectedTemplate(insight.type === 'trend' ? 'announcement' : 'stat');
+                        }}
+                        className={`px-3 py-2 border transition-all text-left max-w-[280px] ${style.bg} ${style.border} ${style.hover}`}
+                      >
+                        <div className="flex items-start gap-2">
+                          <span className="text-sm flex-shrink-0">{style.emoji}</span>
+                          <span className="text-xs text-gray-700 line-clamp-2">{hookText}</span>
+                        </div>
+                      </button>
+                    );
+                  })}
+                  
+                  {/* "Voir plus" / "Voir moins" button */}
+                  {hasMore && (
+                    <button
+                      onClick={() => setShowAllAngles(!showAllAngles)}
+                      className="px-3 py-2 border border-dashed border-gray-300 text-xs text-gray-500 hover:border-gray-400 hover:text-gray-700 transition-all flex items-center gap-1"
                     >
-                      <div className="flex items-start gap-2">
-                        <span className="text-base flex-shrink-0">{style.emoji}</span>
-                        <div className="min-w-0">
-                          <span className="text-sm text-gray-800 line-clamp-2 font-medium">{hookText}</span>
-                          {insight.consequence && (
-                            <span className="text-xs text-gray-500 block mt-1 line-clamp-1">{insight.consequence}</span>
-                          )}
-                  </div>
-                          </div>
+                      {showAllAngles ? (
+                        <>
+                          <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                            <path d="M5 15l7-7 7 7" />
+                          </svg>
+                          {locale === 'fr' ? 'Moins' : 'Less'}
+                        </>
+                      ) : (
+                        <>
+                          <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                            <path d="M19 9l-7 7-7-7" />
+                          </svg>
+                          +{validInsights.length - 4} {locale === 'fr' ? 'autres' : 'more'}
+                        </>
+                      )}
                     </button>
-                  );
-                }).filter(Boolean)}
-                
-                {/* Fallback if no AI insights: Show a helpful message */}
-                {(!brandData.industryInsights || brandData.industryInsights.length === 0) && (
-                  <div className="flex-shrink-0 px-4 py-3 bg-gray-50 border border-dashed border-gray-300 text-center">
-                    <span className="text-xs text-gray-500">
-                      💡 Décrivez votre visuel dans la zone ci-dessous
-                    </span>
-              </div>
-            )}
-              </div>
-                          </div>
-
-            {/* No data fallback - minimal */}
-              {!brandData.contentNuggets?.realStats?.length && 
-               !brandData.contentNuggets?.testimonials?.length && 
-               !brandData.industryInsights?.length &&
-               !brandData.features?.length && (
-                <div className="text-center py-4 text-gray-400">
-                  <p className="text-sm">Aucune donnée exploitable trouvée</p>
-                  <p className="text-xs mt-1">Ajoutez des informations dans l'identité ou écrivez librement !</p>
+                  )}
                 </div>
-              )}
+              );
+            })()}
           </div>
         )}
 
@@ -2518,58 +2535,124 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
             />
           </div>
 
-          {/* Sources Row - Side by side layout - REDESIGNED */}
-          <div className="p-5">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              
-              {/* 1. STYLE INSPIRATION ZONE - Clear CTA */}
-              <div className="space-y-3">
-                <label className="text-xs font-medium text-gray-500 uppercase tracking-wider block">
-                  {locale === 'fr' ? 'Inspiration visuelle' : 'Visual inspiration'}
+          {/* Sources Row - Full width brand assets + compact inspiration */}
+          <div className="p-5 space-y-4">
+            
+            {/* BRAND ASSETS - Full Width */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  {locale === 'fr' ? 'Visuels de la marque' : 'Brand visuals'}
                 </label>
-                
-                {/* Selected styles display */}
-                {styleRefImages.length > 0 && (
-                  <div className="flex gap-2 flex-wrap mb-3">
-                    {styleRefImages.map((ref, i) => (
-                      <div key={i} className="relative group">
-                        <div className="h-16 w-16 rounded-lg overflow-hidden border-2 border-purple-400 shadow-sm">
-                          <img src={ref.url} className="w-full h-full object-cover" alt="" />
-                        </div>
-                        <button
-                          onClick={() => setStyleRefImages(prev => prev.filter((_, idx) => idx !== i))}
-                          className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-lg text-xs"
-                        >×</button>
-                        {ref.note && (
-                          <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 px-1.5 py-0.5 bg-purple-600 text-white text-[8px] rounded-full max-w-[60px] truncate">
-                            {ref.note}
-                          </div>
-                        )}
-                      </div>
-                    ))}
+                <span className="text-[10px] text-gray-400">
+                  {uploadedImages.length} {locale === 'fr' ? 'sélectionné(s)' : 'selected'}
+                </span>
+              </div>
+              
+              {/* Selected assets preview - Full width scrollable */}
+              <div className="flex gap-2 items-center overflow-x-auto pb-1 no-scrollbar">
+                {/* Logo - always first */}
+                {brandData?.logo && (
+                  <div 
+                    className="relative h-14 w-14 rounded-xl border-2 border-accent overflow-hidden flex-shrink-0"
+                    style={{
+                      backgroundImage: `linear-gradient(45deg, #f0f0f0 25%, transparent 25%), linear-gradient(-45deg, #f0f0f0 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #f0f0f0 75%), linear-gradient(-45deg, transparent 75%, #f0f0f0 75%)`,
+                      backgroundSize: '8px 8px',
+                      backgroundPosition: '0 0, 0 4px, 4px -4px, -4px 0px'
+                    }}
+                    title={locale === 'fr' ? 'Logo (toujours inclus)' : 'Logo (always included)'}
+                  >
+                    <img src={brandData.logo} className="w-full h-full object-contain p-1" alt="Logo" />
+                    <div className="absolute bottom-0 left-0 right-0 bg-accent text-white text-[7px] text-center py-0.5 font-bold">
+                      LOGO
+                    </div>
                   </div>
                 )}
+
+                {/* Other selected assets */}
+                {uploadedImages.filter(img => img !== brandData?.logo).map((imgUrl, i) => {
+                  const labelObj = brandData?.labeledImages?.find((li: any) => li.url === imgUrl);
+                  const mode = assetModes[imgUrl] || (labelObj?.category === 'app_ui' ? 'exact' : 'inspire');
+                  
+                  return (
+                    <div 
+                      key={i}
+                      onClick={() => setUploadedImages(prev => prev.filter(img => img !== imgUrl))}
+                      className="relative h-14 w-14 rounded-xl border-2 border-accent overflow-hidden cursor-pointer group flex-shrink-0"
+                      title={locale === 'fr' ? 'Cliquez pour retirer' : 'Click to remove'}
+                    >
+                      <img src={imgUrl} className="w-full h-full object-cover" alt="" />
+                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <span className="text-white text-lg">×</span>
+                      </div>
+                      <div className={`absolute bottom-0 left-0 right-0 text-[7px] text-center py-0.5 font-bold ${
+                        mode === 'exact' ? 'bg-orange-500 text-white' : 'bg-accent text-white'
+                      }`}>
+                        {mode === 'exact' ? 'EXACT' : 'LIBRE'}
+                      </div>
+                    </div>
+                  );
+                })}
                 
-                {/* Two clear options */}
-                <div className="flex gap-2">
-                  {/* Gallery button - Primary CTA */}
+                {/* Add more button */}
+                <button
+                  onClick={() => setShowAssetManager(true)}
+                  className="h-14 w-14 rounded-xl border-2 border-dashed border-gray-300 flex flex-col items-center justify-center cursor-pointer hover:border-accent hover:bg-accent/5 transition-all flex-shrink-0"
+                >
+                  <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <path d="M12 4v16m8-8H4" />
+                  </svg>
+                  <span className="text-[8px] text-gray-400 mt-0.5">{brandData?.images?.length || 0}</span>
+                </button>
+              </div>
+              
+              <input ref={fileInputRef} type="file" multiple accept="image/*" className="hidden" onChange={handleImageUpload} />
+            </div>
+
+            {/* STYLE INSPIRATION - Compact inline */}
+            <div className="flex items-center gap-3 pt-2 border-t border-gray-100">
+              <span className="text-xs text-gray-400">
+                {locale === 'fr' ? 'Style' : 'Style'}
+              </span>
+              
+              {/* Selected styles display */}
+              {styleRefImages.length > 0 ? (
+                <div className="flex gap-2 items-center">
+                  {styleRefImages.map((ref, i) => (
+                    <div key={i} className="relative group">
+                      <div className="h-10 w-10 rounded-lg overflow-hidden border border-gray-200 shadow-sm">
+                        <img src={ref.url} className="w-full h-full object-cover" alt="" />
+                      </div>
+                      <button
+                        onClick={() => setStyleRefImages(prev => prev.filter((_, idx) => idx !== i))}
+                        className="absolute -top-1 -right-1 w-4 h-4 bg-gray-900 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-lg text-[10px]"
+                      >×</button>
+                    </div>
+                  ))}
                   <button
                     onClick={() => setShowStyleGallery(true)}
-                    className="flex-1 h-14 bg-gradient-to-br from-purple-500 to-pink-500 text-white rounded-lg flex items-center justify-center gap-2 hover:from-purple-600 hover:to-pink-600 transition-all shadow-sm"
+                    className="text-xs text-gray-500 hover:text-gray-700 transition-colors"
                   >
-                    <span className="text-xl">🎨</span>
-                    <div className="text-left">
-                      <span className="text-sm font-medium block">{locale === 'fr' ? "Galerie d'inspiration" : 'Inspiration gallery'}</span>
-                      <span className="text-[10px] text-white/70">{locale === 'fr' ? 'Styles prêts à utiliser' : 'Ready-to-use styles'}</span>
-                    </div>
+                    {locale === 'fr' ? 'Changer' : 'Change'}
+                  </button>
+                </div>
+              ) : (
+                <div className="flex gap-2 items-center">
+                  <button
+                    onClick={() => setShowStyleGallery(true)}
+                    className="h-8 px-3 text-xs text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg flex items-center gap-1.5 transition-all"
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                      <path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                    </svg>
+                    {locale === 'fr' ? 'Galerie' : 'Gallery'}
                   </button>
                   
-                  {/* Upload custom - Secondary */}
-                  <label className="w-14 h-14 rounded-lg border-2 border-dashed border-gray-300 flex flex-col items-center justify-center cursor-pointer hover:border-purple-400 hover:bg-purple-50/50 transition-all flex-shrink-0">
-                    <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <label className="h-8 px-3 text-xs text-gray-500 bg-white border border-gray-200 hover:border-gray-300 rounded-lg flex items-center gap-1.5 cursor-pointer transition-all">
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                       <path d="M12 4v16m8-8H4" />
                     </svg>
-                    <span className="text-[8px] text-gray-400 mt-0.5">{locale === 'fr' ? 'Perso' : 'Custom'}</span>
+                    {locale === 'fr' ? 'Importer' : 'Upload'}
                     <input 
                       type="file" 
                       accept="image/*" 
@@ -2593,105 +2676,9 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                     />
                   </label>
                 </div>
-                
-                {/* Optional note for style refs */}
-                {styleRefImages.length > 0 && (
-                  <input
-                    type="text"
-                    placeholder={locale === 'fr' ? "Ce qui vous plaît dans ce style... (optionnel)" : "What you like about this style... (optional)"}
-                    value={styleRefImages[0]?.note || ''}
-                    onChange={(e) => {
-                      setStyleRefImages(prev => prev.map((r, idx) => 
-                        idx === 0 ? { ...r, note: e.target.value } : r
-                      ));
-                    }}
-                    className="w-full text-xs border border-gray-200 rounded-lg px-3 py-2 placeholder:text-gray-300 focus:border-purple-400 focus:outline-none"
-                  />
-                )}
-              </div>
-
-              {/* 2. BRAND ASSETS ZONE - With Asset Manager */}
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    {locale === 'fr' ? 'Visuels de la marque' : 'Brand visuals'}
-                  </label>
-                  <span className="text-[10px] text-gray-400">
-                    {uploadedImages.length} {locale === 'fr' ? 'sélectionné(s)' : 'selected'}
-                  </span>
-                </div>
-                
-                {/* Selected assets preview */}
-                <div className="flex gap-2 items-center flex-wrap">
-                  {/* Logo - always first */}
-                  {brandData?.logo && (
-                    <div 
-                      className="relative h-14 w-14 rounded-lg border-2 border-blue-500 overflow-hidden flex-shrink-0"
-                      style={{
-                        backgroundImage: `linear-gradient(45deg, #f0f0f0 25%, transparent 25%), linear-gradient(-45deg, #f0f0f0 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #f0f0f0 75%), linear-gradient(-45deg, transparent 75%, #f0f0f0 75%)`,
-                        backgroundSize: '8px 8px',
-                        backgroundPosition: '0 0, 0 4px, 4px -4px, -4px 0px'
-                      }}
-                      title={locale === 'fr' ? 'Logo (toujours inclus)' : 'Logo (always included)'}
-                    >
-                      <img src={brandData.logo} className="w-full h-full object-contain p-1" alt="Logo" />
-                      <div className="absolute bottom-0 left-0 right-0 bg-blue-600 text-white text-[7px] text-center py-0.5 font-bold">
-                        LOGO
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Other selected assets (up to 4 shown) */}
-                  {uploadedImages.filter(img => img !== brandData?.logo).slice(0, 4).map((imgUrl, i) => {
-                    const labelObj = brandData?.labeledImages?.find((li: any) => li.url === imgUrl);
-                    const mode = assetModes[imgUrl] || (labelObj?.category === 'app_ui' ? 'exact' : 'inspire');
-                    
-                    return (
-                      <div 
-                        key={i}
-                        onClick={() => setUploadedImages(prev => prev.filter(img => img !== imgUrl))}
-                        className="relative h-14 w-14 rounded-lg border-2 border-blue-500 overflow-hidden cursor-pointer group"
-                        title={locale === 'fr' ? 'Cliquez pour retirer' : 'Click to remove'}
-                      >
-                        <img src={imgUrl} className="w-full h-full object-cover" alt="" />
-                        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                          <span className="text-white text-lg">×</span>
-                        </div>
-                        <div className={`absolute bottom-0 left-0 right-0 text-[7px] text-center py-0.5 font-bold ${
-                          mode === 'exact' ? 'bg-orange-500 text-white' : 'bg-purple-500 text-white'
-                        }`}>
-                          {mode === 'exact' ? 'EXACT' : 'LIBRE'}
-                        </div>
-                      </div>
-                    );
-                  })}
-                  
-                  {/* "+X more" indicator */}
-                  {uploadedImages.filter(img => img !== brandData?.logo).length > 4 && (
-                    <div className="h-14 w-14 rounded-lg bg-gray-100 flex items-center justify-center text-gray-500 text-sm font-medium">
-                      +{uploadedImages.filter(img => img !== brandData?.logo).length - 4}
-                    </div>
-                  )}
-                  
-                  {/* Manage assets button */}
-                  <button
-                    onClick={() => setShowAssetManager(true)}
-                    className="h-14 px-4 rounded-lg bg-gray-900 text-white flex items-center gap-2 hover:bg-gray-800 transition-all"
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                      <path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                    </svg>
-                    <div className="text-left">
-                      <span className="text-xs font-medium block">{locale === 'fr' ? 'Gérer' : 'Manage'}</span>
-                      <span className="text-[9px] text-gray-400">{brandData?.images?.length || 0} {locale === 'fr' ? 'dispo' : 'avail.'}</span>
-                    </div>
-                  </button>
-                </div>
-                
-                <input ref={fileInputRef} type="file" multiple accept="image/*" className="hidden" onChange={handleImageUpload} />
-              </div>
+              )}
             </div>
-            </div>
+          </div>
 
           {/* Generate Button */}
           <div className="p-5 bg-gray-50 border-t border-gray-100">
@@ -3515,12 +3502,26 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                     const data = await res.json();
                     if (data.success) {
                       showToast(locale === 'fr' ? 'Marque supprimée' : 'Brand deleted', 'success');
-                      refreshBrands();
-                      // If we deleted the current brand, reset to URL step
+                      
+                      // Refresh brands list first
+                      await refreshBrands();
+                      
+                      // If we deleted the current brand, load another one
                       if (brandId === selectedBrandId) {
                         setBrandData(null);
                         setSelectedBrandId(null);
-                        setStep('url');
+                        
+                        // Find another brand to load (exclude the deleted one)
+                        const remainingBrands = userBrands.filter(b => b.id !== brandId);
+                        if (remainingBrands.length > 0) {
+                          // Load the first remaining brand
+                          const nextBrand = remainingBrands[0];
+                          loadBrandById(nextBrand.id, false, true); // silent load
+                          showToast(locale === 'fr' ? `Chargement de ${nextBrand.name}...` : `Loading ${nextBrand.name}...`, 'info');
+                        } else {
+                          // No more brands - go to URL step
+                          setStep('url');
+                        }
                       }
                     } else {
                       showToast(data.error || (locale === 'fr' ? 'Erreur' : 'Error'), 'error');
@@ -3555,6 +3556,35 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
           {renderContent()}
         </main>
       </div>
+      
+      {/* Mobile Sticky Generate CTA - Only visible on mobile when in playground/create mode */}
+      {step === 'playground' && activeTab === 'create' && (
+        <div className="md:hidden fixed bottom-16 left-0 right-0 z-40 px-4 pb-2 bg-gradient-to-t from-[#F9F9F9] via-[#F9F9F9] to-transparent pt-4">
+          <button
+            onClick={() => handleGenerate()}
+            disabled={status !== 'idle' || !brief.trim() || uploadedImages.length === 0}
+            className="w-full bg-gray-900 text-white py-3.5 font-medium disabled:opacity-30 disabled:cursor-not-allowed transition-all hover:bg-black flex items-center justify-center gap-2 shadow-lg"
+          >
+            {status === 'preparing' || status === 'running' ? (
+              <>
+                <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                </svg>
+                <span className="text-sm">{locale === 'fr' ? 'Création...' : 'Creating...'}</span>
+              </>
+            ) : (
+              <>
+                <span className="text-blue-400">✦</span>
+                <span className="text-sm">{locale === 'fr' ? 'Générer' : 'Generate'}</span>
+                {brief.trim() && uploadedImages.length > 0 && (
+                  <span className="text-[10px] bg-white/20 px-1.5 py-0.5 rounded">1 crédit</span>
+                )}
+              </>
+            )}
+          </button>
+        </div>
+      )}
       
       {/* Credits Toast (subtle notification) */}
       <CreditsToast 

@@ -556,8 +556,10 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
           onClick={onValidate}
           className="group flex items-center gap-2 px-4 py-2 bg-gray-900 text-white text-sm font-medium transition-all hover:bg-blue-600"
         >
-          <span className="w-1.5 h-1.5 bg-blue-400 rounded-full group-hover:bg-white" />
-          {locale === 'fr' ? 'Valider & Créer' : 'Validate & Create'}
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+            <path d="M5 13l4 4L19 7" />
+          </svg>
+          {locale === 'fr' ? 'Sauvegarder' : 'Save'}
           <svg className="w-4 h-4 transition-transform group-hover:translate-x-0.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
             <path d="M5 12h14M12 5l7 7-7 7" />
           </svg>
@@ -1008,16 +1010,25 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
       </section>
 
       {/* ═══════════════════════════════════════════════════════════════════════════
-          SECTION 3: ACTION - VALIDER & CRÉER
+          SECTION 3: ACTION - SAUVEGARDER & CONTINUER
           ═══════════════════════════════════════════════════════════════════════════ */}
       <section className="border-t border-gray-200 pt-6">
+        <div className="text-center mb-3">
+          <p className="text-xs text-gray-400">
+            {locale === 'fr' 
+              ? '💾 Vos modifications seront sauvegardées automatiquement' 
+              : '💾 Your changes will be saved automatically'}
+          </p>
+        </div>
         <button 
           onClick={onValidate}
           className="w-full group relative py-4 bg-gray-900 text-white text-sm font-medium transition-all hover:bg-black"
         >
           <span className="relative z-10 flex items-center justify-center gap-3">
-            <span className="w-2 h-2 bg-blue-500 rounded-full" />
-            {locale === 'fr' ? 'Valider & Créer' : 'Validate & Create'}
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <path d="M5 13l4 4L19 7" />
+            </svg>
+            {locale === 'fr' ? 'Sauvegarder et continuer' : 'Save and continue'}
             <svg className="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
               <path d="M5 12h14M12 5l7 7-7 7" />
             </svg>
