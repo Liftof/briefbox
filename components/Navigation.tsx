@@ -23,11 +23,10 @@ export default function Navigation() {
     <>
       <nav className="fixed top-0 left-0 right-0 z-50">
         <div className={`mx-auto max-w-7xl px-6 transition-all duration-300 ${isScrolled ? 'py-4' : 'py-6'}`}>
-          <div className={`flex items-center justify-between px-6 py-3 transition-all duration-300 ${
-            isScrolled 
-              ? 'bg-white/80 backdrop-blur-xl border border-gray-200 shadow-sm' 
-              : 'bg-transparent'
-          }`}>
+          <div className={`flex items-center justify-between px-6 py-3 transition-all duration-300 ${isScrolled
+            ? 'bg-white/80 backdrop-blur-xl border border-gray-200 shadow-sm'
+            : 'bg-transparent'
+            }`}>
             {/* Logo */}
             <Link href="/" className="group">
               <img src="/logo.png" alt="Palette" className="h-10 object-contain" />
@@ -41,14 +40,14 @@ export default function Navigation() {
               <a href="#tarifs" className="text-sm text-gray-500 hover:text-gray-900 transition-colors">
                 {locale === 'fr' ? 'Tarifs' : 'Pricing'}
               </a>
-              
+
               <div className="flex items-center gap-4 pl-4 border-l border-gray-200">
                 {isLoaded && (
                   <>
                     {isSignedIn ? (
                       <UserButton afterSignOutUrl="/" />
                     ) : (
-                      <SignInButton mode="modal">
+                      <SignInButton mode="modal" forceRedirectUrl="/playground">
                         <button className="text-sm text-gray-500 hover:text-gray-900 transition-colors">
                           {locale === 'fr' ? 'Connexion' : 'Sign in'}
                         </button>
@@ -56,7 +55,7 @@ export default function Navigation() {
                     )}
                   </>
                 )}
-                
+
                 <Link
                   href="/playground"
                   className="group inline-flex items-center gap-2 px-4 py-2 bg-gray-900 text-white text-sm font-medium hover:bg-black transition-colors"
@@ -103,13 +102,13 @@ export default function Navigation() {
             >
               {locale === 'fr' ? 'Tarifs' : 'Pricing'}
             </a>
-            
+
             <div className="py-4 flex items-center justify-between border-b border-gray-100">
               <span className="text-lg text-gray-900">{locale === 'fr' ? 'Compte' : 'Account'}</span>
               {isSignedIn ? (
                 <UserButton afterSignOutUrl="/" />
               ) : (
-                <SignInButton mode="modal">
+                <SignInButton mode="modal" forceRedirectUrl="/playground">
                   <button className="text-gray-900 font-medium">{locale === 'fr' ? 'Connexion' : 'Sign in'}</button>
                 </SignInButton>
               )}
