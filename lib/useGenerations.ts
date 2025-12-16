@@ -100,7 +100,7 @@ export function useGenerations() {
   // Migrate localStorage to DB (one-time)
   const migrateToDb = useCallback(async () => {
     if (typeof window === 'undefined') return;
-    
+
     const alreadyMigrated = localStorage.getItem(MIGRATED_KEY);
     if (alreadyMigrated) return;
 
@@ -117,7 +117,7 @@ export function useGenerations() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ generations: gens }),
           });
-          
+
           if (res.ok) {
             console.log(`✅ Migrated ${gens.length} generations to DB`);
           }
@@ -160,7 +160,7 @@ export function useGenerations() {
       fetchGenerations();
     };
     window.addEventListener('generations-updated', handleUpdate);
-    
+
     return () => {
       window.removeEventListener('generations-updated', handleUpdate);
     };
@@ -320,6 +320,9 @@ export function useGenerations() {
 
 // Legacy export for backward compatibility with existing playground code
 export const addGenerations = async (gens: Omit<Generation, 'id' | 'createdAt'>[]) => {
+  console.log('📦 addGenerations called with', gens.length, 'generations');
+  console.log('   URLs:', gens.map(g => g.url?.slice(0, 50) + '...'));
+
   try {
     const res = await fetch('/api/generations', {
       method: 'POST',
@@ -327,8 +330,14 @@ export const addGenerations = async (gens: Omit<Generation, 'id' | 'createdAt'>[
       body: JSON.stringify({ generations: gens }),
     });
 
+    console.log('📦 API response status:', res.status);
+
     if (!res.ok) {
+      const errorText = await res.text();
+      console.error('📦 API error response:', res.status, errorText);
+
       // Fallback to localStorage
+      console.log('📦 Falling back to localStorage...');
       const existing = JSON.parse(localStorage.getItem(GENERATIONS_KEY) || '[]');
       const withIds = gens.map((g, i) => ({
         ...g,
@@ -336,14 +345,17 @@ export const addGenerations = async (gens: Omit<Generation, 'id' | 'createdAt'>[
         createdAt: new Date().toISOString(),
       }));
       localStorage.setItem(GENERATIONS_KEY, JSON.stringify([...withIds, ...existing]));
+      console.log('📦 Saved to localStorage:', withIds.length, 'generations');
       return withIds;
     }
 
     const data = await res.json();
+    console.log('✅ Generations saved to DB:', data.generations?.length || 0);
     return data.generations || [];
   } catch (err) {
-    console.error('Add generations error:', err);
+    console.error('📦 Add generations error:', err);
     // Fallback to localStorage
+    console.log('📦 Falling back to localStorage due to error...');
     const existing = JSON.parse(localStorage.getItem(GENERATIONS_KEY) || '[]');
     const withIds = gens.map((g, i) => ({
       ...g,
@@ -351,6 +363,7 @@ export const addGenerations = async (gens: Omit<Generation, 'id' | 'createdAt'>[
       createdAt: new Date().toISOString(),
     }));
     localStorage.setItem(GENERATIONS_KEY, JSON.stringify([...withIds, ...existing]));
+    console.log('📦 Saved to localStorage:', withIds.length, 'generations');
     return withIds;
   }
 };

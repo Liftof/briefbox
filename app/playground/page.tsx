@@ -1438,7 +1438,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
         }));
       
       if (generationsToSave.length > 0) {
-        addGenerations(generationsToSave);
+        await addGenerations(generationsToSave);
       }
       window.dispatchEvent(new Event('generations-updated'));
 
@@ -1737,7 +1737,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
         }));
       
       if (generationsToSave.length > 0) {
-        addGenerations(generationsToSave);
+        await addGenerations(generationsToSave);
       }
       
       // Trigger update event for ProjectsView
