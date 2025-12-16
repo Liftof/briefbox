@@ -814,13 +814,13 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
               />
             </div>
 
-            {/* 4. Pain Points - Full width if we have content */}
+            {/* 4. Pain Points - Full width, 8 items in 4 columns */}
             {(localData.industryInsights?.length > 0 || true) && (
               <div className="bg-gradient-to-br from-rose-50 to-amber-50 border border-rose-100 p-4 rounded-lg md:col-span-2 lg:col-span-3">
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2">
                     <span className="text-lg">⚡</span>
-                    <span className="text-[10px] font-mono uppercase tracking-widest text-rose-600">{locale === 'fr' ? 'Pain Points & Contexte Marché' : 'Pain Points & Market Context'}</span>
+                    <span className="text-[10px] font-mono uppercase tracking-widest text-rose-600">{locale === 'fr' ? 'Pain Points' : 'Pain Points'}</span>
                   </div>
                   {(localData.industryInsights?.length || 0) > 0 && (
                     <span className="bg-rose-100 text-rose-700 text-[9px] px-1.5 py-0.5 font-bold rounded">
@@ -829,40 +829,25 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
                   )}
                 </div>
                 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
-                  {localData.industryInsights?.slice(0, 6).map((insight: any, i: number) => (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2 mb-3">
+                  {localData.industryInsights?.slice(0, 8).map((insight: any, i: number) => (
                     <div key={i} className="group relative p-3 bg-white/80 border border-rose-100 rounded-lg hover:shadow-sm transition-all">
-                      {insight.type && (
-                        <span className={`inline-block text-[8px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded mb-2 ${
-                          insight.type === 'pain_point' ? 'bg-rose-100 text-rose-600' :
-                          insight.type === 'trend' ? 'bg-blue-100 text-blue-600' :
-                          insight.type === 'cost_of_inaction' ? 'bg-amber-100 text-amber-600' :
-                          insight.type === 'competitive' ? 'bg-violet-100 text-violet-600' :
-                          'bg-gray-100 text-gray-600'
-                        }`}>
-                          {insight.type === 'pain_point' ? '⚡ Problème' :
-                           insight.type === 'trend' ? '📈 Tendance' :
-                           insight.type === 'cost_of_inaction' ? '⚠️ Risque' :
-                           insight.type === 'competitive' ? '🎯 Concurrence' : 'Insight'}
-                        </span>
-                      )}
-                      <p className="text-xs text-gray-800 font-medium">{insight.painPoint || insight.fact}</p>
-                      {insight.consequence && <p className="text-[10px] text-rose-600 mt-1">→ {insight.consequence}</p>}
-                      {insight.solution && <p className="text-[10px] text-blue-600 mt-1">✓ {insight.solution}</p>}
+                      <p className="text-xs text-gray-800 font-medium leading-snug">{insight.painPoint || insight.hook || insight.fact}</p>
+                      {insight.consequence && <p className="text-[10px] text-rose-500 mt-1.5">→ {insight.consequence}</p>}
                       <button 
                         onClick={() => {
                           const newInsights = [...localData.industryInsights];
                           newInsights.splice(i, 1);
                           handleChange('industryInsights', newInsights);
                         }}
-                        className="absolute top-1 right-1 text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100"
+                        className="absolute top-1 right-1 text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 text-sm"
                       >×</button>
                     </div>
                   ))}
                 </div>
                 
                 <AddItemInput 
-                  placeholder={locale === 'fr' ? "Ajouter un pain point ou tendance marché..." : "Add a pain point or market trend..."} 
+                  placeholder={locale === 'fr' ? "Ajouter un pain point..." : "Add a pain point..."} 
                   onAdd={(val) => {
                     handleChange('industryInsights', [...(localData.industryInsights || []), { painPoint: val, type: 'pain_point' }]);
                   }}

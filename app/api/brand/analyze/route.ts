@@ -1421,37 +1421,41 @@ export async function POST(request: Request) {
         ],
         "editorialHooks": [
            {
-             "hook": "Ready-to-use social media hook in French. Must be attention-grabbing, emotional, specific. Max 60 chars.",
-             "subtext": "Supporting line that adds context or amplifies the hook. Max 80 chars.",
-             "type": "pain_point | trend | provocation | social_proof | tip",
-             "emotion": "curiosity | fear | hope | frustration | relief"
+             "hook": "Ready-to-use pain point hook in French. Must address the target audience's daily struggle. Max 60 chars.",
+             "subtext": "Supporting line that amplifies the pain or hints at the solution. Max 80 chars.",
+             "emotion": "curiosity | frustration | relief | urgency"
            }
         ],
         "_editorialHooks_RULES": {
-          "GENERATE_6_HOOKS": true,
+          "GENERATE_8_HOOKS": true,
           "LANGUAGE": "French only",
+          "FOCUS": "ONLY pain points and frustrations of the TARGET AUDIENCE. NO market stats, NO industry trends.",
           "GOOD_EXAMPLES": [
             "⚡ 2h par jour sur l'admin ? C'est 10h/semaine de perdu.",
             "73% des CM jonglent entre 5+ outils. Et vous ?",
-            "Stop aux posts génériques. Voici ce qui engage vraiment.",
-            "Le secret des marques qui cartonnent sur LinkedIn ?",
-            "Vos visuels sont beaux... mais convertissent-ils ?"
+            "Vos visuels sont beaux... mais convertissent-ils ?",
+            "Marre de courir après les deadlines ?",
+            "Vos emails tombent dans les spams ? Voici pourquoi.",
+            "Le brief client était clair... jusqu'à la V12.",
+            "Vous passez plus de temps à reporter qu'à créer ?",
+            "Vos concurrents publient 3x plus. Comment font-ils ?"
           ],
-          "BAD_EXAMPLES_NEVER_GENERATE": [
-            "Le marché du SaaS atteindra 500 milliards en 2025",
+          "FORBIDDEN_NEVER_GENERATE": [
+            "Le marché atteindra X milliards",
             "L'IA transforme l'industrie",
-            "Le secteur connaît une croissance de 15%",
-            "Les entreprises adoptent de plus en plus...",
-            "Le marché mondial est estimé à...",
-            "D'ici 2030, le secteur...",
-            "L'industrie [X] représente [Y] milliards"
+            "Le secteur connaît une croissance",
+            "Les entreprises adoptent de plus en plus",
+            "D'ici 2030...",
+            "X% des entreprises utilisent...",
+            "Le marché mondial est estimé à",
+            "CAGR", "market size", "industry growth"
           ],
           "MANDATORY_RULES": [
-            "Each hook must speak TO the target audience, not ABOUT the industry",
+            "ONLY generate hooks about TARGET AUDIENCE's daily problems",
             "Use 'vous/votre' to address the reader directly", 
-            "Include specific numbers when possible (73%, 2h, 5 outils)",
-            "Create curiosity or emotional response",
-            "Never mention market size, growth rates, or industry projections"
+            "Make it personal and emotional, not abstract",
+            "Quantify with time/money lost when possible (2h/jour, 500€/mois)",
+            "NEVER mention market size, growth rates, projections, or industry stats"
           ]
         },
         "contentNuggets": {
@@ -1533,36 +1537,36 @@ export async function POST(request: Request) {
          - Each post MUST have an "intent" explaining WHY this post is strategic for the END USER
          - Be SPECIFIC: not "amélioration" but "+47% en 3 mois"
          
-      8. **PAIN POINTS & MARKET CONTEXT (CRITICAL - RETHINK THIS):** Generate 4-5 actionable insights.
+      8. **PAIN POINTS (CRITICAL - 8 REQUIRED):** Generate exactly 8 pain point hooks.
          
-         ⚠️ GOLDEN RULE: These insights must speak TO the TARGET AUDIENCE, not ABOUT the client's industry!
+         ⚠️ GOLDEN RULE: Each hook must describe a DAILY FRUSTRATION of the TARGET AUDIENCE.
          
-         🚫 FORBIDDEN PATTERNS (auto-reject):
-         - "The [industry] market will reach $X billion" (nobody cares about market size)
-         - "SaaS/AI/Tech adoption is growing" (too generic)
-         - "Companies are investing more in X" (vague corporate speak)
-         - Any stat about the CLIENT'S industry growth
+         🚫 ABSOLUTELY FORBIDDEN (will be rejected):
+         - Market size stats ("$X billion market")
+         - Industry growth ("X% growth", "CAGR")
+         - Company adoption rates ("X% of companies use...")
+         - Future projections ("by 2030...")
+         - Generic tech trends ("AI is transforming...")
          
-         ✅ WHAT WE WANT: Stats that resonate with the END CUSTOMER'S daily struggles:
-         - **pain_point**: What frustrates the TARGET AUDIENCE RIGHT NOW? Quantify with time/money lost.
-         - **trend**: What's changing in THEIR world that makes this solution timely?
-         - **cost_of_inaction**: What happens if THEY DON'T solve this? Show the risk.
-         - **social_proof**: What are others like THEM doing? Peer pressure stats.
+         ✅ ONLY GENERATE:
+         - Time wasted: "2h/jour sur des tâches répétitives"
+         - Money lost: "500€/mois en outils inutiles"  
+         - Frustrations: "Marre de jongler entre 5 outils ?"
+         - Missed opportunities: "Vos concurrents publient 3x plus"
+         - Personal struggles: "Le brief était clair... jusqu'à la V12"
          
-         FORMULA: [TARGET AUDIENCE] + [THEIR Specific Problem] + [Quantified Impact on THEM]
+         FORMULA: [VOUS] + [Problème quotidien] + [Impact chiffré]
          
-         EXAMPLE - If client is a "SaaS for communication professionals":
-         - ✅ "73% des CM jonglent entre 5+ outils différents chaque jour" (speaks to CM's daily pain)
-         - ✅ "Les équipes marketing passent 40% de leur temps sur du reporting" (their time is wasted)
-         - ❌ "Le marché du SaaS atteindra 200Mds$ en 2025" (who cares? CM don't care about SaaS market)
-         - ❌ "95% des entreprises adopteront l'IA" (generic, doesn't speak to CM specifically)
+         EXAMPLES (copy this style!):
+         - "Vous passez plus de temps à formater qu'à créer ?"
+         - "73% des marketers jonglent entre 5+ outils. Et vous ?"
+         - "Vos visuels sont beaux... mais convertissent-ils ?"
+         - "2h par jour sur l'admin ? C'est 10h/semaine de perdu."
+         - "Le brief client était clair... jusqu'à la V12."
+         - "Vos emails tombent dans les spams ? Voici pourquoi."
          
-         EXAMPLE - If client is a "Consulting firm for CFOs":
-         - ✅ "67% des CFOs passent plus de temps sur la compliance que sur la stratégie" (CFO's pain)
-         - ❌ "Le marché du consulting financier croît de 8%" (industry stat, not helpful for CFO)
-         
-         ASK YOURSELF: "If I'm the target customer, would this stat make me stop scrolling?"
-         If the answer is "meh, generic", DON'T include it.
+         TEST: "Would this make the TARGET CUSTOMER nod and say 'that's so me'?"
+         If not, DON'T include it.
          
       9. **CONTENT VALIDATION (INTELLIGENT AGENT TASK):** 
          I have provided a raw list of "EXTRACTED CONTENT NUGGETS" above. Your job is to FILTER and CLEAN them.
@@ -2243,35 +2247,48 @@ FORMAT: Return ONLY a valid JSON array:
     }
 
     // ═══════════════════════════════════════════════════════════════════════════
-    // STEP C: SOURCE-BASED FILTERING - Only keep quality insights
+    // STEP C: AGGRESSIVE FILTERING - Remove ALL market stats, keep only pain points
     // ═══════════════════════════════════════════════════════════════════════════
     const BAD_PATTERNS = [
-      /market.*(?:reach|worth|size|grow|project|forecast)/i,
+      // Market size & projections (always garbage)
+      /market.*(?:reach|worth|size|grow|project|forecast|estimat)/i,
       /\$\d+\s*(?:billion|trillion|million)/i,
       /(?:billion|trillion)\s*(?:dollar|usd|eur)/i,
+      /\d+\s*(?:billion|trillion|milliard)/i,
+      /marché.*(?:atteindra|vaudra|représente|estimé)/i,
+      // Growth rates (useless for end users)
       /cagr|compound annual/i,
-      /industry.*(?:worth|size|grow|reach)/i,
-      /(?:global|worldwide).*market/i,
+      /\d+%.*(?:growth|increase|rise|croissance)/i,
+      /croissance de \d+/i,
+      // Industry trends (generic)
+      /industry.*(?:worth|size|grow|reach|trend)/i,
+      /(?:global|worldwide|mondial).*market/i,
+      /le secteur.*(?:croît|représente|atteint)/i,
+      /l'industrie.*(?:croît|représente|atteint)/i,
+      // Future projections (nobody cares)
       /by 202[5-9]|by 203[0-9]/i,
-      /\d+%.*(?:growth|increase|rise)/i,
+      /d'ici 202[5-9]|d'ici 203[0-9]/i,
+      /en 202[5-9]|en 203[0-9]/i,
+      // Company adoption stats (not personal)
+      /\d+%\s*(?:des entreprises|of companies|of organizations)/i,
+      /entreprises.*(?:adoptent|utilisent|investissent)/i,
+      /companies.*(?:adopt|use|invest)/i,
+      // Generic AI/tech trends
+      /l'ia transform|ai is transform/i,
+      /digital transformation/i,
     ];
 
     const filterInsight = (insight: any): boolean => {
-      // Keep if explicitly marked as real data or transformed
-      if (insight.isRealData || insight.isTransformed || insight.isEnriched) {
-        return true;
-      }
-      
       const text = (insight.painPoint || insight.hook || insight.fact || '').toLowerCase();
       
-      // Reject if matches bad patterns
+      // Reject if matches any bad pattern (even if marked as real data)
       if (BAD_PATTERNS.some(pattern => pattern.test(text))) {
-        console.log(`   ❌ Filtered out: "${text.slice(0, 50)}..."`);
+        console.log(`   ❌ Filtered market stat: "${text.slice(0, 60)}..."`);
         return false;
       }
       
-      // Reject if too short or generic
-      if (text.length < 20) return false;
+      // Reject if too short
+      if (text.length < 15) return false;
       
       // Keep otherwise
       return true;
@@ -2285,31 +2302,29 @@ FORMAT: Return ONLY a valid JSON array:
     }
 
     // ═══════════════════════════════════════════════════════════════════════════
-    // STEP D: MAP editorialHooks to industryInsights format for frontend compat
+    // STEP D: MAP editorialHooks to industryInsights (ONLY pain points, no market stats)
     // ═══════════════════════════════════════════════════════════════════════════
     if (Array.isArray(brandData.editorialHooks) && brandData.editorialHooks.length > 0) {
-      // editorialHooks are already in the right format from the prompt
-      // Map them to industryInsights format for frontend compatibility
+      // Map editorial hooks to industryInsights format, filtering out any garbage
       const hooksAsInsights = brandData.editorialHooks
-        .filter((h: any) => h.hook && h.hook.length > 10)
-        .filter(filterInsight)
+        .filter((h: any) => h.hook && h.hook.length > 15)
+        .filter((h: any) => filterInsight({ painPoint: h.hook })) // Apply same filter
         .map((h: any) => ({
           painPoint: h.hook,
           consequence: h.subtext || '',
-          solution: '',
-          type: h.type || 'pain_point',
+          type: 'pain_point', // Force type to pain_point only
           emotion: h.emotion,
-          isEditorialHook: true, // Mark so frontend knows these are curated
-          isTransformed: true
         }));
       
-      // Prioritize editorial hooks over raw insights
-      brandData.industryInsights = [
-        ...hooksAsInsights,
-        ...(brandData.industryInsights || []).filter((i: any) => !i.isEditorialHook).slice(0, 2)
-      ].slice(0, 8);
+      // ONLY use editorial hooks, no fallback to other insights (they're often garbage)
+      brandData.industryInsights = hooksAsInsights.slice(0, 8);
       
-      console.log(`✅ Mapped ${hooksAsInsights.length} editorial hooks to industryInsights`);
+      console.log(`✅ Mapped ${hooksAsInsights.length} pain point hooks to industryInsights`);
+    } else {
+      // Filter existing insights if no hooks
+      brandData.industryInsights = (brandData.industryInsights || [])
+        .filter(filterInsight)
+        .slice(0, 8);
     }
 
     return NextResponse.json({
