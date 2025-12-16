@@ -324,6 +324,7 @@ function PlaygroundContent() {
   // Tag editing dropdown state (for BRAND VISUALS inline tag change)
   const [tagDropdownOpen, setTagDropdownOpen] = useState<string | null>(null); // URL of image with open dropdown
   const [showAssetHint, setShowAssetHint] = useState(false); // Hint to add assets when typing custom prompt
+  const [showGiftOverlay, setShowGiftOverlay] = useState(false); // Celebrate free generation gift
 
   // Aspect ratio options
   const ASPECT_RATIOS = [
@@ -870,6 +871,7 @@ function PlaygroundContent() {
   };
 
   // Build a smart prompt from the RICH bento data (pain points, competitors, trends)
+  // IMPORTANT: Keep briefs simple and direct - no forced marketing formulas
   const buildSmartWelcomePrompt = useCallback((brand: any): { brief: string; templateId: TemplateId } | null => {
     const rawInsights = Array.isArray(brand.industryInsights) ? brand.industryInsights : [];
     // Filter out garbage market stats
@@ -881,8 +883,7 @@ function PlaygroundContent() {
     const features = brand.features || [];
     const brandName = brand.name || 'nous';
 
-    // Priority 1: Pain point with emotional hook (most engaging!)
-    // Check multiple sources for pain points
+    // Priority 1: Pain point - use DIRECT text, no marketing transformation
     let mainPainPoint: string | null = null;
 
     // Source 1: industryInsights with type 'pain_point' (already filtered)
@@ -909,30 +910,23 @@ function PlaygroundContent() {
     }
 
     if (mainPainPoint) {
-      // Clean up the pain point text for use in hook
-      const cleanPainPoint = mainPainPoint.replace(/^[0-9%]+\s*(of|des|de)\s*/i, '').trim();
-      const hooks = [
-        `Vous aussi vous en avez marre de "${cleanPainPoint.toLowerCase()}" ?`,
-        `Stop. ${cleanPainPoint}. Voici la solution.`,
-        `${cleanPainPoint} ? On a la réponse.`,
-        `Le problème que personne ne veut voir : ${cleanPainPoint.toLowerCase()}`,
-      ];
+      // Use the pain point DIRECTLY - let the AI do the creative work
       return {
-        brief: hooks[Math.floor(Math.random() * hooks.length)],
+        brief: mainPainPoint,
         templateId: 'stat'
       };
     }
 
-    // Priority 2: Trend with urgency (timely content)
+    // Priority 2: Trend (use directly)
     const trend = insights.find((i: any) => i.type === 'trend' && i.painPoint);
     if (trend?.painPoint) {
       return {
-        brief: `📈 ${trend.painPoint} — Comment ${brandName} vous aide à en profiter`,
+        brief: trend.painPoint,
         templateId: 'announcement'
       };
     }
 
-    // Priority 3: Competitor positioning (differentiator)
+    // Priority 3: Competitor positioning
     const competitor = insights.find((i: any) => i.type === 'competitive');
     if (competitor?.painPoint) {
       return {
@@ -941,12 +935,11 @@ function PlaygroundContent() {
       };
     }
 
-    // Priority 4: Real stat with impact
+    // Priority 4: Real stat
     const realStats = contentNuggets.realStats || [];
     if (realStats.length > 0) {
-      const stat = realStats[0];
       return {
-        brief: `${stat} — Voici comment on y arrive`,
+        brief: realStats[0],
         templateId: 'stat'
       };
     }
@@ -956,26 +949,20 @@ function PlaygroundContent() {
     if (testimonials.length > 0 && testimonials[0].quote) {
       const t = testimonials[0];
       return {
-        brief: `"${t.quote}" — ${t.author || 'Un client satisfait'}`,
+        brief: `"${t.quote}" — ${t.author || (locale === 'fr' ? 'Un client satisfait' : 'A happy customer')}`,
         templateId: 'quote'
       };
     }
 
-    // Priority 6: Feature as benefit (transform feature into hook)
+    // Priority 6: Feature (use directly)
     if (features.length > 0) {
-      const feature = features[0];
-      const hooks = [
-        `Comment ${feature.toLowerCase()} change tout pour nos clients`,
-        `${feature} : le game-changer que vous attendiez`,
-        `Pourquoi ${feature.toLowerCase()} fait la différence`,
-      ];
       return {
-        brief: hooks[Math.floor(Math.random() * hooks.length)],
+        brief: features[0],
         templateId: 'product'
       };
     }
 
-    // Priority 7: Tagline or description
+    // Priority 7: Tagline
     if (brand.tagline && brand.tagline.length > 10) {
       return {
         brief: brand.tagline,
@@ -986,13 +973,15 @@ function PlaygroundContent() {
     // Fallback: Generic but branded
     if (brandName && brandName !== 'nous') {
       return {
-        brief: `Découvrez ce que ${brandName} peut faire pour vous`,
+        brief: locale === 'fr'
+          ? `Découvrez ${brandName}`
+          : `Discover ${brandName}`,
         templateId: 'announcement'
       };
     }
 
     return null;
-  }, []);
+  }, [locale]);
 
   const handleValidateBento = async () => {
     if (!brandData) {
@@ -1044,17 +1033,14 @@ function PlaygroundContent() {
       // Early bird gets 1 FREE auto-generation
       setBrief(smartPrompt.brief);
       setSelectedTemplate(smartPrompt.templateId);
-      showToast(
-        locale === 'fr'
-          ? '🎁 Génération offerte en cours...'
-          : '🎁 Free generation in progress...',
-        'success'
-      );
 
-      // Small delay to let UI update
+      // Show gift overlay instead of simple toast
+      setShowGiftOverlay(true);
+
+      // Small delay to let UI update and show the gift
       setTimeout(() => {
         handleGenerate(smartPrompt.brief, false, brandData, allImages.slice(0, 6), undefined, 1); // 1 image only
-      }, 800);
+      }, 1500); // Longer delay to let user see the gift message
     } else if (smartPrompt && allImages.length > 0) {
       // Not early bird - just set up the prompt, user triggers manually
       setBrief(smartPrompt.brief);
@@ -1817,6 +1803,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
       setGeneratedImages((prev) => [...normalized, ...prev].slice(0, 16));
       setStatus('complete');
       setProgress(100);
+      setShowGiftOverlay(false); // Dismiss gift overlay if it was showing
       showToast(locale === 'fr' ? 'Visuel généré et sauvegardé !' : 'Visual generated and saved!', 'success');
 
       // ====== CREDITS TRACKING (inline upgrade card, no popup) ======
@@ -3158,6 +3145,46 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
           </div>
         ))}
       </div>
+
+      {/* 🎁 Gift Overlay - Celebrate free generation */}
+      {showGiftOverlay && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/50 backdrop-blur-sm animate-fade-in">
+          <div className="relative bg-white border-2 border-amber-400 p-8 max-w-sm mx-4 text-center shadow-2xl animate-bounce-in">
+            {/* Decorative corners */}
+            <div className="absolute -top-2 -left-2 w-6 h-6 border-l-2 border-t-2 border-amber-400" />
+            <div className="absolute -bottom-2 -right-2 w-6 h-6 border-r-2 border-b-2 border-amber-400" />
+
+            {/* Gift emoji */}
+            <div className="text-6xl mb-4 animate-pulse">🎁</div>
+
+            {/* Title */}
+            <h3 className="text-2xl font-bold text-gray-900 mb-2">
+              {locale === 'fr' ? 'Bienvenue !' : 'Welcome!'}
+            </h3>
+
+            {/* Message */}
+            <p className="text-gray-600 mb-4">
+              {locale === 'fr'
+                ? 'On vous offre votre premier visuel. C\'est cadeau ✨'
+                : 'We\'re giving you your first visual for free ✨'}
+            </p>
+
+            {/* Loading indicator */}
+            <div className="flex items-center justify-center gap-2 text-sm text-amber-600">
+              <div className="w-4 h-4 border-2 border-amber-400 border-t-amber-600 rounded-full animate-spin" />
+              <span>{locale === 'fr' ? 'Génération en cours...' : 'Generating...'}</span>
+            </div>
+
+            {/* Auto-dismiss after generation starts */}
+            <button
+              onClick={() => setShowGiftOverlay(false)}
+              className="absolute top-2 right-2 text-gray-400 hover:text-gray-600 text-xl"
+            >
+              ×
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Style Gallery Modal */}
       <StyleGallery

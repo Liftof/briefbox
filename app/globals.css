@@ -103,6 +103,15 @@ body {
 }
 .animate-fade-in { animation: fade-in 0.4s ease-out forwards; }
 
+/* Bounce-in animation for gift overlay */
+@keyframes bounce-in {
+  0% { opacity: 0; transform: scale(0.3); }
+  50% { opacity: 1; transform: scale(1.05); }
+  70% { transform: scale(0.95); }
+  100% { transform: scale(1); }
+}
+.animate-bounce-in { animation: bounce-in 0.5s ease-out forwards; }
+
 /* Smooth transitions */
 * {
   transition-property: background-color, border-color, color, fill, stroke, opacity, box-shadow, transform;
