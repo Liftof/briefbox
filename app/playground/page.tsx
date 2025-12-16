@@ -2785,7 +2785,7 @@ Couleurs : Utiliser la palette de la marque.`;
               </div>
               <div>
                 <p className="text-sm font-medium text-gray-900">
-                  {locale === 'fr' ? 'Création de vos visuels...' : 'Creating your visuals...'}
+                  {locale === 'fr' ? 'Création de votre visuel...' : 'Creating your visual...'}
                 </p>
                 <p className="text-xs text-gray-500">
                   {statusMessage || (locale === 'fr' ? '~30 secondes' : '~30 seconds')}
@@ -2793,13 +2793,9 @@ Couleurs : Utiliser la palette de la marque.`;
               </div>
             </div>
             
-            {/* Skeleton cards with brand gradient */}
-            <div className={`grid gap-4 ${
-              aspectRatio === '9:16' ? 'grid-cols-2 sm:grid-cols-3' : 
-              aspectRatio === '16:9' || aspectRatio === '21:9' ? 'grid-cols-1' : 
-              'grid-cols-1 sm:grid-cols-2'
-            }`}>
-              {[1, 2].map((i) => {
+            {/* Single skeleton card with brand gradient */}
+            <div className="max-w-md mx-auto w-full">
+              {(() => {
                 const aspectClasses: Record<string, string> = {
                   '1:1': 'aspect-square',
                   '4:5': 'aspect-[4/5]',
@@ -2812,7 +2808,6 @@ Couleurs : Utiliser la palette de la marque.`;
                 
                 return (
                   <div 
-                    key={i} 
                     className={`${aspectClass} rounded-xl relative overflow-hidden border border-gray-200`}
                     style={{ 
                       background: `linear-gradient(135deg, ${brandData?.colors?.[0] || '#f3f4f6'}15, ${brandData?.colors?.[1] || '#e5e7eb'}25)` 
@@ -2851,7 +2846,7 @@ Couleurs : Utiliser la palette de la marque.`;
                           ))}
                         </div>
                         <span className="text-[10px] text-gray-400 font-medium">
-                          {locale === 'fr' ? `Visuel ${i}/2` : `Visual ${i}/2`}
+                          {locale === 'fr' ? 'Création en cours...' : 'Creating...'}
                         </span>
                       </div>
                     </div>
@@ -2868,7 +2863,7 @@ Couleurs : Utiliser la palette de la marque.`;
                     </div>
                   </div>
                 );
-              })}
+              })()}
             </div>
             
             {/* Fun fact during loading */}
