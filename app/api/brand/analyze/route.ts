@@ -1440,15 +1440,26 @@ export async function POST(request: Request) {
           ],
           "HOOK_FORMULA": "[Target's daily frustration] + [Hint that solution exists]",
           "SUBTEXT_FORMULA": "[How this brand specifically helps] OR [Consequence of not solving]",
-          "EXAMPLES_FRENCH": [
-            {"hook": "Encore 2h à formater des visuels ?", "subtext": "Générez-les en 60 secondes, à votre image."},
-            {"hook": "Vos posts sont beaux... mais engagent-ils ?", "subtext": "Des visuels optimisés pour la conversion."},
-            {"hook": "3 clics pour un visuel pro. Sans graphiste.", "subtext": "Publiez plus, vendez plus."}
+          "TONE_ADAPTATION_BY_INDUSTRY": {
+            "FORMAL_INDUSTRIES": ["M&A", "Finance", "Law", "Banking", "Consulting", "Enterprise", "Healthcare", "Insurance"],
+            "CASUAL_INDUSTRIES": ["Fashion", "Food", "Lifestyle", "Entertainment", "Gaming", "Fitness", "Beauty", "Travel"],
+            "RULE": "Adapt tone to match the industry: FORMAL = professional, data-driven hooks. CASUAL = punchy, emotional, fun hooks."
+          },
+          "EXAMPLES_FORMAL_FRENCH": [
+            {"hook": "Vos dossiers M&A prennent 3 mois de trop ?", "subtext": "Accélérez le closing avec une due diligence automatisée."},
+            {"hook": "La compliance vous coûte 40% de votre temps ?", "subtext": "Automatisez les contrôles réglementaires."}
           ],
-          "EXAMPLES_ENGLISH": [
+          "EXAMPLES_CASUAL_FRENCH": [
+            {"hook": "Encore 2h à formater des visuels ?", "subtext": "Générez-les en 60 secondes, à votre image."},
+            {"hook": "Vos posts sont beaux... mais engagent-ils ?", "subtext": "Des visuels qui font scroller."}
+          ],
+          "EXAMPLES_FORMAL_ENGLISH": [
+            {"hook": "Your M&A deals taking 3 months too long?", "subtext": "Accelerate closing with automated due diligence."},
+            {"hook": "Compliance eating 40% of your time?", "subtext": "Automate regulatory checks."}
+          ],
+          "EXAMPLES_CASUAL_ENGLISH": [
             {"hook": "Still spending 2h formatting visuals?", "subtext": "Generate them in 60 seconds, on-brand."},
-            {"hook": "Your posts look great... but do they convert?", "subtext": "Visuals optimized for engagement."},
-            {"hook": "3 clicks to a pro visual. No designer needed.", "subtext": "Publish more, sell more."}
+            {"hook": "Your posts look great... but do they convert?", "subtext": "Visuals that make people stop scrolling."}
           ],
           "FORBIDDEN_PATTERNS": [
             "Market size/growth stats",
@@ -1461,7 +1472,8 @@ export async function POST(request: Request) {
             "Each hook must be answerable by THIS brand's product",
             "If the hook could apply to ANY company, it's too generic - REJECT IT",
             "The subtext must reference a specific feature or benefit from the scraped data",
-            "ALL hooks must be in the SAME language as the website (detectedLanguage)"
+            "ALL hooks must be in the SAME language as the website (detectedLanguage)",
+            "ADAPT TONE: Formal for B2B/Finance/Law, Casual for Fashion/Lifestyle/Consumer"
           ]
         },
         "contentNuggets": {
@@ -1543,36 +1555,45 @@ export async function POST(request: Request) {
          - Each post MUST have an "intent" explaining WHY this post is strategic for the END USER
          - Be SPECIFIC: not "amélioration" but "+47% en 3 mois"
          
-      8. **PAIN POINTS (CRITICAL - 8 REQUIRED, PRODUCT-SPECIFIC, SAME LANGUAGE AS SITE):**
+      8. **PAIN POINTS (CRITICAL - 8 REQUIRED, PRODUCT-SPECIFIC, ADAPTED TONE):**
          
          ⚠️ LANGUAGE: Generate hooks in the SAME LANGUAGE as 'detectedLanguage' (French OR English).
+         
+         ⚠️ TONE ADAPTATION BY INDUSTRY:
+         - FORMAL INDUSTRIES (M&A, Finance, Law, Consulting, Healthcare, Enterprise B2B):
+           → Professional, data-driven hooks. Focus on ROI, efficiency, compliance, risk.
+           → Example: "La compliance vous coûte 40% de votre temps ?"
+         - CASUAL INDUSTRIES (Fashion, Food, Lifestyle, Gaming, Beauty, Consumer):
+           → Punchy, emotional, fun hooks. Use emojis sparingly, be relatable.
+           → Example: "Vos posts sont beaux... mais engagent-ils ?"
          
          ⚠️ GOLDEN RULE: Each hook must be DIRECTLY related to what THIS brand sells.
          
          🔍 MANDATORY CONTEXT TO USE:
-         - 'detectedLanguage': Write hooks in THIS language (fr = French, en = English)
+         - 'detectedLanguage': Write hooks in THIS language
+         - 'industry': Adapt tone (formal vs casual)
          - 'targetAudience': WHO are you speaking to?
          - 'features' & 'services': WHAT does the brand offer?
          - 'painPoints': Problems extracted from the site - EXPAND on these!
-         - 'uniqueValueProposition': The main benefit.
+         - 'toneVoice': Match the brand's communication style
          
          ✅ EACH HOOK MUST PASS THIS TEST:
          1. "Is this frustration solvable by THIS brand's product?" → If not, REJECT
          2. "Would a [targetAudience] recognize this as THEIR problem?" → If not, REJECT
-         3. "Is this specific enough that it couldn't apply to ANY random company?" → If not, REJECT
+         3. "Does the tone match the industry?" → If too casual for Finance or too formal for Fashion, REJECT
          
          🚫 FORBIDDEN:
          - Market stats, growth rates, projections
          - Generic problems not related to the product
-         - Writing in a different language than the website
+         - Tone mismatch (casual for M&A, formal for fashion brand)
          
-         FRENCH EXAMPLES (if detectedLanguage = 'fr'):
-         - "Encore 2h à formater des visuels ?"
-         - "Vos leads tombent dans l'oubli ?"
+         FORMAL EXAMPLE (Finance/Law/M&A):
+         - "Vos dossiers M&A prennent 3 mois de trop ?"
+         - "Your deal pipeline lacks visibility?"
          
-         ENGLISH EXAMPLES (if detectedLanguage = 'en'):
-         - "Still spending 2h on manual formatting?"
-         - "Your leads falling through the cracks?"
+         CASUAL EXAMPLE (Fashion/Lifestyle/Consumer):
+         - "Votre feed manque de punch ?"
+         - "Your brand deserves better than templates 🔥"
          
       9. **CONTENT VALIDATION (INTELLIGENT AGENT TASK):** 
          I have provided a raw list of "EXTRACTED CONTENT NUGGETS" above. Your job is to FILTER and CLEAN them.

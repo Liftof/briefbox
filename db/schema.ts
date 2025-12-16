@@ -89,6 +89,10 @@ export const brands = pgTable('brands', {
   tagline: text('tagline'),
   description: text('description'),
   industry: text('industry'),
+  detectedLanguage: text('detected_language').$type<'fr' | 'en'>(), // Language of the website
+  targetAudience: text('target_audience'), // Who this brand targets
+  uniqueValueProposition: text('unique_value_proposition'), // Main benefit
+  brandStory: text('brand_story'), // Brand origin/mission story
   
   // Identité Visuelle
   logo: text('logo'), // URL du logo principal
@@ -137,6 +141,11 @@ export const brands = pgTable('brands', {
     angle: string,
     hook: string,
     targetEmotion: string
+  }[]>(),
+  editorialHooks: jsonb('editorial_hooks').$type<{
+    hook: string,
+    subtext: string,
+    emotion: string
   }[]>(),
   painPoints: jsonb('pain_points').$type<string[]>(),
   vocabulary: jsonb('vocabulary').$type<string[]>(),
