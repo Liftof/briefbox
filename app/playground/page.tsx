@@ -17,6 +17,7 @@ import { useCredits } from '@/lib/useCredits';
 import { TemplateId } from '@/lib/templates';
 import { useTranslation } from '@/lib/i18n';
 import { useBrands, BrandSummary, getLastUsedBrandId, setLastUsedBrandId } from '@/lib/useBrands';
+import { getTagInfo, getTagOptions as getTagOptionsList, EDITABLE_TAGS } from '@/lib/tagStyles';
 
 type Step = 'loading' | 'url' | 'analyzing' | 'logo-confirm' | 'bento' | 'playground';
 
@@ -319,6 +320,10 @@ function PlaygroundContent() {
   const [lastCreditsRemaining, setLastCreditsRemaining] = useState<number | null>(null);
   const [aspectRatio, setAspectRatio] = useState<string>('1:1');
   const [resolution, setResolution] = useState<'2K' | '4K'>('2K');
+
+  // Tag editing dropdown state (for BRAND VISUALS inline tag change)
+  const [tagDropdownOpen, setTagDropdownOpen] = useState<string | null>(null); // URL of image with open dropdown
+  const [showAssetHint, setShowAssetHint] = useState(false); // Hint to add assets when typing custom prompt
 
   // Aspect ratio options
   const ASPECT_RATIOS = [
@@ -1079,6 +1084,37 @@ function PlaygroundContent() {
     }
   };
 
+  // Change tag of an image (from BRAND VISUALS inline dropdown)
+  const handleChangeImageTag = (imageUrl: string, newTag: string) => {
+    setBrandData((prev: any) => {
+      if (!prev) return prev;
+      const existingLabeled = Array.isArray(prev.labeledImages) ? prev.labeledImages : [];
+      const existingIndex = existingLabeled.findIndex((li: any) => li.url === imageUrl);
+
+      let updatedLabeled;
+      if (existingIndex >= 0) {
+        updatedLabeled = [...existingLabeled];
+        updatedLabeled[existingIndex] = { ...updatedLabeled[existingIndex], category: newTag };
+      } else {
+        updatedLabeled = [...existingLabeled, { url: imageUrl, category: newTag }];
+      }
+
+      return { ...prev, labeledImages: updatedLabeled };
+    });
+    setTagDropdownOpen(null); // Close dropdown after selection
+  };
+
+  // Close tag dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = () => {
+      if (tagDropdownOpen) setTagDropdownOpen(null);
+    };
+    if (tagDropdownOpen) {
+      document.addEventListener('click', handleClickOutside);
+      return () => document.removeEventListener('click', handleClickOutside);
+    }
+  }, [tagDropdownOpen]);
+
   const addImagesToState = (urls: string[], label = 'other') => {
     if (!urls || urls.length === 0) return;
 
@@ -1541,6 +1577,18 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
               imageContextMap = cdData.concept.imageSelection.imageRoles;
             }
             console.log('🎯 Smart image selection:', cdData.concept.imageSelection.priority.length, 'images');
+
+            // SYNC: Update uploadedImages so user sees what will be used
+            // Only if user hasn't manually selected images (beyond just logo)
+            const hasOnlyLogoOrEmpty = references.length === 0 ||
+              (references.length === 1 && references[0] === targetBrand?.logo);
+
+            if (hasOnlyLogoOrEmpty && smartImageSelection && smartImageSelection.length > 0) {
+              // Add the smartly selected images to uploadedImages for visibility
+              const imagesToShow = [targetBrand?.logo, ...smartImageSelection].filter(Boolean) as string[];
+              setUploadedImages([...new Set(imagesToShow)].slice(0, 6));
+              console.log('📍 Synced smart selection to uploadedImages for visibility');
+            }
           }
 
           // Extract reference images for style guidance
@@ -2218,8 +2266,8 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                       onClick={() => logoUploadRef.current?.click()}
                       disabled={isUploadingLogo}
                       className={`flex-1 px-5 py-3 text-sm font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed ${currentLogo
-                          ? 'border border-gray-300 text-gray-600 hover:bg-white hover:border-gray-400'
-                          : 'bg-gray-900 text-white hover:bg-black'
+                        ? 'border border-gray-300 text-gray-600 hover:bg-white hover:border-gray-400'
+                        : 'bg-gray-900 text-white hover:bg-black'
                         }`}
                     >
                       {isUploadingLogo ? (
@@ -2388,10 +2436,10 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                       setResolution(res.value);
                     }}
                     className={`text-xs px-3 py-2 transition-colors relative ${resolution === res.value
-                        ? 'bg-gray-900 text-white'
-                        : isLocked
-                          ? 'bg-gray-50 text-gray-300 cursor-not-allowed'
-                          : 'bg-white text-gray-500 hover:text-gray-900'
+                      ? 'bg-gray-900 text-white'
+                      : isLocked
+                        ? 'bg-gray-50 text-gray-300 cursor-not-allowed'
+                        : 'bg-white text-gray-500 hover:text-gray-900'
                       }`}
                   >
                     {res.label}
@@ -2535,7 +2583,16 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
             </div>
             <textarea
               value={brief}
-              onChange={(e) => setBrief(e.target.value)}
+              onChange={(e) => {
+                setBrief(e.target.value);
+                // Show hint if user is typing a custom prompt but has no assets beyond logo
+                const hasOnlyLogo = uploadedImages.length === 0 ||
+                  (uploadedImages.length === 1 && uploadedImages[0] === brandData?.logo);
+                if (e.target.value.length > 20 && hasOnlyLogo && !showAssetHint) {
+                  setShowAssetHint(true);
+                }
+              }}
+              onBlur={() => setShowAssetHint(false)}
               placeholder={getSmartPlaceholder(selectedTemplate, brandData)}
               className="w-full min-h-[100px] text-base resize-none outline-none placeholder:text-gray-300 leading-relaxed"
             />
@@ -2554,6 +2611,27 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                   {uploadedImages.length} {locale === 'fr' ? 'sélectionné(s)' : 'selected'}
                 </span>
               </div>
+
+              {/* Asset hint - shows when user types custom prompt with no assets */}
+              {showAssetHint && (
+                <div className="flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200/50 rounded-lg animate-pulse">
+                  <span className="text-amber-600 text-sm">💡</span>
+                  <span className="text-xs text-amber-700">
+                    {locale === 'fr'
+                      ? 'Ajoutez un visuel pour enrichir votre création !'
+                      : 'Add a visual to enrich your creation!'}
+                  </span>
+                  <button
+                    onClick={() => {
+                      setShowAssetHint(false);
+                      setShowAssetManager(true);
+                    }}
+                    className="ml-auto text-[10px] font-medium text-amber-600 hover:text-amber-700 underline"
+                  >
+                    {locale === 'fr' ? 'Ajouter' : 'Add'}
+                  </button>
+                </div>
+              )}
 
               {/* Selected assets preview - Full width scrollable */}
               <div className="flex gap-2 items-center overflow-x-auto pb-1 no-scrollbar">
@@ -2578,23 +2656,67 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                 {/* Other selected assets */}
                 {uploadedImages.filter(img => img !== brandData?.logo).map((imgUrl, i) => {
                   const labelObj = brandData?.labeledImages?.find((li: any) => li.url === imgUrl);
-                  const mode = assetModes[imgUrl] || (labelObj?.category === 'app_ui' ? 'exact' : 'inspire');
+                  const category = labelObj?.category || 'other';
+                  const tagInfo = getTagInfo(category, locale === 'fr' ? 'fr' : 'en');
+                  const isDropdownOpen = tagDropdownOpen === imgUrl;
 
                   return (
                     <div
                       key={i}
-                      onClick={() => setUploadedImages(prev => prev.filter(img => img !== imgUrl))}
-                      className="relative h-14 w-14 rounded-xl border-2 border-accent overflow-hidden cursor-pointer group flex-shrink-0"
-                      title={locale === 'fr' ? 'Cliquez pour retirer' : 'Click to remove'}
+                      className="relative h-14 w-14 rounded-xl border-2 border-gray-200 hover:border-accent overflow-visible cursor-pointer group flex-shrink-0"
+                      title={locale === 'fr' ? 'Cliquez sur ✕ pour retirer, sur le tag pour modifier' : 'Click ✕ to remove, click tag to change'}
                     >
-                      <img src={imgUrl} className="w-full h-full object-cover" alt="" />
-                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                        <span className="text-white text-lg">×</span>
-                      </div>
-                      <div className={`absolute bottom-0 left-0 right-0 text-[7px] text-center py-0.5 font-bold ${mode === 'exact' ? 'bg-orange-500 text-white' : 'bg-accent text-white'
-                        }`}>
-                        {mode === 'exact' ? 'EXACT' : 'LIBRE'}
-                      </div>
+                      <img src={imgUrl} className="w-full h-full object-cover rounded-lg" alt="" />
+
+                      {/* Remove button - top right */}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setUploadedImages(prev => prev.filter(img => img !== imgUrl));
+                        }}
+                        className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-lg text-[10px] z-10"
+                      >
+                        ×
+                      </button>
+
+                      {/* Tag badge - clickable for dropdown */}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setTagDropdownOpen(isDropdownOpen ? null : imgUrl);
+                        }}
+                        className={`absolute bottom-0 left-0 right-0 text-[7px] text-center py-0.5 font-bold ${tagInfo.className} cursor-pointer hover:opacity-90 transition-opacity rounded-b-lg flex items-center justify-center gap-0.5`}
+                      >
+                        <span>{tagInfo.shortLabel}</span>
+                        <svg className="w-2 h-2 opacity-60" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                        </svg>
+                      </button>
+
+                      {/* Dropdown menu */}
+                      {isDropdownOpen && (
+                        <div
+                          className="absolute top-full left-0 mt-1 bg-white rounded-lg shadow-xl border border-gray-200 py-1 min-w-[120px] z-50"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          {getTagOptionsList(locale === 'fr' ? 'fr' : 'en')
+                            .filter(opt => opt.value !== 'main_logo') // Can't change to logo
+                            .map(opt => (
+                              <button
+                                key={opt.value}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleChangeImageTag(imgUrl, opt.value);
+                                }}
+                                className={`w-full px-3 py-1.5 text-left text-[10px] flex items-center gap-2 hover:bg-gray-50 ${category === opt.value ? 'bg-gray-50' : ''}`}
+                              >
+                                <span className={`w-2 h-2 rounded-sm ${opt.color.split(' ')[0]}`} />
+                                <span className="text-gray-700">{opt.label}</span>
+                                {category === opt.value && <span className="ml-auto text-accent">✓</span>}
+                              </button>
+                            ))}
+                        </div>
+                      )}
                     </div>
                   );
                 })}
@@ -3547,10 +3669,10 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
 
       <div className={`flex-1 transition-all duration-300 ease-out overflow-x-hidden ${step !== 'loading' && step !== 'url' && step !== 'analyzing' && step !== 'bento' ? (isSidebarCollapsed ? 'md:ml-[80px]' : 'md:ml-[240px]') : 'w-full'}`}>
         <main className={`mx-auto min-h-screen flex flex-col justify-center transition-all duration-500 ${step === 'bento'
-            ? 'w-full px-4 md:px-12 py-8 max-w-[1920px]'
-            : step !== 'loading' && step !== 'url' && step !== 'analyzing'
-              ? 'max-w-[900px] p-6 md:p-10 pt-20 pb-24 md:pt-10 md:pb-10' // Mobile: padding for header/nav 
-              : 'max-w-[900px] p-6 md:p-10'
+          ? 'w-full px-4 md:px-12 py-8 max-w-[1920px]'
+          : step !== 'loading' && step !== 'url' && step !== 'analyzing'
+            ? 'max-w-[900px] p-6 md:p-10 pt-20 pb-24 md:pt-10 md:pb-10' // Mobile: padding for header/nav 
+            : 'max-w-[900px] p-6 md:p-10'
           }`}>
           {renderContent()}
         </main>

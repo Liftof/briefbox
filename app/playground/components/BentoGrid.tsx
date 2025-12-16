@@ -2,28 +2,21 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useTranslation } from '@/lib/i18n';
+import { getTagOptions as getSharedTagOptions, getTagInfo, TAG_STYLES } from '@/lib/tagStyles';
 
-// Static tag options (used by sub-components that don't have locale access)
-const TAG_OPTIONS = [
-  { value: 'main_logo', label: 'Logo', color: 'bg-gray-900 text-white' },
-  { value: 'product', label: 'Produit', color: 'bg-blue-500 text-white' },
-  { value: 'app_ui', label: 'App/UI', color: 'bg-purple-500 text-white' },
-  { value: 'reference', label: 'Référence', color: 'bg-amber-500 text-white' },
-  { value: 'team', label: 'Équipe', color: 'bg-blue-500 text-white' },
-  { value: 'lifestyle', label: 'Lifestyle', color: 'bg-pink-500 text-white' },
-  { value: 'other', label: 'Autre', color: 'bg-gray-200 text-gray-600' },
-];
+// Wrapper to match existing usage pattern
+const TAG_OPTIONS = Object.entries(TAG_STYLES).map(([value, style]) => ({
+  value,
+  label: style.label.fr,
+  color: `${style.bg} ${style.text}`,
+}));
 
-// Localized tag options (used in main BentoGrid component)
-const getTagOptions = (locale: string) => [
-  { value: 'main_logo', label: 'Logo', color: 'bg-gray-900 text-white' },
-  { value: 'product', label: locale === 'fr' ? 'Produit' : 'Product', color: 'bg-blue-500 text-white' },
-  { value: 'app_ui', label: 'App/UI', color: 'bg-purple-500 text-white' },
-  { value: 'reference', label: locale === 'fr' ? 'Référence' : 'Reference', color: 'bg-amber-500 text-white' },
-  { value: 'team', label: locale === 'fr' ? 'Équipe' : 'Team', color: 'bg-blue-500 text-white' },
-  { value: 'lifestyle', label: 'Lifestyle', color: 'bg-pink-500 text-white' },
-  { value: 'other', label: locale === 'fr' ? 'Autre' : 'Other', color: 'bg-gray-200 text-gray-600' },
-];
+// Localized tag options (uses shared module with premium gradients)
+const getTagOptions = (locale: string) => getSharedTagOptions(locale === 'fr' ? 'fr' : 'en').map(opt => ({
+  value: opt.value,
+  label: opt.label,
+  color: opt.color,
+}));
 
 // Checker pattern style for transparent/white images (like Photoshop)
 const CHECKER_PATTERN_STYLE: React.CSSProperties = {
@@ -54,9 +47,9 @@ function EditButton({ onClick, title }: { onClick: () => void; title?: string })
 }
 
 // Import popup component
-function ImportPopup({ isOpen, onClose, onImport, forReferences = false, locale = 'fr' }: { 
-  isOpen: boolean; 
-  onClose: () => void; 
+function ImportPopup({ isOpen, onClose, onImport, forReferences = false, locale = 'fr' }: {
+  isOpen: boolean;
+  onClose: () => void;
   onImport: (files: { url: string; tag: string }[]) => void;
   forReferences?: boolean;
   locale?: string;
@@ -112,7 +105,7 @@ function ImportPopup({ isOpen, onClose, onImport, forReferences = false, locale 
       console.error('Error reading files:', error);
       return []; // Return empty array on error to prevent UI freeze
     });
-    
+
     if (filesWithUrls.length > 0) {
       onImport(filesWithUrls);
     }
@@ -135,28 +128,27 @@ function ImportPopup({ isOpen, onClose, onImport, forReferences = false, locale 
         <div className={`px-6 py-4 border-b flex items-center justify-between ${forReferences ? 'border-purple-200 bg-gradient-to-r from-purple-50 to-fuchsia-50' : 'border-gray-200'}`}>
           <h2 className="text-sm font-medium text-gray-900 uppercase tracking-wider flex items-center gap-2">
             <span className={`w-2 h-2 rounded-full ${forReferences ? 'bg-purple-500' : 'bg-blue-500'}`} />
-            {forReferences 
+            {forReferences
               ? (locale === 'fr' ? '🎨 Importer des visuels de référence' : '🎨 Import reference visuals')
               : (locale === 'fr' ? 'Importer des fichiers' : 'Import files')
             }
           </h2>
           <button onClick={handleClose} className="text-gray-400 hover:text-gray-900">×</button>
         </div>
-        
+
         {/* Info banner for reference imports */}
         {forReferences && (
           <div className="mx-6 mt-4 p-3 bg-purple-50 border border-purple-200 text-xs text-purple-700">
-            <strong>{locale === 'fr' ? 'Ces visuels guideront le style de vos créations :' : 'These visuals will guide your creations\' style:'}</strong> {locale === 'fr' ? 'couleurs, composition, ambiance.' : 'colors, composition, mood.'} 
+            <strong>{locale === 'fr' ? 'Ces visuels guideront le style de vos créations :' : 'These visuals will guide your creations\' style:'}</strong> {locale === 'fr' ? 'couleurs, composition, ambiance.' : 'colors, composition, mood.'}
             {locale === 'fr' ? 'Ils seront automatiquement tagués "Visuel de référence".' : 'They will be automatically tagged "Reference visual".'}
           </div>
         )}
 
-        <div 
-          className={`m-6 border-2 border-dashed rounded-lg p-8 text-center transition-all cursor-pointer ${
-            isDragging 
-              ? (forReferences ? 'border-purple-500 bg-purple-50' : 'border-blue-500 bg-blue-50') 
+        <div
+          className={`m-6 border-2 border-dashed rounded-lg p-8 text-center transition-all cursor-pointer ${isDragging
+              ? (forReferences ? 'border-purple-500 bg-purple-50' : 'border-blue-500 bg-blue-50')
               : 'border-gray-300 hover:border-gray-400'
-          }`}
+            }`}
           onDrop={handleDrop}
           onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
           onDragLeave={(e) => { e.preventDefault(); setIsDragging(false); }}
@@ -179,7 +171,7 @@ function ImportPopup({ isOpen, onClose, onImport, forReferences = false, locale 
             <div className="grid grid-cols-3 gap-3">
               {pendingFiles.map((item, index) => (
                 <div key={index} className={`relative group border ${forReferences ? 'border-purple-200' : 'border-gray-200'}`}>
-                  <div 
+                  <div
                     className="aspect-square overflow-hidden"
                     style={CHECKER_PATTERN_STYLE}
                   >
@@ -219,11 +211,10 @@ function ImportPopup({ isOpen, onClose, onImport, forReferences = false, locale 
           <button
             onClick={handleImport}
             disabled={pendingFiles.length === 0}
-            className={`px-6 py-2 text-sm font-medium ${
-              pendingFiles.length > 0 
-                ? (forReferences ? 'bg-purple-500 text-white hover:bg-purple-600' : 'bg-blue-500 text-white hover:bg-blue-600') 
+            className={`px-6 py-2 text-sm font-medium ${pendingFiles.length > 0
+                ? (forReferences ? 'bg-purple-500 text-white hover:bg-purple-600' : 'bg-blue-500 text-white hover:bg-blue-600')
                 : 'bg-gray-200 text-gray-400'
-            }`}
+              }`}
           >{locale === 'fr' ? 'Importer' : 'Import'} {pendingFiles.length > 0 && `(${pendingFiles.length})`}</button>
         </div>
       </div>
@@ -303,8 +294,8 @@ function ColorEditorPopup({ isOpen, onClose, colors, onSave, locale = 'fr' }: {
 }
 
 // Tag editor dropdown
-function TagEditor({ currentTag, onTagChange, position }: { 
-  currentTag: string; 
+function TagEditor({ currentTag, onTagChange, position }: {
+  currentTag: string;
   onTagChange: (tag: string) => void;
   position: { top: number; left: number };
 }) {
@@ -332,7 +323,7 @@ function AddItemInput({ placeholder, onAdd, locale = 'fr' }: { placeholder: stri
 
   if (!isAdding) {
     return (
-      <button 
+      <button
         onClick={() => setIsAdding(true)}
         className="w-full py-2 mt-2 text-xs text-gray-400 hover:text-gray-600 border border-dashed border-gray-200 hover:border-gray-300 flex items-center justify-center gap-1 transition-all"
       >
@@ -360,7 +351,7 @@ function AddItemInput({ placeholder, onAdd, locale = 'fr' }: { placeholder: stri
         placeholder={placeholder}
         className="flex-1 px-2 py-1 text-xs border border-gray-300 outline-none focus:border-gray-500"
       />
-      <button 
+      <button
         onClick={() => {
           if (value.trim()) onAdd(value.trim());
           setValue('');
@@ -374,14 +365,14 @@ function AddItemInput({ placeholder, onAdd, locale = 'fr' }: { placeholder: stri
   );
 }
 
-export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBackgrounds = false, onUpdate, onValidate, onAddSource, onBack }: { 
-  brandData: any, 
-  backgrounds?: string[], 
-  isGeneratingBackgrounds?: boolean, 
-  onUpdate: (data: any) => void, 
-  onValidate: () => void, 
-  onAddSource?: () => void, 
-  onBack?: () => void 
+export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBackgrounds = false, onUpdate, onValidate, onAddSource, onBack }: {
+  brandData: any,
+  backgrounds?: string[],
+  isGeneratingBackgrounds?: boolean,
+  onUpdate: (data: any) => void,
+  onValidate: () => void,
+  onAddSource?: () => void,
+  onBack?: () => void
 }) {
   const { locale } = useTranslation();
   const localizedTags = getTagOptions(locale);
@@ -411,7 +402,7 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
     setLocalData(newData);
     onUpdate(newData);
   };
-  
+
   // Open import popup - optionally for references
   const openImportPopup = (forReferences: boolean = false) => {
     setImportForReferences(forReferences);
@@ -420,16 +411,16 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
 
   const handleImportFiles = (files: { url: string; tag: string }[]) => {
     // If importing for references, force all tags to 'reference'
-    const processedFiles = importForReferences 
+    const processedFiles = importForReferences
       ? files.map(f => ({ ...f, tag: 'reference' }))
       : files;
-    
+
     const newImages = [...(localData.images || []), ...processedFiles.map(f => f.url)];
     const newLabeledImages = [...(localData.labeledImages || []), ...processedFiles.map(f => ({ url: f.url, category: f.tag }))];
     const newData = { ...localData, images: newImages, labeledImages: newLabeledImages };
     setLocalData(newData);
     onUpdate(newData);
-    
+
     // Reset the import mode
     setImportForReferences(false);
   };
@@ -491,9 +482,9 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
   return (
     <div className="animate-fade-in w-full max-w-6xl mx-auto">
       {/* Popups */}
-      <ImportPopup 
-        isOpen={importPopupOpen} 
-        onClose={() => { setImportPopupOpen(false); setImportForReferences(false); }} 
+      <ImportPopup
+        isOpen={importPopupOpen}
+        onClose={() => { setImportPopupOpen(false); setImportForReferences(false); }}
         onImport={handleImportFiles}
         forReferences={importForReferences}
         locale={locale}
@@ -550,7 +541,7 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
             </a>
           </div>
         </div>
-        
+
         {/* Validate button in header - always visible */}
         <button
           onClick={onValidate}
@@ -579,7 +570,7 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
         <div className="grid grid-cols-2 md:grid-cols-12 gap-3 md:gap-4">
           {/* Logo */}
           <div className="col-span-1 md:col-span-3">
-            <button 
+            <button
               onClick={() => setLogoSelectorOpen(true)}
               className="w-full aspect-square p-3 md:p-4 flex items-center justify-center border border-gray-200 transition-all hover:border-blue-500 relative group overflow-hidden"
               style={CHECKER_PATTERN_STYLE}
@@ -626,16 +617,16 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
               )) || <span className="text-xs md:text-sm text-gray-400">Sans-serif</span>}
             </div>
           </div>
-            
+
           {/* Tagline */}
           <div className="col-span-1 md:col-span-3 bg-white border border-gray-200 p-3 md:p-4">
-              <span className="text-[9px] md:text-[10px] font-mono uppercase tracking-widest text-gray-400 block mb-2 md:mb-3">{locale === 'fr' ? 'Accroche' : 'Tagline'}</span>
-              <textarea 
-                value={localData.tagline || ''}
-                onChange={(e) => handleChange('tagline', e.target.value)}
-                className="w-full bg-transparent outline-none text-xs md:text-sm text-gray-900 resize-none h-12 md:h-16 leading-relaxed placeholder:text-gray-300"
+            <span className="text-[9px] md:text-[10px] font-mono uppercase tracking-widest text-gray-400 block mb-2 md:mb-3">{locale === 'fr' ? 'Accroche' : 'Tagline'}</span>
+            <textarea
+              value={localData.tagline || ''}
+              onChange={(e) => handleChange('tagline', e.target.value)}
+              className="w-full bg-transparent outline-none text-xs md:text-sm text-gray-900 resize-none h-12 md:h-16 leading-relaxed placeholder:text-gray-300"
               placeholder="Slogan..."
-              />
+            />
           </div>
 
           {/* STRATEGIE DE MARQUE - New Block */}
@@ -646,7 +637,7 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
             <div className="space-y-4">
               <div>
                 <span className="text-[9px] text-blue-600 font-bold uppercase tracking-wider block mb-1">🎯 Cible (Target Audience)</span>
-                <textarea 
+                <textarea
                   value={localData.targetAudience || ''}
                   onChange={(e) => handleChange('targetAudience', e.target.value)}
                   className="w-full bg-blue-50/50 border-b border-blue-100 p-2 outline-none text-sm text-gray-700 resize-none h-14 leading-relaxed placeholder:text-gray-300"
@@ -655,7 +646,7 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
               </div>
               <div>
                 <span className="text-[9px] text-amber-600 font-bold uppercase tracking-wider block mb-1">⚡ Promesse (Unique Value Prop)</span>
-                <textarea 
+                <textarea
                   value={localData.uniqueValueProposition || ''}
                   onChange={(e) => handleChange('uniqueValueProposition', e.target.value)}
                   className="w-full bg-amber-50/50 border-b border-amber-100 p-2 outline-none text-sm text-gray-700 resize-none h-14 leading-relaxed placeholder:text-gray-300"
@@ -672,7 +663,7 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
             </div>
             <div className="h-full">
               <span className="text-[8px] md:text-[9px] text-purple-600 font-bold uppercase tracking-wider block mb-1">📖 Notre Histoire</span>
-              <textarea 
+              <textarea
                 value={localData.brandStory || ''}
                 onChange={(e) => handleChange('brandStory', e.target.value)}
                 className="w-full bg-purple-50/50 border-b border-purple-100 p-2 outline-none text-xs md:text-sm text-gray-700 resize-none h-24 md:h-32 leading-relaxed placeholder:text-gray-300"
@@ -693,14 +684,14 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
 
           {/* Dynamic grid - only show cards with content + useful alternatives */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            
+
             {/* 1. Target Audience & UVP - Always useful */}
             <div className="bg-gradient-to-br from-indigo-50 to-purple-50 border border-indigo-100 p-4 rounded-lg">
               <div className="flex items-center gap-2 mb-3">
                 <span className="text-lg">🎯</span>
                 <span className="text-[10px] font-mono uppercase tracking-widest text-indigo-600">Cible & Promesse</span>
               </div>
-              
+
               {/* Target Audience */}
               <div className="mb-3">
                 <label className="text-[9px] text-gray-500 uppercase mb-1 block">Audience cible</label>
@@ -712,7 +703,7 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
                   className="w-full text-sm bg-white/70 border border-indigo-200 rounded px-2 py-1.5 outline-none focus:border-indigo-400 placeholder:text-gray-300"
                 />
               </div>
-              
+
               {/* UVP */}
               <div>
                 <label className="text-[9px] text-gray-500 uppercase mb-1 block">Promesse unique (UVP)</label>
@@ -732,7 +723,7 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
                 <span className="text-lg">💎</span>
                 <span className="text-[10px] font-mono uppercase tracking-widest text-blue-600">Forces & USPs</span>
               </div>
-              
+
               <div className="space-y-1.5 max-h-44 overflow-y-auto">
                 {/* Features */}
                 {localData.features?.map((f: string, i: number) => (
@@ -762,9 +753,9 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
                   <p className="text-[10px] text-gray-400 text-center py-2">Ajoutez vos forces et USPs</p>
                 )}
               </div>
-              
-              <AddItemInput 
-                placeholder={locale === 'fr' ? "Ex: Gain de temps 10x, Support 24/7" : "E.g.: 10x time savings, 24/7 support"} 
+
+              <AddItemInput
+                placeholder={locale === 'fr' ? "Ex: Gain de temps 10x, Support 24/7" : "E.g.: 10x time savings, 24/7 support"}
                 onAdd={(val) => handleChange('features', [...(localData.features || []), val])}
                 locale={locale}
               />
@@ -776,7 +767,7 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
                 <span className="text-lg">🎤</span>
                 <span className="text-[10px] font-mono uppercase tracking-widest text-violet-600">Ton & Langage</span>
               </div>
-              
+
               {/* Tone pills */}
               <div className="flex flex-wrap gap-1.5 mb-3">
                 {localData.toneVoice?.map((tone: string, i: number) => (
@@ -793,7 +784,7 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
                   <span className="text-[10px] text-gray-400">Aucun ton défini</span>
                 )}
               </div>
-              
+
               {/* Vocabulary */}
               <div className="space-y-1.5 max-h-24 overflow-y-auto mb-2">
                 {localData.vocabulary?.map((term: string, i: number) => (
@@ -808,9 +799,9 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
                   </div>
                 ))}
               </div>
-              
-              <AddItemInput 
-                placeholder={locale === 'fr' ? "Ton (Pro, Fun) ou terme clé" : "Tone (Pro, Fun) or key term"} 
+
+              <AddItemInput
+                placeholder={locale === 'fr' ? "Ton (Pro, Fun) ou terme clé" : "Tone (Pro, Fun) or key term"}
                 onAdd={(val) => {
                   // If it's a short word, add to tone, otherwise to vocabulary
                   if (val.length < 15 && !val.includes(' ')) {
@@ -837,13 +828,13 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
                     </span>
                   )}
                 </div>
-                
+
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2 mb-3">
                   {localData.industryInsights?.slice(0, 8).map((insight: any, i: number) => (
                     <div key={i} className="group relative p-3 bg-white/80 border border-rose-100 rounded-lg hover:shadow-sm transition-all">
                       <p className="text-xs text-gray-800 font-medium leading-snug">{insight.painPoint || insight.hook || insight.fact}</p>
                       {insight.consequence && <p className="text-[10px] text-rose-500 mt-1.5">→ {insight.consequence}</p>}
-                      <button 
+                      <button
                         onClick={() => {
                           const newInsights = [...localData.industryInsights];
                           newInsights.splice(i, 1);
@@ -854,9 +845,9 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
                     </div>
                   ))}
                 </div>
-                
-                <AddItemInput 
-                  placeholder={locale === 'fr' ? "Ajouter un pain point..." : "Add a pain point..."} 
+
+                <AddItemInput
+                  placeholder={locale === 'fr' ? "Ajouter un pain point..." : "Add a pain point..."}
                   onAdd={(val) => {
                     handleChange('industryInsights', [...(localData.industryInsights || []), { painPoint: val, type: 'pain_point' }]);
                   }}
@@ -903,10 +894,10 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
                 </div>
                 <div className="space-y-2">
                   {localData.newsHighlights.slice(0, 4).map((news: any, i: number) => (
-                    <a 
-                      key={i} 
-                      href={news.url} 
-                      target="_blank" 
+                    <a
+                      key={i}
+                      href={news.url}
+                      target="_blank"
                       rel="noopener noreferrer"
                       className="block p-2 bg-white/80 border border-cyan-100 rounded hover:border-cyan-300 transition-colors"
                     >
@@ -940,14 +931,14 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
                 </span>
               )}
             </div>
-            <button 
+            <button
               onClick={() => openImportPopup(false)}
               className="px-2 py-1 bg-blue-500 text-white text-[9px] font-medium uppercase hover:bg-blue-600 flex items-center gap-1"
             >
               <span>+</span> {locale === 'fr' ? 'Ajouter' : 'Add'}
             </button>
           </div>
-          
+
           {/* Grid view for all images - responsive */}
           <div className="grid grid-cols-6 sm:grid-cols-8 md:grid-cols-10 gap-2 max-h-[200px] overflow-y-auto no-scrollbar">
             {assetImages.map((img: string, i: number) => {
@@ -956,10 +947,10 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
               const originalIndex = localData.images?.indexOf(img);
               return (
                 <div key={i} className="relative aspect-square group" style={CHECKER_PATTERN_STYLE}>
-                  <img 
-                    src={img} 
-                    className="w-full h-full object-contain border border-gray-200 hover:border-blue-400 transition-colors relative z-10" 
-                    loading="lazy" 
+                  <img
+                    src={img}
+                    className="w-full h-full object-contain border border-gray-200 hover:border-blue-400 transition-colors relative z-10"
+                    loading="lazy"
                     onError={(e) => {
                       // Hide broken images
                       (e.target as HTMLImageElement).style.display = 'none';
@@ -971,15 +962,15 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
                   >
                     {localizedTags.find(t => t.value === label)?.label.slice(0, 4) || '...'}
                   </button>
-                  <button 
-                    onClick={() => handleChange('images', localData.images.filter((_: any, idx: number) => idx !== originalIndex))} 
+                  <button
+                    onClick={() => handleChange('images', localData.images.filter((_: any, idx: number) => idx !== originalIndex))}
                     className="absolute top-0.5 right-0.5 w-3 h-3 bg-red-500 text-white flex items-center justify-center text-[8px] opacity-0 group-hover:opacity-100 transition-opacity"
                   >×</button>
                 </div>
               );
             })}
           </div>
-          
+
           {/* No images hint */}
           {assetImages.length === 0 && (
             <div className="text-center py-6 bg-gray-50 border border-dashed border-gray-200">
@@ -987,7 +978,7 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
               <p className="text-[10px] text-gray-300 mt-1">Ajoutez des images ou vérifiez l'URL du site</p>
             </div>
           )}
-          
+
           {/* Image count by category */}
           {assetImages.length > 0 && (
             <div className="flex flex-wrap gap-2 mt-3 pt-3 border-t border-gray-100">
@@ -1015,12 +1006,12 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
       <section className="border-t border-gray-200 pt-6">
         <div className="text-center mb-3">
           <p className="text-xs text-gray-400">
-            {locale === 'fr' 
-              ? '💾 Vos modifications seront sauvegardées automatiquement' 
+            {locale === 'fr'
+              ? '💾 Vos modifications seront sauvegardées automatiquement'
               : '💾 Your changes will be saved automatically'}
           </p>
         </div>
-        <button 
+        <button
           onClick={onValidate}
           className="w-full group relative py-4 bg-gray-900 text-white text-sm font-medium transition-all hover:bg-black"
         >
