@@ -3024,24 +3024,12 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
         ))}
       </div>
 
-      {/* Style Gallery Modal - Enhanced with multi-select */}
+      {/* Style Gallery Modal */}
       <StyleGallery 
         isOpen={showStyleGallery} 
         onClose={() => setShowStyleGallery(false)}
-        multiSelect={true}
-        selectedStyles={styleRefImages}
-        onMultiSelect={(styles: Array<{ url: string; note?: string }>) => {
-          // Convert relative URLs to absolute URLs for Fal API
-          const absoluteStyles = styles.map((s: { url: string; note?: string }) => ({
-            ...s,
-            url: s.url.startsWith('/') ? `${window.location.origin}${s.url}` : s.url
-          }));
-          console.log('🎨 Style refs selected:', absoluteStyles.length);
-          setStyleRefImages(absoluteStyles.slice(0, 3));
-          showToast(locale === 'fr' ? 'Styles mis à jour' : 'Styles updated', 'success');
-        }}
         onSelect={(url: string) => {
-          // Fallback for single select mode
+          // Convert relative URL to absolute URL for Fal API
           const absoluteUrl = url.startsWith('/') 
             ? `${window.location.origin}${url}` 
             : url;
@@ -3049,7 +3037,6 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
           setStyleRefImages(prev => [{ url: absoluteUrl }, ...prev].slice(0, 3));
           showToast(locale === 'fr' ? 'Style ajouté' : 'Style added', 'success');
         }}
-        locale={locale as 'fr' | 'en'}
       />
 
       {/* Asset Manager Modal - Temporarily disabled (component was removed) */}
