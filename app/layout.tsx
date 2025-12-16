@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Lexend } from "next/font/google";
 import { ClerkProvider } from '@clerk/nextjs';
+import Script from "next/script";
 import "./globals.css";
 
 const lexend = Lexend({
@@ -26,6 +27,12 @@ export default function RootLayout({
     <ClerkProvider>
       <html lang="fr">
         <body className={`${lexend.variable} font-sans antialiased`}>
+          <Script
+            src="https://datafa.st/js/script.js"
+            data-website-id="dfid_vm5cEXUj8yn95kKYS6Ttx"
+            data-domain="thepalette.app"
+            strategy="afterInteractive"
+          />
           {children}
         </body>
       </html>
