@@ -1,4 +1,4 @@
-# Architecture Technique Palette (V3 - Production Ready)
+# Architecture Technique Palette (V4 - Production Ready)
 
 Ce document détaille le fonctionnement de Palette. L'objectif est de simuler une agence créative : on analyse la matière, on propose des angles, on définit une DA via des inspirations, et on produit.
 
@@ -6,28 +6,29 @@ Ce document détaille le fonctionnement de Palette. L'objectif est de simuler un
 
 ### Phase 1 : Intelligence & Matière (`/api/brand/analyze`)
 Plus de regex bête. On utilise des agents pour "comprendre" le business.
-1.  **Extraction Hybride** : Firecrawl (Site) + Parallel AI (Recherche Web/Actus).
-2.  **Agent "News & Trends"** : Cherche des actualités récentes et des chiffres *datés* dans la presse pour nourrir la stratégie.
-3.  **Agent "Brand Analyst"** : Analyse le contenu pour en extraire des **Angles Éditoriaux** (pas juste des stats).
-    *   *Exemples d'angles détectés* : "Focus Produit", "Storytelling Fondateur", "Réponse Pain Point", "Preuve Sociale (Logos)".
+1.  **Extraction Hybride** : Firecrawl V2 (Site + Deep Crawl 15 pages) + Parallel AI (Recherche Web/Actus).
+2.  **Détection de langue** : L'IA détecte si le site est en français ou anglais (`detectedLanguage: 'fr' | 'en'`).
+3.  **Agent "Brand Analyst" (Claude 3.5 Sonnet)** : Analyse le contenu pour extraire :
+    - **8 Pain Points** : Hooks concrets liés au produit/service, dans la langue du site.
+    - **Ton adapté à l'industrie** : Formel (M&A, Finance) vs Casual (Fashion, Lifestyle).
+    - **Angles Éditoriaux** : "Focus Produit", "Storytelling Fondateur", "Pain Point", etc.
 
-### Phase 2 : Direction Artistique (Frontend)
+### Phase 2 : Direction Artistique (Frontend - Bento)
 L'utilisateur ne remplit pas un template, il construit une vision.
-1.  **Validation Bento** : Vérification rapide des assets (logos, couleurs) et des faits marquants.
-2.  **Galerie d'Inspiration** : L'utilisateur sélectionne 1 à 3 visuels "références" (layout, vibe) dans une galerie curée.
-3.  **Sélection de l'Angle** : L'utilisateur choisit *quoi raconter* parmi les angles détectés (ex: "Infographie sur le gain de temps").
+1.  **Validation Bento** : Vérification rapide des assets (logos, couleurs) et des pain points.
+2.  **Galerie d'Inspiration** : L'utilisateur sélectionne 1 à 3 visuels "références" (layout, vibe).
+3.  **Sélection de l'Angle** : L'utilisateur choisit *quoi raconter* parmi les 8 pain points détectés.
 
 ### Phase 3 : Production (`/api/creative-director` & `/api/generate`)
 1.  **Le Directeur Artistique (IA)** :
-    *   Prend l'**Angle** (le fond).
-    *   Prend les **Inspirations** (la forme).
-    *   Prend la **Brand Identity** (les codes).
-    *   **Fusionne** le tout dans un prompt technique pour Google AI.
+    *   Prend l'**Angle** (le fond) + les **Inspirations** (la forme) + la **Brand Identity** (les codes).
+    *   Utilise les **fonts** et **visualMotifs** de la marque.
+    *   Applique des guidelines anti-stock/anti-IA (textures réelles, imperfections artistiques).
 2.  **Génération (Google Gemini 3 Pro Image)** :
-    *   Utilise `gemini-3-pro-image-preview` ("Nano Banana Pro").
-    *   Supporte jusqu'à 14 images de référence.
-    *   Résolutions : 1K, 2K, 4K.
-    *   Le logo est TOUJOURS en position 1 dans les images pour garantir sa reproduction.
+    *   Modèle : `gemini-3-pro-image-preview` ("Nano Banana Pro").
+    *   Supporte jusqu'à 8 images de référence (logo prioritaire).
+    *   Résolutions : 2K (défaut), 4K (Pro/Premium uniquement).
+    *   **1 crédit = 1 image générée**.
 
 ---
 
@@ -35,15 +36,18 @@ L'utilisateur ne remplit pas un template, il construit une vision.
 
 | Tâche | Modèle / Service | Rôle Spécifique |
 | :--- | :--- | :--- |
-| **Scraping Site** | **Firecrawl** | Structure, Markdown propre, Screenshot Home. |
-| **Scraping News** | **Parallel AI** | "Latest news [Industry]", "Market trends 2024". |
-| **Analyse Stratégique** | **GPT-4o** | Analyse visuelle + textuelle. Sortie : JSON `editorialAngles`. |
-| **Directeur Artistique** | **Logique Code + Prompt** | Mapping "Inspi Image" -> Instructions de composition. |
-| **Génération Visuelle** | **Google Gemini 3 Pro Image** | Rendu final haute fidélité (remplace Fal AI). |
+| **Scraping Site** | **Firecrawl V2** | Deep crawl 15 pages, Markdown, Screenshot, Map API. |
+| **Scraping News** | **Parallel AI** | Recherche web contextuelle, actualités. |
+| **Analyse Stratégique** | **Claude 3.5 Sonnet** (OpenRouter) | 200K contexte. Extraction JSON, pain points, détection langue. |
+| **Transformation Insights** | **Claude 3 Haiku** (OpenRouter) | Fast & cheap. Transforme données brutes en angles éditoriaux. |
+| **Fallback Analyse** | **GPT-4o-mini** (OpenRouter) | Si Claude refuse (rare). |
+| **Directeur Artistique** | **Claude 3 Haiku** | Prompt enhancement, sélection d'images. |
+| **Génération Visuelle** | **Google Gemini 3 Pro Image** | Rendu final haute fidélité. |
 | **Authentification** | **Clerk** | Gestion des utilisateurs et sessions. |
 | **Base de données** | **Neon PostgreSQL + Drizzle** | Persistence des données. |
 | **Paiements** | **Stripe** | Checkout, Webhooks, Customer Portal. |
 | **Stockage Images** | **Vercel Blob** | Upload et hébergement des images générées. |
+| **Cron Jobs** | **Vercel Cron** | Daily visuals pour Pro/Premium (batch API). |
 
 ---
 
@@ -51,64 +55,126 @@ L'utilisateur ne remplit pas un template, il construit une vision.
 
 ### Agent Analyse (`api/brand/analyze`)
 **Objectif** : Sortir de la donnée exploitable pour des posts, pas des métriques froides.
-- **Input** : URL.
+
+- **Input** : URL du site.
 - **Process** :
-  - Deep Crawl (About, Blog, Press).
-  - Recherche externe (Parallel) pour contextualiser la marque dans son marché.
+  1. Firecrawl Map API pour découvrir les pages importantes.
+  2. Deep Crawl de 15 pages (About, Blog, Press, Services).
+  3. Parallel AI pour contextualiser dans le marché.
+  4. Claude 3.5 Sonnet pour extraction structurée.
+  
 - **Output** :
-  - `editorialAngles`: Liste d'objets `{ type: 'founder_story', content: '...', visual_idea: 'Portrait N&B' }`.
-  - `visualMotifs`: Éléments récurrents (ex: "Formes rondes", "Dégradés").
+  - `detectedLanguage`: 'fr' | 'en' (langue du site).
+  - `targetAudience`: Description spécifique de la cible.
+  - `uniqueValueProposition`: Promesse principale.
+  - `editorialHooks`: 8 pain points concrets, adaptés au ton de l'industrie.
+  - `visualMotifs`: Éléments récurrents visuels.
+  - `labeledImages`: Assets catégorisés (main_logo, product, app_ui, person, texture).
+
+### Pain Points Generation Rules
+Les pain points doivent être :
+1. **Produit-spécifiques** : Directement liés à ce que la marque vend.
+2. **Dans la langue du site** : FR ou EN selon `detectedLanguage`.
+3. **Ton adapté** :
+   - **Formel** (M&A, Finance, Law, Consulting) : Data-driven, ROI-focused.
+   - **Casual** (Fashion, Lifestyle, Consumer) : Punchy, émotionnel.
+4. **Jamais de market stats** : Pas de "Le marché atteindra X milliards".
 
 ### Agent Génération (`api/generate`)
-**Objectif** : Respecter la DA choisie par l'user.
-- **Input** : Prompt DA + Images (Logo PREMIER + Références Visuelles choisies).
+- **Input** : Prompt DA + Images (Logo PREMIER + Références Visuelles).
 - **Logique** : 
-  - Logo toujours en position 1 pour maximiser la fidélité.
-  - Style refs en positions 2-N.
-  - Prompt explicite sur la protection du logo.
-- **Crédits** : 1 crédit = 1 image (2 images par génération = 2 crédits).
+  - Logo toujours en position 1.
+  - Conversion SVG → PNG automatique pour compatibilité.
+  - Guidelines anti-stock intégrées au prompt.
+- **Crédits** : **1 crédit = 1 image**.
 
 ---
 
 ## 4. Base de Données (Persistance)
 
 ### Tables principales :
-- **`brands`** : Identité de marque, assets, angles éditoriaux.
-  - `marketing_angles` (JSONB) : Les angles éditoriaux détectés.
-  - `industry_insights` (JSONB) : Les vraies news récupérées.
-  - `labeled_images` (JSONB) : Les assets triés (Logo vs Produit vs Team).
-  - `teamId` : Lien vers équipe (multi-brand).
 
-- **`users`** : Profils utilisateurs et abonnements.
-  - `plan` : 'free' | 'pro' | 'premium'.
-  - `creditsRemaining` : Crédits disponibles.
-  - `stripeCustomerId`, `stripeSubscriptionId` : Liaison Stripe.
+**`brands`** : Identité de marque complète.
+```typescript
+{
+  // Infos de base
+  name, url, tagline, description, industry,
+  detectedLanguage,      // 'fr' | 'en'
+  targetAudience,        // "Marketing managers in SMBs"
+  uniqueValueProposition, // "Saves 10h/week"
+  brandStory,            // Origin story
+  
+  // Identité Visuelle
+  logo, colors, fonts, aesthetic, toneVoice,
+  
+  // Intelligence Créative
+  visualMotifs, marketingAngles, backgroundPrompts,
+  editorialHooks,        // 8 pain points JSONB
+  industryInsights,      // Insights transformés
+  painPoints, vocabulary,
+  
+  // Assets
+  labeledImages,         // {url, category, description}[]
+  
+  // Metadata
+  teamId, userId, createdAt, updatedAt
+}
+```
 
-- **`teams`** : Équipes (plan Premium).
-  - `creditsPool` : Crédits partagés.
-  - `ownerId` : Propriétaire de l'équipe.
+**`users`** : Profils et abonnements.
+```typescript
+{
+  clerkId, email, name, avatarUrl,
+  plan,                  // 'free' | 'pro' | 'premium'
+  creditsRemaining,      // Crédits disponibles
+  creditsResetAt,        // Reset mensuel
+  isEarlyBird,           // First 30 signups/day
+  stripeCustomerId, stripeSubscriptionId, stripePriceId,
+  teamId
+}
+```
 
-- **`generations`** : Historique des créations.
-  - `feedback` (JSONB) : `{ rating: 1|2|3 }` (3 = favori).
-  - `folderId` : Organisation en dossiers.
+**`dailySignupCounts`** : Tracking Early Bird.
+```typescript
+{
+  date,   // Date unique
+  count   // Nombre d'inscriptions ce jour
+}
+```
 
-- **`folders`** : Dossiers utilisateur.
+**`batchGenerationQueue`** : Queue pour daily visuals.
+```typescript
+{
+  userId, brandId,
+  status,        // 'pending' | 'processing' | 'completed' | 'failed'
+  scheduledFor,  // Heure de génération
+  prompt, resultUrl, error
+}
+```
+
+**`generations`** : Historique des créations.
+**`folders`** : Organisation des visuels.
+**`teams`** : Équipes (Premium).
 
 ---
 
 ## 5. Plans & Crédits
 
-| Plan | Prix | Crédits/mois | Marques | Équipe |
-|------|------|--------------|---------|--------|
-| **Free** | Gratuit | 3 (one-time) | 1 | Non |
-| **Pro** | 19€/mois | 50 | 5 | Non |
-| **Premium** | 49€/mois | 150 | 20 | 3 membres |
+| Plan | Prix | Crédits/mois | Marques | Résolution | Daily Visual |
+|------|------|--------------|---------|------------|--------------|
+| **Free** | Gratuit | 1-2 (one-time)* | 1 | 2K | Non |
+| **Pro** | 19€/mois | 50 | 5 | 4K | Oui (1/jour) |
+| **Premium** | 49€/mois | 150 | 20 | 4K | Oui (1/jour) |
 
 ### Logique de crédits :
-- 1 image = 1 crédit.
-- Chaque génération produit 2 images = 2 crédits.
-- Free : 3 crédits offerts (1 génération + 1 image seule possible).
+- **1 crédit = 1 image** générée.
+- **Early Bird** (30 premiers signups/jour) : 2 crédits offerts (1 auto-gen + 1 manuel).
+- **Autres signups** : 1 crédit offert (auto-gen uniquement).
+- **Daily Visual** (Pro/Premium) : 1 visuel automatique chaque matin, consomme 1 crédit.
 - Reset mensuel pour Pro/Premium.
+
+### URL déjà scrappée :
+Si un utilisateur entre une URL déjà analysée, on retourne les données existantes sans re-scraper (économie d'API).
 
 ---
 
@@ -119,26 +185,26 @@ L'utilisateur ne remplit pas un template, il construit une vision.
 - `POST /api/brands` : Check permissions (add/rescrape).
 - `DELETE /api/brands` : Supprimer une marque.
 - `GET /api/brand/[id]` : Détails d'une marque.
-- `POST /api/brand/analyze` : Analyser un site.
+- `POST /api/brand/analyze` : Analyser un site (retourne existing si déjà scrappé).
 - `POST /api/brand/save` : Sauvegarder une marque.
 
 ### Generation
-- `POST /api/generate` : Générer des visuels.
+- `POST /api/generate` : Générer 1 visuel (consomme 1 crédit).
+- `POST /api/creative-director` : Enhancement de prompt.
 - `GET/POST/PATCH/DELETE /api/generations` : CRUD générations.
 - `GET/POST/DELETE /api/folders` : Gestion des dossiers.
 
 ### User & Credits
-- `GET/PATCH /api/user` : Profil utilisateur.
-- `GET/POST/PUT /api/user/credits` : Gestion des crédits.
+- `GET/PATCH /api/user` : Profil utilisateur (crée si n'existe pas).
+- `GET/POST/PUT /api/user/credits` : Gestion des crédits (crée user si n'existe pas).
 
 ### Stripe
 - `POST /api/stripe/checkout` : Créer une session de paiement.
 - `POST /api/stripe/webhook` : Recevoir les événements Stripe.
 - `POST /api/stripe/portal` : Accéder au portail client.
 
-### Teams
-- `GET/POST/PATCH/DELETE /api/teams` : Gestion des équipes.
-- `POST/PATCH/DELETE /api/teams/members` : Gestion des membres.
+### Batch (Cron)
+- `POST /api/batch/process` : Traite la queue de daily visuals (appelé par Vercel Cron).
 
 ---
 
@@ -148,20 +214,12 @@ L'utilisateur ne remplit pas un template, il construit une vision.
 - Clerk pour toutes les routes protégées.
 - Vérification `userId` sur chaque requête.
 
-### Rate Limiting (à implémenter)
+### Rate Limiting
 ```typescript
-// Exemple avec Upstash Redis
-import { Ratelimit } from '@upstash/ratelimit';
-import { Redis } from '@upstash/redis';
+import { rateLimitByUser } from '@/lib/rateLimit';
 
-const ratelimit = new Ratelimit({
-  redis: Redis.fromEnv(),
-  limiter: Ratelimit.slidingWindow(10, '1 m'), // 10 requests per minute
-});
-
-// Dans la route
-const { success } = await ratelimit.limit(userId);
-if (!success) {
+const result = rateLimitByUser(userId, 'analyze');
+if (!result.success) {
   return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
 }
 ```
@@ -169,17 +227,19 @@ if (!success) {
 ### Protection contre les abus
 1. **Crédits** : Limite naturelle par plan.
 2. **Rate limiting** : Limite de requêtes par minute.
-3. **Validation** : Vérification des inputs côté serveur.
-4. **CORS** : Headers appropriés.
+3. **Early Bird cap** : Max 30 signups gratuits par jour.
+4. **URL dedup** : Pas de re-scrape inutile.
+5. **Validation** : Vérification des inputs côté serveur.
 
 ---
 
 ## 8. Déploiement
 
 ### Vercel
-- Next.js App Router.
+- Next.js 16 App Router (Turbopack).
 - Edge Functions pour les API routes.
 - Vercel Blob pour le stockage d'images.
+- Vercel Cron pour daily visuals (Pro/Premium).
 
 ### Variables d'environnement requises
 ```env
@@ -190,10 +250,11 @@ CLERK_SECRET_KEY=
 # Database
 DATABASE_URL=
 
-# AI
+# AI (OpenRouter pour LLMs)
 GOOGLE_AI_API_KEY=
-OPENAI_API_KEY=
+OPENROUTER_API_KEY=
 FIRECRAWL_API_KEY=
+PARALLEL_API_KEY=
 
 # Stripe
 STRIPE_SECRET_KEY=
@@ -208,4 +269,24 @@ BLOB_READ_WRITE_TOKEN=
 # App
 NEXT_PUBLIC_APP_URL=
 INTERNAL_API_KEY=
+```
+
+---
+
+## 9. Migrations récentes
+
+### 0006_brand_extended_fields.sql
+```sql
+ALTER TABLE brands ADD COLUMN IF NOT EXISTS detected_language TEXT;
+ALTER TABLE brands ADD COLUMN IF NOT EXISTS target_audience TEXT;
+ALTER TABLE brands ADD COLUMN IF NOT EXISTS unique_value_proposition TEXT;
+ALTER TABLE brands ADD COLUMN IF NOT EXISTS brand_story TEXT;
+ALTER TABLE brands ADD COLUMN IF NOT EXISTS editorial_hooks JSONB;
+```
+
+### 0005_early_bird_system.sql
+```sql
+ALTER TABLE users ADD COLUMN IF NOT EXISTS is_early_bird BOOLEAN DEFAULT FALSE;
+CREATE TABLE IF NOT EXISTS daily_signup_counts (...);
+CREATE TABLE IF NOT EXISTS batch_generation_queue (...);
 ```
