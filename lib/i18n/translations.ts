@@ -153,8 +153,8 @@ export const translations = {
           cta: { fr: 'Essai gratuit 7 jours', en: '7-day free trial' },
           badge: { fr: 'Populaire', en: 'Popular' },
           features: {
-            fr: ['50 générations/mois', 'Galerie d\'inspirations complète', 'Tous les ratios et formats', 'Historique illimité'],
-            en: ['50 generations/month', 'Full inspiration gallery', 'All ratios and formats', 'Unlimited history']
+            fr: ['50 générations/mois', 'Galerie d\'inspirations complète', 'Tous les ratios et formats', 'Historique illimité', 'Génération 4K'],
+            en: ['50 generations/month', 'Full inspiration gallery', 'All ratios and formats', 'Unlimited history', '4K Generation']
           }
         },
         business: {
@@ -165,8 +165,8 @@ export const translations = {
           credits: { fr: '150 crédits/mois', en: '150 credits/month' },
           cta: { fr: 'Contacter les ventes', en: 'Contact sales' },
           features: {
-            fr: ['150 générations/mois', 'Tout du plan Pro', '3 membres d\'équipe', 'Support prioritaire'],
-            en: ['150 generations/month', 'Everything in Pro', '3 team members', 'Priority support']
+            fr: ['150 générations/mois', 'Tout du plan Pro', '3 membres d\'équipe', 'Support prioritaire', 'Génération 4K'],
+            en: ['150 generations/month', 'Everything in Pro', '3 team members', 'Priority support', '4K Generation']
           }
         }
       }

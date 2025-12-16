@@ -424,6 +424,10 @@ export default async function Home() {
                   <span className="text-blue-400">✓</span>
                   {locale === 'fr' ? 'Historique illimité' : 'Unlimited history'}
                 </li>
+                <li className="flex items-center gap-3 text-sm text-gray-300">
+                  <span className="text-blue-400">✓</span>
+                  {locale === 'fr' ? 'Génération 4K' : '4K Generation'}
+                </li>
               </ul>
               
               <button className="w-full py-3 text-center text-sm font-medium bg-white text-gray-900 hover:bg-gray-100 transition-colors">

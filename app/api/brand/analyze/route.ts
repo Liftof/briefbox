@@ -1421,41 +1421,48 @@ export async function POST(request: Request) {
         ],
         "editorialHooks": [
            {
-             "hook": "Ready-to-use pain point hook in French. Must address the target audience's daily struggle. Max 60 chars.",
-             "subtext": "Supporting line that amplifies the pain or hints at the solution. Max 80 chars.",
+             "hook": "Concrete pain point hook in French, DIRECTLY related to what this brand sells. Max 60 chars.",
+             "subtext": "How the brand's product/service solves this pain. Max 80 chars.",
              "emotion": "curiosity | frustration | relief | urgency"
            }
         ],
         "_editorialHooks_RULES": {
           "GENERATE_8_HOOKS": true,
           "LANGUAGE": "French only",
-          "FOCUS": "ONLY pain points and frustrations of the TARGET AUDIENCE. NO market stats, NO industry trends.",
-          "GOOD_EXAMPLES": [
-            "⚡ 2h par jour sur l'admin ? C'est 10h/semaine de perdu.",
-            "73% des CM jonglent entre 5+ outils. Et vous ?",
-            "Vos visuels sont beaux... mais convertissent-ils ?",
-            "Marre de courir après les deadlines ?",
-            "Vos emails tombent dans les spams ? Voici pourquoi.",
-            "Le brief client était clair... jusqu'à la V12.",
-            "Vous passez plus de temps à reporter qu'à créer ?",
-            "Vos concurrents publient 3x plus. Comment font-ils ?"
+          "CRITICAL_CONTEXT_TO_USE": [
+            "Use 'targetAudience' to know WHO you're speaking to",
+            "Use 'features' and 'services' to understand WHAT the brand offers",
+            "Use 'painPoints' to find the problems they solve",
+            "Use 'uniqueValueProposition' to understand the main benefit",
+            "Use 'vocabulary' to speak the target's language",
+            "Use 'industry' to understand the context"
           ],
-          "FORBIDDEN_NEVER_GENERATE": [
-            "Le marché atteindra X milliards",
-            "L'IA transforme l'industrie",
-            "Le secteur connaît une croissance",
-            "Les entreprises adoptent de plus en plus",
-            "D'ici 2030...",
-            "X% des entreprises utilisent...",
-            "Le marché mondial est estimé à",
-            "CAGR", "market size", "industry growth"
+          "HOOK_FORMULA": "[Target's daily frustration] + [Hint that solution exists]",
+          "SUBTEXT_FORMULA": "[How this brand specifically helps] OR [Consequence of not solving]",
+          "EXAMPLES_BY_INDUSTRY": {
+            "SaaS_for_marketers": [
+              {"hook": "Encore 2h à formater des visuels ?", "subtext": "Générez-les en 60 secondes, à votre image."},
+              {"hook": "Vos posts sont beaux... mais engagent-ils ?", "subtext": "Des visuels optimisés pour la conversion."}
+            ],
+            "E-commerce": [
+              {"hook": "Vos photos produit passent inaperçues ?", "subtext": "Des visuels qui arrêtent le scroll."},
+              {"hook": "3 clics pour un visuel pro. Sans graphiste.", "subtext": "Publiez plus, vendez plus."}
+            ],
+            "Consulting": [
+              {"hook": "Votre expertise mérite mieux qu'un template Canva", "subtext": "Des visuels à la hauteur de votre expertise."}
+            ]
+          },
+          "FORBIDDEN_PATTERNS": [
+            "Market size/growth stats",
+            "Industry projections (by 2030...)",
+            "Generic tech trends (AI is transforming...)",
+            "Company adoption rates",
+            "Anything not related to THIS brand's product/service"
           ],
-          "MANDATORY_RULES": [
-            "ONLY generate hooks about TARGET AUDIENCE's daily problems",
-            "Use 'vous/votre' to address the reader directly", 
-            "Make it personal and emotional, not abstract",
-            "Quantify with time/money lost when possible (2h/jour, 500€/mois)",
-            "NEVER mention market size, growth rates, projections, or industry stats"
+          "QUALITY_CHECK": [
+            "Each hook must be answerable by THIS brand's product",
+            "If the hook could apply to ANY company, it's too generic - REJECT IT",
+            "The subtext must reference a specific feature or benefit from the scraped data"
           ]
         },
         "contentNuggets": {
@@ -1537,36 +1544,39 @@ export async function POST(request: Request) {
          - Each post MUST have an "intent" explaining WHY this post is strategic for the END USER
          - Be SPECIFIC: not "amélioration" but "+47% en 3 mois"
          
-      8. **PAIN POINTS (CRITICAL - 8 REQUIRED):** Generate exactly 8 pain point hooks.
+      8. **PAIN POINTS (CRITICAL - 8 REQUIRED, PRODUCT-SPECIFIC):** Generate exactly 8 pain point hooks.
          
-         ⚠️ GOLDEN RULE: Each hook must describe a DAILY FRUSTRATION of the TARGET AUDIENCE.
+         ⚠️ GOLDEN RULE: Each hook must be DIRECTLY related to what THIS brand sells.
          
-         🚫 ABSOLUTELY FORBIDDEN (will be rejected):
-         - Market size stats ("$X billion market")
-         - Industry growth ("X% growth", "CAGR")
-         - Company adoption rates ("X% of companies use...")
-         - Future projections ("by 2030...")
-         - Generic tech trends ("AI is transforming...")
+         🔍 MANDATORY CONTEXT TO USE (from your analysis above):
+         - 'targetAudience': WHO are you speaking to? Use their job title, their daily context.
+         - 'features' & 'services': WHAT does the brand offer? The pain points must be solvable by these.
+         - 'painPoints': Problems extracted from the site - EXPAND on these!
+         - 'uniqueValueProposition': The main benefit - pain points should lead to this.
+         - 'industry': To understand the specific context and vocabulary.
          
-         ✅ ONLY GENERATE:
-         - Time wasted: "2h/jour sur des tâches répétitives"
-         - Money lost: "500€/mois en outils inutiles"  
-         - Frustrations: "Marre de jongler entre 5 outils ?"
-         - Missed opportunities: "Vos concurrents publient 3x plus"
-         - Personal struggles: "Le brief était clair... jusqu'à la V12"
+         ✅ EACH HOOK MUST PASS THIS TEST:
+         1. "Is this frustration solvable by THIS brand's product?" → If not, REJECT
+         2. "Would a [targetAudience] recognize this as THEIR problem?" → If not, REJECT
+         3. "Is this specific enough that it couldn't apply to ANY random company?" → If not, REJECT
          
-         FORMULA: [VOUS] + [Problème quotidien] + [Impact chiffré]
+         🚫 FORBIDDEN:
+         - Market stats, growth rates, projections
+         - Generic problems not related to the product
+         - Hooks that could apply to any company in any industry
          
-         EXAMPLES (copy this style!):
-         - "Vous passez plus de temps à formater qu'à créer ?"
-         - "73% des marketers jonglent entre 5+ outils. Et vous ?"
-         - "Vos visuels sont beaux... mais convertissent-ils ?"
-         - "2h par jour sur l'admin ? C'est 10h/semaine de perdu."
-         - "Le brief client était clair... jusqu'à la V12."
-         - "Vos emails tombent dans les spams ? Voici pourquoi."
+         FORMULA: [Target's specific daily frustration] + [Hint that solution exists]
          
-         TEST: "Would this make the TARGET CUSTOMER nod and say 'that's so me'?"
-         If not, DON'T include it.
+         EXAMPLE FOR A VISUAL CREATION TOOL:
+         - ✅ "Encore 2h à formater des visuels ?" (specific to their product)
+         - ✅ "Vos posts sont beaux... mais engagent-ils ?" (related to their value prop)
+         - ❌ "Le marché du design atteindra 50Mds$" (market stat, useless)
+         - ❌ "La créativité est importante" (too generic, not actionable)
+         
+         EXAMPLE FOR A CRM TOOL:
+         - ✅ "Vos leads tombent dans l'oubli ?" (CRM solves this)
+         - ✅ "Encore un deal perdu faute de suivi ?" (CRM solves this)
+         - ❌ "Les entreprises adoptent le digital" (generic, not CRM-specific)
          
       9. **CONTENT VALIDATION (INTELLIGENT AGENT TASK):** 
          I have provided a raw list of "EXTRACTED CONTENT NUGGETS" above. Your job is to FILTER and CLEAN them.
