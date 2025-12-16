@@ -33,7 +33,7 @@ const TEMPLATES = [
 // Smart placeholder generator based on brand context
 const getSmartPlaceholder = (templateId: TemplateId | null, brandData: any): string => {
   if (!brandData) return "Qu'est-ce que vous voulez communiquer ?";
-  
+
   const brandName = brandData.name || 'votre marque';
   const industry = brandData.industry || '';
   const features = brandData.features || [];
@@ -41,11 +41,11 @@ const getSmartPlaceholder = (templateId: TemplateId | null, brandData: any): str
   const services = brandData.services || [];
   const realStats = brandData.contentNuggets?.realStats || [];
   const testimonials = brandData.contentNuggets?.testimonials || [];
-  
+
   // Get first feature/service for context
   const mainFeature = features[0] || services[0] || '';
   const mainValue = values[0] || '';
-  
+
   // Industry-specific terms
   const industryTerms: Record<string, { metric: string; action: string; event: string }> = {
     'saas': { metric: 'utilisateurs actifs', action: 'automatisé', event: 'Product Hunt Launch' },
@@ -57,13 +57,13 @@ const getSmartPlaceholder = (templateId: TemplateId | null, brandData: any): str
     'education': { metric: 'étudiants formés', action: 'certifié', event: 'EdTech Summit' },
     'default': { metric: 'clients satisfaits', action: 'accompagné', event: 'notre prochain événement' }
   };
-  
+
   // Find matching industry or use default
-  const industryKey = Object.keys(industryTerms).find(key => 
+  const industryKey = Object.keys(industryTerms).find(key =>
     industry.toLowerCase().includes(key)
   ) || 'default';
   const terms = industryTerms[industryKey];
-  
+
   // Generate placeholder based on template
   const placeholders: Record<TemplateId, string[]> = {
     'stat': [
@@ -103,10 +103,10 @@ const getSmartPlaceholder = (templateId: TemplateId | null, brandData: any): str
       `${brandName} : la fonctionnalité que vous attendiez`
     ]
   };
-  
+
   // Get placeholders for the template
   const templatePlaceholders = templateId ? placeholders[templateId] : null;
-  
+
   if (!templatePlaceholders) {
     // Generic smart placeholder when no template selected
     const genericOptions = [
@@ -117,7 +117,7 @@ const getSmartPlaceholder = (templateId: TemplateId | null, brandData: any): str
     ];
     return genericOptions[Math.floor(Math.random() * genericOptions.length)];
   }
-  
+
   // Return a random placeholder from the options (or first one for consistency)
   return templatePlaceholders[0];
 };
@@ -173,7 +173,7 @@ function PlaygroundContent() {
   const searchParams = useSearchParams();
   const brandId = searchParams.get('brandId');
   const analyzeUrl = searchParams.get('analyzeUrl'); // From Hero input
-  
+
   // Multi-brand system
   const { brands: userBrands, loading: brandsLoading, refresh: refreshBrands } = useBrands();
   const [selectedBrandId, setSelectedBrandId] = useState<number | null>(null);
@@ -181,7 +181,7 @@ function PlaygroundContent() {
   const [showStyleGallery, setShowStyleGallery] = useState(false);
   const [showAssetManager, setShowAssetManager] = useState(false);
   const [showAllAngles, setShowAllAngles] = useState(false);
-  
+
   // Determine initial step:
   // - If we have URL params → go to analyzing
   // - Otherwise start with 'loading' to check if user has existing brands
@@ -196,7 +196,7 @@ function PlaygroundContent() {
   const [progress, setProgress] = useState(0);
   const [status, setStatus] = useState<'idle' | 'preparing' | 'running' | 'complete' | 'error'>('idle');
   const [loadingStage, setLoadingStage] = useState(0);
-  
+
   // Fun loading messages that cycle through (locale-aware)
   const LOADING_STAGES = locale === 'fr' ? [
     { emoji: '🔍', message: 'Exploration du site...', sub: 'On scrape les pages clés' },
@@ -215,7 +215,7 @@ function PlaygroundContent() {
     { emoji: '📊', message: 'Compiling insights...', sub: 'Pain points & competitors' },
     { emoji: '✨', message: 'Finalizing...', sub: 'Preparing your brief' },
   ];
-  
+
   // Simulated discoveries that appear during loading (locale-aware)
   const DISCOVERY_ITEMS = locale === 'fr' ? [
     { threshold: 10, emoji: '🌐', text: 'Site web détecté' },
@@ -238,7 +238,7 @@ function PlaygroundContent() {
     { threshold: 80, emoji: '🔥', text: 'Pain points detected' },
     { threshold: 90, emoji: '✅', text: 'Brief ready!' },
   ];
-  
+
   // Rotating fun facts (locale-aware)
   const FUN_FACTS = locale === 'fr' ? [
     "💡 On analyse jusqu'à 10 pages de votre site pour extraire le maximum d'insights.",
@@ -255,9 +255,9 @@ function PlaygroundContent() {
     "📊 We identify your competitors for better positioning.",
     "✨ 1 credit = 1 unique visual, tailored to your brand.",
   ];
-  
+
   const [currentFact, setCurrentFact] = useState(0);
-  
+
   // Rotate fun facts every 5 seconds
   useEffect(() => {
     if (step !== 'analyzing') return;
@@ -266,7 +266,7 @@ function PlaygroundContent() {
     }, 5000);
     return () => clearInterval(interval);
   }, [step]);
-  
+
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false); // Open by default on desktop
 
   const [brandData, setBrandData] = useState<any | null>(null);
@@ -298,7 +298,7 @@ function PlaygroundContent() {
 
   const [editingImage, setEditingImage] = useState<string | null>(null);
   // Style references with optional descriptions
-  const [styleRefImages, setStyleRefImages] = useState<{url: string; note?: string}[]>([]);
+  const [styleRefImages, setStyleRefImages] = useState<{ url: string; note?: string }[]>([]);
   const [editPrompt, setEditPrompt] = useState('');
   const [editAdditionalImages, setEditAdditionalImages] = useState<string[]>([]); // NEW: Additional images for editing
   const [visualIdeas, setVisualIdeas] = useState<string[]>([]);
@@ -307,19 +307,19 @@ function PlaygroundContent() {
   const [lightboxImage, setLightboxImage] = useState<GeneratedImage | null>(null);
   const [isThinking, setIsThinking] = useState(false);
   const [contentLanguage, setContentLanguage] = useState<'fr' | 'en' | 'es' | 'de'>('fr');
-  
+
   // Credits & Upgrade state
   const { credits: creditsInfo, updateRemaining: updateCreditsRemaining, refresh: refreshCredits } = useCredits();
   const [showUpgradePopup, setShowUpgradePopup] = useState(false);
   const [creditsUsed, setCreditsUsed] = useState(0); // Track how many credits user has consumed
   const [showCreditsToast, setShowCreditsToast] = useState(false);
-  
+
   // Recent generations for the bottom section
   const { generations: recentGenerations, refresh: refreshGenerations } = useGenerations();
   const [lastCreditsRemaining, setLastCreditsRemaining] = useState<number | null>(null);
   const [aspectRatio, setAspectRatio] = useState<string>('1:1');
   const [resolution, setResolution] = useState<'2K' | '4K'>('2K');
-  
+
   // Aspect ratio options
   const ASPECT_RATIOS = [
     { value: '1:1', label: '1:1', desc: 'Carré', icon: '◻️' },
@@ -329,13 +329,13 @@ function PlaygroundContent() {
     { value: '3:2', label: '3:2', desc: 'Photo', icon: '📷' },
     { value: '21:9', label: '21:9', desc: 'Cinéma', icon: '🎬' },
   ];
-  
+
   // Resolution options
   const RESOLUTIONS = [
     { value: '2K' as const, label: '2K', desc: '2048px' },
     { value: '4K' as const, label: '4K', desc: '4096px', badge: 'PRO' },
   ];
-  
+
   // Language options
   const LANGUAGES = [
     { code: 'fr' as const, label: 'Français', flag: '🇫🇷' },
@@ -382,14 +382,14 @@ function PlaygroundContent() {
       if (e.detail) {
         const { templateId, headline, metric, metricLabel } = e.detail;
         setSelectedTemplate(templateId as TemplateId);
-        
+
         // Build the brief based on template type
         let briefText = headline || '';
         if (templateId === 'stat' && metric) {
           briefText = `${metric} ${metricLabel || ''}`.trim();
         }
         setBrief(briefText);
-        
+
         setStep('playground');
         setActiveTab('create');
         showToast(`Template "${templateId}" sélectionné`, 'success');
@@ -403,25 +403,33 @@ function PlaygroundContent() {
 
   const hydrateBrand = (brand: any) => {
     if (!brand) return;
-    setBrandData(brand);
+
     // setBackgrounds removed - textures disabled
     setVisualIdeas(Array.isArray(brand.visualConcepts) ? brand.visualConcepts : []);
 
     // SYNC images with same priority as handleValidateBento
     // This ensures returning users get the same quality images as new users
     const labeledImages = Array.isArray(brand.labeledImages) ? brand.labeledImages : [];
-    
+
     // Priority order: logo first, then reference, product, app_ui, others
     const logoImg = brand.logo ? [brand.logo] : [];
     const referenceImgs = labeledImages.filter((img: any) => img.category === 'reference').map((img: any) => img.url);
     const productImgs = labeledImages.filter((img: any) => img.category === 'product').map((img: any) => img.url);
     const appImgs = labeledImages.filter((img: any) => img.category === 'app_ui').map((img: any) => img.url);
     const otherImgs = labeledImages.filter((img: any) => !['main_logo', 'reference', 'product', 'app_ui'].includes(img.category)).map((img: any) => img.url);
-    
+
     // Combine in priority order with fallback to legacy images array
     const fallback = Array.isArray(brand.images) ? brand.images : [];
     const allImages = [...new Set([...logoImg, ...referenceImgs, ...productImgs, ...appImgs, ...otherImgs, ...fallback])].filter(Boolean);
-    
+
+    // FIX: Add images array to brandData so BentoGrid Asset Library works
+    // The DB stores labeledImages but BentoGrid expects brandData.images
+    const hydratedBrand = {
+      ...brand,
+      images: allImages, // Populate images from labeledImages for BentoGrid
+    };
+
+    setBrandData(hydratedBrand);
     setUploadedImages(allImages.slice(0, 8)); // Same limit as handleValidateBento
 
     // New: Use suggestedPosts (template-based) if available
@@ -433,7 +441,7 @@ function PlaygroundContent() {
         const briefText = firstPost.headline || (firstPost.metric ? `${firstPost.metric} ${firstPost.metricLabel || ''}` : '');
         if (briefText) setBrief(briefText);
       }
-    } 
+    }
     // Fallback to old marketingAngles format
     else if (brand.marketingAngles?.length && !brief) {
       const firstAngle = brand.marketingAngles[0];
@@ -450,10 +458,10 @@ function PlaygroundContent() {
   useEffect(() => {
     // Skip if we have explicit URL params or already checked
     if (brandId || analyzeUrl || hasCheckedBrands) return;
-    
+
     // Check localStorage immediately (no API wait)
     const lastUsedId = getLastUsedBrandId();
-    
+
     if (lastUsedId) {
       // User has used a brand before - go directly to playground
       console.log('⚡ Fast path: Loading last brand from localStorage:', lastUsedId);
@@ -465,15 +473,15 @@ function PlaygroundContent() {
     }
     // If no lastUsedId, wait for API to check if user has any brands at all
   }, [brandId, analyzeUrl, hasCheckedBrands]);
-  
+
   // SLOW PATH: Wait for API if no localStorage brand found
   useEffect(() => {
     // Skip if we have explicit URL params or already handled
     if (brandId || analyzeUrl || hasCheckedBrands || brandsLoading) return;
-    
+
     // API finished loading and we haven't handled yet
     setHasCheckedBrands(true);
-    
+
     if (userBrands.length > 0) {
       // User has brands but no localStorage - go to playground immediately
       const brandToLoad = userBrands[0];
@@ -487,17 +495,17 @@ function PlaygroundContent() {
       setStep('url');
     }
   }, [brandsLoading, userBrands, brandId, analyzeUrl, hasCheckedBrands]);
-  
+
   // Helper: Load a brand by ID
   // silent = true → don't show loading screen (for returning users)
   const loadBrandById = async (id: number, showBento = true, silent = false) => {
     let timer: NodeJS.Timeout | null = null;
-    
+
     if (!silent) {
       setStep('analyzing');
       setStatusMessage(locale === 'fr' ? 'Chargement de la marque...' : 'Loading brand...');
       setProgress(5);
-      
+
       timer = setInterval(() => {
         setProgress((prev) => prev >= 90 ? prev : prev + Math.random() * 15);
       }, 500);
@@ -509,13 +517,13 @@ function PlaygroundContent() {
       if (!response.ok || !data.success) {
         throw new Error(data.error || 'Failed to load brand');
       }
-      
+
       if (timer) clearInterval(timer);
       setProgress(100);
       hydrateBrand(data.brand);
       setSelectedBrandId(id);
       setLastUsedBrandId(id);
-      
+
       // Go to bento or directly to playground
       if (silent) {
         // Direct transition for returning users
@@ -527,7 +535,7 @@ function PlaygroundContent() {
           setActiveTab('create');
         }, 300);
       }
-      
+
     } catch (error: any) {
       if (timer) clearInterval(timer);
       console.error('Brand load error', error);
@@ -535,7 +543,7 @@ function PlaygroundContent() {
       setStep('url');
     }
   };
-  
+
   // Switch to a different brand
   const switchBrand = (brand: BrandSummary) => {
     if (brand.id === selectedBrandId) return;
@@ -549,7 +557,7 @@ function PlaygroundContent() {
     const fetchBrand = async () => {
       setStep('analyzing');
       setStatusMessage(locale === 'fr' ? 'Chargement de la marque...' : 'Loading brand...');
-      
+
       // Simulate initial progress
       setProgress(5);
       const timer = setInterval(() => {
@@ -566,19 +574,19 @@ function PlaygroundContent() {
           throw new Error(data.error || 'Impossible de charger la marque');
         }
         if (cancelled) return;
-        
+
         clearInterval(timer);
         setProgress(100);
         hydrateBrand(data.brand);
         setSelectedBrandId(parseInt(brandId));
         setLastUsedBrandId(parseInt(brandId));
-        
+
         // Small delay to show 100% before switching
         setTimeout(() => {
-            setStep('bento');
-            setActiveTab('create');
+          setStep('bento');
+          setActiveTab('create');
         }, 500);
-        
+
       } catch (error: any) {
         if (!cancelled) {
           clearInterval(timer);
@@ -605,7 +613,7 @@ function PlaygroundContent() {
       }, 100);
       return () => clearTimeout(timer);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [analyzeUrl, brandId]);
 
   // Cycle through loading stages during analysis
@@ -614,7 +622,7 @@ function PlaygroundContent() {
       setLoadingStage(0);
       return;
     }
-    
+
     const interval = setInterval(() => {
       setLoadingStage((prev) => {
         // Cycle through stages based on progress
@@ -626,7 +634,7 @@ function PlaygroundContent() {
         return Math.max(prev, targetStage);
       });
     }, 2500); // Change stage every 2.5s
-    
+
     return () => clearInterval(interval);
   }, [step, progress, LOADING_STAGES.length]);
 
@@ -641,7 +649,7 @@ function PlaygroundContent() {
     setStep('analyzing');
     setStatus('preparing');
     setStatusMessage('Nous scannons votre site...');
-    
+
     setProgress(5);
     const timer = setInterval(() => {
       setProgress((prev) => {
@@ -654,25 +662,25 @@ function PlaygroundContent() {
     // Retry logic for failed scrapes
     const maxRetries = 2;
     let lastError: any = null;
-    
+
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
         if (attempt > 1) {
           setStatusMessage(`Nouvelle tentative (${attempt}/${maxRetries})...`);
           setProgress(10); // Reset progress for retry
         }
-        
+
         const response = await fetch('/api/brand/analyze', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-              url,
-              socialLinks: [],
-              otherLinks: []
+          body: JSON.stringify({
+            url,
+            socialLinks: [],
+            otherLinks: []
           })
         });
         const data = await response.json();
-        
+
         if (!response.ok || !data.success) {
           throw new Error(data.error || 'Analyse impossible');
         }
@@ -681,7 +689,7 @@ function PlaygroundContent() {
         setProgress(100);
         hydrateBrand(data.brand);
         setStatus('idle');
-        
+
         // If brand already exists for this user, skip onboarding and go to bento
         if (data.isUpdate && data.brand?.id) {
           setTimeout(() => {
@@ -691,29 +699,29 @@ function PlaygroundContent() {
           }, 300);
           return; // Success! Exit the retry loop
         }
-        
+
         setTimeout(() => {
-            setStep('logo-confirm');
-            if (data.brand?.logo) {
-              showToast('Logo détecté !', 'success');
-            } else {
-              showToast('Analyse terminée — uploadez votre logo', 'info');
-            }
+          setStep('logo-confirm');
+          if (data.brand?.logo) {
+            showToast('Logo détecté !', 'success');
+          } else {
+            showToast('Analyse terminée — uploadez votre logo', 'info');
+          }
         }, 500);
-        
+
         return; // Success! Exit the retry loop
-        
+
       } catch (error: any) {
         lastError = error;
         console.error(`Analyze attempt ${attempt} failed:`, error);
-        
+
         if (attempt < maxRetries) {
           // Wait before retry (exponential backoff)
           await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
         }
       }
     }
-    
+
     // All retries failed
     clearInterval(timer);
     console.error('All analyze attempts failed:', lastError);
@@ -729,7 +737,7 @@ function PlaygroundContent() {
     setStep('analyzing');
     setStatus('preparing');
     setStatusMessage('Nous scannons votre site...');
-    
+
     // Simulate progress for analysis
     setProgress(5);
     const timer = setInterval(() => {
@@ -744,70 +752,70 @@ function PlaygroundContent() {
     // Retry logic for failed scrapes
     const maxRetries = 2;
     let lastError: any = null;
-    
+
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
-    try {
+      try {
         if (attempt > 1) {
           setStatusMessage(`Nouvelle tentative (${attempt}/${maxRetries})...`);
           setProgress(10);
         }
-        
-      const response = await fetch('/api/brand/analyze', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
+
+        const response = await fetch('/api/brand/analyze', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
             url,
             socialLinks: socialLinks.filter(Boolean),
             otherLinks: otherLinks.split(',').map(l => l.trim()).filter(Boolean)
-        })
-      });
-      const data = await response.json();
-        
-      if (!response.ok || !data.success) {
-        throw new Error(data.error || 'Analyse impossible');
-      }
+          })
+        });
+        const data = await response.json();
 
-      clearInterval(timer);
-      setProgress(100);
-      hydrateBrand(data.brand);
-      setStatus('idle');
-      
-      // If brand already exists for this user, skip onboarding and go to bento
-      if (data.isUpdate && data.brand?.id) {
+        if (!response.ok || !data.success) {
+          throw new Error(data.error || 'Analyse impossible');
+        }
+
+        clearInterval(timer);
+        setProgress(100);
+        hydrateBrand(data.brand);
+        setStatus('idle');
+
+        // If brand already exists for this user, skip onboarding and go to bento
+        if (data.isUpdate && data.brand?.id) {
+          setTimeout(() => {
+            setSelectedBrandId(data.brand.id);
+            setStep('bento');
+            showToast(locale === 'fr' ? 'Cette marque existe déjà — la voici !' : 'This brand already exists — here it is!', 'info');
+          }, 300);
+          return; // Success!
+        }
+
         setTimeout(() => {
-          setSelectedBrandId(data.brand.id);
-          setStep('bento');
-          showToast(locale === 'fr' ? 'Cette marque existe déjà — la voici !' : 'This brand already exists — here it is!', 'info');
-        }, 300);
-        return; // Success!
-      }
-      
-      setTimeout(() => {
           setStep('logo-confirm');
-            if (data.brand?.logo) {
-          showToast('Logo détecté !', 'success');
-            } else {
-              showToast('Analyse terminée — uploadez votre logo', 'info');
-            }
-      }, 500);
+          if (data.brand?.logo) {
+            showToast('Logo détecté !', 'success');
+          } else {
+            showToast('Analyse terminée — uploadez votre logo', 'info');
+          }
+        }, 500);
 
         return; // Success!
 
-    } catch (error: any) {
+      } catch (error: any) {
         lastError = error;
         console.error(`Analyze attempt ${attempt} failed:`, error);
-        
+
         if (attempt < maxRetries) {
           await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
         }
       }
     }
-    
+
     // All retries failed
-      clearInterval(timer);
+    clearInterval(timer);
     console.error('All analyze attempts failed:', lastError);
-      setStatus('error');
-      setStep('url');
+    setStatus('error');
+    setStep('url');
     showToast(lastError?.message || 'Impossible d\'analyser ce site après plusieurs tentatives', 'error');
   };
 
@@ -852,17 +860,17 @@ function PlaygroundContent() {
     const contentNuggets = brand.contentNuggets || {};
     const features = brand.features || [];
     const brandName = brand.name || 'nous';
-    
+
     // Priority 1: Pain point with emotional hook (most engaging!)
     // Check multiple sources for pain points
     let mainPainPoint: string | null = null;
-    
+
     // Source 1: industryInsights with type 'pain_point' (already filtered)
     const painPointInsight = insights.find((i: any) => i.type === 'pain_point' && i.painPoint);
     if (painPointInsight?.painPoint) {
       mainPainPoint = painPointInsight.painPoint;
     }
-    
+
     // Source 2: contentNuggets.painPoints (from Firecrawl search) - filter garbage
     if (!mainPainPoint && contentNuggets.painPoints && contentNuggets.painPoints.length > 0) {
       const validPainPoints = contentNuggets.painPoints.filter((p: any) => {
@@ -874,12 +882,12 @@ function PlaygroundContent() {
         mainPainPoint = typeof firstPain === 'string' ? firstPain : firstPain.point || firstPain.problem;
       }
     }
-    
+
     // Source 3: brand.painPoints (direct)
     if (!mainPainPoint && brand.painPoints && brand.painPoints.length > 0) {
       mainPainPoint = brand.painPoints[0];
     }
-    
+
     if (mainPainPoint) {
       // Clean up the pain point text for use in hook
       const cleanPainPoint = mainPainPoint.replace(/^[0-9%]+\s*(of|des|de)\s*/i, '').trim();
@@ -907,7 +915,7 @@ function PlaygroundContent() {
     // Priority 3: Competitor positioning (differentiator)
     const competitor = insights.find((i: any) => i.type === 'competitive');
     if (competitor?.painPoint) {
-        return {
+      return {
         brief: competitor.painPoint,
         templateId: 'expert'
       };
@@ -919,8 +927,8 @@ function PlaygroundContent() {
       const stat = realStats[0];
       return {
         brief: `${stat} — Voici comment on y arrive`,
-          templateId: 'stat'
-        };
+        templateId: 'stat'
+      };
     }
 
     // Priority 5: Real testimonial
@@ -971,23 +979,23 @@ function PlaygroundContent() {
       showToast('Analysez ou chargez une marque avant de continuer', 'error');
       return;
     }
-    
+
     // SYNC images from bento: prioritize logo + relevant categories
     const labeledImages = Array.isArray(brandData.labeledImages) ? brandData.labeledImages : [];
-    
+
     // Priority order: logo first, then reference, product, app_ui, others
     const logoImg = brandData.logo ? [brandData.logo] : [];
     const referenceImgs = labeledImages.filter((img: any) => img.category === 'reference').map((img: any) => img.url);
     const productImgs = labeledImages.filter((img: any) => img.category === 'product').map((img: any) => img.url);
     const appImgs = labeledImages.filter((img: any) => img.category === 'app_ui').map((img: any) => img.url);
     const otherImgs = labeledImages.filter((img: any) => !['main_logo', 'reference', 'product', 'app_ui'].includes(img.category)).map((img: any) => img.url);
-    
+
     // Combine in priority order, ensuring logo is first
     const allImages = [...new Set([...logoImg, ...referenceImgs, ...productImgs, ...appImgs, ...otherImgs])].filter(Boolean);
-    
+
     // ALWAYS sync with bento data (not conditional)
     setUploadedImages(allImages.slice(0, 8));
-    
+
     // Save brand state to DB to persist nuggets & edits
     try {
       await handleSaveBrand();
@@ -997,32 +1005,32 @@ function PlaygroundContent() {
 
     setStep('playground');
     setActiveTab('create');
-    
+
     // Auto-generate visuals based on smart bento data
     const smartPrompt = buildSmartWelcomePrompt(brandData);
-    
+
     // IMPORTANT: Refresh credits to get accurate isEarlyBird status
     // This ensures we have the latest data after user creation
     await refreshCredits();
-    
+
     // Check if user is early bird (first 30 signups of the day)
     // Note: We need to fetch fresh data since creditsInfo might be stale
     const freshCredits = await fetch('/api/user/credits').then(r => r.json()).catch(() => null);
     const isEarlyBird = freshCredits?.credits?.isEarlyBird ?? creditsInfo?.isEarlyBird ?? false;
-    
+
     console.log('🐦 Early bird check:', { isEarlyBird, freshCredits: freshCredits?.credits?.isEarlyBird, cachedCredits: creditsInfo?.isEarlyBird });
-    
+
     if (smartPrompt && allImages.length > 0 && isEarlyBird) {
       // Early bird gets 1 FREE auto-generation
       setBrief(smartPrompt.brief);
       setSelectedTemplate(smartPrompt.templateId);
       showToast(
-        locale === 'fr' 
-          ? '🎁 Génération offerte en cours...' 
-          : '🎁 Free generation in progress...', 
+        locale === 'fr'
+          ? '🎁 Génération offerte en cours...'
+          : '🎁 Free generation in progress...',
         'success'
       );
-      
+
       // Small delay to let UI update
       setTimeout(() => {
         handleGenerate(smartPrompt.brief, false, brandData, allImages.slice(0, 6), undefined, 1); // 1 image only
@@ -1032,17 +1040,17 @@ function PlaygroundContent() {
       setBrief(smartPrompt.brief);
       setSelectedTemplate(smartPrompt.templateId);
       showToast(
-        locale === 'fr' 
-          ? '✨ Cliquez sur Générer pour créer votre premier visuel !' 
-          : '✨ Click Generate to create your first visual!', 
+        locale === 'fr'
+          ? '✨ Cliquez sur Générer pour créer votre premier visuel !'
+          : '✨ Click Generate to create your first visual!',
         'success'
       );
     } else {
       // No good data - show helpful message
       showToast(
-        locale === 'fr' 
-          ? 'Décrivez ce que vous voulez communiquer' 
-          : 'Describe what you want to communicate', 
+        locale === 'fr'
+          ? 'Décrivez ce que vous voulez communiquer'
+          : 'Describe what you want to communicate',
         'info'
       );
     }
@@ -1130,7 +1138,7 @@ function PlaygroundContent() {
   const handleLogoUpload = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
-    
+
     setIsUploadingLogo(true);
     const reader = new FileReader();
     reader.onload = (e) => {
@@ -1139,11 +1147,11 @@ function PlaygroundContent() {
         // Update brandData with the new logo
         setBrandData((prev: any) => {
           if (!prev) return prev;
-          
+
           // Update labeledImages: remove old main_logo entries, add new one
           const existingLabeled = Array.isArray(prev.labeledImages) ? prev.labeledImages : [];
           const filteredLabeled = existingLabeled.filter((img: any) => img.category !== 'main_logo');
-          
+
           return {
             ...prev,
             logo: logoDataUrl,
@@ -1153,7 +1161,7 @@ function PlaygroundContent() {
             ]
           };
         });
-        
+
         showToast('Logo mis à jour !', 'success');
       }
       setIsUploadingLogo(false);
@@ -1169,13 +1177,13 @@ function PlaygroundContent() {
   // Confirm logo and proceed to bento
   const handleConfirmLogo = async () => {
     if (!brandData) return;
-    
+
     setIsConfirmingLogo(true);
-    
+
     // Mark logo as confirmed in labeledImages
     setBrandData((prev: any) => {
       if (!prev) return prev;
-      
+
       const existingLabeled = Array.isArray(prev.labeledImages) ? prev.labeledImages : [];
       const updatedLabeled = existingLabeled.map((img: any) => {
         if (img.category === 'main_logo') {
@@ -1183,7 +1191,7 @@ function PlaygroundContent() {
         }
         return img;
       });
-      
+
       // If no main_logo exists but we have a logo URL, add it
       if (!updatedLabeled.some((img: any) => img.category === 'main_logo') && prev.logo) {
         updatedLabeled.unshift({
@@ -1193,10 +1201,10 @@ function PlaygroundContent() {
           confirmed: true
         });
       }
-      
+
       return { ...prev, labeledImages: updatedLabeled };
     });
-    
+
     // Save the brand with the confirmed logo
     try {
       const response = await fetch('/api/brand/save', {
@@ -1204,7 +1212,7 @@ function PlaygroundContent() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ brand: { ...brandData, logoConfirmed: true } })
       });
-      
+
       const data = await response.json();
       if (data.success && data.brandId) {
         setBrandData((prev: any) => ({ ...prev, id: data.brandId }));
@@ -1214,7 +1222,7 @@ function PlaygroundContent() {
       console.error('Error saving brand:', error);
       // Continue anyway - we'll try to save later
     }
-    
+
     // Proceed to bento grid
     setStep('bento');
     setIsConfirmingLogo(false);
@@ -1309,18 +1317,18 @@ ${enhancement}`);
       // Build a simple, direct edit prompt
       // The image to edit goes FIRST, then style refs
       const allImages = [imageToEdit, ...styleReferences];
-      
+
       // Detect if user is asking to replace/fix the logo and has uploaded one
-      const isLogoReplacement = styleReferences.length > 0 && 
-        (editInstruction.toLowerCase().includes('logo') || 
-         editInstruction.toLowerCase().includes('remplace') ||
-         editInstruction.toLowerCase().includes('utilise') ||
-         editInstruction.toLowerCase().includes('mets ce') ||
-         editInstruction.toLowerCase().includes('met ce'));
-      
+      const isLogoReplacement = styleReferences.length > 0 &&
+        (editInstruction.toLowerCase().includes('logo') ||
+          editInstruction.toLowerCase().includes('remplace') ||
+          editInstruction.toLowerCase().includes('utilise') ||
+          editInstruction.toLowerCase().includes('mets ce') ||
+          editInstruction.toLowerCase().includes('met ce'));
+
       // Construct edit prompt with clear instructions
       let editPrompt: string;
-      
+
       if (isLogoReplacement) {
         // SPECIAL CASE: User wants to replace logo with their uploaded image
         editPrompt = `[IMAGE EDIT - LOGO REPLACEMENT]
@@ -1373,7 +1381,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
       });
 
       const payload = await response.json();
-      
+
       if (!response.ok || !payload.success) {
         throw new Error(payload.error || 'Échec de la modification');
       }
@@ -1436,7 +1444,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
           brandName: brandData?.name,
           aspectRatio: img.aspectRatio || aspectRatio, // Save the ratio used
         }));
-      
+
       if (generationsToSave.length > 0) {
         await addGenerations(generationsToSave);
       }
@@ -1446,7 +1454,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
       setStatus('complete');
       setProgress(100);
       showToast('Variante générée !', 'success');
-      
+
     } catch (error: any) {
       console.error('Edit error:', error);
       setStatus('error');
@@ -1499,11 +1507,11 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
       let smartImageSelection: string[] | null = null;
       let styleReferenceImages: string[] = [];
       let imageContextMap: Record<string, string> = {};
-      
+
       try {
         // Load feedback patterns to personalize generation
         const feedbackPatterns = loadFeedbackPatterns();
-        
+
         const cdResponse = await fetch('/api/creative-director', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -1513,34 +1521,34 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
             templateId: targetTemplate || undefined,
             language: contentLanguage,
             aspectRatio, // Pass the selected ratio to adapt composition
-            feedbackPatterns: feedbackPatterns.likedKeywords.length > 0 || feedbackPatterns.dislikedKeywords.length > 0 
-              ? feedbackPatterns 
+            feedbackPatterns: feedbackPatterns.likedKeywords.length > 0 || feedbackPatterns.dislikedKeywords.length > 0
+              ? feedbackPatterns
               : undefined
           })
         });
-        
+
         const cdData = await cdResponse.json();
-        
+
         if (cdResponse.ok && cdData.success && cdData.concept) {
           finalGenerationPrompt = cdData.concept.finalPrompt;
           promptVariations = cdData.concept.promptVariations || null;
           negativePrompt = cdData.concept.negativePrompt || negativePrompt;
-          
+
           // Use smart image selection if provided
           if (cdData.concept.imageSelection?.priority?.length > 0) {
             smartImageSelection = cdData.concept.imageSelection.priority;
             if (cdData.concept.imageSelection.imageRoles) {
-                imageContextMap = cdData.concept.imageSelection.imageRoles;
+              imageContextMap = cdData.concept.imageSelection.imageRoles;
             }
             console.log('🎯 Smart image selection:', cdData.concept.imageSelection.priority.length, 'images');
           }
-          
+
           // Extract reference images for style guidance
           if (cdData.concept.imageSelection?.references?.length > 0) {
             styleReferenceImages = cdData.concept.imageSelection.references;
             console.log('🎨 Reference visuals for style:', styleReferenceImages.length);
           }
-          
+
           console.log('🎬 Creative Director:', promptVariations ? `${promptVariations.length} variations` : 'single prompt');
           console.log('🚫 Negative prompt:', negativePrompt.substring(0, 50) + '...');
           setProgress(30);
@@ -1562,14 +1570,14 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
       // 2. User selection is PRIORITY (not overridden by CD)
       // 3. Labels from brandData for proper context
       // ========================================
-      
+
       const imagesToUse: string[] = [];
-      
+
       // 1. LOGO FIRST - Always include and protect it
       console.log('🔍 LOGO DEBUG - handleGenerate:');
       console.log(`   targetBrand?.logo exists: ${!!targetBrand?.logo}`);
       console.log(`   targetBrand?.logo value: ${targetBrand?.logo ? targetBrand.logo.slice(0, 80) + '...' : 'NONE'}`);
-      
+
       if (targetBrand?.logo) {
         imagesToUse.push(targetBrand.logo);
         imageContextMap[targetBrand.logo] = "BRAND_LOGO (CRITICAL): This is the official brand logo. Display it clearly and prominently. DO NOT distort, warp, or modify it in any way. It must remain perfectly legible.";
@@ -1577,22 +1585,22 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
       } else {
         console.log('⚠️ NO LOGO in targetBrand - will check references for main_logo category');
       }
-      
+
       // 2. USER SELECTION IS PRIORITY - Add all user-selected images (except logo already added)
       for (const img of references) {
         if (!imagesToUse.includes(img)) {
           imagesToUse.push(img);
-          
+
           // Find label from brandData to give Fal context
           const labelObj = targetBrand?.labeledImages?.find((li: any) => li.url === img);
           const category = labelObj?.category || 'other';
-          
+
           // Get reproduction mode for this asset (default: app_ui = exact, others = inspire)
           const mode = assetModes[img] || (category === 'app_ui' ? 'exact' : 'inspire');
-          const modeInstruction = mode === 'exact' 
+          const modeInstruction = mode === 'exact'
             ? '[REPRODUCE EXACTLY - Copy this image as-is, do not modify or reinterpret]'
             : '[CAN REINTERPRET - Use as inspiration, feel free to recreate in the brand style]';
-          
+
           // Assign context based on label + reproduction mode
           if (!imageContextMap[img]) {
             switch (category) {
@@ -1624,30 +1632,30 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
           }
         }
       }
-      
+
       console.log('📸 Images to use (user priority):', imagesToUse.length, 'images');
       console.log('   Labels:', Object.entries(imageContextMap).map(([k, v]) => `${k.slice(-20)}: ${v.slice(0, 30)}`).slice(0, 4));
 
-    // Add manual style references if present (with optional notes)
-    if (styleRefImages.length > 0) {
-      const styleRefUrls = styleRefImages.map(ref => ref.url);
-      styleReferenceImages = [...styleRefUrls, ...styleReferenceImages];
-      
-      // Build style notes for the prompt
-      const styleNotes = styleRefImages
-        .filter(ref => ref.note?.trim())
-        .map((ref, i) => `Style ref ${i + 1}: "${ref.note}"`)
-        .join('. ');
-      
-      if (styleNotes) {
-        // Append style notes to the brief
-        finalGenerationPrompt += `\n\n[USER STYLE NOTES: ${styleNotes}]`;
-        console.log('📝 Style notes:', styleNotes);
+      // Add manual style references if present (with optional notes)
+      if (styleRefImages.length > 0) {
+        const styleRefUrls = styleRefImages.map(ref => ref.url);
+        styleReferenceImages = [...styleRefUrls, ...styleReferenceImages];
+
+        // Build style notes for the prompt
+        const styleNotes = styleRefImages
+          .filter(ref => ref.note?.trim())
+          .map((ref, i) => `Style ref ${i + 1}: "${ref.note}"`)
+          .join('. ');
+
+        if (styleNotes) {
+          // Append style notes to the brief
+          finalGenerationPrompt += `\n\n[USER STYLE NOTES: ${styleNotes}]`;
+          console.log('📝 Style notes:', styleNotes);
+        }
+
+        console.log('🎨 User style refs added:', styleRefImages.length, 'images');
+        console.log('   URLs:', styleRefUrls.map(u => u.slice(0, 50) + '...'));
       }
-      
-      console.log('🎨 User style refs added:', styleRefImages.length, 'images');
-      console.log('   URLs:', styleRefUrls.map(u => u.slice(0, 50) + '...'));
-    }
 
       console.log('📤 Final style reference images:', styleReferenceImages.length);
 
@@ -1735,11 +1743,11 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
           brandName: brandData?.name,
           aspectRatio: img.aspectRatio || aspectRatio, // Save the ratio used
         }));
-      
+
       if (generationsToSave.length > 0) {
         await addGenerations(generationsToSave);
       }
-      
+
       // Trigger update event for ProjectsView
       window.dispatchEvent(new Event('generations-updated'));
 
@@ -1747,29 +1755,29 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
       setStatus('complete');
       setProgress(100);
       showToast(locale === 'fr' ? 'Visuel généré et sauvegardé !' : 'Visual generated and saved!', 'success');
-      
+
       // ====== CREDITS TRACKING (inline upgrade card, no popup) ======
       const creditsRemaining = payload.creditsRemaining;
       const plan = payload.plan;
-      
+
       if (creditsRemaining !== undefined) {
         setLastCreditsRemaining(creditsRemaining);
-        
+
         // Update the credits hook so sidebar shows correct count
         updateCreditsRemaining(creditsRemaining);
-        
+
         if (plan === 'free') {
           // Free tier can be 1 or 2 credits depending on early bird status
           const maxFreeCredits = creditsInfo?.isEarlyBird ? 2 : 1;
           setCreditsUsed(maxFreeCredits - creditsRemaining);
         }
-        
+
         // Show toast for credits feedback (only for free users with low credits)
         if (plan === 'free' && creditsRemaining <= 1) {
           setShowCreditsToast(true);
           setTimeout(() => setShowCreditsToast(false), 4000);
         }
-        
+
         // Note: Popup removed - now using inline upgrade card instead
       }
     } catch (error: any) {
@@ -1798,7 +1806,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
         </div>
       );
     }
-    
+
     if (step === 'url') {
       return (
         <div className="min-h-[85vh] flex items-center justify-center animate-fade-in relative">
@@ -1807,7 +1815,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
             backgroundImage: `linear-gradient(#000 1px, transparent 1px), linear-gradient(90deg, #000 1px, transparent 1px)`,
             backgroundSize: '60px 60px'
           }} />
-          
+
           {/* Floating accent */}
           <div className="absolute top-20 right-20 w-64 h-64 bg-gradient-to-br from-amber-200/20 to-orange-300/10 rounded-full blur-3xl" />
           <div className="absolute bottom-32 left-16 w-48 h-48 bg-gradient-to-tr from-blue-200/15 to-sky-300/10 rounded-full blur-3xl" />
@@ -1818,14 +1826,14 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
               <div className="mb-8">
                 <img src="/logo-icon.png" alt="Palette" className="w-14 h-14 object-contain" />
               </div>
-              
+
               <h1 className="text-4xl md:text-5xl font-light text-gray-900 leading-[1.1] mb-4" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
                 {locale === 'fr' ? "Commençons par" : "Let's start with"}<br />
                 <span className="font-semibold">{locale === 'fr' ? 'votre marque.' : 'your brand.'}</span>
               </h1>
-              
+
               <p className="text-gray-400 text-lg max-w-md leading-relaxed">
-                {locale === 'fr' 
+                {locale === 'fr'
                   ? "On récupère votre logo, vos couleurs, votre ton — en quelques secondes. Ensuite, créez."
                   : "We extract your logo, colors, and tone — in seconds. Then, create."
                 }
@@ -1837,7 +1845,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
               {/* Decorative corner */}
               <div className="absolute -top-3 -left-3 w-6 h-6 border-l-2 border-t-2 border-gray-200" />
               <div className="absolute -bottom-3 -right-3 w-6 h-6 border-r-2 border-b-2 border-gray-200" />
-              
+
               <div className="bg-white border border-gray-200 p-8 space-y-6">
                 {/* Primary URL Input */}
                 <div className="group">
@@ -1845,14 +1853,14 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                     {locale === 'fr' ? 'Site principal *' : 'Main website *'}
                   </label>
                   <div className="relative">
-                <input
-                type="text"
+                    <input
+                      type="text"
                       placeholder="votresite.com"
                       className="w-full bg-transparent border-b-2 border-gray-200 py-4 text-xl font-light outline-none transition-all placeholder:text-gray-300 focus:border-black"
-                value={websiteUrl}
-                onChange={(e) => setWebsiteUrl(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleAnalyzeBrand()}
-                />
+                      value={websiteUrl}
+                      onChange={(e) => setWebsiteUrl(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && handleAnalyzeBrand()}
+                    />
                     <div className="absolute right-0 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-black transition-colors">
                       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                         <circle cx="12" cy="12" r="10" />
@@ -1860,7 +1868,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                       </svg>
                     </div>
                   </div>
-            </div>
+                </div>
 
                 {/* Expandable Additional Sources */}
                 <details className="group">
@@ -1871,55 +1879,55 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                     <span className="font-mono text-xs uppercase tracking-wider">{locale === 'fr' ? 'Sources additionnelles' : 'Additional sources'}</span>
                     <span className="text-[10px] text-gray-300">{locale === 'fr' ? '(optionnel)' : '(optional)'}</span>
                   </summary>
-                  
+
                   <div className="mt-6 pt-6 border-t border-gray-100 space-y-4 animate-fade-in">
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <label className="block text-[10px] font-mono uppercase tracking-widest text-gray-300 mb-2">
                           {locale === 'fr' ? 'Réseau social 1' : 'Social network 1'}
                         </label>
-                    <input
-                        type="text"
+                        <input
+                          type="text"
                           placeholder="linkedin.com/company/..."
                           className="w-full bg-gray-50 border-0 py-3 px-4 text-sm outline-none focus:bg-gray-100 transition-colors"
-                        value={socialLinks[0]}
-                        onChange={(e) => {
+                          value={socialLinks[0]}
+                          onChange={(e) => {
                             const newLinks = [...socialLinks];
                             newLinks[0] = e.target.value;
                             setSocialLinks(newLinks);
-                        }}
-                    />
-                </div>
+                          }}
+                        />
+                      </div>
                       <div>
                         <label className="block text-[10px] font-mono uppercase tracking-widest text-gray-300 mb-2">
                           {locale === 'fr' ? 'Réseau social 2' : 'Social network 2'}
                         </label>
-                    <input
-                        type="text"
+                        <input
+                          type="text"
                           placeholder="instagram.com/..."
                           className="w-full bg-gray-50 border-0 py-3 px-4 text-sm outline-none focus:bg-gray-100 transition-colors"
-                        value={socialLinks[1]}
-                        onChange={(e) => {
+                          value={socialLinks[1]}
+                          onChange={(e) => {
                             const newLinks = [...socialLinks];
                             newLinks[1] = e.target.value;
                             setSocialLinks(newLinks);
-                        }}
-                    />
-                </div>
-            </div>
+                          }}
+                        />
+                      </div>
+                    </div>
 
                     <div>
                       <label className="block text-[10px] font-mono uppercase tracking-widest text-gray-300 mb-2">
                         {locale === 'fr' ? 'Autres liens (presse, notion, drive...)' : 'Other links (press, notion, drive...)'}
                       </label>
-                <input
-                    type="text"
+                      <input
+                        type="text"
                         placeholder="Séparés par des virgules"
                         className="w-full bg-gray-50 border-0 py-3 px-4 text-sm outline-none focus:bg-gray-100 transition-colors"
-                    value={otherLinks}
-                    onChange={(e) => setOtherLinks(e.target.value)}
-                />
-            </div>
+                        value={otherLinks}
+                        onChange={(e) => setOtherLinks(e.target.value)}
+                      />
+                    </div>
                   </div>
                 </details>
 
@@ -1928,23 +1936,23 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                   <p className="text-[11px] text-gray-300 max-w-[200px] leading-relaxed">
                     {locale === 'fr' ? "Vous pourrez enrichir ces sources après l'analyse." : "You can add more sources after analysis."}
                   </p>
-                  
-                <button
-                onClick={handleAnalyzeBrand}
-                disabled={!websiteUrl}
-                  className="group bg-gray-900 text-white px-8 py-4 font-medium text-sm disabled:opacity-30 disabled:cursor-not-allowed transition-all hover:bg-blue-600"
-                >
-                  <span className="flex items-center gap-3">
-                    {locale === 'fr' ? 'Scanner la marque' : 'Scan brand'}
-                    <svg className="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                      <path d="M5 12h14M12 5l7 7-7 7" />
-                    </svg>
-                  </span>
-                </button>
+
+                  <button
+                    onClick={handleAnalyzeBrand}
+                    disabled={!websiteUrl}
+                    className="group bg-gray-900 text-white px-8 py-4 font-medium text-sm disabled:opacity-30 disabled:cursor-not-allowed transition-all hover:bg-blue-600"
+                  >
+                    <span className="flex items-center gap-3">
+                      {locale === 'fr' ? 'Scanner la marque' : 'Scan brand'}
+                      <svg className="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                        <path d="M5 12h14M12 5l7 7-7 7" />
+                      </svg>
+                    </span>
+                  </button>
                 </div>
+              </div>
             </div>
-          </div>
-          
+
             {/* Footer note */}
             <div className="mt-8 flex items-center justify-center gap-6 text-xs text-gray-300">
               <span className="flex items-center gap-2">
@@ -1959,7 +1967,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
               {userBrands.length > 0 && (
                 <>
                   <span className="w-1 h-1 bg-gray-200 rounded-full" />
-                  <button 
+                  <button
                     onClick={() => {
                       // Load the first available brand instead of going to empty playground
                       const brandToLoad = userBrands[0];
@@ -1968,7 +1976,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                       } else {
                         setStep('playground');
                       }
-                    }} 
+                    }}
                     className="hover:text-gray-500 transition-colors underline underline-offset-2"
                   >
                     {locale === 'fr' ? 'Retour à mes marques' : 'Back to my brands'}
@@ -1985,7 +1993,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
       return (
         <div className="min-h-screen flex items-center justify-center relative">
           {/* Subtle grid background */}
-          <div 
+          <div
             className="absolute inset-0 opacity-[0.03]"
             style={{
               backgroundImage: `
@@ -2015,8 +2023,8 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
 
             {/* Animated emoji + message */}
             <div className="mb-8 text-center">
-              <div 
-                key={loadingStage} 
+              <div
+                key={loadingStage}
                 className="animate-fade-in"
               >
                 <span className="text-5xl mb-4 block animate-bounce" style={{ animationDuration: '2s' }}>
@@ -2024,7 +2032,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                 </span>
                 <h2 className="text-2xl md:text-3xl font-semibold text-gray-900 mb-2">
                   {LOADING_STAGES[loadingStage]?.message || 'Analyse...'}
-            </h2>
+                </h2>
                 <p className="text-sm text-gray-400">
                   {LOADING_STAGES[loadingStage]?.sub || ''}
                 </p>
@@ -2037,17 +2045,17 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                 <span>Progression</span>
                 <span className="tabular-nums">{Math.round(progress)}%</span>
               </div>
-              
+
               {/* Progress bar */}
               <div className="relative h-2 bg-gray-100 rounded-full overflow-hidden">
-                <div 
+                <div
                   className="absolute left-0 top-0 h-full bg-gradient-to-r from-blue-500 to-sky-400 transition-all duration-700 ease-out rounded-full"
                   style={{ width: `${progress}%` }}
                 />
                 {/* Shimmer effect */}
-                <div 
+                <div
                   className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shimmer"
-                  style={{ 
+                  style={{
                     transform: 'skewX(-20deg)',
                     animation: 'shimmer 2s infinite'
                   }}
@@ -2075,28 +2083,28 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
               </div>
               <div className="bg-gray-50 border border-gray-100 rounded-lg p-3 space-y-1.5 h-[120px] overflow-hidden">
                 {DISCOVERY_ITEMS.filter(item => progress >= item.threshold).map((item, i) => (
-                  <div 
-                    key={i} 
+                  <div
+                    key={i}
                     className="flex items-center gap-2 text-xs animate-fade-in"
                     style={{ animationDelay: `${i * 100}ms` }}
                   >
                     <span className="text-sm">{item.emoji}</span>
                     <span className="text-gray-600">{item.text}</span>
                     <span className="text-blue-500 text-[10px]">✓</span>
-              </div>
+                  </div>
                 ))}
                 {progress < 90 && (
                   <div className="flex items-center gap-2 text-xs text-gray-300">
                     <span className="animate-pulse">⏳</span>
                     <span>En cours...</span>
-            </div>
+                  </div>
                 )}
               </div>
             </div>
 
             {/* Rotating fun facts */}
             <div className="px-6 py-3 bg-gradient-to-r from-gray-50 to-white border border-gray-100 rounded-lg max-w-md">
-              <p 
+              <p
                 key={currentFact}
                 className="text-xs text-gray-500 text-center animate-fade-in"
               >
@@ -2107,15 +2115,15 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
             {/* Time estimate */}
             <p className="mt-4 text-[10px] font-mono text-gray-400 uppercase tracking-widest">
               ~60-90 secondes
-              </p>
-            </div>
+            </p>
+          </div>
         </div>
       );
     }
 
     if (step === 'logo-confirm') {
       const currentLogo = brandData?.logo || brandData?.labeledImages?.find((img: any) => img.category === 'main_logo')?.url;
-      
+
       return (
         <div className="min-h-[85vh] flex items-center justify-center animate-fade-in relative">
           {/* Subtle grid background - matching URL step */}
@@ -2123,7 +2131,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
             backgroundImage: `linear-gradient(#000 1px, transparent 1px), linear-gradient(90deg, #000 1px, transparent 1px)`,
             backgroundSize: '60px 60px'
           }} />
-          
+
           {/* Floating accents - matching URL step */}
           <div className="absolute top-20 right-20 w-64 h-64 bg-gradient-to-br from-blue-200/20 to-sky-300/10 rounded-full blur-3xl" />
           <div className="absolute bottom-32 left-16 w-48 h-48 bg-gradient-to-tr from-amber-200/15 to-orange-300/10 rounded-full blur-3xl" />
@@ -2135,12 +2143,12 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                 <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
                 <span className="text-xs font-mono uppercase tracking-[0.2em] text-gray-400">Logo Check</span>
               </div>
-              
+
               <h1 className="text-3xl md:text-4xl font-light text-gray-900 leading-[1.1] mb-3" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
                 C'est bien<br />
                 <span className="font-semibold">votre logo ?</span>
               </h1>
-              
+
               <p className="text-gray-400 text-base max-w-md leading-relaxed">
                 Ce logo sera utilisé dans tous vos visuels générés. Assurez-vous qu'il est correct.
               </p>
@@ -2151,10 +2159,10 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
               {/* Decorative corners */}
               <div className="absolute -top-3 -left-3 w-6 h-6 border-l-2 border-t-2 border-gray-200" />
               <div className="absolute -bottom-3 -right-3 w-6 h-6 border-r-2 border-b-2 border-gray-200" />
-              
+
               <div className="bg-white border border-gray-200">
                 {/* Logo Container with checker pattern for transparent/white logos */}
-                <div 
+                <div
                   className="aspect-[16/9] flex items-center justify-center p-8 relative overflow-hidden"
                   style={{
                     backgroundImage: `
@@ -2169,9 +2177,9 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                   }}
                 >
                   {currentLogo ? (
-                    <img 
-                      src={currentLogo} 
-                      alt={brandData?.name || 'Logo'} 
+                    <img
+                      src={currentLogo}
+                      alt={brandData?.name || 'Logo'}
                       className="max-w-full max-h-full object-contain relative z-10"
                       style={{ maxHeight: '160px' }}
                     />
@@ -2184,7 +2192,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                     </div>
                   )}
                 </div>
-                
+
                 {/* Warning ONLY if NO logo was found - removed false positive heuristic */}
                 {!currentLogo && (
                   <div className="px-6 py-3 bg-amber-50 border-t border-amber-100 flex items-center gap-2 text-amber-700 text-sm">
@@ -2203,17 +2211,16 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                     className="hidden"
                     onChange={handleLogoUpload}
                   />
-                  
+
                   {/* Action Buttons */}
                   <div className="flex gap-3">
                     <button
                       onClick={() => logoUploadRef.current?.click()}
                       disabled={isUploadingLogo}
-                      className={`flex-1 px-5 py-3 text-sm font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
-                        currentLogo 
-                          ? 'border border-gray-300 text-gray-600 hover:bg-white hover:border-gray-400' 
+                      className={`flex-1 px-5 py-3 text-sm font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed ${currentLogo
+                          ? 'border border-gray-300 text-gray-600 hover:bg-white hover:border-gray-400'
                           : 'bg-gray-900 text-white hover:bg-black'
-                      }`}
+                        }`}
                     >
                       {isUploadingLogo ? (
                         <span className="flex items-center justify-center gap-2">
@@ -2228,14 +2235,14 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                             <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" strokeLinecap="round" strokeLinejoin="round" />
                           </svg>
-                          {currentLogo 
+                          {currentLogo
                             ? (locale === 'fr' ? 'Uploader le vrai logo' : 'Upload correct logo')
                             : (locale === 'fr' ? 'Uploader votre logo' : 'Upload your logo')
                           }
                         </span>
                       )}
                     </button>
-                    
+
                     {currentLogo && (
                       <button
                         onClick={handleConfirmLogo}
@@ -2260,8 +2267,8 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                         )}
                       </button>
                     )}
-              </div>
-                  
+                  </div>
+
                   {/* No logo option */}
                   <button
                     onClick={() => {
@@ -2275,7 +2282,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                     {locale === 'fr' ? "Je n'ai pas de logo pour l'instant →" : "I don't have a logo yet →"}
                   </button>
                 </div>
-            </div>
+              </div>
             </div>
 
             {/* Brand name indicator */}
@@ -2286,7 +2293,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                   {brandData.name}
                 </span>
                 <div className="w-1 h-1 bg-gray-300 rounded-full" />
-            </div>
+              </div>
             )}
           </div>
         </div>
@@ -2335,7 +2342,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
             VERTICAL STACKED CREATIVE SPACE
             Clean top-to-bottom flow: Header → Ideas → Form → Results
             ═══════════════════════════════════════════════════════════════════════════ */}
-        
+
         {/* Header Bar */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 pb-4 border-b border-gray-100">
           <div className="flex items-center gap-3">
@@ -2369,7 +2376,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
               {RESOLUTIONS.map(res => {
                 const isPro = creditsInfo?.plan === 'pro' || creditsInfo?.plan === 'premium';
                 const isLocked = res.value === '4K' && !isPro;
-                
+
                 return (
                   <button
                     key={res.value}
@@ -2380,13 +2387,12 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                       }
                       setResolution(res.value);
                     }}
-                    className={`text-xs px-3 py-2 transition-colors relative ${
-                      resolution === res.value 
-                        ? 'bg-gray-900 text-white' 
+                    className={`text-xs px-3 py-2 transition-colors relative ${resolution === res.value
+                        ? 'bg-gray-900 text-white'
                         : isLocked
                           ? 'bg-gray-50 text-gray-300 cursor-not-allowed'
                           : 'bg-white text-gray-500 hover:text-gray-900'
-                    }`}
+                      }`}
                   >
                     {res.label}
                     {res.badge && isLocked && (
@@ -2408,19 +2414,19 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                 <option key={lang.code} value={lang.code}>{lang.flag} {lang.label}</option>
               ))}
             </select>
-          <button
-            onClick={() => {
-              setStepBeforeBento(step); // Remember current step
-              setStep('bento');
-            }}
+            <button
+              onClick={() => {
+                setStepBeforeBento(step); // Remember current step
+                setStep('bento');
+              }}
               className="px-3 py-2 border border-gray-200 text-xs text-gray-500 hover:text-gray-900 hover:border-gray-400 transition-colors flex items-center gap-2"
-          >
+            >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
-              <path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-              <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-            </svg>
-            {locale === 'fr' ? 'Identité' : 'Identity'}
-          </button>
+                <path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+              {locale === 'fr' ? 'Identité' : 'Identity'}
+            </button>
           </div>
         </div>
 
@@ -2434,17 +2440,17 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
               <span className="w-1.5 h-1.5 bg-blue-500 rounded-full" />
               <span className="text-[10px] font-mono uppercase tracking-widest text-gray-400">{locale === 'fr' ? 'Idées de contenu' : 'Content ideas'}</span>
             </div>
-            
+
             {/* AI-Generated Editorial Hooks - Collapsed with "voir plus" */}
             {(() => {
               const validInsights = brandData.industryInsights?.filter((insight: any) => {
                 const hookText = insight.painPoint || insight.hook || insight.fact;
                 return hookText && hookText.length >= 10;
               }) || [];
-              
+
               const visibleInsights = showAllAngles ? validInsights : validInsights.slice(0, 4);
               const hasMore = validInsights.length > 4;
-              
+
               // Type-based styling
               const typeStyles: Record<string, { emoji: string; bg: string; border: string; hover: string }> = {
                 'pain_point': { emoji: '⚡', bg: 'bg-rose-50', border: 'border-rose-200', hover: 'hover:border-rose-400' },
@@ -2454,18 +2460,18 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                 'tip': { emoji: '💡', bg: 'bg-emerald-50', border: 'border-emerald-200', hover: 'hover:border-emerald-400' },
                 'competitive': { emoji: '🏆', bg: 'bg-indigo-50', border: 'border-indigo-200', hover: 'hover:border-indigo-400' },
               };
-              
+
               return (
                 <div className="flex flex-wrap gap-2">
                   {visibleInsights.map((insight: any, i: number) => {
                     const hookText = insight.painPoint || insight.hook || insight.fact;
                     const style = typeStyles[insight.type] || { emoji: '💡', bg: 'bg-gray-50', border: 'border-gray-200', hover: 'hover:border-gray-400' };
-                    
+
                     return (
                       <button
                         key={`insight-${i}`}
                         onClick={() => {
-                          const simpleBrief = insight.consequence 
+                          const simpleBrief = insight.consequence
                             ? `${hookText}\n\n${insight.consequence}`
                             : hookText;
                           setBrief(simpleBrief);
@@ -2480,7 +2486,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                       </button>
                     );
                   })}
-                  
+
                   {/* "Voir plus" / "Voir moins" button */}
                   {hasMore && (
                     <button
@@ -2512,7 +2518,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
 
         {/* MAIN CREATION CARD */}
         <div className="bg-white border border-gray-200 shadow-sm mb-8">
-          
+
           {/* Message Section */}
           <div className="p-5 border-b border-gray-100">
             <div className="flex items-center justify-between mb-3">
@@ -2537,7 +2543,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
 
           {/* Sources Row - Full width brand assets + compact inspiration */}
           <div className="p-5 space-y-4">
-            
+
             {/* BRAND ASSETS - Full Width */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
@@ -2548,12 +2554,12 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                   {uploadedImages.length} {locale === 'fr' ? 'sélectionné(s)' : 'selected'}
                 </span>
               </div>
-              
+
               {/* Selected assets preview - Full width scrollable */}
               <div className="flex gap-2 items-center overflow-x-auto pb-1 no-scrollbar">
                 {/* Logo - always first */}
                 {brandData?.logo && (
-                  <div 
+                  <div
                     className="relative h-14 w-14 rounded-xl border-2 border-accent overflow-hidden flex-shrink-0"
                     style={{
                       backgroundImage: `linear-gradient(45deg, #f0f0f0 25%, transparent 25%), linear-gradient(-45deg, #f0f0f0 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #f0f0f0 75%), linear-gradient(-45deg, transparent 75%, #f0f0f0 75%)`,
@@ -2573,9 +2579,9 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                 {uploadedImages.filter(img => img !== brandData?.logo).map((imgUrl, i) => {
                   const labelObj = brandData?.labeledImages?.find((li: any) => li.url === imgUrl);
                   const mode = assetModes[imgUrl] || (labelObj?.category === 'app_ui' ? 'exact' : 'inspire');
-                  
+
                   return (
-                    <div 
+                    <div
                       key={i}
                       onClick={() => setUploadedImages(prev => prev.filter(img => img !== imgUrl))}
                       className="relative h-14 w-14 rounded-xl border-2 border-accent overflow-hidden cursor-pointer group flex-shrink-0"
@@ -2585,15 +2591,14 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                       <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                         <span className="text-white text-lg">×</span>
                       </div>
-                      <div className={`absolute bottom-0 left-0 right-0 text-[7px] text-center py-0.5 font-bold ${
-                        mode === 'exact' ? 'bg-orange-500 text-white' : 'bg-accent text-white'
-                      }`}>
+                      <div className={`absolute bottom-0 left-0 right-0 text-[7px] text-center py-0.5 font-bold ${mode === 'exact' ? 'bg-orange-500 text-white' : 'bg-accent text-white'
+                        }`}>
                         {mode === 'exact' ? 'EXACT' : 'LIBRE'}
                       </div>
                     </div>
                   );
                 })}
-                
+
                 {/* Add more button */}
                 <button
                   onClick={() => setShowAssetManager(true)}
@@ -2605,7 +2610,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                   <span className="text-[8px] text-gray-400 mt-0.5">{brandData?.images?.length || 0}</span>
                 </button>
               </div>
-              
+
               <input ref={fileInputRef} type="file" multiple accept="image/*" className="hidden" onChange={handleImageUpload} />
             </div>
 
@@ -2614,7 +2619,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
               <span className="text-xs text-gray-400">
                 {locale === 'fr' ? 'Style' : 'Style'}
               </span>
-              
+
               {/* Selected styles display */}
               {styleRefImages.length > 0 ? (
                 <div className="flex gap-2 items-center">
@@ -2647,16 +2652,16 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                     </svg>
                     {locale === 'fr' ? 'Galerie' : 'Gallery'}
                   </button>
-                  
+
                   <label className="h-8 px-3 text-xs text-gray-500 bg-white border border-gray-200 hover:border-gray-300 rounded-lg flex items-center gap-1.5 cursor-pointer transition-all">
                     <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                       <path d="M12 4v16m8-8H4" />
                     </svg>
                     {locale === 'fr' ? 'Importer' : 'Upload'}
-                    <input 
-                      type="file" 
-                      accept="image/*" 
-                      className="hidden" 
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
                       onChange={(e) => {
                         if (e.target.files?.[0]) {
                           const file = e.target.files[0];
@@ -2672,7 +2677,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                           };
                           reader.readAsDataURL(file);
                         }
-                      }} 
+                      }}
                     />
                   </label>
                 </div>
@@ -2691,17 +2696,17 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                 <span className="text-xs text-gray-500">{statusMessage}</span>
               </div>
             )}
-            
-              <button
-                onClick={() => handleGenerate()}
-                disabled={status !== 'idle' || !brief.trim() || uploadedImages.length === 0}
+
+            <button
+              onClick={() => handleGenerate()}
+              disabled={status !== 'idle' || !brief.trim() || uploadedImages.length === 0}
               className="w-full group bg-gray-900 text-white py-4 font-medium disabled:opacity-30 disabled:cursor-not-allowed transition-all hover:bg-black flex items-center justify-center gap-3"
             >
               {status === 'preparing' || status === 'running' ? (
                 <>
                   <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                   </svg>
                   <span>{locale === 'fr' ? 'Génération en cours...' : 'Generating...'}</span>
                 </>
@@ -2714,8 +2719,8 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                   </svg>
                 </>
               )}
-              </button>
-            
+            </button>
+
             {/* Validation hints */}
             {(uploadedImages.length === 0 || !brief.trim()) && (
               <div className="flex justify-center gap-4 mt-3">
@@ -2723,26 +2728,26 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                 {uploadedImages.length === 0 && <span className="text-xs text-amber-600">⚠ Image requise</span>}
               </div>
             )}
-            </div>
           </div>
+        </div>
 
         {/* ═══════════════════════════════════════════════════════════════════════════
             RESULTS SECTION
             ═══════════════════════════════════════════════════════════════════════════ */}
-        
+
         {/* Loading State - Enhanced with brand colors */}
         {(status === 'preparing' || status === 'running') && (
           <div className="mb-8">
             {/* Status header */}
             <div className="flex items-center gap-3 mb-4">
               <div className="relative">
-                <div 
+                <div
                   className="w-10 h-10 rounded-xl flex items-center justify-center"
                   style={{ backgroundColor: brandData?.colors?.[0] || '#3B82F6' }}
                 >
                   <svg className="w-5 h-5 text-white animate-spin" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                   </svg>
                 </div>
                 <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-white animate-pulse" />
@@ -2756,7 +2761,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                 </p>
               </div>
             </div>
-            
+
             {/* Single skeleton card with brand gradient */}
             <div className="max-w-md mx-auto w-full">
               {(() => {
@@ -2769,20 +2774,20 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                   '3:2': 'aspect-[3/2]',
                 };
                 const aspectClass = aspectClasses[aspectRatio] || 'aspect-square';
-                
+
                 return (
-                  <div 
+                  <div
                     className={`${aspectClass} rounded-xl relative overflow-hidden border border-gray-200`}
-                    style={{ 
-                      background: `linear-gradient(135deg, ${brandData?.colors?.[0] || '#f3f4f6'}15, ${brandData?.colors?.[1] || '#e5e7eb'}25)` 
+                    style={{
+                      background: `linear-gradient(135deg, ${brandData?.colors?.[0] || '#f3f4f6'}15, ${brandData?.colors?.[1] || '#e5e7eb'}25)`
                     }}
                   >
                     {/* Shimmer effect */}
-                    <div 
-                      className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent" 
-                      style={{ animation: 'shimmer 2s infinite' }} 
+                    <div
+                      className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent"
+                      style={{ animation: 'shimmer 2s infinite' }}
                     />
-                    
+
                     {/* Content preview */}
                     <div className="absolute inset-0 flex flex-col items-center justify-center p-6">
                       {/* Brand logo preview if available */}
@@ -2791,18 +2796,18 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                           <img src={brandData.logo} className="w-full h-full object-contain" alt="" />
                         </div>
                       )}
-                      
+
                       {/* Skeleton lines */}
                       <div className="space-y-2 w-full max-w-[60%]">
                         <div className="h-3 bg-gray-200/50 rounded-full animate-pulse" />
                         <div className="h-3 bg-gray-200/50 rounded-full w-3/4 mx-auto animate-pulse" style={{ animationDelay: '0.2s' }} />
                       </div>
-                      
+
                       {/* Progress indicator */}
                       <div className="mt-6 flex items-center gap-2">
                         <div className="flex gap-1">
                           {[0, 1, 2].map((dot) => (
-                            <div 
+                            <div
                               key={dot}
                               className="w-1.5 h-1.5 rounded-full bg-gray-400 animate-bounce"
                               style={{ animationDelay: `${dot * 0.2}s` }}
@@ -2814,14 +2819,14 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                         </span>
                       </div>
                     </div>
-                    
+
                     {/* Color bar at bottom using brand colors */}
                     <div className="absolute bottom-0 left-0 right-0 h-1 flex">
                       {(brandData?.colors || ['#3B82F6', '#8B5CF6', '#EC4899']).slice(0, 4).map((color: string, idx: number) => (
-                        <div 
-                          key={idx} 
-                          className="flex-1 animate-pulse" 
-                          style={{ backgroundColor: color, animationDelay: `${idx * 0.3}s` }} 
+                        <div
+                          key={idx}
+                          className="flex-1 animate-pulse"
+                          style={{ backgroundColor: color, animationDelay: `${idx * 0.3}s` }}
                         />
                       ))}
                     </div>
@@ -2829,12 +2834,12 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                 );
               })()}
             </div>
-            
+
             {/* Fun fact during loading */}
             <div className="mt-4 text-center">
               <p className="text-xs text-gray-400 italic">
-                💡 {locale === 'fr' 
-                  ? '1 crédit = 1 visuel unique créé par l\'IA' 
+                💡 {locale === 'fr'
+                  ? '1 crédit = 1 visuel unique créé par l\'IA'
                   : '1 credit = 1 unique AI-generated visual'}
               </p>
             </div>
@@ -2867,89 +2872,89 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
               // Determine dominant ratio from the images themselves
               const imageRatios = generatedImages.map(img => img.aspectRatio || '1:1');
               const dominantRatio = imageRatios[0] || '1:1'; // Use first image's ratio
-              
+
               // Grid layout based on dominant ratio
-              const gridClass = 
-                dominantRatio === '9:16' ? 'grid-cols-2 sm:grid-cols-3' : 
-                dominantRatio === '16:9' || dominantRatio === '21:9' ? 'grid-cols-1' : 
-                'grid-cols-1 sm:grid-cols-2';
-              
+              const gridClass =
+                dominantRatio === '9:16' ? 'grid-cols-2 sm:grid-cols-3' :
+                  dominantRatio === '16:9' || dominantRatio === '21:9' ? 'grid-cols-1' :
+                    'grid-cols-1 sm:grid-cols-2';
+
               return (
                 <div className={`grid gap-4 ${gridClass}`}>
-              {generatedImages.map((img) => {
-                // Map aspect ratio to CSS class
-                const aspectClasses: Record<string, string> = {
-                  '1:1': 'aspect-square',
-                  '4:5': 'aspect-[4/5]',
-                  '9:16': 'aspect-[9/16]',
-                  '16:9': 'aspect-[16/9]',
-                  '3:2': 'aspect-[3/2]',
-                  '21:9': 'aspect-[21/9]',
-                };
-                const aspectClass = aspectClasses[img.aspectRatio || '1:1'] || 'aspect-square';
-                
-                return (
-              <div
-                key={img.id}
-                onClick={() => setLightboxImage(img)}
-                  className={`bg-gray-100 overflow-hidden relative group cursor-pointer border border-gray-200 hover:border-gray-400 transition-all hover:shadow-xl ${aspectClass}`}
-              >
-                <img src={img.url} className="w-full h-full object-cover" />
-                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all flex items-center justify-center gap-3 opacity-0 group-hover:opacity-100">
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setLightboxImage(img);
-                    }}
-                      className="w-11 h-11 bg-white text-gray-900 flex items-center justify-center hover:bg-gray-100 transition-colors shadow-lg"
-                    title={locale === 'fr' ? 'Voir' : 'View'}
-                  >
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                        <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
-                      </svg>
-                  </button>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setEditingImage(img.url);
-                      setEditPrompt('');
-                    }}
-                      className="w-11 h-11 bg-white text-gray-900 flex items-center justify-center hover:bg-gray-100 transition-colors shadow-lg"
-                    title={locale === 'fr' ? 'Modifier' : 'Edit'}
-                  >
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                        <path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                      </svg>
-                  </button>
-                  <button
-                    onClick={async (e) => {
-                      e.stopPropagation();
-                      try {
-                        const response = await fetch(img.url);
-                        const blob = await response.blob();
-                        const blobUrl = window.URL.createObjectURL(blob);
-                        const link = document.createElement('a');
-                        link.href = blobUrl;
-                          link.download = `palette-${Date.now()}.png`;
-                        document.body.appendChild(link);
-                        link.click();
-                        document.body.removeChild(link);
-                      } catch (err) {
-                        window.open(img.url, '_blank');
-                      }
-                    }}
-                      className="w-11 h-11 bg-white text-gray-900 flex items-center justify-center hover:bg-gray-100 transition-colors shadow-lg"
-                    title={locale === 'fr' ? 'Télécharger' : 'Download'}
-                  >
-                      <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                        <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                      </svg>
-                  </button>
+                  {generatedImages.map((img) => {
+                    // Map aspect ratio to CSS class
+                    const aspectClasses: Record<string, string> = {
+                      '1:1': 'aspect-square',
+                      '4:5': 'aspect-[4/5]',
+                      '9:16': 'aspect-[9/16]',
+                      '16:9': 'aspect-[16/9]',
+                      '3:2': 'aspect-[3/2]',
+                      '21:9': 'aspect-[21/9]',
+                    };
+                    const aspectClass = aspectClasses[img.aspectRatio || '1:1'] || 'aspect-square';
+
+                    return (
+                      <div
+                        key={img.id}
+                        onClick={() => setLightboxImage(img)}
+                        className={`bg-gray-100 overflow-hidden relative group cursor-pointer border border-gray-200 hover:border-gray-400 transition-all hover:shadow-xl ${aspectClass}`}
+                      >
+                        <img src={img.url} className="w-full h-full object-cover" />
+                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all flex items-center justify-center gap-3 opacity-0 group-hover:opacity-100">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setLightboxImage(img);
+                            }}
+                            className="w-11 h-11 bg-white text-gray-900 flex items-center justify-center hover:bg-gray-100 transition-colors shadow-lg"
+                            title={locale === 'fr' ? 'Voir' : 'View'}
+                          >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                              <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
+                            </svg>
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setEditingImage(img.url);
+                              setEditPrompt('');
+                            }}
+                            className="w-11 h-11 bg-white text-gray-900 flex items-center justify-center hover:bg-gray-100 transition-colors shadow-lg"
+                            title={locale === 'fr' ? 'Modifier' : 'Edit'}
+                          >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                              <path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                            </svg>
+                          </button>
+                          <button
+                            onClick={async (e) => {
+                              e.stopPropagation();
+                              try {
+                                const response = await fetch(img.url);
+                                const blob = await response.blob();
+                                const blobUrl = window.URL.createObjectURL(blob);
+                                const link = document.createElement('a');
+                                link.href = blobUrl;
+                                link.download = `palette-${Date.now()}.png`;
+                                document.body.appendChild(link);
+                                link.click();
+                                document.body.removeChild(link);
+                              } catch (err) {
+                                window.open(img.url, '_blank');
+                              }
+                            }}
+                            className="w-11 h-11 bg-white text-gray-900 flex items-center justify-center hover:bg-gray-100 transition-colors shadow-lg"
+                            title={locale === 'fr' ? 'Télécharger' : 'Download'}
+                          >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                              <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                            </svg>
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
-              </div>
-                );
-              })}
-            </div>
               );
             })()}
           </div>
@@ -2958,10 +2963,10 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
         {/* Upgrade Inline Card - shows when credits are low */}
         {generatedImages.length > 0 && status === 'idle' && lastCreditsRemaining !== null && (
           <div className="mb-8">
-            <UpgradeInline 
-              creditsRemaining={lastCreditsRemaining} 
-              plan={creditsInfo?.plan || 'free'} 
-              locale={locale} 
+            <UpgradeInline
+              creditsRemaining={lastCreditsRemaining}
+              plan={creditsInfo?.plan || 'free'}
+              locale={locale}
             />
           </div>
         )}
@@ -2999,26 +3004,24 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
         {toasts.map((toast) => (
           <div
             key={toast.id}
-            className={`pointer-events-auto px-4 py-3 border flex items-center gap-3 bg-white animate-slide-in-right ${
-              toast.type === 'error' ? 'border-red-200 text-red-600' : toast.type === 'success' ? 'border-blue-200' : 'border-gray-200'
-            }`}
+            className={`pointer-events-auto px-4 py-3 border flex items-center gap-3 bg-white animate-slide-in-right ${toast.type === 'error' ? 'border-red-200 text-red-600' : toast.type === 'success' ? 'border-blue-200' : 'border-gray-200'
+              }`}
           >
-            <div className={`w-2 h-2 rounded-full ${
-              toast.type === 'success' ? 'bg-blue-500' : toast.type === 'error' ? 'bg-red-500' : 'bg-gray-400'
-            }`} />
+            <div className={`w-2 h-2 rounded-full ${toast.type === 'success' ? 'bg-blue-500' : toast.type === 'error' ? 'bg-red-500' : 'bg-gray-400'
+              }`} />
             <span className="text-sm text-gray-900">{toast.message}</span>
           </div>
         ))}
       </div>
 
       {/* Style Gallery Modal */}
-      <StyleGallery 
-        isOpen={showStyleGallery} 
+      <StyleGallery
+        isOpen={showStyleGallery}
         onClose={() => setShowStyleGallery(false)}
         onSelect={(url: string) => {
           // Convert relative URL to absolute URL for Fal API
-          const absoluteUrl = url.startsWith('/') 
-            ? `${window.location.origin}${url}` 
+          const absoluteUrl = url.startsWith('/')
+            ? `${window.location.origin}${url}`
             : url;
           console.log('🎨 Style ref selected:', absoluteUrl);
           setStyleRefImages(prev => [{ url: absoluteUrl }, ...prev].slice(0, 3));
@@ -3040,14 +3043,14 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                 </div>
                 <h3 className="text-xl font-semibold">Sources visuelles</h3>
               </div>
-            <button
-              onClick={() => setShowSourceManager(false)}
+              <button
+                onClick={() => setShowSourceManager(false)}
                 className="w-8 h-8 border border-gray-200 flex items-center justify-center text-gray-400 hover:text-gray-900 hover:border-gray-400 transition-colors"
-            >
+              >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                   <path d="M6 18L18 6M6 6l12 12" />
                 </svg>
-            </button>
+              </button>
             </div>
 
             {/* Tabs */}
@@ -3057,18 +3060,17 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                 { id: 'upload', label: 'Importer' },
                 { id: 'url', label: 'URL externe' },
               ].map((tab) => (
-              <button
+                <button
                   key={tab.id}
                   onClick={() => setSourceTab(tab.id as 'library' | 'upload' | 'url')}
-                  className={`py-3 text-sm font-medium transition-colors relative ${
-                    sourceTab === tab.id ? 'text-gray-900' : 'text-gray-400 hover:text-gray-600'
-                  }`}
+                  className={`py-3 text-sm font-medium transition-colors relative ${sourceTab === tab.id ? 'text-gray-900' : 'text-gray-400 hover:text-gray-600'
+                    }`}
                 >
                   {tab.label}
                   {sourceTab === tab.id && (
                     <div className="absolute bottom-0 left-0 right-0 h-px bg-gray-900" />
                   )}
-              </button>
+                </button>
               ))}
             </div>
 
@@ -3091,15 +3093,13 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                             setUploadedImages((prev) => [...prev, img]);
                           }
                         }}
-                        className={`aspect-square overflow-hidden relative cursor-pointer group border-2 transition-all ${
-                          isSelected ? 'border-gray-900' : 'border-transparent hover:border-gray-300'
-                        }`}
+                        className={`aspect-square overflow-hidden relative cursor-pointer group border-2 transition-all ${isSelected ? 'border-gray-900' : 'border-transparent hover:border-gray-300'
+                          }`}
                       >
                         <img src={img} className="w-full h-full object-cover" />
                         <div
-                          className={`absolute inset-0 bg-black/30 transition-opacity flex items-center justify-center ${
-                            isSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
-                          }`}
+                          className={`absolute inset-0 bg-black/30 transition-opacity flex items-center justify-center ${isSelected ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+                            }`}
                         >
                           <div className={`w-6 h-6 flex items-center justify-center ${isSelected ? 'bg-gray-900 text-white' : 'bg-white text-gray-400'}`}>
                             {isSelected ? '✓' : ''}
@@ -3259,7 +3259,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                         if (brandData.logo && !editAdditionalImages.includes(brandData.logo)) {
                           setEditAdditionalImages(prev => [brandData.logo, ...prev].slice(0, 3));
                         }
-                        setEditPrompt(locale === 'fr' 
+                        setEditPrompt(locale === 'fr'
                           ? 'Remplace le logo actuel par le logo officiel fourni. Reproduis-le exactement comme dans l\'image de référence, sans le modifier ni le styliser.'
                           : 'Replace the current logo with the official logo provided. Reproduce it exactly as shown in the reference image, without modifying or stylizing it.'
                         );
@@ -3279,11 +3279,11 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                   <span className="text-[10px] text-gray-400">{editAdditionalImages.length}/3</span>
                 </div>
                 <p className="text-[10px] text-gray-400 mb-2">
-                  {locale === 'fr' 
+                  {locale === 'fr'
                     ? '💡 Ajoutez des images pour guider la modification (ex: nouveau logo, produit, texture...)'
                     : '💡 Add images to guide the edit (e.g., new logo, product, texture...)'}
                 </p>
-                
+
                 <div className="grid grid-cols-4 gap-2">
                   {editAdditionalImages.map((img, i) => (
                     <div key={i} className="relative aspect-square group rounded overflow-hidden border border-gray-200">
@@ -3294,9 +3294,9 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                       >×</button>
                     </div>
                   ))}
-                  
+
                   {editAdditionalImages.length < 3 && (
-                    <div 
+                    <div
                       className="aspect-square border-2 border-dashed border-gray-200 rounded flex flex-col items-center justify-center cursor-pointer hover:border-gray-400 hover:bg-gray-50 transition-all"
                       onClick={() => document.getElementById('edit-image-upload')?.click()}
                     >
@@ -3304,12 +3304,12 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                     </div>
                   )}
                 </div>
-                <input 
-                  id="edit-image-upload" 
-                  type="file" 
-                  multiple 
-                  accept="image/*" 
-                  className="hidden" 
+                <input
+                  id="edit-image-upload"
+                  type="file"
+                  multiple
+                  accept="image/*"
+                  className="hidden"
                   onChange={(e) => {
                     if (e.target.files) {
                       Array.from(e.target.files).forEach(file => {
@@ -3326,7 +3326,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                         reader.readAsDataURL(file);
                       });
                     }
-                  }} 
+                  }}
                 />
               </div>
 
@@ -3373,9 +3373,9 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
           <div className="flex flex-col md:flex-row w-full h-full" onClick={(e) => e.stopPropagation()}>
             {/* Image preview - takes most of the space */}
             <div className="flex-1 flex items-center justify-center p-4 md:p-8 overflow-hidden">
-              <img 
-                src={lightboxImage.url} 
-                alt="Full view" 
+              <img
+                src={lightboxImage.url}
+                alt="Full view"
                 className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
               />
             </div>
@@ -3454,7 +3454,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
               {/* Tips */}
               <div className="mt-auto pt-4 border-t border-white/10">
                 <p className="text-gray-500 text-xs leading-relaxed">
-                  {locale === 'fr' 
+                  {locale === 'fr'
                     ? '💡 Cliquez sur "Modifier" pour corriger une faute, remplacer un logo, ou ajuster un détail.'
                     : '💡 Click "Edit" to fix a typo, replace a logo, or adjust a detail.'
                   }
@@ -3470,70 +3470,70 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
         <>
           {/* Desktop Sidebar */}
           <div className="hidden md:block">
-            <Sidebar 
-                activeTab={activeTab} 
-                setActiveTab={setActiveTab} 
-                brandData={brandData} 
-                onEditBrand={() => {
-                  setStepBeforeBento(step);
-                  setStep('bento');
-                }} 
-                isCollapsed={isSidebarCollapsed}
-                toggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-                userBrands={userBrands}
-                selectedBrandId={selectedBrandId}
-                onSwitchBrand={switchBrand}
-                onAddBrand={() => setStep('url')}
-                onRescrape={() => {
-                  // Re-scrape current brand
-                  if (brandData?.url) {
-                    setWebsiteUrl(brandData.url);
-                    setStep('analyzing');
-                    handleAnalyzeBrandWithUrl(brandData.url);
-                  }
-                }}
-                onDeleteBrand={async (brandId) => {
-                  try {
-                    const res = await fetch('/api/brands', {
-                      method: 'DELETE',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({ brandId }),
-                    });
-                    const data = await res.json();
-                    if (data.success) {
-                      showToast(locale === 'fr' ? 'Marque supprimée' : 'Brand deleted', 'success');
-                      
-                      // Refresh brands list first
-                      await refreshBrands();
-                      
-                      // If we deleted the current brand, load another one
-                      if (brandId === selectedBrandId) {
-                        setBrandData(null);
-                        setSelectedBrandId(null);
-                        
-                        // Find another brand to load (exclude the deleted one)
-                        const remainingBrands = userBrands.filter(b => b.id !== brandId);
-                        if (remainingBrands.length > 0) {
-                          // Load the first remaining brand
-                          const nextBrand = remainingBrands[0];
-                          loadBrandById(nextBrand.id, false, true); // silent load
-                          showToast(locale === 'fr' ? `Chargement de ${nextBrand.name}...` : `Loading ${nextBrand.name}...`, 'info');
-                        } else {
-                          // No more brands - go to URL step
-                          setStep('url');
-                        }
+            <Sidebar
+              activeTab={activeTab}
+              setActiveTab={setActiveTab}
+              brandData={brandData}
+              onEditBrand={() => {
+                setStepBeforeBento(step);
+                setStep('bento');
+              }}
+              isCollapsed={isSidebarCollapsed}
+              toggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+              userBrands={userBrands}
+              selectedBrandId={selectedBrandId}
+              onSwitchBrand={switchBrand}
+              onAddBrand={() => setStep('url')}
+              onRescrape={() => {
+                // Re-scrape current brand
+                if (brandData?.url) {
+                  setWebsiteUrl(brandData.url);
+                  setStep('analyzing');
+                  handleAnalyzeBrandWithUrl(brandData.url);
+                }
+              }}
+              onDeleteBrand={async (brandId) => {
+                try {
+                  const res = await fetch('/api/brands', {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ brandId }),
+                  });
+                  const data = await res.json();
+                  if (data.success) {
+                    showToast(locale === 'fr' ? 'Marque supprimée' : 'Brand deleted', 'success');
+
+                    // Refresh brands list first
+                    await refreshBrands();
+
+                    // If we deleted the current brand, load another one
+                    if (brandId === selectedBrandId) {
+                      setBrandData(null);
+                      setSelectedBrandId(null);
+
+                      // Find another brand to load (exclude the deleted one)
+                      const remainingBrands = userBrands.filter(b => b.id !== brandId);
+                      if (remainingBrands.length > 0) {
+                        // Load the first remaining brand
+                        const nextBrand = remainingBrands[0];
+                        loadBrandById(nextBrand.id, false, true); // silent load
+                        showToast(locale === 'fr' ? `Chargement de ${nextBrand.name}...` : `Loading ${nextBrand.name}...`, 'info');
+                      } else {
+                        // No more brands - go to URL step
+                        setStep('url');
                       }
-                    } else {
-                      showToast(data.error || (locale === 'fr' ? 'Erreur' : 'Error'), 'error');
                     }
-                  } catch (err) {
-                    showToast(locale === 'fr' ? 'Erreur de suppression' : 'Delete error', 'error');
+                  } else {
+                    showToast(data.error || (locale === 'fr' ? 'Erreur' : 'Error'), 'error');
                   }
-                }}
-                creditsInfo={creditsInfo}
+                } catch (err) {
+                  showToast(locale === 'fr' ? 'Erreur de suppression' : 'Delete error', 'error');
+                }
+              }}
+              creditsInfo={creditsInfo}
             />
           </div>
-          
+
           {/* Mobile Navigation */}
           <MobileNav
             activeTab={activeTab}
@@ -3546,17 +3546,16 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
       )}
 
       <div className={`flex-1 transition-all duration-300 ease-out overflow-x-hidden ${step !== 'loading' && step !== 'url' && step !== 'analyzing' && step !== 'bento' ? (isSidebarCollapsed ? 'md:ml-[80px]' : 'md:ml-[240px]') : 'w-full'}`}>
-        <main className={`mx-auto min-h-screen flex flex-col justify-center transition-all duration-500 ${
-            step === 'bento' 
-                ? 'w-full px-4 md:px-12 py-8 max-w-[1920px]'
-                : step !== 'loading' && step !== 'url' && step !== 'analyzing' 
-                  ? 'max-w-[900px] p-6 md:p-10 pt-20 pb-24 md:pt-10 md:pb-10' // Mobile: padding for header/nav 
-                : 'max-w-[900px] p-6 md:p-10'
-        }`}>
+        <main className={`mx-auto min-h-screen flex flex-col justify-center transition-all duration-500 ${step === 'bento'
+            ? 'w-full px-4 md:px-12 py-8 max-w-[1920px]'
+            : step !== 'loading' && step !== 'url' && step !== 'analyzing'
+              ? 'max-w-[900px] p-6 md:p-10 pt-20 pb-24 md:pt-10 md:pb-10' // Mobile: padding for header/nav 
+              : 'max-w-[900px] p-6 md:p-10'
+          }`}>
           {renderContent()}
         </main>
       </div>
-      
+
       {/* Mobile Sticky Generate CTA - Only visible on mobile when in playground/create mode */}
       {step === 'playground' && activeTab === 'create' && (
         <div className="md:hidden fixed bottom-16 left-0 right-0 z-40 px-4 pb-2 bg-gradient-to-t from-[#F9F9F9] via-[#F9F9F9] to-transparent pt-4">
@@ -3568,8 +3567,8 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
             {status === 'preparing' || status === 'running' ? (
               <>
                 <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                 </svg>
                 <span className="text-sm">{locale === 'fr' ? 'Création...' : 'Creating...'}</span>
               </>
@@ -3585,9 +3584,9 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
           </button>
         </div>
       )}
-      
+
       {/* Credits Toast (subtle notification) */}
-      <CreditsToast 
+      <CreditsToast
         creditsRemaining={lastCreditsRemaining ?? 1}
         isVisible={showCreditsToast}
         locale={locale}
