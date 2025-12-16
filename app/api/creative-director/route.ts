@@ -393,10 +393,38 @@ function buildFeedbackGuidance(patterns?: FeedbackPatterns): string {
     : '';
 }
 
+// Aspect ratio descriptions for composition guidance
+const ASPECT_RATIO_GUIDANCE: Record<string, { name: string; composition: string }> = {
+  '1:1': { 
+    name: 'Square (1:1)', 
+    composition: 'Centered, balanced composition. Works well for social media feeds. Keep key elements in the center third.' 
+  },
+  '4:5': { 
+    name: 'Portrait (4:5)', 
+    composition: 'Vertical format for Instagram feed posts. Slightly taller than square - good for portraits or product showcases with text below.' 
+  },
+  '9:16': { 
+    name: 'Vertical Story/Reel (9:16)', 
+    composition: 'TALL VERTICAL format for Stories/Reels. Stack elements vertically. Logo at top, main visual in center, CTA at bottom. Leave safe zones at top/bottom edges.' 
+  },
+  '16:9': { 
+    name: 'Horizontal/Landscape (16:9)', 
+    composition: 'WIDE horizontal format for banners, LinkedIn, YouTube thumbnails. Spread elements horizontally. Text on one side, visual on the other works well.' 
+  },
+  '3:2': { 
+    name: 'Photo (3:2)', 
+    composition: 'Classic photography ratio. Slightly wider than 4:5. Good for editorial and lifestyle imagery.' 
+  },
+  '21:9': { 
+    name: 'Ultra-wide/Cinematic (21:9)', 
+    composition: 'VERY WIDE cinematic banner format. Use for website headers or dramatic panoramic compositions. Spread content across the width.' 
+  },
+};
+
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { brief, brand, templateId: requestedTemplateId, language = 'fr', feedbackPatterns } = body;
+    const { brief, brand, templateId: requestedTemplateId, language = 'fr', aspectRatio = '1:1', feedbackPatterns } = body;
 
     if (!brief || !brand) {
       return NextResponse.json(
@@ -593,6 +621,9 @@ IMPORTANT: Use each image according to its role. The order of images reflects th
     // Add template-specific style emphasis
     const templateStyleEmphasis = templateNeeds.styleEmphasis;
 
+    // Get aspect ratio guidance
+    const ratioInfo = ASPECT_RATIO_GUIDANCE[aspectRatio] || ASPECT_RATIO_GUIDANCE['1:1'];
+    
     // FORCE THE STRUCTURE REQUESTED BY USER
     // This is the exact prompt structure that works well with Gemini 3 Pro (with thinking mode)
     const buildStructuredPrompt = (variationEmphasis: string) => {
@@ -602,7 +633,7 @@ ROLE: Expert Art Director & Copywriter for a Brand Agency.
 THINK STEP BY STEP:
 1. First, analyze the brief and identify the key message
 2. Then, consider the brand identity and how to express it visually
-3. Plan the composition: where will the logo go? The headline? The visual elements?
+3. Plan the composition FOR THE SPECIFIC FORMAT: where will the logo go? The headline? The visual elements?
 4. Finally, generate the image with all elements perfectly placed
 
 TASK: Create a sophisticated social media visual based on the following brief. The goal is to create a "stopper" visual - something that immediately grabs attention in a feed.
@@ -610,6 +641,9 @@ TASK: Create a sophisticated social media visual based on the following brief. T
 BRIEF: ${brief}.
 AESTHETIC: ${aesthetic} (but interpreted with high taste).
 VIBE: ${toneVoice}.
+
+📐 FORMAT: ${ratioInfo.name}
+COMPOSITION GUIDANCE: ${ratioInfo.composition}
 
 USER-CENTRIC MINDSET (CRITICAL):
 - THE VIEWER is scrolling fast. Has 0.5 seconds to notice you.

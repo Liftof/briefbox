@@ -52,6 +52,7 @@ export async function GET(request: NextRequest) {
         createdAt: g.createdAt?.toISOString() || new Date().toISOString(),
         folderId: g.folderId,
         feedback: g.feedback,
+        aspectRatio: g.format || '1:1', // Map DB 'format' to 'aspectRatio'
       })),
       total: allUserGens.length,
       page,
@@ -86,7 +87,8 @@ export async function POST(request: NextRequest) {
         prompt: gen.prompt || null,
         templateId: gen.templateId || null,
         brandName: gen.brandName || null,
-        format: gen.format || null,
+        // Accept both 'format' and 'aspectRatio' for backwards compatibility
+        format: gen.aspectRatio || gen.format || '1:1',
         type: gen.type || 'social_post',
       };
       // Only add brandId if it's a valid number
@@ -109,6 +111,7 @@ export async function POST(request: NextRequest) {
         createdAt: g.createdAt?.toISOString() || new Date().toISOString(),
         folderId: g.folderId,
         feedback: g.feedback,
+        aspectRatio: g.format || '1:1',
       })),
     });
 
@@ -167,6 +170,7 @@ export async function PATCH(request: NextRequest) {
         createdAt: result[0].createdAt?.toISOString() || new Date().toISOString(),
         folderId: result[0].folderId,
         feedback: result[0].feedback,
+        aspectRatio: result[0].format || '1:1',
       },
     });
 

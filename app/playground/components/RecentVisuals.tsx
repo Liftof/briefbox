@@ -2,6 +2,33 @@
 
 import { Generation } from '@/lib/useGenerations';
 
+// Aspect ratio to CSS class mapping
+const getAspectClass = (ratio?: string): string => {
+  const aspectClasses: Record<string, string> = {
+    '1:1': 'aspect-square',
+    '4:5': 'aspect-[4/5]',
+    '9:16': 'aspect-[9/16]',
+    '16:9': 'aspect-[16/9]',
+    '3:2': 'aspect-[3/2]',
+    '21:9': 'aspect-[21/9]',
+  };
+  return aspectClasses[ratio || '1:1'] || 'aspect-square';
+};
+
+// Get appropriate width for thumbnail based on ratio
+const getThumbnailWidth = (ratio?: string): string => {
+  // Vertical ratios need more height (so less width to keep same area)
+  // Horizontal ratios need more width
+  switch (ratio) {
+    case '9:16': return 'w-10'; // Narrow for vertical
+    case '4:5': return 'w-14'; // Slightly narrow
+    case '16:9': return 'w-24'; // Wide for horizontal
+    case '21:9': return 'w-28'; // Very wide
+    case '3:2': return 'w-20'; // Slightly wide
+    default: return 'w-16'; // Square
+  }
+};
+
 interface RecentVisualsProps {
   generations: Generation[];
   onViewAll: () => void;
@@ -56,35 +83,40 @@ export default function RecentVisuals({
       </div>
 
       {/* Thumbnails row */}
-      <div className="flex gap-2 overflow-x-auto pb-2">
-        {recent.map((gen) => (
-          <div
-            key={gen.id}
-            className="relative flex-shrink-0 group cursor-pointer"
-            onClick={() => onImageClick?.(gen)}
-          >
-            {/* Image */}
-            <div className="w-16 h-16 rounded-lg overflow-hidden border border-gray-200 hover:border-gray-400 transition-colors">
-              <img
-                src={gen.url}
-                alt={gen.prompt || 'Generated visual'}
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
-              />
-            </div>
-
-            {/* New badge */}
-            {isNew(gen) && (
-              <div className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full border-2 border-white" />
-            )}
-
-            {/* Daily visual indicator */}
-            {gen.type === 'daily' && (
-              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent text-white text-[8px] font-medium text-center py-0.5">
-                ☀️
+      <div className="flex gap-2 overflow-x-auto pb-2 items-end">
+        {recent.map((gen) => {
+          const aspectClass = getAspectClass(gen.aspectRatio);
+          const widthClass = getThumbnailWidth(gen.aspectRatio);
+          
+          return (
+            <div
+              key={gen.id}
+              className="relative flex-shrink-0 group cursor-pointer"
+              onClick={() => onImageClick?.(gen)}
+            >
+              {/* Image with dynamic aspect ratio */}
+              <div className={`${widthClass} ${aspectClass} rounded-lg overflow-hidden border border-gray-200 hover:border-gray-400 transition-colors`}>
+                <img
+                  src={gen.url}
+                  alt={gen.prompt || 'Generated visual'}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                />
               </div>
-            )}
-          </div>
-        ))}
+
+              {/* New badge */}
+              {isNew(gen) && (
+                <div className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full border-2 border-white" />
+              )}
+
+              {/* Daily visual indicator */}
+              {gen.type === 'daily' && (
+                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent text-white text-[8px] font-medium text-center py-0.5">
+                  ☀️
+                </div>
+              )}
+            </div>
+          );
+        })}
 
         {/* "View more" card if there are more than 5 */}
         {generations.length > 5 && (

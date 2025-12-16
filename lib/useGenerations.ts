@@ -21,6 +21,7 @@ export interface Generation {
   feedback?: GenerationFeedback;
   type?: string; // 'daily' for daily batch visuals
   liked?: boolean;
+  aspectRatio?: string; // '1:1', '4:5', '9:16', '16:9', '3:2', '21:9'
 }
 
 export interface Folder {

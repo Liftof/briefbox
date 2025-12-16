@@ -1428,6 +1428,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
           prompt: `[EDIT] ${editInstruction}`,
           brandId: brandData?.id || undefined,
           brandName: brandData?.name,
+          aspectRatio: img.aspectRatio || aspectRatio, // Save the ratio used
         }));
       
       if (generationsToSave.length > 0) {
@@ -1505,6 +1506,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
             brand: targetBrand,
             templateId: targetTemplate || undefined,
             language: contentLanguage,
+            aspectRatio, // Pass the selected ratio to adapt composition
             feedbackPatterns: feedbackPatterns.likedKeywords.length > 0 || feedbackPatterns.dislikedKeywords.length > 0 
               ? feedbackPatterns 
               : undefined
@@ -1725,6 +1727,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
           templateId: selectedTemplate || undefined,
           brandId: brandData?.id || undefined,
           brandName: brandData?.name,
+          aspectRatio: img.aspectRatio || aspectRatio, // Save the ratio used
         }));
       
       if (generationsToSave.length > 0) {
@@ -2437,20 +2440,13 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                       <button
                         key={`insight-${i}`}
                         onClick={() => {
-                        // BUILD A COMPLETE BRIEF with context
-                        const formatHint = aspectRatio === '9:16' ? 'Story/Reel vertical' : 
-                                          aspectRatio === '16:9' ? 'Bannière horizontale' : 
-                                          aspectRatio === '4:5' ? 'Post Instagram' : 'Post carré';
+                        // SIMPLE BRIEF: Just the hook text + subtitle
+                        // Format/ratio is handled separately by the selector and API
+                        const simpleBrief = insight.consequence 
+                          ? `${hookText}\n\n${insight.consequence}`
+                          : hookText;
                         
-                        const completeBrief = `Créez un visuel ${formatHint} pour ${brandData.name || 'la marque'}.
-
-Message principal : "${hookText}"
-${insight.consequence ? `\nSous-titre suggéré : "${insight.consequence}"` : ''}
-
-Style : Professionnel, moderne, avec le logo visible en haut.
-Couleurs : Utiliser la palette de la marque.`;
-                        
-                        setBrief(completeBrief);
+                        setBrief(simpleBrief);
                         setSelectedTemplate(insight.type === 'trend' ? 'announcement' : 'stat');
                       }}
                       className={`flex-shrink-0 px-4 py-3 border transition-all text-left max-w-[300px] ${style.bg} ${style.border} ${style.hover}`}
@@ -2898,12 +2894,20 @@ Couleurs : Utiliser la palette de la marque.`;
               💡 Une faute d'orthographe, un logo à corriger ou un détail à changer ? Cliquez sur ✏️ pour modifier n'importe quelle image.
             </p>
 
-            {/* Grid adapts based on aspect ratio - vertical ratios get more width */}
-            <div className={`grid gap-4 ${
-              aspectRatio === '9:16' ? 'grid-cols-2 sm:grid-cols-3' : 
-              aspectRatio === '16:9' || aspectRatio === '21:9' ? 'grid-cols-1' : 
-              'grid-cols-1 sm:grid-cols-2'
-            }`}>
+            {/* Grid adapts based on the actual images' aspect ratios */}
+            {(() => {
+              // Determine dominant ratio from the images themselves
+              const imageRatios = generatedImages.map(img => img.aspectRatio || '1:1');
+              const dominantRatio = imageRatios[0] || '1:1'; // Use first image's ratio
+              
+              // Grid layout based on dominant ratio
+              const gridClass = 
+                dominantRatio === '9:16' ? 'grid-cols-2 sm:grid-cols-3' : 
+                dominantRatio === '16:9' || dominantRatio === '21:9' ? 'grid-cols-1' : 
+                'grid-cols-1 sm:grid-cols-2';
+              
+              return (
+                <div className={`grid gap-4 ${gridClass}`}>
               {generatedImages.map((img) => {
                 // Map aspect ratio to CSS class
                 const aspectClasses: Record<string, string> = {
@@ -2978,6 +2982,8 @@ Couleurs : Utiliser la palette de la marque.`;
                 );
               })}
             </div>
+              );
+            })()}
           </div>
         )}
 
@@ -3010,7 +3016,7 @@ Couleurs : Utiliser la palette de la marque.`;
             setLightboxImage({
               id: gen.id,
               url: gen.url,
-              aspectRatio: '1:1', // Default, we don't store this in generations
+              aspectRatio: gen.aspectRatio || '1:1', // Use stored ratio
             });
           }}
           locale={locale}
