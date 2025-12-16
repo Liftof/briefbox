@@ -5,7 +5,6 @@ import { useSearchParams } from 'next/navigation';
 import Sidebar from './components/Sidebar';
 import BentoGrid from './components/BentoGrid';
 import StyleGallery from './components/StyleGallery';
-import AssetManager from './components/AssetManager';
 import CalendarView from './components/CalendarView';
 import ProjectsView, { addGenerations, loadFeedbackPatterns } from './components/ProjectsView';
 import RecentVisuals from './components/RecentVisuals';
@@ -1107,6 +1106,10 @@ function PlaygroundContent() {
           addImagesToState([event.target.result], label);
           showToast('Image ajoutée', 'success');
         }
+      };
+      reader.onerror = () => {
+        console.error(`Failed to read file: ${file.name}`);
+        showToast(locale === 'fr' ? 'Erreur lors du chargement de l\'image' : 'Error loading image', 'error');
       };
       reader.readAsDataURL(file);
     });
@@ -2573,13 +2576,18 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                       className="hidden" 
                       onChange={(e) => {
                         if (e.target.files?.[0]) {
+                          const file = e.target.files[0];
                           const reader = new FileReader();
                           reader.onload = (ev) => {
                             if (typeof ev.target?.result === 'string') {
                               setStyleRefImages(prev => [...prev, { url: ev.target!.result as string }].slice(0, 3));
                             }
                           };
-                          reader.readAsDataURL(e.target.files[0]);
+                          reader.onerror = () => {
+                            console.error(`Failed to read style ref file: ${file.name}`);
+                            showToast(locale === 'fr' ? 'Erreur lors du chargement de l\'image' : 'Error loading image', 'error');
+                          };
+                          reader.readAsDataURL(file);
                         }
                       }} 
                     />
@@ -3022,9 +3030,9 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
         onClose={() => setShowStyleGallery(false)}
         multiSelect={true}
         selectedStyles={styleRefImages}
-        onMultiSelect={(styles) => {
+        onMultiSelect={(styles: Array<{ url: string; note?: string }>) => {
           // Convert relative URLs to absolute URLs for Fal API
-          const absoluteStyles = styles.map(s => ({
+          const absoluteStyles = styles.map((s: { url: string; note?: string }) => ({
             ...s,
             url: s.url.startsWith('/') ? `${window.location.origin}${s.url}` : s.url
           }));
@@ -3032,7 +3040,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
           setStyleRefImages(absoluteStyles.slice(0, 3));
           showToast(locale === 'fr' ? 'Styles mis à jour' : 'Styles updated', 'success');
         }}
-        onSelect={(url) => {
+        onSelect={(url: string) => {
           // Fallback for single select mode
           const absoluteUrl = url.startsWith('/') 
             ? `${window.location.origin}${url}` 
@@ -3044,53 +3052,8 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
         locale={locale as 'fr' | 'en'}
       />
 
-      {/* Asset Manager Modal */}
-      <AssetManager
-        isOpen={showAssetManager}
-        onClose={() => setShowAssetManager(false)}
-        images={brandData?.images || []}
-        labeledImages={brandData?.labeledImages || []}
-        selectedImages={uploadedImages}
-        logoUrl={brandData?.logo}
-        onSelectionChange={(selected) => {
-          setUploadedImages(selected);
-          showToast(locale === 'fr' ? `${selected.length} visuels sélectionnés` : `${selected.length} visuals selected`, 'success');
-        }}
-        onLabelChange={(imageUrl, newLabel) => {
-          // Update labeledImages in brandData
-          if (brandData) {
-            const newLabeledImages = [...(brandData.labeledImages || [])];
-            const existingIndex = newLabeledImages.findIndex((li: any) => li.url === imageUrl);
-            if (existingIndex >= 0) {
-              newLabeledImages[existingIndex] = { url: imageUrl, category: newLabel };
-            } else {
-              newLabeledImages.push({ url: imageUrl, category: newLabel });
-            }
-            setBrandData({ ...brandData, labeledImages: newLabeledImages });
-          }
-        }}
-        onImport={(files) => {
-          // Add new files to brandData.images and brandData.labeledImages
-          if (brandData) {
-            const newImages = [...(brandData.images || []), ...files.map(f => f.url)];
-            const newLabeledImages = [...(brandData.labeledImages || []), ...files.map(f => ({ url: f.url, category: f.tag }))];
-            setBrandData({ ...brandData, images: newImages, labeledImages: newLabeledImages });
-            showToast(locale === 'fr' ? `${files.length} image(s) importée(s)` : `${files.length} image(s) imported`, 'success');
-          }
-        }}
-        onDelete={(imageUrl) => {
-          // Remove from brandData
-          if (brandData) {
-            const newImages = (brandData.images || []).filter((img: string) => img !== imageUrl);
-            const newLabeledImages = (brandData.labeledImages || []).filter((li: any) => li.url !== imageUrl);
-            setBrandData({ ...brandData, images: newImages, labeledImages: newLabeledImages });
-            // Also remove from selection
-            setUploadedImages(prev => prev.filter(img => img !== imageUrl));
-            showToast(locale === 'fr' ? 'Image supprimée' : 'Image deleted', 'info');
-          }
-        }}
-        locale={locale as 'fr' | 'en'}
-      />
+      {/* Asset Manager Modal - Temporarily disabled (component was removed) */}
+      {/* <AssetManager ... /> */}
 
       {showSourceManager && (
         <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in">
@@ -3381,6 +3344,10 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                           if (typeof ev.target?.result === 'string') {
                             setEditAdditionalImages(prev => [...prev, ev.target!.result as string].slice(0, 3));
                           }
+                        };
+                        reader.onerror = () => {
+                          console.error(`Failed to read edit image file: ${file.name}`);
+                          showToast(locale === 'fr' ? 'Erreur lors du chargement de l\'image' : 'Error loading image', 'error');
                         };
                         reader.readAsDataURL(file);
                       });

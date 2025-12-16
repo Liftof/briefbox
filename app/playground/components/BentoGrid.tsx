@@ -101,14 +101,21 @@ function ImportPopup({ isOpen, onClose, onImport, forReferences = false, locale 
   const handleImport = async () => {
     const filesWithUrls = await Promise.all(
       pendingFiles.map(async ({ file, tag }) => {
-        return new Promise<{ url: string; tag: string }>((resolve) => {
+        return new Promise<{ url: string; tag: string }>((resolve, reject) => {
           const reader = new FileReader();
           reader.onload = () => resolve({ url: reader.result as string, tag });
+          reader.onerror = () => reject(new Error(`Failed to read file: ${file.name}`));
           reader.readAsDataURL(file);
         });
       })
-    );
-    onImport(filesWithUrls);
+    ).catch(error => {
+      console.error('Error reading files:', error);
+      return []; // Return empty array on error to prevent UI freeze
+    });
+    
+    if (filesWithUrls.length > 0) {
+      onImport(filesWithUrls);
+    }
     pendingFiles.forEach(f => URL.revokeObjectURL(f.preview));
     setPendingFiles([]);
     onClose();
