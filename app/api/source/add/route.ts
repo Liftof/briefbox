@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { firecrawlScrape } from '@/lib/firecrawl';
 
 export async function POST(request: Request) {
   try {
@@ -10,31 +11,20 @@ export async function POST(request: Request) {
 
     console.log('🌐 Scraping additional source:', url);
 
-    // Use Firecrawl V2 to get content - faster with caching
-    const firecrawlResponse = await fetch('https://api.firecrawl.dev/v2/scrape', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.FIRECRAWL_API_KEY}`
-      },
-      body: JSON.stringify({
-        url,
-        formats: ["markdown", "screenshot"],
-        // V2 improvements
-        maxAge: 86400, // 1 day cache
-        blockAds: true,
-        skipTlsVerification: true
-      })
+    // Use centralized Firecrawl helper with retry on network errors
+    const scrapeResult = await firecrawlScrape(url, {
+      formats: ['markdown', 'screenshot'],
+      timeout: 30000,
+      retries: 1, // 1 retry on network/5xx errors
     });
 
-    if (!firecrawlResponse.ok) {
-        throw new Error(`Firecrawl failed: ${await firecrawlResponse.text()}`);
+    if (!scrapeResult.success) {
+      throw new Error(`Firecrawl failed: ${scrapeResult.error}`);
     }
 
-    const scrapeData = await firecrawlResponse.json();
-    const markdown = scrapeData.data?.markdown || '';
-    const metadata = scrapeData.data?.metadata || {};
-    const screenshot = scrapeData.data?.screenshot;
+    const markdown = scrapeResult.markdown;
+    const metadata = scrapeResult.metadata;
+    const screenshot = scrapeResult.screenshot;
 
     // Extract Images from Markdown
     const extractImagesFromMarkdown = (md: string) => {

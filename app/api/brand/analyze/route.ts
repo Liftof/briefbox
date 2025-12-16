@@ -6,6 +6,7 @@ import { rateLimitByUser } from '@/lib/rateLimit';
 import { db } from '@/db';
 import { brands } from '@/db/schema';
 import { eq, and, like } from 'drizzle-orm';
+import { firecrawlScrape, firecrawlMap, firecrawlExtract, firecrawlSearch, firecrawlBatchScrape } from '@/lib/firecrawl';
 
 // Content nugget types for editorial extraction
 interface ContentNugget {
@@ -167,8 +168,7 @@ function isRelevantInsight(text: string): boolean {
 }
 
 // Helper: Use Firecrawl Extract v2 for structured data with web search enrichment
-// Docs: https://docs.firecrawl.dev/features/extract
-// UPGRADED TO V2: Better extraction, JSON format, caching
+// NOW USES CENTRALIZED HELPER with polling support for async jobs
 async function extractWithFirecrawl(
   url: string,
   industry: string,
@@ -178,26 +178,14 @@ async function extractWithFirecrawl(
   trends: { trend: string; relevance: string; source?: string }[];
   competitorInsights: string[];
 }> {
-  const FIRECRAWL_API_KEY = process.env.FIRECRAWL_API_KEY;
-  
-  if (!FIRECRAWL_API_KEY) {
-    console.warn('⚠️ FIRECRAWL_API_KEY not set, skipping Extract');
-    return { painPoints: [], trends: [], competitorInsights: [] };
-  }
+  const emptyResult = { painPoints: [], trends: [], competitorInsights: [] };
 
-  try {
-    console.log(`🔥 Firecrawl Extract v2 with web search for: ${industry}`);
-    
-    // V2 Extract API - uses prompt + schema directly (not formats array)
-    const response = await fetch('https://api.firecrawl.dev/v2/extract', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${FIRECRAWL_API_KEY}`
-      },
-      body: JSON.stringify({
-        urls: [url],
-        prompt: `For a ${industry} company called "${brandName}", extract insights about their TARGET CUSTOMERS (not about the ${industry} industry itself!):
+  const result = await firecrawlExtract<{
+    painPoints: { problem: string; impact: string }[];
+    trends: { trend: string; relevance: string }[];
+    competitorInsights: string[];
+  }>([url], {
+    prompt: `For a ${industry} company called "${brandName}", extract insights about their TARGET CUSTOMERS (not about the ${industry} industry itself!):
 
 1. Pain points the TARGET USERS face daily (with specific impact/cost on THEM)
    - Example: "73% of marketing professionals juggle 5+ tools daily" ✅
@@ -210,78 +198,58 @@ async function extractWithFirecrawl(
 3. What competitors fail to solve for these users
 
 Focus on stats that would make the TARGET CUSTOMER stop scrolling. Be specific with percentages and time/money impact.`,
-        // V2 Extract uses schema directly, not formats array
-        schema: {
-          type: 'object',
-          properties: {
-            painPoints: {
-              type: 'array',
-              items: {
-                type: 'object',
-                properties: {
-                  problem: { type: 'string', description: 'A specific struggle the TARGET USER faces daily' },
-                  impact: { type: 'string', description: 'Quantified impact on THEM (time/money/stress lost)' }
-                },
-                required: ['problem', 'impact']
-              }
+    schema: {
+      type: 'object',
+      properties: {
+        painPoints: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              problem: { type: 'string', description: 'A specific struggle the TARGET USER faces daily' },
+              impact: { type: 'string', description: 'Quantified impact on THEM (time/money/stress lost)' }
             },
-            trends: {
-              type: 'array',
-              items: {
-                type: 'object',
-                properties: {
-                  trend: { type: 'string', description: 'A trend affecting the TARGET USERS work/life' },
-                  relevance: { type: 'string', description: 'Why it matters for THEM (not for the industry)' }
-                },
-                required: ['trend', 'relevance']
-              }
-            },
-            competitorInsights: {
-              type: 'array',
-              items: { type: 'string' },
-              description: 'What competitors fail to deliver for the target users'
-            }
-          },
-          required: ['painPoints', 'trends', 'competitorInsights']
+            required: ['problem', 'impact']
+          }
         },
-        enableWebSearch: true // KEY: This expands search beyond the URL!
-      })
-    });
+        trends: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              trend: { type: 'string', description: 'A trend affecting the TARGET USERS work/life' },
+              relevance: { type: 'string', description: 'Why it matters for THEM (not for the industry)' }
+            },
+            required: ['trend', 'relevance']
+          }
+        },
+        competitorInsights: {
+          type: 'array',
+          items: { type: 'string' },
+          description: 'What competitors fail to deliver for the target users'
+        }
+      },
+      required: ['painPoints', 'trends', 'competitorInsights']
+    },
+    enableWebSearch: true,
+    pollTimeout: 15000, // Wait up to 15s for async jobs
+  });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.warn('Firecrawl Extract API error:', errorText);
-      return { painPoints: [], trends: [], competitorInsights: [] };
-    }
-
-    const data = await response.json();
-    
-    // Handle async job (Extract can return a job ID)
-    if (data.jobId || data.id) {
-      console.log(`🔄 Firecrawl Extract job started: ${data.jobId || data.id}`);
-      // For now, we won't wait - return empty and let the other enrichments handle it
-      // In V2, we could poll for completion
-      return { painPoints: [], trends: [], competitorInsights: [] };
-    }
-
-    if (data.success && data.data) {
-      console.log(`✅ Firecrawl Extract success:`, {
-        painPoints: data.data.painPoints?.length || 0,
-        trends: data.data.trends?.length || 0,
-        competitorInsights: data.data.competitorInsights?.length || 0
-      });
-      return {
-        painPoints: data.data.painPoints || [],
-        trends: data.data.trends || [],
-        competitorInsights: data.data.competitorInsights || []
-      };
-    }
-
-    return { painPoints: [], trends: [], competitorInsights: [] };
-  } catch (error) {
-    console.error('Firecrawl Extract error:', error);
-    return { painPoints: [], trends: [], competitorInsights: [] };
+  if (!result.success || !result.data) {
+    return emptyResult;
   }
+
+  console.log(`✅ Firecrawl Extract success:`, {
+    painPoints: result.data.painPoints?.length || 0,
+    trends: result.data.trends?.length || 0,
+    competitorInsights: result.data.competitorInsights?.length || 0
+  });
+
+  return {
+    painPoints: result.data.painPoints || [],
+    trends: result.data.trends || [],
+    competitorInsights: result.data.competitorInsights || []
+  };
 }
 
 // Helper: Smart Firecrawl Search for competitive intelligence & market insights
@@ -705,49 +673,14 @@ async function extractColorsFromImage(imageUrl: string): Promise<string[]> {
   }
 }
 
-// Helper: Map website to find all URLs using Firecrawl /map V2
-// V2: sitemap param replaces ignoreSitemap, better redirect handling
+// Helper: Map website to find all URLs - NOW USES CENTRALIZED HELPER
 async function mapWebsite(url: string): Promise<string[]> {
-    try {
-      console.log('🗺️ Mapping website structure (v2):', url);
-      const controller = new AbortController();
-      // Increased timeout to 45s as Firecrawl mapping can take time for larger sites
-      const timeoutId = setTimeout(() => controller.abort(), 45000);
-
-      const response = await fetch('https://api.firecrawl.dev/v2/map', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${process.env.FIRECRAWL_API_KEY}`
-        },
-        body: JSON.stringify({
-          url,
-          search: "about story mission team blog press careers values history",
-          // V2: sitemap param instead of ignoreSitemap
-          sitemap: "include", // "only" | "skip" | "include"
-          includeSubdomains: false,
-          limit: 50
-        }),
-        signal: controller.signal
-      });
-      
-      clearTimeout(timeoutId);
-
-      if (!response.ok) {
-        console.warn('Map API failed:', await response.text());
-        return [];
-      }
-
-      const data = await response.json();
-      if (data.success && Array.isArray(data.links)) {
-        console.log(`✅ Map found ${data.links.length} potential pages`);
-        return data.links;
-      }
-      return [];
-  } catch (e) {
-    console.warn('Map error:', e);
-    return [];
-  }
+  return firecrawlMap(url, {
+    search: 'about story mission team blog press careers values history',
+    limit: 50,
+    includeSubdomains: false,
+    timeout: 45000,
+  });
 }
 
 // Helper: Discover internal pages to crawl (blog, about, case studies, etc.)
@@ -1028,7 +961,7 @@ export async function POST(request: Request) {
         (u) => u && typeof u === 'string' && u.startsWith('http')
     );
 
-    // 1. Scrape with Firecrawl & Parallel Web Systems
+    // 1. Scrape with Firecrawl (centralized helper with retry) & Parallel Web Systems
     console.log('🔥 Scraping:', urlsToScrape);
     let firecrawlMarkdown = '';
     let firecrawlMetadata: any = {};
@@ -1044,23 +977,13 @@ export async function POST(request: Request) {
     }
 
     try {
-        // Firecrawl V2 for the primary website - faster with caching & better branding detection
-        const firecrawlPromise = fetch('https://api.firecrawl.dev/v2/scrape', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${process.env.FIRECRAWL_API_KEY}`
-            },
-            body: JSON.stringify({
-                url, // Primary URL only for detailed structure
-                formats: ["markdown", "html", "screenshot"],
-                onlyMainContent: false,
-                // V2 improvements for speed
-                maxAge: 86400, // 1 day cache
-                blockAds: true,
-                skipTlsVerification: true,
-                removeBase64Images: true
-            })
+        // Firecrawl V2 via centralized helper (with retry on network errors)
+        const firecrawlPromise = firecrawlScrape(url, {
+            formats: ['markdown', 'html', 'screenshot'],
+            onlyMainContent: false,
+            removeBase64Images: true,
+            timeout: 30000,
+            retries: 1, // 1 retry on network/5xx errors
         });
 
         // Parallel AI for extracting data from ALL links (website + socials)
@@ -1075,28 +998,20 @@ export async function POST(request: Request) {
             })
         });
 
-        const [firecrawlRes, parallelRes] = await Promise.allSettled([firecrawlPromise, parallelPromise]);
+        const [firecrawlResult, parallelRes] = await Promise.allSettled([firecrawlPromise, parallelPromise]);
 
-        // Process Firecrawl
-        if (firecrawlRes.status === 'fulfilled') {
-            if (firecrawlRes.value.ok) {
-                const scrapeData = await firecrawlRes.value.json();
-                if (scrapeData.success) {
-                    firecrawlMarkdown = scrapeData.data?.markdown || '';
-                    firecrawlMetadata = { 
-                        ...(scrapeData.data?.metadata || {}), 
-                        screenshot: scrapeData.data?.screenshot 
-                    };
-                    console.log('✅ Firecrawl success - markdown length:', firecrawlMarkdown.length);
-                } else {
-                    console.warn('⚠️ Firecrawl returned success:false:', JSON.stringify(scrapeData).slice(0, 500));
-                }
+        // Process Firecrawl (now via helper)
+        if (firecrawlResult.status === 'fulfilled') {
+            const scrapeResult = firecrawlResult.value;
+            if (scrapeResult.success) {
+                firecrawlMarkdown = scrapeResult.markdown;
+                firecrawlMetadata = scrapeResult.metadata;
+                console.log('✅ Firecrawl success - markdown length:', firecrawlMarkdown.length);
             } else {
-                const errorText = await firecrawlRes.value.text();
-                console.warn('⚠️ Firecrawl HTTP error:', firecrawlRes.value.status, errorText.slice(0, 500));
+                console.warn('⚠️ Firecrawl failed:', scrapeResult.error);
             }
         } else {
-            console.warn('⚠️ Firecrawl promise rejected:', firecrawlRes.reason);
+            console.warn('⚠️ Firecrawl promise rejected:', firecrawlResult.reason);
         }
 
         // Process Parallel
@@ -1228,54 +1143,27 @@ export async function POST(request: Request) {
         
         console.log(`🎯 Selected ${finalPagesToScrape.length} high-value pages to scrape:`, finalPagesToScrape);
 
-        // BATCH SCRAPE V2: Scrape all selected pages in parallel
-        // V2: Faster with caching, better error handling
-        const scrapePromises = finalPagesToScrape.map(async (pageUrl) => {
-            try {
-                const controller = new AbortController();
-                // Increased to 30s per page to account for rendering, queue times, and heavier pages
-                const timeoutId = setTimeout(() => controller.abort(), 30000); 
-
-                const res = await fetch('https://api.firecrawl.dev/v2/scrape', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${process.env.FIRECRAWL_API_KEY}`
-                    },
-                    body: JSON.stringify({
-                        url: pageUrl,
-                        formats: ["markdown", "html"], // HTML helps finding images hidden in markup
-                        onlyMainContent: false,
-                        // V2 speed improvements
-                        maxAge: 86400, // 1 day cache
-                        blockAds: true,
-                        skipTlsVerification: true
-                    }),
-                    signal: controller.signal
-                });
-                
-                clearTimeout(timeoutId);
-                
-                if (res.ok) {
-                    const data = await res.json();
-                    if (data.success && data.data) {
-                        return {
-                            url: pageUrl,
-                            content: data.data.markdown || '',
-                            html: data.data.html || '',
-                            metadata: data.data.metadata || {}
-                        };
-                    }
-                }
-                return null;
-            } catch (err) {
-                console.warn(`Failed to scrape ${pageUrl}`, err);
-                return null;
-            }
+        // BATCH SCRAPE V2: Use centralized helper with retry and controlled concurrency
+        const batchResults = await firecrawlBatchScrape(finalPagesToScrape, {
+            formats: ['markdown', 'html'],
+            onlyMainContent: false,
+            timeout: 30000,
+            retries: 1, // 1 retry on network/5xx errors
+            concurrency: 5, // Process 5 pages at a time to avoid overwhelming API
         });
 
-        const scrapeResults = await Promise.all(scrapePromises);
-        const validResults = scrapeResults.filter(Boolean) as { url: string; content: string; html: string; metadata: any }[];
+        // Convert Map to array of valid results
+        const validResults: { url: string; content: string; html: string; metadata: any }[] = [];
+        for (const [pageUrl, result] of batchResults) {
+            if (result.success) {
+                validResults.push({
+                    url: pageUrl,
+                    content: result.markdown,
+                    html: result.html || '',
+                    metadata: result.metadata,
+                });
+            }
+        }
 
         console.log(`✅ Successfully scraped ${validResults.length} deep pages`);
 
