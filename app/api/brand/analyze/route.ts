@@ -1390,6 +1390,7 @@ export async function POST(request: Request) {
       Return ONLY a valid JSON object with the following structure:
       {
         "name": "Brand Name",
+        "detectedLanguage": "fr | en (detect from website content - French or English)",
         "tagline": "Brand Tagline or Slogan",
         "description": "A short summary paragraph (max 200 chars)",
         "brandStory": "A compelling 2-3 sentence summary of the brand's origin, mission, or founding story found in the content.",
@@ -1421,14 +1422,14 @@ export async function POST(request: Request) {
         ],
         "editorialHooks": [
            {
-             "hook": "Concrete pain point hook in French, DIRECTLY related to what this brand sells. Max 60 chars.",
+             "hook": "Concrete pain point hook in the SAME LANGUAGE as detectedLanguage. Max 60 chars.",
              "subtext": "How the brand's product/service solves this pain. Max 80 chars.",
              "emotion": "curiosity | frustration | relief | urgency"
            }
         ],
         "_editorialHooks_RULES": {
           "GENERATE_8_HOOKS": true,
-          "LANGUAGE": "French only",
+          "LANGUAGE": "SAME AS 'detectedLanguage' FIELD (French if 'fr', English if 'en')",
           "CRITICAL_CONTEXT_TO_USE": [
             "Use 'targetAudience' to know WHO you're speaking to",
             "Use 'features' and 'services' to understand WHAT the brand offers",
@@ -1439,19 +1440,16 @@ export async function POST(request: Request) {
           ],
           "HOOK_FORMULA": "[Target's daily frustration] + [Hint that solution exists]",
           "SUBTEXT_FORMULA": "[How this brand specifically helps] OR [Consequence of not solving]",
-          "EXAMPLES_BY_INDUSTRY": {
-            "SaaS_for_marketers": [
-              {"hook": "Encore 2h à formater des visuels ?", "subtext": "Générez-les en 60 secondes, à votre image."},
-              {"hook": "Vos posts sont beaux... mais engagent-ils ?", "subtext": "Des visuels optimisés pour la conversion."}
-            ],
-            "E-commerce": [
-              {"hook": "Vos photos produit passent inaperçues ?", "subtext": "Des visuels qui arrêtent le scroll."},
-              {"hook": "3 clics pour un visuel pro. Sans graphiste.", "subtext": "Publiez plus, vendez plus."}
-            ],
-            "Consulting": [
-              {"hook": "Votre expertise mérite mieux qu'un template Canva", "subtext": "Des visuels à la hauteur de votre expertise."}
-            ]
-          },
+          "EXAMPLES_FRENCH": [
+            {"hook": "Encore 2h à formater des visuels ?", "subtext": "Générez-les en 60 secondes, à votre image."},
+            {"hook": "Vos posts sont beaux... mais engagent-ils ?", "subtext": "Des visuels optimisés pour la conversion."},
+            {"hook": "3 clics pour un visuel pro. Sans graphiste.", "subtext": "Publiez plus, vendez plus."}
+          ],
+          "EXAMPLES_ENGLISH": [
+            {"hook": "Still spending 2h formatting visuals?", "subtext": "Generate them in 60 seconds, on-brand."},
+            {"hook": "Your posts look great... but do they convert?", "subtext": "Visuals optimized for engagement."},
+            {"hook": "3 clicks to a pro visual. No designer needed.", "subtext": "Publish more, sell more."}
+          ],
           "FORBIDDEN_PATTERNS": [
             "Market size/growth stats",
             "Industry projections (by 2030...)",
@@ -1462,7 +1460,8 @@ export async function POST(request: Request) {
           "QUALITY_CHECK": [
             "Each hook must be answerable by THIS brand's product",
             "If the hook could apply to ANY company, it's too generic - REJECT IT",
-            "The subtext must reference a specific feature or benefit from the scraped data"
+            "The subtext must reference a specific feature or benefit from the scraped data",
+            "ALL hooks must be in the SAME language as the website (detectedLanguage)"
           ]
         },
         "contentNuggets": {
@@ -1544,16 +1543,18 @@ export async function POST(request: Request) {
          - Each post MUST have an "intent" explaining WHY this post is strategic for the END USER
          - Be SPECIFIC: not "amélioration" but "+47% en 3 mois"
          
-      8. **PAIN POINTS (CRITICAL - 8 REQUIRED, PRODUCT-SPECIFIC):** Generate exactly 8 pain point hooks.
+      8. **PAIN POINTS (CRITICAL - 8 REQUIRED, PRODUCT-SPECIFIC, SAME LANGUAGE AS SITE):**
+         
+         ⚠️ LANGUAGE: Generate hooks in the SAME LANGUAGE as 'detectedLanguage' (French OR English).
          
          ⚠️ GOLDEN RULE: Each hook must be DIRECTLY related to what THIS brand sells.
          
-         🔍 MANDATORY CONTEXT TO USE (from your analysis above):
-         - 'targetAudience': WHO are you speaking to? Use their job title, their daily context.
-         - 'features' & 'services': WHAT does the brand offer? The pain points must be solvable by these.
+         🔍 MANDATORY CONTEXT TO USE:
+         - 'detectedLanguage': Write hooks in THIS language (fr = French, en = English)
+         - 'targetAudience': WHO are you speaking to?
+         - 'features' & 'services': WHAT does the brand offer?
          - 'painPoints': Problems extracted from the site - EXPAND on these!
-         - 'uniqueValueProposition': The main benefit - pain points should lead to this.
-         - 'industry': To understand the specific context and vocabulary.
+         - 'uniqueValueProposition': The main benefit.
          
          ✅ EACH HOOK MUST PASS THIS TEST:
          1. "Is this frustration solvable by THIS brand's product?" → If not, REJECT
@@ -1563,20 +1564,15 @@ export async function POST(request: Request) {
          🚫 FORBIDDEN:
          - Market stats, growth rates, projections
          - Generic problems not related to the product
-         - Hooks that could apply to any company in any industry
+         - Writing in a different language than the website
          
-         FORMULA: [Target's specific daily frustration] + [Hint that solution exists]
+         FRENCH EXAMPLES (if detectedLanguage = 'fr'):
+         - "Encore 2h à formater des visuels ?"
+         - "Vos leads tombent dans l'oubli ?"
          
-         EXAMPLE FOR A VISUAL CREATION TOOL:
-         - ✅ "Encore 2h à formater des visuels ?" (specific to their product)
-         - ✅ "Vos posts sont beaux... mais engagent-ils ?" (related to their value prop)
-         - ❌ "Le marché du design atteindra 50Mds$" (market stat, useless)
-         - ❌ "La créativité est importante" (too generic, not actionable)
-         
-         EXAMPLE FOR A CRM TOOL:
-         - ✅ "Vos leads tombent dans l'oubli ?" (CRM solves this)
-         - ✅ "Encore un deal perdu faute de suivi ?" (CRM solves this)
-         - ❌ "Les entreprises adoptent le digital" (generic, not CRM-specific)
+         ENGLISH EXAMPLES (if detectedLanguage = 'en'):
+         - "Still spending 2h on manual formatting?"
+         - "Your leads falling through the cracks?"
          
       9. **CONTENT VALIDATION (INTELLIGENT AGENT TASK):** 
          I have provided a raw list of "EXTRACTED CONTENT NUGGETS" above. Your job is to FILTER and CLEAN them.
