@@ -220,6 +220,18 @@ async function urlToBase64(url: string): Promise<{ data: string; mimeType: strin
       return { data: pngBuffer.toString('base64'), mimeType: 'image/png' };
     }
 
+    // AVIF, WebP, HEIC are NOT supported by Google Gemini - convert to PNG
+    const unsupportedFormats = ['image/avif', 'image/heic', 'image/heif'];
+    if (unsupportedFormats.includes(contentType) || url.includes('.avif') || url.includes('.heic')) {
+      console.log(`🔄 Converting unsupported format (${contentType}) to PNG...`);
+      const pngBuffer = await sharp(Buffer.from(buffer))
+        .png()
+        .resize(1024, 1024, { fit: 'inside', withoutEnlargement: false })
+        .toBuffer();
+      console.log('✅ Converted to PNG');
+      return { data: pngBuffer.toString('base64'), mimeType: 'image/png' };
+    }
+
     const base64 = Buffer.from(buffer).toString('base64');
     return { data: base64, mimeType: contentType };
   } catch (e) {
