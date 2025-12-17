@@ -2396,7 +2396,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
     }
 
     if (activeTab === 'projects') {
-      return <ProjectsView />;
+      return <ProjectsView brandId={selectedBrandId || undefined} />;;
     }
 
     if (activeTab === 'settings') {

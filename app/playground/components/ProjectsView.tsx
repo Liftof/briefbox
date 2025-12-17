@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { 
+import {
   useGenerations as useGenerationsHook,
   type Generation,
   type Folder,
@@ -47,7 +47,7 @@ const FOLDER_COLORS = [
 
 const ITEMS_PER_PAGE = 20;
 
-export default function ProjectsView() {
+export default function ProjectsView({ brandId }: { brandId?: number }) {
   // Use the hook for data management (API + localStorage fallback)
   const {
     generations,
@@ -58,7 +58,7 @@ export default function ProjectsView() {
     createFolder,
     deleteFolder,
     refresh,
-  } = useGenerationsHook();
+  } = useGenerationsHook(brandId);
 
   const [showNewFolder, setShowNewFolder] = useState(false);
   const [newFolderName, setNewFolderName] = useState('');
@@ -67,7 +67,7 @@ export default function ProjectsView() {
   const [draggedGen, setDraggedGen] = useState<string | null>(null);
   const [lightboxImage, setLightboxImage] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
-  
+
   // Favorites filter
   const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
 
@@ -77,7 +77,7 @@ export default function ProjectsView() {
       refresh();
     };
     window.addEventListener('generations-updated', handleUpdate);
-    
+
     return () => {
       window.removeEventListener('generations-updated', handleUpdate);
     };
@@ -87,23 +87,23 @@ export default function ProjectsView() {
   const unorganizedGenerations = generations
     .filter(g => !g.folderId)
     .filter(g => !showFavoritesOnly || g.feedback?.rating === 3);
-  
+
   const totalPages = Math.ceil(unorganizedGenerations.length / ITEMS_PER_PAGE);
-  
+
   // Paginated recent generations
   const recentGenerations = unorganizedGenerations
     .slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
-  
+
   // Count favorites
   const favoritesCount = generations.filter(g => g.feedback?.rating === 3).length;
 
-  const folderGenerations = (folderId: string) => 
+  const folderGenerations = (folderId: string) =>
     generations.filter(g => g.folderId === folderId);
 
   // Create folder
   const handleCreateFolder = async () => {
     if (!newFolderName.trim()) return;
-    
+
     await createFolder(newFolderName.trim(), newFolderColor);
     setShowNewFolder(false);
     setNewFolderName('');
@@ -118,7 +118,7 @@ export default function ProjectsView() {
   // Drag & drop to folder
   const handleDrop = async (folderId: string) => {
     if (!draggedGen) return;
-    
+
     await updateGeneration(draggedGen, { folderId });
     setDraggedGen(null);
   };
@@ -141,7 +141,7 @@ export default function ProjectsView() {
     const diffMins = Math.floor(diffMs / 60000);
     const diffHours = Math.floor(diffMins / 60);
     const diffDays = Math.floor(diffHours / 24);
-    
+
     if (diffMins < 1) return "À l'instant";
     if (diffMins < 60) return `Il y a ${diffMins}min`;
     if (diffHours < 24) return `Il y a ${diffHours}h`;
@@ -153,12 +153,12 @@ export default function ProjectsView() {
   const handleToggleFavorite = async (genId: string) => {
     const gen = generations.find(g => g.id === genId);
     if (!gen) return;
-    
+
     const isFavorite = gen.feedback?.rating === 3;
-    const feedback: GenerationFeedback = isFavorite 
+    const feedback: GenerationFeedback = isFavorite
       ? { rating: 1, timestamp: new Date().toISOString() } // Unfavorite
       : { rating: 3, timestamp: new Date().toISOString() }; // Favorite
-    
+
     await updateGeneration(genId, { feedback });
   };
 
@@ -166,16 +166,15 @@ export default function ProjectsView() {
   const renderFavoriteButton = (gen: Generation, isCompact = false) => {
     const isFavorite = gen.feedback?.rating === 3;
     const size = isCompact ? 'w-4 h-4' : 'w-5 h-5';
-    
+
     return (
       <button
         onClick={(e) => {
           e.stopPropagation();
           handleToggleFavorite(gen.id);
         }}
-        className={`transition-all hover:scale-110 ${
-          isFavorite ? 'text-red-500' : 'text-gray-300 hover:text-red-400'
-        }`}
+        className={`transition-all hover:scale-110 ${isFavorite ? 'text-red-500' : 'text-gray-300 hover:text-red-400'
+          }`}
         title={isFavorite ? 'Retirer des favoris' : 'Ajouter aux favoris'}
       >
         <svg className={size} fill={isFavorite ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
@@ -201,7 +200,7 @@ export default function ProjectsView() {
     <div className="animate-fade-in">
       {/* Lightbox */}
       {lightboxImage && (
-        <div 
+        <div
           className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-8 cursor-pointer"
           onClick={() => setLightboxImage(null)}
         >
@@ -213,22 +212,21 @@ export default function ProjectsView() {
       {/* Header */}
       <header className="flex items-center justify-between mb-8">
         <div>
-           <h2 className="text-2xl font-bold mb-1">Mes Projets</h2>
+          <h2 className="text-2xl font-bold mb-1">Mes Projets</h2>
           <p className="text-gray-500 text-sm">
             {generations.length} génération{generations.length !== 1 ? 's' : ''} · {folders.length} dossier{folders.length !== 1 ? 's' : ''}
             {favoritesCount > 0 && ` · ${favoritesCount} favori${favoritesCount !== 1 ? 's' : ''}`}
           </p>
         </div>
-        
+
         {/* Favorites filter */}
         {favoritesCount > 0 && (
           <button
             onClick={() => setShowFavoritesOnly(!showFavoritesOnly)}
-            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-colors ${
-              showFavoritesOnly 
-                ? 'bg-red-50 border-red-200 text-red-600' 
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border transition-colors ${showFavoritesOnly
+                ? 'bg-red-50 border-red-200 text-red-600'
                 : 'bg-white border-gray-200 text-gray-600 hover:border-gray-300'
-            }`}
+              }`}
           >
             <svg className="w-4 h-4" fill={showFavoritesOnly ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
@@ -247,27 +245,26 @@ export default function ProjectsView() {
           <h3 className="text-sm font-medium text-gray-900 uppercase tracking-wider">Générations récentes</h3>
           <span className="text-xs text-gray-400 font-mono">{unorganizedGenerations.length} visuel{unorganizedGenerations.length !== 1 ? 's' : ''}</span>
         </div>
-        
+
         {recentGenerations.length > 0 ? (
           <>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
               {recentGenerations.map((gen) => (
-                <div 
+                <div
                   key={gen.id}
                   draggable
                   onDragStart={() => setDraggedGen(gen.id)}
                   onDragEnd={() => setDraggedGen(null)}
-                  className={`relative aspect-square bg-gray-100 border border-gray-200 overflow-hidden group cursor-move hover:border-gray-400 transition-all ${
-                    draggedGen === gen.id ? 'opacity-50 scale-95' : ''
-                  } ${gen.feedback?.rating === 3 ? 'ring-2 ring-red-400' : ''}`}
+                  className={`relative aspect-square bg-gray-100 border border-gray-200 overflow-hidden group cursor-move hover:border-gray-400 transition-all ${draggedGen === gen.id ? 'opacity-50 scale-95' : ''
+                    } ${gen.feedback?.rating === 3 ? 'ring-2 ring-red-400' : ''}`}
                 >
-                  <img 
-                    src={gen.url} 
-                    alt="" 
+                  <img
+                    src={gen.url}
+                    alt=""
                     className="w-full h-full object-cover"
                     onClick={() => setLightboxImage(gen.url)}
                   />
-                  
+
                   {/* Favorite indicator (if favorited) */}
                   {gen.feedback?.rating === 3 && (
                     <div className="absolute top-1 left-1 p-1 bg-black/60 backdrop-blur-sm rounded-full">
@@ -276,7 +273,7 @@ export default function ProjectsView() {
                       </svg>
                     </div>
                   )}
-                  
+
                   {/* Hover Overlay */}
                   <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
                     {/* Bottom info */}
@@ -289,7 +286,7 @@ export default function ProjectsView() {
                       </div>
                     </div>
                   </div>
-                  
+
                   {/* Actions */}
                   <div className="absolute top-1 right-1 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                     <button
@@ -297,24 +294,23 @@ export default function ProjectsView() {
                         e.stopPropagation();
                         handleToggleFavorite(gen.id);
                       }}
-                      className={`w-6 h-6 bg-white/90 flex items-center justify-center hover:bg-white transition-colors ${
-                        gen.feedback?.rating === 3 ? 'text-red-500' : 'text-gray-400'
-                      }`}
+                      className={`w-6 h-6 bg-white/90 flex items-center justify-center hover:bg-white transition-colors ${gen.feedback?.rating === 3 ? 'text-red-500' : 'text-gray-400'
+                        }`}
                       title={gen.feedback?.rating === 3 ? "Retirer des favoris" : "Ajouter aux favoris"}
                     >
                       <svg className="w-4 h-4" fill={gen.feedback?.rating === 3 ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                       </svg>
                     </button>
-                    <a 
-                      href={gen.url} 
-                      download 
+                    <a
+                      href={gen.url}
+                      download
                       className="w-6 h-6 bg-white/90 flex items-center justify-center text-xs hover:bg-white"
                       onClick={(e) => e.stopPropagation()}
                     >
                       ↓
                     </a>
-                    <button 
+                    <button
                       onClick={(e) => {
                         e.stopPropagation();
                         handleDeleteGeneration(gen.id);
@@ -327,7 +323,7 @@ export default function ProjectsView() {
                 </div>
               ))}
             </div>
-            
+
             {/* Pagination */}
             {totalPages > 1 && (
               <div className="flex items-center justify-center gap-2 mt-6">
@@ -338,7 +334,7 @@ export default function ProjectsView() {
                 >
                   ←
                 </button>
-                
+
                 <div className="flex items-center gap-1">
                   {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => {
                     // Smart pagination: show first, last, and around current
@@ -352,27 +348,26 @@ export default function ProjectsView() {
                     } else {
                       pageNum = i === 0 ? 1 : (i === 1 ? -1 : (i === 5 ? -1 : (i === 6 ? totalPages : currentPage - 2 + i)));
                     }
-                    
+
                     if (pageNum === -1) {
                       return <span key={i} className="px-2 text-gray-400">…</span>;
                     }
-                    
+
                     return (
                       <button
                         key={pageNum}
                         onClick={() => setCurrentPage(pageNum)}
-                        className={`w-8 h-8 text-sm transition-colors ${
-                          currentPage === pageNum 
-                            ? 'bg-gray-900 text-white' 
+                        className={`w-8 h-8 text-sm transition-colors ${currentPage === pageNum
+                            ? 'bg-gray-900 text-white'
                             : 'hover:bg-gray-100'
-                        }`}
+                          }`}
                       >
                         {pageNum}
                       </button>
                     );
                   })}
                 </div>
-                
+
                 <button
                   onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                   disabled={currentPage === totalPages}
@@ -399,12 +394,12 @@ export default function ProjectsView() {
             <span className="text-lg">📁</span>
             <h3 className="text-sm font-medium text-gray-900 uppercase tracking-wider">Dossiers</h3>
           </div>
-            <button 
+          <button
             onClick={() => setShowNewFolder(true)}
             className="px-3 py-1.5 bg-gray-900 text-white text-xs font-medium hover:bg-black transition-colors flex items-center gap-1"
-            >
+          >
             <span>+</span> Nouveau dossier
-            </button>
+          </button>
         </div>
 
         {/* New folder form */}
@@ -424,14 +419,13 @@ export default function ProjectsView() {
                   <button
                     key={c.value}
                     onClick={() => setNewFolderColor(c.value)}
-                    className={`w-6 h-6 rounded-full transition-transform ${
-                      newFolderColor === c.value ? 'scale-125 ring-2 ring-offset-1 ring-gray-400' : ''
-                    }`}
+                    className={`w-6 h-6 rounded-full transition-transform ${newFolderColor === c.value ? 'scale-125 ring-2 ring-offset-1 ring-gray-400' : ''
+                      }`}
                     style={{ backgroundColor: c.value }}
                     title={c.name}
                   />
-         ))}
-      </div>
+                ))}
+              </div>
             </div>
             <div className="flex justify-end gap-2">
               <button
@@ -460,24 +454,23 @@ export default function ProjectsView() {
             {folders.map((folder) => {
               const folderGens = folderGenerations(folder.id);
               const isExpanded = selectedFolder === folder.id;
-              
+
               return (
-                <div 
+                <div
                   key={folder.id}
                   onDragOver={(e) => e.preventDefault()}
                   onDrop={() => handleDrop(folder.id)}
-                  className={`bg-white border-2 transition-all ${
-                    draggedGen ? 'border-dashed border-gray-300 hover:border-gray-500 hover:bg-gray-50' : 'border-gray-200'
-                  }`}
+                  className={`bg-white border-2 transition-all ${draggedGen ? 'border-dashed border-gray-300 hover:border-gray-500 hover:bg-gray-50' : 'border-gray-200'
+                    }`}
                 >
                   {/* Folder header */}
-                  <div 
+                  <div
                     className="p-4 cursor-pointer hover:bg-gray-50 transition-colors"
                     onClick={() => setSelectedFolder(isExpanded ? null : folder.id)}
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
-                        <div 
+                        <div
                           className="w-4 h-4 rounded-sm"
                           style={{ backgroundColor: folder.color }}
                         />
@@ -496,18 +489,18 @@ export default function ProjectsView() {
                             <path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                           </svg>
                         </button>
-                        <svg 
+                        <svg
                           className={`w-4 h-4 text-gray-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
-                          fill="none" 
-                          stroke="currentColor" 
-                          strokeWidth="2" 
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
                           viewBox="0 0 24 24"
                         >
                           <path d="M19 9l-7 7-7-7" />
                         </svg>
                       </div>
-               </div>
-               
+                    </div>
+
                     {/* Thumbnail preview */}
                     {!isExpanded && folderGens.length > 0 && (
                       <div className="flex gap-1 mt-3">
@@ -521,9 +514,9 @@ export default function ProjectsView() {
                             +{folderGens.length - 4}
                           </div>
                         )}
-                     </div>
-                  )}
-               </div>
+                      </div>
+                    )}
+                  </div>
 
                   {/* Expanded content */}
                   {isExpanded && (
@@ -532,9 +525,9 @@ export default function ProjectsView() {
                         <div className="grid grid-cols-3 gap-2">
                           {folderGens.map((gen) => (
                             <div key={gen.id} className="relative aspect-square bg-gray-100 overflow-hidden group">
-                              <img 
-                                src={gen.url} 
-                                alt="" 
+                              <img
+                                src={gen.url}
+                                alt=""
                                 className="w-full h-full object-cover cursor-pointer"
                                 onClick={() => setLightboxImage(gen.url)}
                               />
@@ -545,9 +538,9 @@ export default function ProjectsView() {
                               >
                                 ↩
                               </button>
-            </div>
-         ))}
-      </div>
+                            </div>
+                          ))}
+                        </div>
                       ) : (
                         <p className="text-center text-gray-400 text-sm py-4">
                           Glissez des images ici

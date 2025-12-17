@@ -112,7 +112,7 @@ export function useGenerations(brandId?: number) {
       const localData = localStorage.getItem(FOLDERS_KEY);
       setFolders(localData ? JSON.parse(localData) : []);
     }
-  }, []);
+  }, [brandId]);
 
   // Migrate localStorage to DB (one-time)
   const migrateToDb = useCallback(async () => {
@@ -181,7 +181,7 @@ export function useGenerations(brandId?: number) {
     return () => {
       window.removeEventListener('generations-updated', handleUpdate);
     };
-  }, [fetchGenerations, fetchFolders, migrateToDb]);
+  }, [fetchGenerations, fetchFolders, migrateToDb]); // brandId dependency handled by callbacks
 
   // Add generations
   const addGenerations = useCallback(async (newGens: Omit<Generation, 'id' | 'createdAt'>[]) => {
@@ -264,10 +264,13 @@ export function useGenerations(brandId?: number) {
   // Create folder
   const createFolder = useCallback(async (name: string, color: string) => {
     try {
+      const payload: any = { name, color };
+      if (brandId) payload.brandId = brandId;
+
       const res = await fetch('/api/folders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, color }),
+        body: JSON.stringify(payload),
       });
 
       if (!res.ok) {
@@ -291,7 +294,7 @@ export function useGenerations(brandId?: number) {
       console.error('Create folder error:', err);
       return null;
     }
-  }, []);
+  }, [brandId]);
 
   // Delete folder
   const deleteFolder = useCallback(async (id: string) => {
