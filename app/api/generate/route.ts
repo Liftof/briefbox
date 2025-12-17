@@ -17,13 +17,17 @@ const PLAN_CREDITS = {
   premium: 150,
 } as const;
 
-// Helper: Check and consume credits (1 credit = 1 image)
-async function checkAndConsumeCredits(clerkId: string, numImages: number = 1): Promise<{
+// Helper: Check credits and optionally consume them (1 credit = 1 image)
+// consumeNow = false: only check if credits available (no consumption)
+// consumeNow = true: check AND consume credits
+async function checkAndConsumeCredits(clerkId: string, numImages: number = 1, consumeNow: boolean = true): Promise<{
   allowed: boolean;
   error?: string;
   remaining?: number;
   plan?: string;
   creditsConsumed?: number;
+  userId?: number; // For later consumption if consumeNow=false
+  teamId?: number | null; // For later consumption if consumeNow=false
 }> {
   try {
     const user = await db.query.users.findFirst({
@@ -58,16 +62,19 @@ async function checkAndConsumeCredits(clerkId: string, numImages: number = 1): P
           };
         }
 
-        // Consume team credits (1 per image)
-        await db.update(teams)
-          .set({ creditsPool: team.creditsPool - numImages })
-          .where(eq(teams.id, user.teamId));
+        // Only consume team credits if consumeNow is true
+        if (consumeNow) {
+          await db.update(teams)
+            .set({ creditsPool: team.creditsPool - numImages })
+            .where(eq(teams.id, user.teamId));
+        }
 
         return {
           allowed: true,
-          remaining: team.creditsPool - numImages,
+          remaining: consumeNow ? team.creditsPool - numImages : team.creditsPool,
           plan: 'premium',
-          creditsConsumed: numImages,
+          creditsConsumed: consumeNow ? numImages : 0,
+          teamId: user.teamId, // For later consumption
         };
       }
     }
@@ -84,21 +91,66 @@ async function checkAndConsumeCredits(clerkId: string, numImages: number = 1): P
       };
     }
 
-    // Consume credits (1 per image)
-    await db.update(users)
-      .set({ creditsRemaining: user.creditsRemaining - numImages })
-      .where(eq(users.clerkId, clerkId));
+    // Only consume credits if consumeNow is true
+    if (consumeNow) {
+      await db.update(users)
+        .set({ creditsRemaining: user.creditsRemaining - numImages })
+        .where(eq(users.clerkId, clerkId));
+    }
 
     return {
       allowed: true,
-      remaining: user.creditsRemaining - numImages,
+      remaining: consumeNow ? user.creditsRemaining - numImages : user.creditsRemaining,
       plan: user.plan,
-      creditsConsumed: numImages,
+      creditsConsumed: consumeNow ? numImages : 0,
+      userId: user.id, // For later consumption
     };
   } catch (error) {
     console.error('Credit check error:', error);
     // On error, allow generation (fail open for better UX)
     return { allowed: true };
+  }
+}
+
+// Helper: Consume credits AFTER successful generation
+async function consumeCreditsAfterSuccess(
+  clerkId: string,
+  numImages: number,
+  creditCheckResult: { userId?: number; teamId?: number | null; plan?: string }
+): Promise<{ remaining: number }> {
+  try {
+    // If team credits
+    if (creditCheckResult.teamId) {
+      const team = await db.query.teams.findFirst({
+        where: eq(teams.id, creditCheckResult.teamId),
+      });
+      if (team) {
+        const newCredits = Math.max(0, team.creditsPool - numImages);
+        await db.update(teams)
+          .set({ creditsPool: newCredits })
+          .where(eq(teams.id, creditCheckResult.teamId));
+        console.log(`💳 Credits consumed (team): ${numImages}, ${newCredits} remaining`);
+        return { remaining: newCredits };
+      }
+    }
+
+    // Personal credits
+    const user = await db.query.users.findFirst({
+      where: eq(users.clerkId, clerkId),
+    });
+    if (user) {
+      const newCredits = Math.max(0, user.creditsRemaining - numImages);
+      await db.update(users)
+        .set({ creditsRemaining: newCredits })
+        .where(eq(users.clerkId, clerkId));
+      console.log(`💳 Credits consumed (personal): ${numImages}, ${newCredits} remaining`);
+      return { remaining: newCredits };
+    }
+
+    return { remaining: 0 };
+  } catch (error) {
+    console.error('Credit consumption error:', error);
+    return { remaining: 0 };
   }
 }
 
@@ -340,9 +392,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Prompt is required' }, { status: 400 });
     }
 
-    // ====== CREDITS CHECK (1 credit = 1 image) ======
+    // ====== CREDITS CHECK ONLY (consumption happens after success) ======
     const requestedImages = Math.min(numImages, 4); // Cap at 4 images max
-    const creditCheck = await checkAndConsumeCredits(userId, requestedImages);
+    const creditCheck = await checkAndConsumeCredits(userId, requestedImages, false); // false = check only, don't consume yet
 
     if (!creditCheck.allowed) {
       return NextResponse.json({
@@ -354,7 +406,8 @@ export async function POST(request: NextRequest) {
       }, { status: 402 }); // Payment Required
     }
 
-    console.log(`💳 Credits: ${requestedImages} consumed, ${creditCheck.remaining} remaining (plan: ${creditCheck.plan})`);
+    console.log(`💳 Credits check: ${requestedImages} needed, ${creditCheck.remaining} available (plan: ${creditCheck.plan})`);
+    console.log(`   Credits will be consumed ONLY after successful generation`);
 
     // 🔍 LOGO DEBUG
     console.log('📥 LOGO DEBUG - Input:');
@@ -862,13 +915,19 @@ ${logoRule}${imageDescriptions.join('\n')}
         };
       });
 
+      // ====== CONSUME CREDITS ONLY AFTER SUCCESS ======
+      // Only charge for the number of images actually generated
+      const imagesToCharge = normalizedImages.length;
+      const consumeResult = await consumeCreditsAfterSuccess(userId, imagesToCharge, creditCheck);
+      console.log(`✅ SUCCESS: ${imagesToCharge} images generated, ${consumeResult.remaining} credits remaining`);
+
       return NextResponse.json({
         success: true,
         images: normalizedImages,
         generatedCount: normalizedImages.length,
         requestedCount: actualNumImages,
         aspectRatio, // Also return it at top level for reference
-        creditsRemaining: creditCheck.remaining,
+        creditsRemaining: consumeResult.remaining,
         plan: creditCheck.plan,
       });
     } catch (generationError: any) {
