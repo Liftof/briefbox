@@ -24,7 +24,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <ClerkProvider>
+    <ClerkProvider
+      signUpFallbackRedirectUrl="/playground"
+      signInFallbackRedirectUrl="/playground"
+    >
       <html lang="fr">
         <body className={`${lexend.variable} font-sans antialiased`}>
           <Script
