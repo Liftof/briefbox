@@ -5,15 +5,27 @@ import { folders, generations } from '@/db/schema';
 import { eq, and, desc } from 'drizzle-orm';
 
 // GET - Fetch user's folders
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     const { userId } = await auth();
     if (!userId) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const { searchParams } = new URL(request.url);
+    const brandId = searchParams.get('brandId');
+
+    const conditions = [eq(folders.userId, userId)];
+
+    // If brandId is provided, filter by it. 
+    // If not provided, we might show all (legacy behavior) or unassigned ones.
+    // For this strict update, let's filter by brandId if present.
+    if (brandId) {
+      conditions.push(eq(folders.brandId, parseInt(brandId)));
+    }
+
     const result = await db.query.folders.findMany({
-      where: eq(folders.userId, userId),
+      where: and(...conditions),
       orderBy: [desc(folders.createdAt)],
     });
 
@@ -42,7 +54,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { name, color } = body;
+    const { name, color, brandId } = body;
 
     if (!name || !name.trim()) {
       return NextResponse.json({ error: 'name required' }, { status: 400 });
@@ -50,12 +62,18 @@ export async function POST(request: NextRequest) {
 
     const externalId = `folder_${Date.now()}`;
 
-    const result = await db.insert(folders).values({
+    const folderData: any = {
       externalId,
       userId,
       name: name.trim(),
       color: color || '#6B7280',
-    }).returning();
+    };
+
+    if (brandId) {
+      folderData.brandId = parseInt(brandId);
+    }
+
+    const result = await db.insert(folders).values(folderData).returning();
 
     return NextResponse.json({
       success: true,

@@ -43,22 +43,31 @@ const useApi = () => {
 };
 
 // Hook for generations
-export function useGenerations() {
+export function useGenerations(brandId?: number) {
   const [generations, setGenerations] = useState<Generation[]>([]);
   const [folders, setFolders] = useState<Folder[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   // Fetch generations from API
-  const fetchGenerations = useCallback(async () => {
+  const fetchGenerations = useCallback(async (brandId?: number) => {
     try {
       setLoading(true);
-      const res = await fetch('/api/generations');
+      const url = brandId
+        ? `/api/generations?brandId=${brandId}`
+        : '/api/generations';
+
+      const res = await fetch(url);
       if (!res.ok) {
         // If unauthorized, fall back to localStorage
         if (res.status === 401) {
           const localData = localStorage.getItem(GENERATIONS_KEY);
-          setGenerations(localData ? JSON.parse(localData) : []);
+          let parsed = localData ? JSON.parse(localData) : [];
+          // Filter by brandId if provided (legacy local storage might not have brandId consistently, but we try)
+          if (brandId) {
+            parsed = parsed.filter((g: Generation) => g.brandId === brandId);
+          }
+          setGenerations(parsed);
           return;
         }
         throw new Error('Failed to fetch generations');
@@ -70,16 +79,24 @@ export function useGenerations() {
       setError(err.message);
       // Fall back to localStorage
       const localData = localStorage.getItem(GENERATIONS_KEY);
-      setGenerations(localData ? JSON.parse(localData) : []);
+      let parsed = localData ? JSON.parse(localData) : [];
+      if (brandId) {
+        parsed = parsed.filter((g: Generation) => g.brandId === brandId);
+      }
+      setGenerations(parsed ? parsed : []);
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [brandId]);
 
   // Fetch folders from API
-  const fetchFolders = useCallback(async () => {
+  const fetchFolders = useCallback(async (brandId?: number) => {
     try {
-      const res = await fetch('/api/folders');
+      const url = brandId
+        ? `/api/folders?brandId=${brandId}`
+        : '/api/folders';
+
+      const res = await fetch(url);
       if (!res.ok) {
         if (res.status === 401) {
           const localData = localStorage.getItem(FOLDERS_KEY);

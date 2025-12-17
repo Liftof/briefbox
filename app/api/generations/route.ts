@@ -14,13 +14,18 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const folderId = searchParams.get('folderId');
+    const brandId = searchParams.get('brandId');
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '50');
     const offset = (page - 1) * limit;
 
     // Build query conditions
     const conditions = [eq(generations.userId, userId)];
-    
+
+    if (brandId) {
+      conditions.push(eq(generations.brandId, parseInt(brandId)));
+    }
+
     if (folderId === 'null' || folderId === '') {
       // Get unorganized generations (no folder)
       conditions.push(isNull(generations.folderId));

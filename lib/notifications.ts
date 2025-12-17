@@ -25,29 +25,49 @@ export async function requestNotificationPermission(): Promise<boolean> {
     return permission === 'granted';
 }
 
-// Play a subtle notification sound
-function playNotificationSound() {
+// Play a joyful notification sound
+function playNotificationSound(type: 'brand' | 'visual' | 'default' = 'default') {
     try {
-        // Create a subtle "ding" sound using Web Audio API
         const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-        const oscillator = audioContext.createOscillator();
-        const gainNode = audioContext.createGain();
 
-        oscillator.connect(gainNode);
-        gainNode.connect(audioContext.destination);
+        // Frequencies for a C Major arpeggio
+        // C5 = 523.25, E5 = 659.25, G5 = 783.99, C6 = 1046.50
+        const arpeggio = [523.25, 659.25, 783.99, 1046.50];
 
-        // Gentle bell-like sound
-        oscillator.frequency.setValueAtTime(880, audioContext.currentTime); // A5
-        oscillator.frequency.exponentialRampToValueAtTime(440, audioContext.currentTime + 0.1); // A4
+        // Adjust sequence based on type
+        let notes = arpeggio;
+        let speed = 0.08;
+        let gainValue = 0.2;
 
-        gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+        if (type === 'brand') {
+            notes = [523.25, 783.99, 1046.50]; // Bright discovery
+            speed = 0.12;
+        } else if (type === 'visual') {
+            notes = [659.25, 783.99, 1046.50, 1318.51]; // Higher achievement
+            speed = 0.07;
+        }
 
-        oscillator.type = 'sine';
-        oscillator.start(audioContext.currentTime);
-        oscillator.stop(audioContext.currentTime + 0.3);
+        const now = audioContext.currentTime;
+
+        notes.forEach((freq, i) => {
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+
+            oscillator.type = 'sine';
+            oscillator.frequency.setValueAtTime(freq, now + i * speed);
+
+            // Soft envelope
+            gainNode.gain.setValueAtTime(0, now + i * speed);
+            gainNode.gain.linearRampToValueAtTime(gainValue, now + i * speed + 0.02);
+            gainNode.gain.exponentialRampToValueAtTime(0.001, now + i * speed + 0.3);
+
+            oscillator.start(now + i * speed);
+            oscillator.stop(now + i * speed + 0.3);
+        });
     } catch (e) {
-        // Fallback: silent if Web Audio not available
         console.log('Sound notification not available');
     }
 }
@@ -59,14 +79,15 @@ export function showBrowserNotification(
         body?: string;
         icon?: string;
         playSound?: boolean;
+        soundType?: 'brand' | 'visual' | 'default';
         onClick?: () => void;
     }
 ) {
-    const { body, icon = '/logo-icon.png', playSound = true, onClick } = options || {};
+    const { body, icon = '/logo-icon.png', playSound = true, soundType = 'default', onClick } = options || {};
 
     // Play sound if enabled
     if (playSound) {
-        playNotificationSound();
+        playNotificationSound(soundType);
     }
 
     // Check permission
@@ -104,6 +125,7 @@ export const notify = {
         showBrowserNotification('🎨 Marque analysée !', {
             body: brandName ? `${brandName} est prête` : 'Cliquez pour voir',
             playSound: true,
+            soundType: 'brand',
         });
     },
 
@@ -112,6 +134,7 @@ export const notify = {
         showBrowserNotification('✨ Visuel prêt !', {
             body: count > 1 ? `${count} visuels générés` : 'Votre création est prête',
             playSound: true,
+            soundType: 'visual',
         });
     },
 
@@ -120,6 +143,7 @@ export const notify = {
         showBrowserNotification('⚠️ Erreur', {
             body: message,
             playSound: true,
+            soundType: 'default',
         });
     },
 };

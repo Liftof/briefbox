@@ -2708,8 +2708,8 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                         }
                       }}
                       className={`relative h-14 w-14 rounded-xl border-2 overflow-visible cursor-pointer group flex-shrink-0 transition-all ${isSelected
-                          ? 'border-accent shadow-md'
-                          : 'border-gray-200 opacity-50 hover:opacity-80 hover:border-gray-400'
+                        ? 'border-accent shadow-md'
+                        : 'border-gray-200 opacity-50 hover:opacity-80 hover:border-gray-400'
                         }`}
                       title={isSelected
                         ? (locale === 'fr' ? 'Cliquez pour désélectionner' : 'Click to deselect')
@@ -3769,35 +3769,31 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
           {renderContent()}
         </main>
       </div>
-
-      {/* Mobile Sticky Generate CTA - Only visible on mobile when in playground/create mode */}
-      {step === 'playground' && activeTab === 'create' && (
-        <div className="md:hidden fixed bottom-16 left-0 right-0 z-40 px-4 pb-2 bg-gradient-to-t from-[#F9F9F9] via-[#F9F9F9] to-transparent pt-4">
-          <button
-            onClick={() => handleGenerate()}
-            disabled={status !== 'idle' || !brief.trim() || uploadedImages.length === 0}
-            className="w-full bg-gray-900 text-white py-3.5 font-medium disabled:opacity-30 disabled:cursor-not-allowed transition-all hover:bg-black flex items-center justify-center gap-2 shadow-lg"
-          >
-            {status === 'preparing' || status === 'running' ? (
-              <>
-                <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                </svg>
-                <span className="text-sm">{locale === 'fr' ? 'Création...' : 'Creating...'}</span>
-              </>
-            ) : (
-              <>
-                <span className="text-blue-400">✦</span>
-                <span className="text-sm">{locale === 'fr' ? 'Générer' : 'Generate'}</span>
-                {brief.trim() && uploadedImages.length > 0 && (
-                  <span className="text-[10px] bg-white/20 px-1.5 py-0.5 rounded">1 crédit</span>
-                )}
-              </>
-            )}
-          </button>
-        </div>
-      )}
+      <div className="md:hidden fixed bottom-16 left-0 right-0 z-40 px-4 pb-2 bg-gradient-to-t from-[#F9F9F9] via-[#F9F9F9] to-transparent pt-4">
+        <button
+          onClick={() => handleGenerate()}
+          disabled={status !== 'idle' || !brief.trim() || uploadedImages.length === 0}
+          className="w-full bg-gray-900 text-white py-3.5 font-medium disabled:opacity-30 disabled:cursor-not-allowed transition-all hover:bg-black flex items-center justify-center gap-2 shadow-lg"
+        >
+          {status === 'preparing' || status === 'running' ? (
+            <>
+              <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+              </svg>
+              <span className="text-sm">{locale === 'fr' ? 'Création...' : 'Creating...'}</span>
+            </>
+          ) : (
+            <>
+              <span className="text-blue-400">✦</span>
+              <span className="text-sm">{locale === 'fr' ? 'Générer' : 'Generate'}</span>
+              {brief.trim() && uploadedImages.length > 0 && (
+                <span className="text-[10px] bg-white/20 px-1.5 py-0.5 rounded">1 crédit</span>
+              )}
+            </>
+          )}
+        </button>
+      </div>
 
       {/* Credits Toast (subtle notification) */}
       <CreditsToast

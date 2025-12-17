@@ -22,6 +22,13 @@
       "when": 1732876800000,
       "tag": "0002_add_editorial_columns",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1766007857549,
+      "tag": "0003_marvelous_spot",
+      "breakpoints": true
     }
   ]
 }

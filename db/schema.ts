@@ -14,24 +14,24 @@ export const users = pgTable('users', {
   email: text('email').notNull(),
   name: text('name'),
   avatarUrl: text('avatar_url'),
-  
+
   // Subscription
   plan: text('plan').$type<PlanType>().default('free').notNull(),
   creditsRemaining: integer('credits_remaining').default(2).notNull(), // 2 pour free, 50 pro, 150 premium
   creditsResetAt: timestamp('credits_reset_at'), // Prochaine date de reset mensuel
-  
+
   // Early Bird System (auto-gen for first 30 signups/day)
   isEarlyBird: boolean('is_early_bird').default(false),
-  
+
   // Stripe
   stripeCustomerId: text('stripe_customer_id'),
   stripeSubscriptionId: text('stripe_subscription_id'),
   stripePriceId: text('stripe_price_id'),
   stripeCurrentPeriodEnd: timestamp('stripe_current_period_end'),
-  
+
   // Team (optionnel)
   teamId: integer('team_id'), // Sera une foreign key vers teams
-  
+
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').defaultNow(),
 });
@@ -44,15 +44,15 @@ export const teams = pgTable('teams', {
   id: serial('id').primaryKey(),
   name: text('name').notNull(),
   ownerId: text('owner_id').notNull(), // Clerk ID du propriétaire
-  
+
   // Pool de crédits partagé pour l'équipe
   creditsPool: integer('credits_pool').default(150).notNull(),
   creditsResetAt: timestamp('credits_reset_at'),
-  
+
   // Stripe (pour facturation de l'équipe)
   stripeCustomerId: text('stripe_customer_id'),
   stripeSubscriptionId: text('stripe_subscription_id'),
-  
+
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').defaultNow(),
 });
@@ -64,12 +64,12 @@ export const teamMembers = pgTable('team_members', {
   teamId: integer('team_id').notNull().references(() => teams.id),
   userId: text('user_id').notNull(), // Clerk ID
   role: text('role').$type<TeamRole>().default('member').notNull(),
-  
+
   // Invitation
   invitedBy: text('invited_by'), // Clerk ID de l'inviteur
   invitedAt: timestamp('invited_at').defaultNow(),
   acceptedAt: timestamp('accepted_at'),
-  
+
   createdAt: timestamp('created_at').defaultNow(),
 });
 
@@ -82,7 +82,7 @@ export const brands = pgTable('brands', {
   id: serial('id').primaryKey(),
   userId: text('user_id'), // L'ID de l'utilisateur (via Clerk)
   teamId: integer('team_id').references(() => teams.id), // Optionnel: pour partager avec l'équipe
-  
+
   // Infos de base
   name: text('name').notNull(),
   url: text('url').notNull(),
@@ -93,39 +93,39 @@ export const brands = pgTable('brands', {
   targetAudience: text('target_audience'), // Who this brand targets
   uniqueValueProposition: text('unique_value_proposition'), // Main benefit
   brandStory: text('brand_story'), // Brand origin/mission story
-  
+
   // Identité Visuelle
   logo: text('logo'), // URL du logo principal
   colors: jsonb('colors').$type<string[]>(), // ["#000", "#FFF"]
   fonts: jsonb('fonts').$type<string[]>(), // ["Inter", "Roboto"]
   aesthetic: jsonb('aesthetic').$type<string[]>(), // ["Minimalist", "Clean"]
   toneVoice: jsonb('tone_voice').$type<string[]>(), // ["Professional", "Friendly"]
-  
+
   // Contenu Stratégique (IA)
   values: jsonb('values').$type<string[]>(),
   features: jsonb('features').$type<string[]>(),
   services: jsonb('services').$type<string[]>(),
   keyPoints: jsonb('key_points').$type<string[]>(),
-  
+
   // Intelligence Créative
   visualMotifs: jsonb('visual_motifs').$type<string[]>(),
-  marketingAngles: jsonb('marketing_angles').$type<{title: string, hook?: string, concept: string, emotionalTension?: string, platform?: string}[]>(),
+  marketingAngles: jsonb('marketing_angles').$type<{ title: string, hook?: string, concept: string, emotionalTension?: string, platform?: string }[]>(),
   backgroundPrompts: jsonb('background_prompts').$type<string[]>(),
-  
+
   // NOUVEAUX CHAMPS (Workflow V2)
   contentNuggets: jsonb('content_nuggets').$type<{
     realStats: string[],
-    testimonials: {quote: string, author: string, company: string}[],
+    testimonials: { quote: string, author: string, company: string }[],
     achievements: string[],
     blogTopics: string[]
   }>(),
-  
+
   industryInsights: jsonb('industry_insights').$type<{
     fact: string,
     didYouKnow: string,
     source: string
   }[]>(),
-  
+
   suggestedPosts: jsonb('suggested_posts').$type<{
     templateId: string,
     headline: string,
@@ -135,7 +135,7 @@ export const brands = pgTable('brands', {
     source: string,
     intent: string
   }[]>(),
-  
+
   // Editorial Intelligence (V2 Smart Agency)
   editorialAngles: jsonb('editorial_angles').$type<{
     angle: string,
@@ -152,7 +152,7 @@ export const brands = pgTable('brands', {
 
   // Assets (Images scrapées + Textures générées)
   // On stocke tout ici pour simplifier, ou on peut séparer
-  labeledImages: jsonb('labeled_images').$type<{url: string, category: string, description: string}[]>(),
+  labeledImages: jsonb('labeled_images').$type<{ url: string, category: string, description: string }[]>(),
   backgrounds: jsonb('backgrounds').$type<string[]>(), // URLs des textures générées
 
   createdAt: timestamp('created_at').defaultNow(),
@@ -164,14 +164,14 @@ export const campaigns = pgTable('campaigns', {
   id: serial('id').primaryKey(),
   brandId: serial('brand_id').references(() => brands.id),
   userId: text('user_id'), // Pour filtrage rapide
-  
+
   name: text('name').notNull(), // ex: "Noël 2025", "Lancement Produit X"
   description: text('description'),
   status: text('status').default('active'), // 'active', 'archived', 'completed'
-  
+
   startDate: timestamp('start_date'),
   endDate: timestamp('end_date'),
-  
+
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').defaultNow(),
 });
@@ -182,14 +182,14 @@ export const posts = pgTable('posts', {
   brandId: serial('brand_id').references(() => brands.id),
   campaignId: serial('campaign_id').references(() => campaigns.id), // Optionnel, lié à une campagne
   userId: text('user_id'),
-  
+
   content: text('content'), // La caption / légende
   mediaUrl: text('media_url').notNull(), // L'image ou vidéo (souvent issue de generations)
   platform: text('platform'), // 'instagram', 'linkedin', 'facebook', etc.
-  
+
   scheduledDate: timestamp('scheduled_date'), // Date de publication prévue
   status: text('status').default('draft'), // 'draft', 'scheduled', 'published'
-  
+
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').defaultNow(),
 });
@@ -200,27 +200,27 @@ export const generations = pgTable('generations', {
   brandId: serial('brand_id').references(() => brands.id),
   campaignId: serial('campaign_id').references(() => campaigns.id), // Lien vers une campagne spécifique
   userId: text('user_id').notNull(), // Pour accès rapide
-  
+
   type: text('type'), // 'teaser', 'boom', 'social_post', 'edit'
   prompt: text('prompt'), // Le prompt utilisé
   imageUrl: text('image_url').notNull(), // L'image finale
-  
+
   // Métadonnées
   format: text('format'), // '1:1', '9:16'
   liked: boolean('liked').default(false),
   templateId: text('template_id'), // ID du template utilisé
   brandName: text('brand_name'), // Nom de la marque (dénormalisé pour affichage rapide)
-  
+
   // Organisation
   folderId: text('folder_id'), // Dossier utilisateur (optionnel)
-  
+
   // Feedback utilisateur
   feedback: jsonb('feedback').$type<{
     rating: 1 | 2 | 3;
     comment?: string;
     timestamp: string;
   }>(),
-  
+
   createdAt: timestamp('created_at').defaultNow(),
 });
 
@@ -229,6 +229,7 @@ export const folders = pgTable('folders', {
   id: serial('id').primaryKey(),
   externalId: text('external_id').notNull(), // ID client-side compatible (folder_xxx)
   userId: text('user_id').notNull(),
+  brandId: integer('brand_id'), // Optional: link to specific brand
   name: text('name').notNull(),
   color: text('color').default('#6B7280'),
   createdAt: timestamp('created_at').defaultNow(),
