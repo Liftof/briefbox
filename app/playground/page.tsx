@@ -2072,7 +2072,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
             <div className="flex items-center gap-2 mb-6">
               <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
               <span className="text-[10px] font-mono uppercase tracking-widest text-gray-400">
-                Analyse en cours
+                {locale === 'fr' ? 'Analyse en cours' : 'Analysis in progress'}
               </span>
             </div>
 
@@ -2097,7 +2097,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
             {/* Progress bar - modern style */}
             <div className="w-full max-w-md mb-6">
               <div className="flex justify-between text-[10px] font-mono uppercase tracking-widest text-gray-400 mb-2">
-                <span>Progression</span>
+                <span>{locale === 'fr' ? 'Progression' : 'Progress'}</span>
                 <span className="tabular-nums">{Math.round(progress)}%</span>
               </div>
 
@@ -2120,13 +2120,13 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
               {/* Stage labels */}
               <div className="flex justify-between mt-3">
                 <span className={`text-[9px] font-mono uppercase ${loadingStage >= 0 ? 'text-blue-600' : 'text-gray-300'}`}>
-                  Scraping
+                  {locale === 'fr' ? 'Scraping' : 'Scraping'}
                 </span>
                 <span className={`text-[9px] font-mono uppercase ${loadingStage >= 3 ? 'text-blue-600' : 'text-gray-300'}`}>
-                  IA
+                  {locale === 'fr' ? 'IA' : 'AI'}
                 </span>
                 <span className={`text-[9px] font-mono uppercase ${loadingStage >= 5 ? 'text-blue-600' : 'text-gray-300'}`}>
-                  Enrichissement
+                  {locale === 'fr' ? 'Enrichissement' : 'Enrichment'}
                 </span>
               </div>
             </div>
@@ -2134,7 +2134,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
             {/* Live discovery feed */}
             <div className="w-full max-w-md mb-6">
               <div className="text-[10px] font-mono uppercase tracking-widest text-gray-400 mb-2">
-                Découvertes
+                {locale === 'fr' ? 'Découvertes' : 'Discoveries'}
               </div>
               <div className="bg-gray-50 border border-gray-100 rounded-lg p-3 space-y-1.5 h-[120px] overflow-hidden">
                 {DISCOVERY_ITEMS.filter(item => progress >= item.threshold).map((item, i) => (
@@ -2151,7 +2151,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                 {progress < 90 && (
                   <div className="flex items-center gap-2 text-xs text-gray-300">
                     <span className="animate-pulse">⏳</span>
-                    <span>En cours...</span>
+                    <span>{locale === 'fr' ? 'En cours...' : 'In progress...'}</span>
                   </div>
                 )}
               </div>
