@@ -2688,49 +2688,58 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                   </div>
                 )}
 
-                {/* Other selected assets */}
-                {uploadedImages.filter(img => img !== brandData?.logo).map((imgUrl, i) => {
+                {/* ALL brand assets with toggle selection */}
+                {(brandData?.images || []).filter((img: string) => img !== brandData?.logo).map((imgUrl: string, i: number) => {
                   const labelObj = brandData?.labeledImages?.find((li: any) => li.url === imgUrl);
                   const category = labelObj?.category || 'other';
                   const tagInfo = getTagInfo(category, locale === 'fr' ? 'fr' : 'en');
+                  const isSelected = uploadedImages.includes(imgUrl);
                   const isDropdownOpen = tagDropdownOpen === imgUrl;
 
                   return (
                     <div
                       key={i}
                       onClick={() => {
-                        // Toggle selection - clicking deselects the image
-                        setUploadedImages(prev => prev.filter(img => img !== imgUrl));
+                        // Toggle selection
+                        if (isSelected) {
+                          setUploadedImages(prev => prev.filter(img => img !== imgUrl));
+                        } else {
+                          setUploadedImages(prev => [...prev, imgUrl]);
+                        }
                       }}
-                      className="relative h-14 w-14 rounded-xl border-2 border-gray-200 hover:border-accent overflow-visible cursor-pointer group flex-shrink-0"
-                      title={locale === 'fr' ? 'Cliquez pour retirer' : 'Click to remove'}
+                      className={`relative h-14 w-14 rounded-xl border-2 overflow-visible cursor-pointer group flex-shrink-0 transition-all ${isSelected
+                          ? 'border-accent shadow-md'
+                          : 'border-gray-200 opacity-50 hover:opacity-80 hover:border-gray-400'
+                        }`}
+                      title={isSelected
+                        ? (locale === 'fr' ? 'Cliquez pour désélectionner' : 'Click to deselect')
+                        : (locale === 'fr' ? 'Cliquez pour sélectionner' : 'Click to select')
+                      }
                     >
                       <img src={imgUrl} className="w-full h-full object-cover rounded-lg" alt="" />
 
-                      {/* Remove button - top right */}
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setUploadedImages(prev => prev.filter(img => img !== imgUrl));
-                        }}
-                        className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-lg text-[10px] z-10"
-                      >
-                        ×
-                      </button>
+                      {/* Selection checkmark - only when selected */}
+                      {isSelected && (
+                        <div className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-accent text-white rounded-full flex items-center justify-center shadow-lg text-[10px] z-10">
+                          ✓
+                        </div>
+                      )}
 
-                      {/* Tag badge - clickable for dropdown */}
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setTagDropdownOpen(isDropdownOpen ? null : imgUrl);
-                        }}
-                        className={`absolute bottom-0 left-0 right-0 text-[7px] text-center py-0.5 font-bold ${tagInfo.className} cursor-pointer hover:opacity-90 transition-opacity rounded-b-lg flex items-center justify-center gap-0.5`}
-                      >
-                        <span>{tagInfo.shortLabel}</span>
-                        <svg className="w-2 h-2 opacity-60" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-                        </svg>
-                      </button>
+                      {/* Tag badge - only show on selected, clickable for dropdown */}
+                      {isSelected && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setTagDropdownOpen(isDropdownOpen ? null : imgUrl);
+                          }}
+                          className={`absolute bottom-0 left-0 right-0 text-[7px] text-center py-0.5 font-bold ${tagInfo.className} cursor-pointer hover:opacity-90 transition-opacity rounded-b-lg flex items-center justify-center gap-0.5`}
+                        >
+                          <span>{tagInfo.shortLabel}</span>
+                          <svg className="w-2 h-2 opacity-60" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                          </svg>
+                        </button>
+                      )}
 
                       {/* Dropdown menu */}
                       {isDropdownOpen && (
