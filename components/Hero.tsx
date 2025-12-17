@@ -15,7 +15,31 @@ export default function Hero() {
   const [displayedPrompt, setDisplayedPrompt] = useState('');
   const [isTyping, setIsTyping] = useState(true);
   const [isFocused, setIsFocused] = useState(false);
+  const [carouselIndex, setCarouselIndex] = useState(0);
   const promptInputRef = useRef<HTMLTextAreaElement>(null);
+
+  const carouselData = [
+    {
+      image: '/hero-illustration.jpg',
+      prompt: 'Social media post for @Finary, a centralized wealth management platform'
+    },
+    {
+      image: '/hero-lifestyle.png',
+      prompt: 'Minimalist fashion brand social media post featuring a luxury watch'
+    },
+    {
+      image: '/hero-skincare.png',
+      prompt: "Clean skincare brand social media post for 'Glow' serum"
+    }
+  ];
+
+  // Carousel timer
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCarouselIndex((prev) => (prev + 1) % carouselData.length);
+    }, 4000);
+    return () => clearInterval(timer);
+  }, []);
 
   // Locale-aware default prompts
   const defaultPrompts = {
@@ -265,13 +289,118 @@ export default function Hero() {
 
           {/* Right: Visual */}
           <div className="relative hidden lg:block">
-            {/* Hero illustration */}
-            <div className="relative">
-              <img
-                src="/hero-illustration.jpg"
-                alt="Briefbox - Centralize your visuals"
-                className="w-full max-w-lg rounded-xl shadow-2xl"
-              />
+            {/* Carousel Container */}
+            <div className="relative group">
+              <div className="absolute -top-4 -left-4 w-8 h-8 border-l-2 border-t-2 border-gray-300" />
+              <div className="absolute -bottom-4 -right-4 w-8 h-8 border-r-2 border-b-2 border-gray-300" />
+
+              {/* Image Container with smooth transition */}
+              <div className="relative bg-white border border-gray-200 p-3 shadow-2xl shadow-gray-200/50 overflow-hidden">
+                <div className="aspect-[4/5] relative overflow-hidden rounded-sm">
+                  {carouselData.map((item, idx) => (
+                    <img
+                      key={idx}
+                      src={item.image}
+                      alt={`Hero carousel - ${idx}`}
+                      className={`absolute inset-0 w-full h-full object-cover transition-all duration-1000 ease-in-out ${idx === carouselIndex ? 'opacity-100 scale-100' : 'opacity-0 scale-110'
+                        }`}
+                    />
+                  ))}
+
+                  {/* Status badge */}
+                  <div className="absolute top-6 right-6 bg-white/10 backdrop-blur-md text-white text-xs font-medium px-3 py-1.5 flex items-center gap-2 z-20">
+                    <span className="w-1.5 h-1.5 bg-blue-400 rounded-full" />
+                    {locale === 'fr' ? 'Généré' : 'Generated'}
+                  </div>
+                </div>
+              </div>
+
+              {/* Floating prompt card - RESTORED & DYNAMIC */}
+              <div
+                className={`absolute -left-20 top-20 w-80 bg-white border-2 p-5 shadow-xl transition-all duration-500 cursor-text z-30 ${isFocused
+                    ? 'border-blue-500 rotate-0 scale-105 shadow-2xl shadow-blue-500/20'
+                    : 'border-gray-200 -rotate-2 hover:rotate-0 hover:border-gray-300'
+                  }`}
+                onClick={() => {
+                  setIsFocused(true);
+                  setIsTyping(false);
+                  setPromptText(promptText || defaultPrompt);
+                  setTimeout(() => promptInputRef.current?.focus(), 100);
+                }}
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <div className={`w-2 h-2 rounded-full transition-colors ${isFocused ? 'bg-blue-500 animate-pulse' : 'bg-gray-400'}`} />
+                    <span className="text-[10px] font-mono uppercase tracking-widest text-gray-400">
+                      {locale === 'fr' ? 'Le brief' : 'The brief'}
+                    </span>
+                  </div>
+                  <div className="flex gap-1">
+                    {carouselData.map((_, idx) => (
+                      <div
+                        key={idx}
+                        className={`w-1 h-1 rounded-full transition-all duration-300 ${idx === carouselIndex ? 'w-3 bg-gray-900' : 'bg-gray-300'
+                          }`}
+                      />
+                    ))}
+                  </div>
+                </div>
+
+                <div className="min-h-[60px] flex items-center overflow-hidden">
+                  <div
+                    className="w-full transition-all duration-500 transform"
+                  >
+                    {isFocused ? (
+                      <textarea
+                        ref={promptInputRef}
+                        value={promptText}
+                        onChange={(e) => setPromptText(e.target.value)}
+                        onKeyDown={handlePromptKeyDown}
+                        onBlur={() => !promptText && setIsFocused(false)}
+                        placeholder={locale === 'fr' ? 'Décrivez votre visuel...' : 'Describe your visual...'}
+                        className="w-full text-sm text-gray-700 leading-relaxed resize-none outline-none bg-transparent"
+                        rows={3}
+                      />
+                    ) : (
+                      <p className="text-sm text-gray-600 leading-relaxed italic">
+                        "{carouselData[carouselIndex].prompt}"
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="mt-3 flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-[10px] text-gray-400">
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                      <path d="M5 12h14M12 5l7 7-7 7" />
+                    </svg>
+                    <span className="font-mono">
+                      {locale === 'fr' ? 'DÉMO' : 'DEMO'}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <div className="text-[9px] font-mono text-gray-400 uppercase tracking-tighter">
+                      Step {carouselIndex + 1}/3
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Floating assets card - RESTORED */}
+              <div className="absolute -right-8 bottom-20 w-56 bg-white border border-gray-200 p-4 shadow-xl transform rotate-3 hover:rotate-0 transition-all duration-500 z-10 group-hover:rotate-0">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full" />
+                  <span className="text-[10px] font-mono uppercase tracking-widest text-gray-400">
+                    {locale === 'fr' ? 'Assets chargés' : 'Assets loaded'}
+                  </span>
+                </div>
+                <div className="flex gap-2">
+                  <div className="w-10 h-10 bg-gray-900 rounded-lg animate-pulse" style={{ animationDelay: '0ms' }} />
+                  <div className="w-10 h-10 bg-orange-500 rounded-lg animate-pulse" style={{ animationDelay: '200ms' }} />
+                  <div className="w-10 h-10 bg-gray-200 rounded-lg animate-pulse" style={{ animationDelay: '400ms' }} />
+                </div>
+              </div>
             </div>
           </div>
 
