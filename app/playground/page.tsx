@@ -719,6 +719,7 @@ function PlaygroundContent() {
             setSelectedBrandId(data.brand.id);
             setStep('bento');
             showToast(locale === 'fr' ? 'Cette marque existe déjà — la voici !' : 'This brand already exists — here it is!', 'info');
+            notify.brandReady(data.brand?.name); // Browser notification
           }, 300);
           return; // Success! Exit the retry loop
         }
@@ -730,6 +731,8 @@ function PlaygroundContent() {
           } else {
             showToast('Analyse terminée — uploadez votre logo', 'info');
           }
+          // Browser notification with sound
+          notify.brandReady(data.brand?.name);
         }, 500);
 
         return; // Success! Exit the retry loop
