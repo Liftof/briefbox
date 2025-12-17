@@ -1803,8 +1803,12 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
           aspectRatio: img.aspectRatio || aspectRatio, // Save the ratio used
         }));
 
+      console.log('🗂️ SAVE DEBUG: generationsToSave count:', generationsToSave.length);
       if (generationsToSave.length > 0) {
+        console.log('🗂️ SAVE DEBUG: Saving to DB/localStorage:', generationsToSave.map(g => g.url?.slice(0, 50)));
         await addGenerations(generationsToSave);
+      } else {
+        console.log('⚠️ SAVE DEBUG: No generations to save! All have skipSave=true');
       }
 
       // Trigger update event for ProjectsView
