@@ -18,6 +18,7 @@ import { TemplateId } from '@/lib/templates';
 import { useTranslation } from '@/lib/i18n';
 import { useBrands, BrandSummary, getLastUsedBrandId, setLastUsedBrandId, clearLastUsedBrandId } from '@/lib/useBrands';
 import { getTagInfo, getTagOptions as getTagOptionsList, EDITABLE_TAGS } from '@/lib/tagStyles';
+import { notify, requestNotificationPermission } from '@/lib/notifications';
 
 type Step = 'loading' | 'url' | 'analyzing' | 'logo-confirm' | 'bento' | 'playground';
 
@@ -1496,6 +1497,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
       setStatus('complete');
       setProgress(100);
       showToast('Variante générée !', 'success');
+      notify.visualReady(normalized.length); // Browser notification with sound
 
     } catch (error: any) {
       console.error('Edit error:', error);
@@ -1810,6 +1812,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
       setProgress(100);
       setShowGiftOverlay(false); // Dismiss gift overlay if it was showing
       showToast(locale === 'fr' ? 'Visuel généré et sauvegardé !' : 'Visual generated and saved!', 'success');
+      notify.visualReady(normalized.length); // Browser notification with sound
 
       // ====== CREDITS TRACKING (inline upgrade card, no popup) ======
       const creditsRemaining = payload.creditsRemaining;
@@ -2507,8 +2510,16 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                 return hookText && hookText.length >= 10;
               }) || [];
 
-              const visibleInsights = showAllAngles ? validInsights : validInsights.slice(0, 4);
-              const hasMore = validInsights.length > 4;
+              // Sort: pain_points (red) first, then primary, then others
+              const sortedInsights = [...validInsights].sort((a: any, b: any) => {
+                const order = { 'pain_point': 0, 'primary': 1 };
+                const aOrder = a.type === 'pain_point' ? 0 : (a.tier === 'primary' ? 1 : 2);
+                const bOrder = b.type === 'pain_point' ? 0 : (b.tier === 'primary' ? 1 : 2);
+                return aOrder - bOrder;
+              });
+
+              const visibleInsights = showAllAngles ? sortedInsights : sortedInsights.slice(0, 4);
+              const hasMore = sortedInsights.length > 4;
 
               // Type-based styling for secondary angles
               const typeStyles: Record<string, { emoji: string; bg: string; border: string; hover: string }> = {
@@ -2680,8 +2691,12 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                   return (
                     <div
                       key={i}
+                      onClick={() => {
+                        // Toggle selection - clicking deselects the image
+                        setUploadedImages(prev => prev.filter(img => img !== imgUrl));
+                      }}
                       className="relative h-14 w-14 rounded-xl border-2 border-gray-200 hover:border-accent overflow-visible cursor-pointer group flex-shrink-0"
-                      title={locale === 'fr' ? 'Cliquez sur ✕ pour retirer, sur le tag pour modifier' : 'Click ✕ to remove, click tag to change'}
+                      title={locale === 'fr' ? 'Cliquez pour retirer' : 'Click to remove'}
                     >
                       <img src={imgUrl} className="w-full h-full object-cover rounded-lg" alt="" />
 
