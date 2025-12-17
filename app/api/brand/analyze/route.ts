@@ -45,7 +45,7 @@ async function transformToEditorialAngles(
 
   try {
     console.log(`🎯 Transforming ${rawInsights.length} raw insights into editorial angles...`);
-    
+
     const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -102,15 +102,15 @@ Retourne UNIQUEMENT le JSON array, rien d'autre.`
 
     const data = await response.json();
     const content = data.choices?.[0]?.message?.content || '[]';
-    
+
     // Parse JSON from response
     const jsonMatch = content.match(/\[[\s\S]*\]/);
     if (!jsonMatch) return [];
-    
+
     const angles = JSON.parse(jsonMatch[0]);
     console.log(`✅ Transformed into ${angles.length} smart editorial angles`);
     return angles;
-    
+
   } catch (error) {
     console.warn('Failed to transform insights:', error);
     return [];
@@ -124,9 +124,9 @@ Retourne UNIQUEMENT le JSON array, rien d'autre.`
 // This runs BEFORE adding to brandData, not at display time
 function isRelevantInsight(text: string): boolean {
   if (!text || text.length < 10) return false;
-  
+
   const lower = text.toLowerCase();
-  
+
   // FORBIDDEN patterns - generic industry garbage
   const garbagePatterns = [
     // Market size / projections (useless for end users)
@@ -155,7 +155,7 @@ function isRelevantInsight(text: string): boolean {
     'machine learning market', 'cloud computing market',
     'according to a report', 'industry report', 'market report',
   ];
-  
+
   // Check if any garbage pattern is present
   for (const pattern of garbagePatterns) {
     if (lower.includes(pattern)) {
@@ -163,7 +163,7 @@ function isRelevantInsight(text: string): boolean {
       return false;
     }
   }
-  
+
   return true;
 }
 
@@ -255,7 +255,7 @@ Focus on stats that would make the TARGET CUSTOMER stop scrolling. Be specific w
 // Helper: Smart Firecrawl Search for competitive intelligence & market insights
 // Uses: sources (news), categories (research), tbs (time filter) per docs.firecrawl.dev/features/search
 async function enrichWithFirecrawlSearch(
-  industry: string, 
+  industry: string,
   brandName: string,
   targetAudience?: string
 ): Promise<{
@@ -266,7 +266,7 @@ async function enrichWithFirecrawlSearch(
   newsHighlights: { headline: string; date?: string; url: string }[];
 }> {
   const FIRECRAWL_API_KEY = process.env.FIRECRAWL_API_KEY;
-  
+
   if (!FIRECRAWL_API_KEY) {
     console.warn('⚠️ FIRECRAWL_API_KEY not set, skipping enrichment search');
     return { painPoints: [], trends: [], marketContext: [], competitors: [], newsHighlights: [] };
@@ -282,22 +282,22 @@ async function enrichWithFirecrawlSearch(
 
   try {
     console.log(`🔥 Smart Firecrawl Search for: ${industry} / ${brandName}`);
-    
+
     // STRATEGIC SEARCH MATRIX - Focus on TARGET AUDIENCE problems, NOT industry meta-data!
     // IMPORTANT: We want insights that speak TO the target customer, not ABOUT the client's industry
     // Example: For a "SaaS for marketers", search for "marketer problems", NOT "SaaS market growth"
-    
+
     const searches = [
       // 1. PAIN POINTS - What problems does the TARGET AUDIENCE face in their daily work?
       // If targetAudience = "marketing professionals", search for THEIR struggles
       {
-        query: targetAudience 
+        query: targetAudience
           ? `"${targetAudience}" daily struggles challenges time wasted statistics survey`
           : `professionals problems with "${industry}" frustrations pain points`,
         type: 'painPoints',
         config: { limit: 5, scrapeOptions: { formats: ['markdown'] } }
       },
-      
+
       // 2. TARGET AUDIENCE TRENDS - What's changing in THEIR profession?
       // NOT "Industry grew" but "More marketers are struggling with X"
       {
@@ -307,23 +307,23 @@ async function enrichWithFirecrawlSearch(
         type: 'trends',
         config: { limit: 5, tbs: 'qdr:m' }
       },
-      
+
       // 3. RELEVANT NEWS - Topics the TARGET AUDIENCE cares about professionally
       {
-        query: targetAudience 
+        query: targetAudience
           ? `"${targetAudience}" career challenges news`
           : `"${industry}" professionals news impact`,
         type: 'news',
         config: { limit: 5, sources: ['news'] }
       },
-      
+
       // 4. COMPETITOR ANALYSIS - What are customers saying about alternatives?
       {
         query: `"${brandName}" alternatives OR competitors reviews complaints`,
         type: 'competitors',
         config: { limit: 5, scrapeOptions: { formats: ['markdown'] } }
       },
-      
+
       // 5. RESEARCH/STATS - Stats about the TARGET AUDIENCE's work life
       // NOT "Market size $X billion" but "X% of [target audience] struggle with Y"
       {
@@ -354,12 +354,12 @@ async function enrichWithFirecrawlSearch(
           // V2 improvements
           maxAge: 172800, // 2 days cache (faster responses)
         };
-        
+
         // V2: Use sources for news searches
         if (search.type === 'news') {
           searchBody.sources = ['news'];
         }
-        
+
         const response = await fetch('https://api.firecrawl.dev/v2/search', {
           method: 'POST',
           headers: {
@@ -391,7 +391,7 @@ async function enrichWithFirecrawlSearch(
       // Handle different response structures
       const webResults = Array.isArray(result.data) ? result.data : (result.data.web || []);
       const newsResults = result.data.news || [];
-      
+
       // === PAIN POINTS: Extract frustration sentences ===
       if (result.type === 'painPoints') {
         for (const item of webResults) {
@@ -400,24 +400,24 @@ async function enrichWithFirecrawlSearch(
             const hostname = new URL(item.url || '').hostname;
             const painSentences = content
               .split(/[.!?]/)
-              .filter((s: string) => 
+              .filter((s: string) =>
                 s.length > 40 && s.length < 250 &&
-                (s.toLowerCase().includes('challenge') || 
-                 s.toLowerCase().includes('struggle') ||
-                 s.toLowerCase().includes('frustrat') ||
-                 s.toLowerCase().includes('difficult') ||
-                 s.toLowerCase().includes('pain point') ||
-                 s.toLowerCase().includes('problem'))
+                (s.toLowerCase().includes('challenge') ||
+                  s.toLowerCase().includes('struggle') ||
+                  s.toLowerCase().includes('frustrat') ||
+                  s.toLowerCase().includes('difficult') ||
+                  s.toLowerCase().includes('pain point') ||
+                  s.toLowerCase().includes('problem'))
               )
               .slice(0, 2);
-            
+
             for (const sentence of painSentences) {
               results.painPoints.push({ point: sentence.trim(), source: hostname });
             }
           } catch (e) { /* skip invalid URLs */ }
         }
       }
-      
+
       // === TRENDS: Extract with stats/numbers ===
       if (result.type === 'trends' || result.type === 'research') {
         for (const item of webResults) {
@@ -426,20 +426,20 @@ async function enrichWithFirecrawlSearch(
             const hostname = new URL(item.url || '').hostname;
             const trendSentences = content
               .split(/[.!?]/)
-              .filter((s: string) => 
+              .filter((s: string) =>
                 s.length > 40 && s.length < 250 &&
                 (s.match(/\d+%/) || s.match(/\$[\d,]+/) || s.match(/\d+x/) ||
-                 s.toLowerCase().includes('grow') ||
-                 s.toLowerCase().includes('increase') ||
-                 s.toLowerCase().includes('rise') ||
-                 s.toLowerCase().includes('market') ||
-                 s.toLowerCase().includes('trend'))
+                  s.toLowerCase().includes('grow') ||
+                  s.toLowerCase().includes('increase') ||
+                  s.toLowerCase().includes('rise') ||
+                  s.toLowerCase().includes('market') ||
+                  s.toLowerCase().includes('trend'))
               )
               .slice(0, 2);
-            
+
             for (const sentence of trendSentences) {
-              results.trends.push({ 
-                trend: sentence.trim(), 
+              results.trends.push({
+                trend: sentence.trim(),
                 source: hostname,
                 isRecent: result.type === 'trends' // tbs filtered = recent
               });
@@ -447,7 +447,7 @@ async function enrichWithFirecrawlSearch(
           } catch (e) { /* skip */ }
         }
       }
-      
+
       // === NEWS: Headlines for content inspiration ===
       if (result.type === 'news' && newsResults.length > 0) {
         for (const news of newsResults.slice(0, 4)) {
@@ -459,17 +459,17 @@ async function enrichWithFirecrawlSearch(
         }
         console.log(`📰 Found ${newsResults.length} news items`);
       }
-      
+
       // === COMPETITORS: Extract names and potential weaknesses ===
       if (result.type === 'competitors') {
         for (const item of webResults) {
           const content = item.markdown || item.description || '';
           const title = item.title || '';
-          
+
           // Extract competitor names from "X vs Y" or "alternatives to X" patterns
           const vsMatch = title.match(/(\w+)\s+vs\s+(\w+)/i);
           const altMatch = content.match(/alternatives?(?:\s+to)?\s+(\w+)/i);
-          
+
           if (vsMatch) {
             const comp = vsMatch[1] !== brandName ? vsMatch[1] : vsMatch[2];
             if (comp && comp.toLowerCase() !== brandName.toLowerCase()) {
@@ -492,11 +492,11 @@ async function enrichWithFirecrawlSearch(
     results.painPoints = results.painPoints
       .filter((p, i, arr) => arr.findIndex(x => x.point.slice(0, 50) === p.point.slice(0, 50)) === i)
       .slice(0, 6);
-    
+
     results.trends = results.trends
       .filter((t, i, arr) => arr.findIndex(x => x.trend.slice(0, 50) === t.trend.slice(0, 50)) === i)
       .slice(0, 6);
-    
+
     results.competitors = results.competitors
       .filter((c, i, arr) => arr.findIndex(x => x.name.toLowerCase() === c.name.toLowerCase()) === i)
       .slice(0, 5);
@@ -507,7 +507,7 @@ async function enrichWithFirecrawlSearch(
       news: results.newsHighlights.length,
       competitors: results.competitors.length
     });
-    
+
     return results;
   } catch (error) {
     console.error('Firecrawl enrichment error:', error);
@@ -521,7 +521,7 @@ async function searchIndustryInsights(industry: string, brandName: string): Prom
   sources: { url: string; title: string }[];
 }> {
   const PARALLEL_API_KEY = process.env.PARALLEL_API_KEY;
-  
+
   if (!PARALLEL_API_KEY) {
     console.warn('⚠️ PARALLEL_API_KEY not set, skipping industry search');
     return { rawExcerpts: '', sources: [] };
@@ -529,7 +529,7 @@ async function searchIndustryInsights(industry: string, brandName: string): Prom
 
   try {
     console.log(`🔍 Searching industry insights for: ${industry}`);
-    
+
     const response = await fetch('https://api.parallel.ai/v1beta/search', {
       method: 'POST',
       headers: {
@@ -567,7 +567,7 @@ Focus on data from 2024-2025 reports from Gartner, Forrester, Statista, or speci
     }
 
     const data = await response.json();
-    
+
     if (!data.results || data.results.length === 0) {
       console.warn('No search results found');
       return { rawExcerpts: '', sources: [] };
@@ -599,56 +599,56 @@ Focus on data from 2024-2025 reports from Gartner, Forrester, Statista, or speci
 async function extractColorsFromImage(imageUrl: string): Promise<string[]> {
   try {
     console.log('🎨 Extracting colors from:', imageUrl);
-    
+
     // Skip SVGs - they often have parsing issues and Sharp can't always handle them
     const isSvg = imageUrl.toLowerCase().includes('.svg') || imageUrl.includes('image/svg');
     if (isSvg) {
       console.log('⚠️ Skipping SVG for color extraction (not supported reliably)');
       return [];
     }
-    
+
     // Fetch the image with timeout
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 10000); // 10s timeout
-    
-    const response = await fetch(imageUrl, { 
+
+    const response = await fetch(imageUrl, {
       signal: controller.signal,
       headers: { 'Accept': 'image/*' }
     });
     clearTimeout(timeout);
-    
+
     if (!response.ok) {
       console.warn('Failed to fetch image for color extraction:', response.status);
       return [];
     }
-    
+
     const contentType = response.headers.get('content-type') || '';
-    
+
     // Double-check for SVG in content-type
     if (contentType.includes('svg')) {
       console.log('⚠️ Detected SVG via content-type, skipping color extraction');
       return [];
     }
-    
+
     const arrayBuffer = await response.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
-    
+
     // Check if buffer looks like SVG (starts with < or <?xml)
     const bufferStart = buffer.slice(0, 100).toString('utf8').trim();
     if (bufferStart.startsWith('<') || bufferStart.startsWith('<?xml')) {
       console.log('⚠️ Buffer appears to be SVG/XML, skipping');
       return [];
     }
-    
+
     // Convert to PNG using sharp (handles WEBP, etc.)
     const pngBuffer = await sharp(buffer)
       .png()
       .resize(200, 200, { fit: 'inside' })
       .toBuffer();
-    
+
     // Extract colors using get-image-colors
     const colors = await getColors(pngBuffer, 'image/png');
-    
+
     // Convert to hex and filter out near-white/near-black that might be background
     const hexColors = colors
       .map((color: any) => color.hex())
@@ -659,7 +659,7 @@ async function extractColorsFromImage(imageUrl: string): Promise<string[]> {
         const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
         return luminance > 0.05 && luminance < 0.95;
       });
-    
+
     console.log('🎨 Extracted colors:', hexColors);
     return hexColors.slice(0, 5);
   } catch (error: any) {
@@ -687,7 +687,7 @@ async function mapWebsite(url: string): Promise<string[]> {
 function discoverInternalPages(baseUrl: string, markdown: string): string[] {
   const url = new URL(baseUrl);
   const baseOrigin = url.origin;
-  
+
   // Keywords to find valuable internal pages
   const valuablePagePatterns = [
     /\/blog\/?$/i, /\/articles?\/?$/i, /\/news\/?$/i, /\/actualites?\/?$/i,
@@ -697,30 +697,30 @@ function discoverInternalPages(baseUrl: string, markdown: string): string[] {
     /\/services?\/?$/i, /\/solutions?\/?$/i, /\/products?\/?$/i,
     /\/pricing\/?$/i, /\/tarifs?\/?$/i
   ];
-  
+
   // Extract all links from markdown
   const linkRegex = /\[([^\]]*)\]\(([^)]+)\)/g;
   const discoveredPages: string[] = [];
   let match;
-  
+
   while ((match = linkRegex.exec(markdown)) !== null) {
     let href = match[2];
-    
+
     // Convert relative to absolute
     if (href.startsWith('/')) {
       href = baseOrigin + href;
     }
-    
+
     // Only same-origin pages
     if (!href.startsWith(baseOrigin)) continue;
-    
+
     // Check if it matches valuable patterns
     const isValuable = valuablePagePatterns.some(pattern => pattern.test(href));
     if (isValuable && !discoveredPages.includes(href)) {
       discoveredPages.push(href);
     }
   }
-  
+
   // Also try common paths even if not found in content
   const commonPaths = ['/blog', '/about', '/a-propos', '/case-studies', '/clients', '/temoignages'];
   for (const path of commonPaths) {
@@ -729,21 +729,21 @@ function discoverInternalPages(baseUrl: string, markdown: string): string[] {
       discoveredPages.push(fullUrl);
     }
   }
-  
+
   return discoveredPages.slice(0, 10); // Limit to 10 extra pages for fallback
 }
 
 // Helper: Extract content nuggets (stats, quotes, facts) from text
 function extractContentNuggets(text: string): ContentNugget[] {
   const nuggets: ContentNugget[] = [];
-  
+
   // Extract statistics (numbers with context)
   const statPatterns = [
     /(\d+(?:[,\.]\d+)?(?:\s*[%xX×]|\s*(?:millions?|milliards?|K\+?|M\+?)))\s+([^.!?\n]{10,80})/gi,
     /([+\-]?\d+(?:[,\.]\d+)?%)\s*(?:de\s+)?([^.!?\n]{10,60})/gi,
     /(\d+(?:\s*\d+)*)\s+(clients?|users?|utilisateurs?|entreprises?|projets?|années?)/gi
   ];
-  
+
   // patterns to exclude (pricing, dates, common UI noise)
   const excludePatterns = [
     /€|\$|£|eur|usd|prix|price|tarif|mois|month|an|year|user|utilisateur/i, // Currency & billing
@@ -761,7 +761,7 @@ function extractContentNuggets(text: string): ContentNugget[] {
       const stat = match[1];
       const context = match[2] || match[0];
       const fullString = `${stat} ${context}`.toLowerCase();
-      
+
       // Skip if matches exclusion patterns
       if (excludePatterns.some(p => p.test(fullString))) continue;
 
@@ -774,14 +774,14 @@ function extractContentNuggets(text: string): ContentNugget[] {
       }
     }
   }
-  
+
   // Extract testimonials/quotes
   const quotePatterns = [
     /"([^"]{30,200})"\s*[-–—]\s*([^,\n]+)/g,
     /«([^»]{30,200})»\s*[-–—]\s*([^,\n]+)/g,
     /"([^"]{30,200})"\s*[-–—]\s*([^,\n]+)/g
   ];
-  
+
   for (const pattern of quotePatterns) {
     let match;
     while ((match = pattern.exec(text)) !== null) {
@@ -792,12 +792,12 @@ function extractContentNuggets(text: string): ContentNugget[] {
       });
     }
   }
-  
+
   // Extract achievements/certifications
   const achievementPatterns = [
     /(certifi[ée]|labelli[ée]|récompens[ée]|award|prix|distinction|best of|top \d+)/gi
   ];
-  
+
   for (const pattern of achievementPatterns) {
     let match;
     while ((match = pattern.exec(text)) !== null) {
@@ -805,7 +805,7 @@ function extractContentNuggets(text: string): ContentNugget[] {
       const start = Math.max(0, match.index - 50);
       const end = Math.min(text.length, match.index + match[0].length + 50);
       const context = text.slice(start, end).replace(/\n/g, ' ').trim();
-      
+
       if (context.length > 20) {
         nuggets.push({
           type: 'achievement',
@@ -814,11 +814,11 @@ function extractContentNuggets(text: string): ContentNugget[] {
       }
     }
   }
-  
+
   // Remove duplicates and limit
   const uniqueNuggets: ContentNugget[] = [];
   const seen = new Set<string>();
-  
+
   for (const nugget of nuggets) {
     const key = nugget.content.toLowerCase().slice(0, 50);
     if (!seen.has(key)) {
@@ -826,7 +826,7 @@ function extractContentNuggets(text: string): ContentNugget[] {
       uniqueNuggets.push(nugget);
     }
   }
-  
+
   return uniqueNuggets.slice(0, 15);
 }
 
@@ -834,13 +834,13 @@ function extractContentNuggets(text: string): ContentNugget[] {
 function mergeColorPalettes(aiColors: string[], extractedColors: string[]): string[] {
   if (extractedColors.length === 0) return aiColors;
   if (aiColors.length === 0) return extractedColors;
-  
+
   // Normalize hex colors to uppercase
   const normalize = (hex: string) => hex.toUpperCase().replace(/^#/, '');
-  
+
   // Start with extracted colors (they are the "truth")
   const merged = [...extractedColors];
-  
+
   // Add AI colors that are significantly different from extracted ones
   for (const aiColor of aiColors) {
     const aiNorm = normalize(aiColor);
@@ -853,12 +853,12 @@ function mergeColorPalettes(aiColors: string[], extractedColors: string[]): stri
       const totalDiff = rDiff + gDiff + bDiff;
       return totalDiff > 60; // Threshold for "different enough"
     });
-    
+
     if (isDifferent && merged.length < 6) {
       merged.push(aiColor);
     }
   }
-  
+
   return merged.slice(0, 6);
 }
 
@@ -873,7 +873,7 @@ export async function POST(request: Request) {
     // ====== RATE LIMITING ======
     const rateLimitResult = rateLimitByUser(userId, 'analyze');
     if (!rateLimitResult.success) {
-      return NextResponse.json({ 
+      return NextResponse.json({
         error: 'Trop de requêtes. Réessayez dans quelques secondes.',
         retryAfter: Math.ceil((rateLimitResult.reset - Date.now()) / 1000),
       }, { status: 429 });
@@ -907,15 +907,15 @@ export async function POST(request: Request) {
     const existingBrands = await db.query.brands.findMany({
       where: eq(brands.userId, userId),
     });
-    
-    const existingBrand = existingBrands.find(b => 
+
+    const existingBrand = existingBrands.find(b =>
       b.url && normalizeUrl(b.url) === normalizedUrl
     );
 
     // If brand exists and we're not forcing a re-scrape, return existing brand data immediately
     // This saves API costs and time - no need to re-scrape
     const forceRescrape = reqBody.forceRescrape === true;
-    
+
     if (existingBrand && !forceRescrape) {
       console.log(`♻️ Brand already exists for this URL, returning existing data (id: ${existingBrand.id})`);
       return NextResponse.json({
@@ -952,13 +952,13 @@ export async function POST(request: Request) {
         isUpdate: true,
       });
     }
-    
+
     // Store existing brand ID to include in response (for update instead of create)
     let existingBrandId: number | null = existingBrand?.id || null;
 
     // Gather all URLs to scrape (Website + Socials + Other)
     const urlsToScrape = [url, ...socialLinks, ...otherLinks].filter(
-        (u) => u && typeof u === 'string' && u.startsWith('http')
+      (u) => u && typeof u === 'string' && u.startsWith('http')
     );
 
     // 1. Scrape with Firecrawl (centralized helper with retry) & Parallel Web Systems
@@ -966,240 +966,240 @@ export async function POST(request: Request) {
     let firecrawlMarkdown = '';
     let firecrawlMetadata: any = {};
     let parallelContent = '';
-    
+
     const PARALLEL_API_KEY = process.env.PARALLEL_API_KEY;
     const parallelHeaders: Record<string, string> = {
-        'Content-Type': 'application/json',
-        'parallel-beta': 'search-extract-2025-10-10', // Required header value for beta API
+      'Content-Type': 'application/json',
+      'parallel-beta': 'search-extract-2025-10-10', // Required header value for beta API
     };
     if (PARALLEL_API_KEY) {
-        parallelHeaders['x-api-key'] = PARALLEL_API_KEY;
+      parallelHeaders['x-api-key'] = PARALLEL_API_KEY;
     }
 
     try {
-        // Firecrawl V2 via centralized helper (with retry on network errors)
-        const firecrawlPromise = firecrawlScrape(url, {
-            formats: ['markdown', 'html', 'screenshot'],
-            onlyMainContent: false,
-            removeBase64Images: true,
-            timeout: 30000,
-            retries: 1, // 1 retry on network/5xx errors
-        });
+      // Firecrawl V2 via centralized helper (with retry on network errors)
+      const firecrawlPromise = firecrawlScrape(url, {
+        formats: ['markdown', 'html', 'screenshot'],
+        onlyMainContent: false,
+        removeBase64Images: true,
+        timeout: 30000,
+        retries: 1, // 1 retry on network/5xx errors
+      });
 
-        // Parallel AI for extracting data from ALL links (website + socials)
-        const parallelPromise = fetch('https://api.parallel.ai/v1beta/extract', {
-            method: 'POST',
-            headers: parallelHeaders,
-            body: JSON.stringify({
-                urls: urlsToScrape, // Send all URLs
-                objective: "Extract the brand identity, logo URL, color palette, fonts, brand values, main product images, and analyze social media vibes.",
-                excerpts: true,
-                full_content: false
-            })
-        });
+      // Parallel AI for extracting data from ALL links (website + socials)
+      const parallelPromise = fetch('https://api.parallel.ai/v1beta/extract', {
+        method: 'POST',
+        headers: parallelHeaders,
+        body: JSON.stringify({
+          urls: urlsToScrape, // Send all URLs
+          objective: "Extract the brand identity, logo URL, color palette, fonts, brand values, main product images, and analyze social media vibes.",
+          excerpts: true,
+          full_content: false
+        })
+      });
 
-        const [firecrawlResult, parallelRes] = await Promise.allSettled([firecrawlPromise, parallelPromise]);
+      const [firecrawlResult, parallelRes] = await Promise.allSettled([firecrawlPromise, parallelPromise]);
 
-        // Process Firecrawl (now via helper)
-        if (firecrawlResult.status === 'fulfilled') {
-            const scrapeResult = firecrawlResult.value;
-            if (scrapeResult.success) {
-                firecrawlMarkdown = scrapeResult.markdown;
-                firecrawlMetadata = scrapeResult.metadata;
-                console.log('✅ Firecrawl success - markdown length:', firecrawlMarkdown.length);
-            } else {
-                console.warn('⚠️ Firecrawl failed:', scrapeResult.error);
-            }
+      // Process Firecrawl (now via helper)
+      if (firecrawlResult.status === 'fulfilled') {
+        const scrapeResult = firecrawlResult.value;
+        if (scrapeResult.success) {
+          firecrawlMarkdown = scrapeResult.markdown;
+          firecrawlMetadata = scrapeResult.metadata;
+          console.log('✅ Firecrawl success - markdown length:', firecrawlMarkdown.length);
         } else {
-            console.warn('⚠️ Firecrawl promise rejected:', firecrawlResult.reason);
+          console.warn('⚠️ Firecrawl failed:', scrapeResult.error);
         }
+      } else {
+        console.warn('⚠️ Firecrawl promise rejected:', firecrawlResult.reason);
+      }
 
-        // Process Parallel
-        if (parallelRes.status === 'fulfilled') {
-            if (parallelRes.value.ok) {
-                const parallelData = await parallelRes.value.json();
-                if (parallelData.results && parallelData.results.length > 0) {
-                    // Concatenate excerpts from all sources
-                    parallelContent = parallelData.results
-                        .map((res: any) => `SOURCE (${res.url}):\n` + (res.excerpts || []).join('\n\n'))
-                        .join('\n\n---\n\n');
-                    console.log('✅ Parallel AI success - sources:', parallelData.results.length);
-                } else {
-                    console.log('ℹ️ Parallel AI returned no results');
-                }
-            } else {
-                const errorText = await parallelRes.value.text();
-                console.warn('⚠️ Parallel API HTTP error:', parallelRes.value.status, errorText.slice(0, 300));
-            }
+      // Process Parallel
+      if (parallelRes.status === 'fulfilled') {
+        if (parallelRes.value.ok) {
+          const parallelData = await parallelRes.value.json();
+          if (parallelData.results && parallelData.results.length > 0) {
+            // Concatenate excerpts from all sources
+            parallelContent = parallelData.results
+              .map((res: any) => `SOURCE (${res.url}):\n` + (res.excerpts || []).join('\n\n'))
+              .join('\n\n---\n\n');
+            console.log('✅ Parallel AI success - sources:', parallelData.results.length);
+          } else {
+            console.log('ℹ️ Parallel AI returned no results');
+          }
         } else {
-            console.warn('⚠️ Parallel API rejected:', parallelRes.reason);
+          const errorText = await parallelRes.value.text();
+          console.warn('⚠️ Parallel API HTTP error:', parallelRes.value.status, errorText.slice(0, 300));
         }
+      } else {
+        console.warn('⚠️ Parallel API rejected:', parallelRes.reason);
+      }
 
     } catch (e) {
-        console.warn('Scraping error:', e);
+      console.warn('Scraping error:', e);
     }
-    
+
     // 1.5. DEEP CRAWL: Recursive crawling for maximum editorial content AND images
     console.log('🔍 Starting recursive deep crawl for editorial content & images...');
     let deepCrawlContent = '';
     let contentNuggets: ContentNugget[] = [];
     let deepCrawlImages: string[] = []; // NEW: Collect images from all crawled pages
-    
+
     // Helper to extract images from Markdown (defined early so we can use it throughout)
     const extractImagesFromMarkdown = (md: string): string[] => {
-        const images: string[] = [];
-        
-        // Pattern 1: Standard markdown ![alt](url)
-        const mdRegex = /!\[.*?\]\((https?:\/\/[^)\s]+)\)/g;
-        let match;
-        while ((match = mdRegex.exec(md)) !== null) {
-            if (match[1]) {
-                const cleanUrl = match[1].split(' ')[0].replace(/\)$/, '');
-                images.push(cleanUrl);
-            }
+      const images: string[] = [];
+
+      // Pattern 1: Standard markdown ![alt](url)
+      const mdRegex = /!\[.*?\]\((https?:\/\/[^)\s]+)\)/g;
+      let match;
+      while ((match = mdRegex.exec(md)) !== null) {
+        if (match[1]) {
+          const cleanUrl = match[1].split(' ')[0].replace(/\)$/, '');
+          images.push(cleanUrl);
         }
-        
-        // Pattern 2: HTML img tags <img src="url">
-        const imgRegex = /<img[^>]+src=["'](https?:\/\/[^"']+)["']/gi;
-        while ((match = imgRegex.exec(md)) !== null) {
-            if (match[1]) {
-                images.push(match[1]);
-            }
+      }
+
+      // Pattern 2: HTML img tags <img src="url">
+      const imgRegex = /<img[^>]+src=["'](https?:\/\/[^"']+)["']/gi;
+      while ((match = imgRegex.exec(md)) !== null) {
+        if (match[1]) {
+          images.push(match[1]);
         }
-        
-        // Pattern 3: Background URLs in style attributes
-        const bgRegex = /url\(['"]?(https?:\/\/[^'")\s]+)['"]?\)/gi;
-        while ((match = bgRegex.exec(md)) !== null) {
-            if (match[1]) {
-                images.push(match[1]);
-            }
+      }
+
+      // Pattern 3: Background URLs in style attributes
+      const bgRegex = /url\(['"]?(https?:\/\/[^'")\s]+)['"]?\)/gi;
+      while ((match = bgRegex.exec(md)) !== null) {
+        if (match[1]) {
+          images.push(match[1]);
         }
-        
-        // Pattern 4: Standalone image URLs (common in markdown conversions)
-        const standaloneRegex = /(?:^|\s)(https?:\/\/[^\s]+\.(?:jpg|jpeg|png|gif|webp|svg|avif)(?:\?[^\s]*)?)/gmi;
-        while ((match = standaloneRegex.exec(md)) !== null) {
-            if (match[1]) {
-                images.push(match[1].trim());
-            }
+      }
+
+      // Pattern 4: Standalone image URLs (common in markdown conversions)
+      const standaloneRegex = /(?:^|\s)(https?:\/\/[^\s]+\.(?:jpg|jpeg|png|gif|webp|svg|avif)(?:\?[^\s]*)?)/gmi;
+      while ((match = standaloneRegex.exec(md)) !== null) {
+        if (match[1]) {
+          images.push(match[1].trim());
         }
-        
-        return images;
+      }
+
+      return images;
     };
-    
+
     // Helper to filter valid images (no tracking pixels, icons too small, etc.)
     const isValidImageUrl = (url: string): boolean => {
-        if (!url || !url.startsWith('http')) return false;
-        
-        const invalidPatterns = [
-            /facebook\.com\/tr/i,
-            /google-analytics/i,
-            /pixel/i,
-            /1x1/i,
-            /tracking/i,
-            /beacon/i,
-            /favicon/i,
-            /\.ico$/i,
-            /data:image/i,
-            /placeholder/i,
-            /spacer/i,
-            /blank\./i,
-            /ad\./i,
-            /ads\./i,
-            /doubleclick/i,
-        ];
-        
-        return !invalidPatterns.some(pattern => pattern.test(url));
+      if (!url || !url.startsWith('http')) return false;
+
+      const invalidPatterns = [
+        /facebook\.com\/tr/i,
+        /google-analytics/i,
+        /pixel/i,
+        /1x1/i,
+        /tracking/i,
+        /beacon/i,
+        /favicon/i,
+        /\.ico$/i,
+        /data:image/i,
+        /placeholder/i,
+        /spacer/i,
+        /blank\./i,
+        /ad\./i,
+        /ads\./i,
+        /doubleclick/i,
+      ];
+
+      return !invalidPatterns.some(pattern => pattern.test(url));
     };
-    
+
     // Extract nuggets and images from main page first
     contentNuggets = extractContentNuggets(firecrawlMarkdown + '\n' + parallelContent);
     console.log(`📊 Found ${contentNuggets.length} content nuggets from main page`);
-    
+
     // 🚀 NEW STRATEGY: MAP & SELECT (Holistic Crawling)
     // Instead of blindly crawling links, we MAP the site to find the high-value pages.
     try {
-        console.log('🗺️ Mapping site to find Story, About, and Team pages...');
-        let targetPages = await mapWebsite(url);
-        
-        // Fallback if map fails or returns nothing (e.g. single page app or blocked)
-        if (targetPages.length === 0) {
-            console.log('⚠️ Map failed, falling back to link discovery');
-            targetPages = discoverInternalPages(url, firecrawlMarkdown);
+      console.log('🗺️ Mapping site to find Story, About, and Team pages...');
+      let targetPages = await mapWebsite(url);
+
+      // Fallback if map fails or returns nothing (e.g. single page app or blocked)
+      if (targetPages.length === 0) {
+        console.log('⚠️ Map failed, falling back to link discovery');
+        targetPages = discoverInternalPages(url, firecrawlMarkdown);
+      }
+
+      // INTELLIGENT SELECTION: Pick the most valuable pages
+      const priorityKeywords = ['about', 'apropos', 'story', 'histoire', 'mission', 'team', 'equipe', 'valeurs', 'manifesto', 'presse'];
+      const secondaryKeywords = ['blog', 'news', 'actualites', 'services', 'solutions', 'produits', 'case-studies', 'clients'];
+
+      const selectedPages = targetPages.filter(link => {
+        const lowerLink = link.toLowerCase();
+        if (lowerLink === url || lowerLink === url + '/') return false; // Skip home
+        return priorityKeywords.some(k => lowerLink.includes(k)) ||
+          secondaryKeywords.some(k => lowerLink.includes(k));
+      });
+
+      // Fill up with other pages if we don't have enough, up to 15
+      const finalPagesToScrape = [...new Set([...selectedPages, ...targetPages])].slice(0, 15);
+
+      console.log(`🎯 Selected ${finalPagesToScrape.length} high-value pages to scrape:`, finalPagesToScrape);
+
+      // BATCH SCRAPE V2: Use centralized helper with retry and controlled concurrency
+      const batchResults = await firecrawlBatchScrape(finalPagesToScrape, {
+        formats: ['markdown', 'html'],
+        onlyMainContent: false,
+        timeout: 30000,
+        retries: 1, // 1 retry on network/5xx errors
+        concurrency: 5, // Process 5 pages at a time to avoid overwhelming API
+      });
+
+      // Convert Map to array of valid results
+      const validResults: { url: string; content: string; html: string; metadata: any }[] = [];
+      for (const [pageUrl, result] of batchResults) {
+        if (result.success) {
+          validResults.push({
+            url: pageUrl,
+            content: result.markdown,
+            html: result.html || '',
+            metadata: result.metadata,
+          });
         }
+      }
 
-        // INTELLIGENT SELECTION: Pick the most valuable pages
-        const priorityKeywords = ['about', 'apropos', 'story', 'histoire', 'mission', 'team', 'equipe', 'valeurs', 'manifesto', 'presse'];
-        const secondaryKeywords = ['blog', 'news', 'actualites', 'services', 'solutions', 'produits', 'case-studies', 'clients'];
-        
-        const selectedPages = targetPages.filter(link => {
-            const lowerLink = link.toLowerCase();
-            if (lowerLink === url || lowerLink === url + '/') return false; // Skip home
-            return priorityKeywords.some(k => lowerLink.includes(k)) || 
-                   secondaryKeywords.some(k => lowerLink.includes(k));
-        });
+      console.log(`✅ Successfully scraped ${validResults.length} deep pages`);
 
-        // Fill up with other pages if we don't have enough, up to 15
-        const finalPagesToScrape = [...new Set([...selectedPages, ...targetPages])].slice(0, 15);
-        
-        console.log(`🎯 Selected ${finalPagesToScrape.length} high-value pages to scrape:`, finalPagesToScrape);
+      // PROCESS RESULTS
+      for (const result of validResults) {
+        // Aggregate content for the LLM
+        deepCrawlContent += `\n\n--- PAGE: ${result.url} ---\nTITLE: ${result.metadata.title || 'No Title'}\n${result.content.substring(0, 6000)}`;
 
-        // BATCH SCRAPE V2: Use centralized helper with retry and controlled concurrency
-        const batchResults = await firecrawlBatchScrape(finalPagesToScrape, {
-            formats: ['markdown', 'html'],
-            onlyMainContent: false,
-            timeout: 30000,
-            retries: 1, // 1 retry on network/5xx errors
-            concurrency: 5, // Process 5 pages at a time to avoid overwhelming API
-        });
+        // Extract Images
+        const pageImages = [
+          ...extractImagesFromMarkdown(result.content),
+          ...extractImagesFromMarkdown(result.html),
+          result.metadata?.ogImage,
+          result.metadata?.image,
+        ].filter(isValidImageUrl);
 
-        // Convert Map to array of valid results
-        const validResults: { url: string; content: string; html: string; metadata: any }[] = [];
-        for (const [pageUrl, result] of batchResults) {
-            if (result.success) {
-                validResults.push({
-                    url: pageUrl,
-                    content: result.markdown,
-                    html: result.html || '',
-                    metadata: result.metadata,
-                });
-            }
-        }
+        deepCrawlImages.push(...pageImages);
 
-        console.log(`✅ Successfully scraped ${validResults.length} deep pages`);
+        // Extract Nuggets
+        const pageNuggets = extractContentNuggets(result.content);
+        contentNuggets = [...contentNuggets, ...pageNuggets];
 
-        // PROCESS RESULTS
-        for (const result of validResults) {
-            // Aggregate content for the LLM
-            deepCrawlContent += `\n\n--- PAGE: ${result.url} ---\nTITLE: ${result.metadata.title || 'No Title'}\n${result.content.substring(0, 6000)}`;
-            
-            // Extract Images
-            const pageImages = [
-                ...extractImagesFromMarkdown(result.content),
-                ...extractImagesFromMarkdown(result.html),
-                result.metadata?.ogImage,
-                result.metadata?.image,
-            ].filter(isValidImageUrl);
-            
-            deepCrawlImages.push(...pageImages);
-            
-            // Extract Nuggets
-            const pageNuggets = extractContentNuggets(result.content);
-            contentNuggets = [...contentNuggets, ...pageNuggets];
-            
-            console.log(`   📄 ${result.url}: ${pageNuggets.length} nuggets, ${pageImages.length} images`);
-        }
+        console.log(`   📄 ${result.url}: ${pageNuggets.length} nuggets, ${pageImages.length} images`);
+      }
 
     } catch (e) {
-        console.warn('Deep crawl error:', e);
+      console.warn('Deep crawl error:', e);
     }
-    
+
     // Deduplicate nuggets
     const uniqueNuggetMap = new Map<string, ContentNugget>();
     for (const nugget of contentNuggets) {
-        const key = nugget.content.toLowerCase().slice(0, 40);
-        if (!uniqueNuggetMap.has(key)) {
-            uniqueNuggetMap.set(key, nugget);
-        }
+      const key = nugget.content.toLowerCase().slice(0, 40);
+      if (!uniqueNuggetMap.has(key)) {
+        uniqueNuggetMap.set(key, nugget);
+      }
     }
     contentNuggets = Array.from(uniqueNuggetMap.values()).slice(0, 40); // Increased from 30 to 40
 
@@ -1207,41 +1207,41 @@ export async function POST(request: Request) {
     // COMPREHENSIVE IMAGE COLLECTION - Main page + Deep crawl + Metadata
     // ══════════════════════════════════════════════════════════════════════════════
     const allCollectedImages = [
-        // Priority: Main page images
-        ...extractImagesFromMarkdown(firecrawlMarkdown),
-        
-        // Metadata images (high quality, usually hero/og images)
-        firecrawlMetadata.ogImage,
-        firecrawlMetadata.icon,
-        firecrawlMetadata.logo,
-        firecrawlMetadata.screenshot,
-        firecrawlMetadata.image,
-        
-        // Deep crawl images (from all crawled pages)
-        ...deepCrawlImages
+      // Priority: Main page images
+      ...extractImagesFromMarkdown(firecrawlMarkdown),
+
+      // Metadata images (high quality, usually hero/og images)
+      firecrawlMetadata.ogImage,
+      firecrawlMetadata.icon,
+      firecrawlMetadata.logo,
+      firecrawlMetadata.screenshot,
+      firecrawlMetadata.image,
+
+      // Deep crawl images (from all crawled pages)
+      ...deepCrawlImages
     ].filter(isValidImageUrl);
 
     // Deduplicate while preserving order (priority first)
     const uniqueImages = Array.from(new Set(allCollectedImages));
-    
+
     console.log(`🖼️ TOTAL UNIQUE IMAGES COLLECTED: ${uniqueImages.length}`);
     console.log(`   - From main page: ${extractImagesFromMarkdown(firecrawlMarkdown).length}`);
     console.log(`   - From deep crawl: ${deepCrawlImages.length}`);
     console.log(`   - From metadata: 5 (og, icon, logo, screenshot, image)`);
-    
+
     // Log all collected images for debugging
     console.log(`📝 Full Image List (${uniqueImages.length}):`, uniqueImages);
 
     // 2. Analyze with OpenRouter (Grok or other)
     console.log('🤖 Analyzing with OpenRouter...');
-    
+
     // Format content nuggets for the AI
-    const nuggetsFormatted = contentNuggets.length > 0 
-        ? `\n\nEXTRACTED CONTENT NUGGETS (USE THESE FOR POSTS):\n${contentNuggets.map(n => 
-            `- [${n.type.toUpperCase()}] ${n.content}${n.source ? ` (Source: ${n.source})` : ''}`
-          ).join('\n')}`
-        : '';
-    
+    const nuggetsFormatted = contentNuggets.length > 0
+      ? `\n\nEXTRACTED CONTENT NUGGETS (USE THESE FOR POSTS):\n${contentNuggets.map(n =>
+        `- [${n.type.toUpperCase()}] ${n.content}${n.source ? ` (Source: ${n.source})` : ''}`
+      ).join('\n')}`
+      : '';
+
     // Limit images sent to AI to avoid token limits and ensure quality
     const imagesForAnalysis = uniqueImages.slice(0, 40);
 
@@ -1264,9 +1264,9 @@ export async function POST(request: Request) {
     DETECTED IMAGES (${imagesForAnalysis.length}):
     ${imagesForAnalysis.join('\n')}
     `;
-    
+
     console.log(`📊 Prompt content size: ~${combinedContent.length} chars (using Claude-3.5-Sonnet 200K context)`);
-    
+
     const prompt = `
       Analyze this website content to extract brand identity information.
       
@@ -1475,18 +1475,18 @@ export async function POST(request: Request) {
 
     // Prepare message content for GPT-4o (Vision or Text)
     const userMessageContent: any[] = [
-        { type: "text", text: prompt }
+      { type: "text", text: prompt }
     ];
 
     // Add screenshot if available
     if (firecrawlMetadata.screenshot && firecrawlMetadata.screenshot.startsWith('http')) {
-        console.log('📸 Adding screenshot to Vision analysis');
-        userMessageContent.push({
-            type: "image_url",
-            image_url: {
-                "url": firecrawlMetadata.screenshot
-            }
-        });
+      console.log('📸 Adding screenshot to Vision analysis');
+      userMessageContent.push({
+        type: "image_url",
+        image_url: {
+          "url": firecrawlMetadata.screenshot
+        }
+      });
     }
 
     // Using Claude-3.5-Sonnet: 200K context, excellent at JSON, rarely refuses
@@ -1501,8 +1501,8 @@ export async function POST(request: Request) {
       body: JSON.stringify({
         "model": "anthropic/claude-3.5-sonnet", // 200K context, great at JSON, rarely refuses
         "messages": [
-          {"role": "system", "content": "You are a Brand Analyst. Extract brand identity from website content. Return ONLY valid JSON matching the requested schema. No markdown, no explanations, just the JSON object."},
-          {"role": "user", "content": userMessageContent}
+          { "role": "system", "content": "You are a Brand Analyst. Extract brand identity from website content. Return ONLY valid JSON matching the requested schema. No markdown, no explanations, just the JSON object." },
+          { "role": "user", "content": userMessageContent }
         ],
         "max_tokens": 8000,
         "temperature": 0.2
@@ -1510,154 +1510,154 @@ export async function POST(request: Request) {
     });
 
     if (!aiResponse.ok) {
-       const err = await aiResponse.text();
-       console.error("OpenRouter Error:", err);
-       
-       // Fallback manual extraction if AI fails
-       const fallbackData = {
-          name: firecrawlMetadata.title || "Brand Name",
-          tagline: firecrawlMetadata.description || "",
-          description: firecrawlMetadata.description || "",
-          colors: ["#000000", "#ffffff"],
-          fonts: ["Sans-serif"],
-          values: ["Quality", "Innovation"],
-          aesthetic: "Modern",
-          toneVoice: "Professional",
-          logo: firecrawlMetadata.ogImage || null
-       };
-       
-       return NextResponse.json({
-          success: true,
-          brand: {
-            ...fallbackData,
-            id: existingBrandId, // Include existing brand ID if found
-            url: url,
-            images: uniqueImages.length > 0 ? uniqueImages : [fallbackData.logo].filter(Boolean)
-          },
-          isUpdate: !!existingBrandId,
-       });
+      const err = await aiResponse.text();
+      console.error("OpenRouter Error:", err);
+
+      // Fallback manual extraction if AI fails
+      const fallbackData = {
+        name: firecrawlMetadata.title || "Brand Name",
+        tagline: firecrawlMetadata.description || "",
+        description: firecrawlMetadata.description || "",
+        colors: ["#000000", "#ffffff"],
+        fonts: ["Sans-serif"],
+        values: ["Quality", "Innovation"],
+        aesthetic: "Modern",
+        toneVoice: "Professional",
+        logo: firecrawlMetadata.ogImage || null
+      };
+
+      return NextResponse.json({
+        success: true,
+        brand: {
+          ...fallbackData,
+          id: existingBrandId, // Include existing brand ID if found
+          url: url,
+          images: uniqueImages.length > 0 ? uniqueImages : [fallbackData.logo].filter(Boolean)
+        },
+        isUpdate: !!existingBrandId,
+      });
     }
 
     const aiData = await aiResponse.json();
     let text = aiData.choices[0].message.content;
-    
+
     // Detect model refusals (safety filters) - shouldn't happen with Claude but just in case
-    const isRefusal = text.toLowerCase().includes("i'm sorry") || 
-                      text.toLowerCase().includes("i cannot") ||
-                      text.toLowerCase().includes("can't assist") ||
-                      text.toLowerCase().includes("i can't help") ||
-                      text.toLowerCase().includes("unable to assist");
-    
+    const isRefusal = text.toLowerCase().includes("i'm sorry") ||
+      text.toLowerCase().includes("i cannot") ||
+      text.toLowerCase().includes("can't assist") ||
+      text.toLowerCase().includes("i can't help") ||
+      text.toLowerCase().includes("unable to assist");
+
     if (isRefusal) {
-        console.warn("⚠️ Claude refused, trying GPT-4o-mini fallback...");
-        
-        // Fallback to GPT-4o-mini with simplified prompt
-        const fallbackResponse = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-            method: "POST",
-            headers: {
-                "Authorization": `Bearer ${process.env.OPENROUTER_API_KEY}`,
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-                "model": "openai/gpt-4o-mini",
-                "messages": [
-                    {"role": "system", "content": "Extract brand info as JSON. Be helpful and complete the task."},
-                    {"role": "user", "content": typeof userMessageContent === 'string' ? userMessageContent : userMessageContent[0]?.text || 'Analyze this brand'}
-                ],
-                "max_tokens": 4000
-            })
-        });
-        
-        if (fallbackResponse.ok) {
-            const fallbackData = await fallbackResponse.json();
-            text = fallbackData.choices?.[0]?.message?.content || '';
-            console.log("✅ Fallback GPT-4o-mini responded");
-        } else {
-            console.warn("⚠️ Fallback also failed:", await fallbackResponse.text());
-        }
+      console.warn("⚠️ Claude refused, trying GPT-4o-mini fallback...");
+
+      // Fallback to GPT-4o-mini with simplified prompt
+      const fallbackResponse = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${process.env.OPENROUTER_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          "model": "openai/gpt-4o-mini",
+          "messages": [
+            { "role": "system", "content": "Extract brand info as JSON. Be helpful and complete the task." },
+            { "role": "user", "content": typeof userMessageContent === 'string' ? userMessageContent : userMessageContent[0]?.text || 'Analyze this brand' }
+          ],
+          "max_tokens": 4000
+        })
+      });
+
+      if (fallbackResponse.ok) {
+        const fallbackData = await fallbackResponse.json();
+        text = fallbackData.choices?.[0]?.message?.content || '';
+        console.log("✅ Fallback GPT-4o-mini responded");
+      } else {
+        console.warn("⚠️ Fallback also failed:", await fallbackResponse.text());
+      }
     }
-    
+
     // Clean up markdown code blocks if present
     text = text.replace(/```json\n?/g, '').replace(/```/g, '').trim();
-    
+
     let brandData;
     try {
-        // Ensure we have valid JSON content even if model adds chatter
-        const jsonMatch = text.match(/\{[\s\S]*\}/);
-        if (jsonMatch) {
-            text = jsonMatch[0];
-        }
-        brandData = JSON.parse(text);
-        
-        // DEBUG: Log editorial hooks generation
-        console.log(`📝 LLM generated editorialHooks: ${brandData.editorialHooks?.length || 0} hooks`);
-        if (brandData.editorialHooks?.length) {
-          console.log(`   First hook: "${brandData.editorialHooks[0]?.hook?.slice(0, 50)}..."`);
-          console.log(`   Emotions: ${brandData.editorialHooks.map((h: any) => h.emotion).join(', ')}`);
-        }
+      // Ensure we have valid JSON content even if model adds chatter
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        text = jsonMatch[0];
+      }
+      brandData = JSON.parse(text);
+
+      // DEBUG: Log editorial hooks generation
+      console.log(`📝 LLM generated editorialHooks: ${brandData.editorialHooks?.length || 0} hooks`);
+      if (brandData.editorialHooks?.length) {
+        console.log(`   First hook: "${brandData.editorialHooks[0]?.hook?.slice(0, 50)}..."`);
+        console.log(`   Emotions: ${brandData.editorialHooks.map((h: any) => h.emotion).join(', ')}`);
+      }
     } catch (e) {
-        console.error("Failed to parse JSON:", text.slice(0, 200));
-        // Fallback data on parse error - extract what we can from metadata
-        brandData = {
-          name: firecrawlMetadata.title?.split('|')[0]?.split('-')[0]?.trim() || "Brand",
-          description: firecrawlMetadata.description || "",
-          tagline: firecrawlMetadata.description?.split('.')[0] || "",
-          colors: ["#000000", "#ffffff"],
-          fonts: ["Sans-serif"],
-          values: ["Quality"],
-          aesthetic: ["Modern"],
-          toneVoice: ["Professional"],
-          logo: firecrawlMetadata.ogImage || firecrawlMetadata.icon || null,
-          industry: "Business"
-        };
-        console.log("ℹ️ Using fallback brand data from metadata");
+      console.error("Failed to parse JSON:", text.slice(0, 200));
+      // Fallback data on parse error - extract what we can from metadata
+      brandData = {
+        name: firecrawlMetadata.title?.split('|')[0]?.split('-')[0]?.trim() || "Brand",
+        description: firecrawlMetadata.description || "",
+        tagline: firecrawlMetadata.description?.split('.')[0] || "",
+        colors: ["#000000", "#ffffff"],
+        fonts: ["Sans-serif"],
+        values: ["Quality"],
+        aesthetic: ["Modern"],
+        toneVoice: ["Professional"],
+        logo: firecrawlMetadata.ogImage || firecrawlMetadata.icon || null,
+        industry: "Business"
+      };
+      console.log("ℹ️ Using fallback brand data from metadata");
     }
 
     // 3. Extract Colors from Logo (if available) - REAL EXTRACTION
     let extractedColors: string[] = [];
     const logoUrl = brandData.logo || firecrawlMetadata.ogImage || firecrawlMetadata.icon;
-    
+
     if (logoUrl && logoUrl.startsWith('http')) {
-        try {
-            console.log('🎨 Extracting REAL colors from logo:', logoUrl);
-            extractedColors = await extractColorsFromImage(logoUrl);
-            
-            if (extractedColors.length > 0) {
-                console.log('✅ Real colors extracted:', extractedColors);
-                // Merge with AI-guessed colors, prioritizing extracted
-                const aiColors = Array.isArray(brandData.colors) ? brandData.colors : [];
-                brandData.colors = mergeColorPalettes(aiColors, extractedColors);
-                console.log('🎨 Final merged palette:', brandData.colors);
-            }
-        } catch (e) {
-            console.error("Color extraction failed:", e);
-            // Keep AI colors if extraction fails
+      try {
+        console.log('🎨 Extracting REAL colors from logo:', logoUrl);
+        extractedColors = await extractColorsFromImage(logoUrl);
+
+        if (extractedColors.length > 0) {
+          console.log('✅ Real colors extracted:', extractedColors);
+          // Merge with AI-guessed colors, prioritizing extracted
+          const aiColors = Array.isArray(brandData.colors) ? brandData.colors : [];
+          brandData.colors = mergeColorPalettes(aiColors, extractedColors);
+          console.log('🎨 Final merged palette:', brandData.colors);
         }
+      } catch (e) {
+        console.error("Color extraction failed:", e);
+        // Keep AI colors if extraction fails
+      }
     }
 
     // Refine the main logo selection based on AI classification
     const aiIdentifiedLogo = brandData.analyzedImages?.find((img: any) => img.category === 'main_logo')?.url;
     if (aiIdentifiedLogo) {
-        brandData.logo = aiIdentifiedLogo;
+      brandData.logo = aiIdentifiedLogo;
     } else if (!brandData.logo && firecrawlMetadata.ogImage) {
-        brandData.logo = firecrawlMetadata.ogImage;
+      brandData.logo = firecrawlMetadata.ogImage;
     }
 
     // 4. Search for REAL industry insights using Parallel Search API
     if (brandData.industry) {
-        console.log(`🔍 Searching real industry insights for: ${brandData.industry}`);
-        
-        try {
-            const { rawExcerpts, sources } = await searchIndustryInsights(
-                brandData.industry, 
-                brandData.name || 'the company'
-            );
-            
-            if (rawExcerpts && rawExcerpts.length > 500) {
-                console.log('📊 Processing industry data from search...');
-                
-                // Use AI to extract structured insights from the search results
-                const insightPrompt = `
+      console.log(`🔍 Searching real industry insights for: ${brandData.industry}`);
+
+      try {
+        const { rawExcerpts, sources } = await searchIndustryInsights(
+          brandData.industry,
+          brandData.name || 'the company'
+        );
+
+        if (rawExcerpts && rawExcerpts.length > 500) {
+          console.log('📊 Processing industry data from search...');
+
+          // Use AI to extract structured insights from the search results
+          const insightPrompt = `
 You are an expert Market Analyst.
 INDUSTRY: ${brandData.industry}
 BRAND: ${brandData.name}
@@ -1681,224 +1681,224 @@ FORMAT: Return ONLY a valid JSON array:
   }
 ]`;
 
-                const insightResponse = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-                    method: "POST",
-                    headers: {
-                        "Authorization": `Bearer ${process.env.OPENROUTER_API_KEY}`,
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({
-                        "model": "openai/gpt-4o-mini",
-                        "messages": [
-                            {"role": "system", "content": "You extract business insights from research data and format them for social media. Always return valid JSON."},
-                            {"role": "user", "content": insightPrompt}
-                        ]
-                    })
-                });
+          const insightResponse = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+            method: "POST",
+            headers: {
+              "Authorization": `Bearer ${process.env.OPENROUTER_API_KEY}`,
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              "model": "openai/gpt-4o-mini",
+              "messages": [
+                { "role": "system", "content": "You extract business insights from research data and format them for social media. Always return valid JSON." },
+                { "role": "user", "content": insightPrompt }
+              ]
+            })
+          });
 
-                if (insightResponse.ok) {
-                    const insightData = await insightResponse.json();
-                    let insightText = insightData.choices[0]?.message?.content || '';
-                    insightText = insightText.replace(/```json\n?/g, '').replace(/```/g, '').trim();
-                    
-                    try {
-                        const jsonMatch = insightText.match(/\[[\s\S]*\]/);
-                        if (jsonMatch) {
-                            const realInsights = JSON.parse(jsonMatch[0]);
-                            
-                            // Merge with AI-generated insights, prioritizing real data
-                            if (Array.isArray(realInsights) && realInsights.length > 0) {
-                                console.log(`✅ Extracted ${realInsights.length} real industry insights`);
-                                
-                                // Mark these as real data
-                                const enrichedInsights = realInsights.map((insight: any) => ({
-                                    ...insight,
-                                    isRealData: true
-                                }));
-                                
-                                // Replace or merge with AI-generated insights
-                                brandData.industryInsights = [
-                                    ...enrichedInsights,
-                                    ...(brandData.industryInsights || []).slice(0, 2) // Keep max 2 AI-generated as fallback
-                                ].slice(0, 6);
-                                
-                                // Also add source URLs for transparency
-                                brandData.industrySources = sources.slice(0, 5);
-                            }
-                        }
-                    } catch (parseError) {
-                        console.warn('Failed to parse industry insights:', parseError);
-                    }
+          if (insightResponse.ok) {
+            const insightData = await insightResponse.json();
+            let insightText = insightData.choices[0]?.message?.content || '';
+            insightText = insightText.replace(/```json\n?/g, '').replace(/```/g, '').trim();
+
+            try {
+              const jsonMatch = insightText.match(/\[[\s\S]*\]/);
+              if (jsonMatch) {
+                const realInsights = JSON.parse(jsonMatch[0]);
+
+                // Merge with AI-generated insights, prioritizing real data
+                if (Array.isArray(realInsights) && realInsights.length > 0) {
+                  console.log(`✅ Extracted ${realInsights.length} real industry insights`);
+
+                  // Mark these as real data
+                  const enrichedInsights = realInsights.map((insight: any) => ({
+                    ...insight,
+                    isRealData: true
+                  }));
+
+                  // Replace or merge with AI-generated insights
+                  brandData.industryInsights = [
+                    ...enrichedInsights,
+                    ...(brandData.industryInsights || []).slice(0, 2) // Keep max 2 AI-generated as fallback
+                  ].slice(0, 6);
+
+                  // Also add source URLs for transparency
+                  brandData.industrySources = sources.slice(0, 5);
                 }
+              }
+            } catch (parseError) {
+              console.warn('Failed to parse industry insights:', parseError);
             }
-        } catch (searchError) {
-            console.warn('Industry search error:', searchError);
-            // Keep AI-generated insights as fallback
+          }
         }
+      } catch (searchError) {
+        console.warn('Industry search error:', searchError);
+        // Keep AI-generated insights as fallback
+      }
     }
 
     // Prioritize the logo, then unique images found
     const rawImages = [
-        brandData.logo,
-        firecrawlMetadata.ogImage,
-        ...uniqueImages
+      brandData.logo,
+      firecrawlMetadata.ogImage,
+      ...uniqueImages
     ].filter((img) => img && typeof img === 'string' && img.startsWith('http'));
 
     // Deduplicate URLs
     const uniqueFinalImages = Array.from(new Set(rawImages));
 
     if (uniqueFinalImages.length === 0) {
-        uniqueFinalImages.push('https://placehold.co/600x600?text=Brand+Logo'); 
+      uniqueFinalImages.push('https://placehold.co/600x600?text=Brand+Logo');
     }
 
     // Merge AI categories with final list
     // If AI didn't return analyzedImages, default to 'other'
     const labeledImages = uniqueFinalImages.map(url => {
-        // Robust matching: try exact match, then fuzzy match
-        const aiData = brandData.analyzedImages?.find((img: any) => {
-            if (!img.url) return false;
-            if (img.url === url) return true;
-            // Fuzzy match: check if one contains the other (handles query params or minor variations)
-            if (url.includes(img.url) || img.url.includes(url)) return true;
-            return false;
-        });
+      // Robust matching: try exact match, then fuzzy match
+      const aiData = brandData.analyzedImages?.find((img: any) => {
+        if (!img.url) return false;
+        if (img.url === url) return true;
+        // Fuzzy match: check if one contains the other (handles query params or minor variations)
+        if (url.includes(img.url) || img.url.includes(url)) return true;
+        return false;
+      });
 
-        return {
-            url,
-            category: aiData?.category || (url === brandData.logo ? 'main_logo' : 'other'),
-            description: aiData?.description || ""
-        };
+      return {
+        url,
+        category: aiData?.category || (url === brandData.logo ? 'main_logo' : 'other'),
+        description: aiData?.description || ""
+      };
     });
 
     // ═══════════════════════════════════════════════════════════════════════════
     // INJECT REAL EXTRACTED DATA - Don't trust AI to fill contentNuggets properly
     // ═══════════════════════════════════════════════════════════════════════════
-    
+
     // Helper to truncate strings that are too long (e.g. pricing tables)
     const cleanAndTruncate = (str: string, maxLength = 150) => {
-        if (!str) return '';
-        let clean = str.trim();
-        // Check for pricing spam indicators
-        if (clean.match(/(\d+€|\/mois|inclus|illimité)/i) && clean.length > 50) {
-            // It's likely a pricing table row, discard or truncate heavily
-            return ''; 
-        }
-        if (clean.length > maxLength) {
-            return clean.substring(0, maxLength) + '...';
-        }
-        return clean;
+      if (!str) return '';
+      let clean = str.trim();
+      // Check for pricing spam indicators
+      if (clean.match(/(\d+€|\/mois|inclus|illimité)/i) && clean.length > 50) {
+        // It's likely a pricing table row, discard or truncate heavily
+        return '';
+      }
+      if (clean.length > maxLength) {
+        return clean.substring(0, maxLength) + '...';
+      }
+      return clean;
     };
 
     // Build REAL contentNuggets from our extraction (not AI-generated)
     const realContentNuggets = {
-        realStats: contentNuggets
-            .filter(n => n.type === 'stat')
-            .map(n => cleanAndTruncate(n.content))
-            .filter(s => s.length > 5 && s.length < 150) // Filter out empty or huge strings
-            .slice(0, 8),
-        testimonials: contentNuggets
-            .filter(n => n.type === 'testimonial')
-            .map(n => ({
-                quote: cleanAndTruncate(n.content, 250),
-                author: cleanAndTruncate(n.source || 'Client', 50),
-                company: cleanAndTruncate(n.context || '', 50)
-            }))
-            .filter(t => t.quote.length > 10)
-            .slice(0, 5),
-        achievements: contentNuggets
-            .filter(n => n.type === 'achievement')
-            .map(n => cleanAndTruncate(n.content))
-            .filter(s => s.length > 5)
-            .slice(0, 5),
-        blogTopics: contentNuggets
-            .filter(n => n.type === 'blog_topic')
-            .map(n => cleanAndTruncate(n.content))
-            .filter(s => s.length > 5)
-            .slice(0, 5),
-        // Keep track of extraction metadata
-        _extractedCount: contentNuggets.length,
-        _pagesScraped: deepCrawlContent.split('--- PAGE:').length - 1
+      realStats: contentNuggets
+        .filter(n => n.type === 'stat')
+        .map(n => cleanAndTruncate(n.content))
+        .filter(s => s.length > 5 && s.length < 150) // Filter out empty or huge strings
+        .slice(0, 8),
+      testimonials: contentNuggets
+        .filter(n => n.type === 'testimonial')
+        .map(n => ({
+          quote: cleanAndTruncate(n.content, 250),
+          author: cleanAndTruncate(n.source || 'Client', 50),
+          company: cleanAndTruncate(n.context || '', 50)
+        }))
+        .filter(t => t.quote.length > 10)
+        .slice(0, 5),
+      achievements: contentNuggets
+        .filter(n => n.type === 'achievement')
+        .map(n => cleanAndTruncate(n.content))
+        .filter(s => s.length > 5)
+        .slice(0, 5),
+      blogTopics: contentNuggets
+        .filter(n => n.type === 'blog_topic')
+        .map(n => cleanAndTruncate(n.content))
+        .filter(s => s.length > 5)
+        .slice(0, 5),
+      // Keep track of extraction metadata
+      _extractedCount: contentNuggets.length,
+      _pagesScraped: deepCrawlContent.split('--- PAGE:').length - 1
     };
 
     // Helper functions for merging
     const normalize = (str: string) => str.toLowerCase().replace(/[^a-z0-9]/g, '');
-    
+
     const mergeUnique = (real: string[], ai: string[]) => {
-        const seen = new Set(real.map(normalize));
-        const merged = [...real];
-        
-        for (const item of ai || []) {
-            const norm = normalize(item);
-            if (norm.length > 10 && !seen.has(norm)) {
-                merged.push(item);
-                seen.add(norm);
-            }
+      const seen = new Set(real.map(normalize));
+      const merged = [...real];
+
+      for (const item of ai || []) {
+        const norm = normalize(item);
+        if (norm.length > 10 && !seen.has(norm)) {
+          merged.push(item);
+          seen.add(norm);
         }
-        return merged.slice(0, 12);
+      }
+      return merged.slice(0, 12);
     };
 
     // Merge: prioritize AI data (which acted as a filter), and only fallback to regex if AI missed things
     // OR if AI returned very few items.
     // The user specifically wants an "Intelligent Agent" to filter the scrap.
     // So we trust the AI's curation over the raw regex.
-    
+
     const mergePrioritizingAI = (regex: string[], ai: string[]) => {
-        // If AI returned a good list (>= 2 items), trust it completely to avoid re-introducing pricing garbage
-        if (ai && ai.length >= 2) {
-            return ai.slice(0, 8);
+      // If AI returned a good list (>= 2 items), trust it completely to avoid re-introducing pricing garbage
+      if (ai && ai.length >= 2) {
+        return ai.slice(0, 8);
+      }
+      // Otherwise, mix them but prioritize AI
+      const seen = new Set((ai || []).map(normalize));
+      const merged = [...(ai || [])];
+
+      for (const item of regex || []) {
+        const norm = normalize(item);
+        // Stricter length check for regex fallback
+        if (norm.length > 15 && !seen.has(norm)) {
+          merged.push(item);
+          seen.add(norm);
         }
-        // Otherwise, mix them but prioritize AI
-        const seen = new Set((ai || []).map(normalize));
-        const merged = [...(ai || [])];
-        
-        for (const item of regex || []) {
-            const norm = normalize(item);
-            // Stricter length check for regex fallback
-            if (norm.length > 15 && !seen.has(norm)) {
-                merged.push(item);
-                seen.add(norm);
-            }
-        }
-        return merged.slice(0, 8);
+      }
+      return merged.slice(0, 8);
     };
 
     const mergeTestimonialsPrioritizingAI = (regex: any[], ai: any[]) => {
-        // If AI found verified testimonials, use them
-        if (ai && ai.length >= 1) {
-            return ai.slice(0, 6);
+      // If AI found verified testimonials, use them
+      if (ai && ai.length >= 1) {
+        return ai.slice(0, 6);
+      }
+
+      // Fallback to regex but be careful
+      const seen = new Set((ai || []).map((t: any) => normalize(t.quote)));
+      const merged = [...(ai || [])];
+
+      for (const item of regex || []) {
+        const norm = normalize(item.quote || '');
+        // Only allow regex testimonials that look substantial
+        if (norm.length > 40 && !seen.has(norm)) {
+          merged.push(item);
+          seen.add(norm);
         }
-        
-        // Fallback to regex but be careful
-        const seen = new Set((ai || []).map((t: any) => normalize(t.quote)));
-        const merged = [...(ai || [])];
-        
-        for (const item of regex || []) {
-            const norm = normalize(item.quote || '');
-            // Only allow regex testimonials that look substantial
-            if (norm.length > 40 && !seen.has(norm)) {
-                merged.push(item);
-                seen.add(norm);
-            }
-        }
-        return merged.slice(0, 6);
+      }
+      return merged.slice(0, 6);
     };
 
     const mergedContentNuggets = {
-        realStats: mergePrioritizingAI(realContentNuggets.realStats, brandData.contentNuggets?.realStats),
-        testimonials: mergeTestimonialsPrioritizingAI(realContentNuggets.testimonials, brandData.contentNuggets?.testimonials),
-        achievements: mergeUnique(
-            realContentNuggets.achievements, 
-            brandData.contentNuggets?.achievements
-        ),
-        blogTopics: mergeUnique(
-            realContentNuggets.blogTopics,
-            brandData.contentNuggets?.blogTopics
-        ),
-        _meta: {
-            extractedNuggets: realContentNuggets._extractedCount,
-            pagesScraped: realContentNuggets._pagesScraped,
-            hasRealData: realContentNuggets.realStats.length > 0 || realContentNuggets.testimonials.length > 0
-        }
+      realStats: mergePrioritizingAI(realContentNuggets.realStats, brandData.contentNuggets?.realStats),
+      testimonials: mergeTestimonialsPrioritizingAI(realContentNuggets.testimonials, brandData.contentNuggets?.testimonials),
+      achievements: mergeUnique(
+        realContentNuggets.achievements,
+        brandData.contentNuggets?.achievements
+      ),
+      blogTopics: mergeUnique(
+        realContentNuggets.blogTopics,
+        brandData.contentNuggets?.blogTopics
+      ),
+      _meta: {
+        extractedNuggets: realContentNuggets._extractedCount,
+        pagesScraped: realContentNuggets._pagesScraped,
+        hasRealData: realContentNuggets.realStats.length > 0 || realContentNuggets.testimonials.length > 0
+      }
     };
 
     console.log('📊 Content Nuggets Summary:');
@@ -1911,14 +1911,14 @@ FORMAT: Return ONLY a valid JSON array:
     // ═══════════════════════════════════════════════════════════════════════════
     // FIRECRAWL SEARCH ENRICHMENT - When we have sparse data, search the web
     // ═══════════════════════════════════════════════════════════════════════════
-    const hasMinimalData = 
+    const hasMinimalData =
       (!brandData.industryInsights || brandData.industryInsights.length < 2) &&
       (mergedContentNuggets.realStats.length < 2) &&
       (!brandData.features || brandData.features.length < 3);
 
     if (hasMinimalData && brandData.industry) {
       console.log('⚠️ Sparse data detected, triggering Firecrawl enrichment (Search + Extract)...');
-      
+
       try {
         // Run BOTH Search and Extract in parallel for maximum enrichment
         const [searchEnrichment, extractEnrichment] = await Promise.all([
@@ -1937,25 +1937,25 @@ FORMAT: Return ONLY a valid JSON array:
         // === Process SEARCH + EXTRACT results through LLM transformation ===
         // Collect ALL raw insights for batch transformation
         const rawInsightsForTransform: { text: string; source?: string; type: string }[] = [];
-        
+
         // Add pain points from Search
         for (const pp of searchEnrichment.painPoints) {
           if (isRelevantInsight(pp.point)) {
             rawInsightsForTransform.push({ text: pp.point, source: pp.source, type: 'pain_point' });
           }
         }
-        
+
         // Add trends from Search
         for (const t of searchEnrichment.trends) {
           if (isRelevantInsight(t.trend)) {
             rawInsightsForTransform.push({ text: t.trend, source: t.source, type: 'trend' });
           }
         }
-        
+
         // Transform raw data into smart editorial angles via Claude
         if (rawInsightsForTransform.length > 0) {
           console.log(`📝 Sending ${rawInsightsForTransform.length} raw insights to LLM for editorial transformation...`);
-          
+
           const smartAngles = await transformToEditorialAngles(
             rawInsightsForTransform,
             {
@@ -1964,7 +1964,7 @@ FORMAT: Return ONLY a valid JSON array:
               industry: brandData.industry || 'general'
             }
           );
-          
+
           if (smartAngles.length > 0) {
             const transformedInsights = smartAngles.map(angle => ({
               painPoint: angle.painPoint,
@@ -1974,12 +1974,12 @@ FORMAT: Return ONLY a valid JSON array:
               isEnriched: true,
               isTransformed: true // Mark as LLM-transformed
             }));
-            
+
             brandData.industryInsights = [
               ...(brandData.industryInsights || []),
               ...transformedInsights
             ].slice(0, 8);
-            
+
             console.log(`✅ Added ${transformedInsights.length} LLM-transformed editorial angles`);
           } else {
             console.log('⚠️ LLM transformation returned no usable angles');
@@ -1988,16 +1988,16 @@ FORMAT: Return ONLY a valid JSON array:
 
         // === NEW: Process COMPETITORS for market positioning ===
         if (searchEnrichment.competitors && searchEnrichment.competitors.length > 0) {
-          console.log(`🎯 Found ${searchEnrichment.competitors.length} competitors:`, 
+          console.log(`🎯 Found ${searchEnrichment.competitors.length} competitors:`,
             searchEnrichment.competitors.map(c => c.name));
-          
+
           // Store competitors in brand data for content angles
           brandData.competitors = searchEnrichment.competitors.map(c => ({
             name: c.name,
             weakness: c.weakness,
             source: c.source
           }));
-          
+
           // Also add competitor-based insights for content angles
           for (const comp of searchEnrichment.competitors.slice(0, 2)) {
             if (comp.weakness) {
@@ -2019,10 +2019,10 @@ FORMAT: Return ONLY a valid JSON array:
         // === NEW: Process NEWS for fresh content angles ===
         if (searchEnrichment.newsHighlights && searchEnrichment.newsHighlights.length > 0) {
           console.log(`📰 Found ${searchEnrichment.newsHighlights.length} news highlights`);
-          
+
           // Store news for content inspiration
           brandData.newsHighlights = searchEnrichment.newsHighlights;
-          
+
           // Add to market context
           (mergedContentNuggets as any).newsAngles = searchEnrichment.newsHighlights.map(n => ({
             headline: n.headline,
@@ -2034,31 +2034,31 @@ FORMAT: Return ONLY a valid JSON array:
         // === Process EXTRACT results - add to transformation batch ===
         // Extract results also go through LLM transformation (don't append raw!)
         const extractRawInsights: { text: string; source?: string; type: string }[] = [];
-        
+
         for (const pp of extractEnrichment.painPoints) {
           if (isRelevantInsight(pp.problem)) {
-            extractRawInsights.push({ 
-              text: `${pp.problem}${pp.impact ? ` (Impact: ${pp.impact})` : ''}`, 
-              source: pp.source, 
-              type: 'pain_point' 
+            extractRawInsights.push({
+              text: `${pp.problem}${pp.impact ? ` (Impact: ${pp.impact})` : ''}`,
+              source: pp.source,
+              type: 'pain_point'
             });
           }
         }
-        
+
         for (const t of extractEnrichment.trends) {
           if (isRelevantInsight(t.trend)) {
-            extractRawInsights.push({ 
-              text: `${t.trend}${t.relevance ? ` (${t.relevance})` : ''}`, 
-              source: t.source, 
-              type: 'trend' 
+            extractRawInsights.push({
+              text: `${t.trend}${t.relevance ? ` (${t.relevance})` : ''}`,
+              source: t.source,
+              type: 'trend'
             });
           }
         }
-        
+
         // Transform Extract results through LLM too
         if (extractRawInsights.length > 0) {
           console.log(`📝 Sending ${extractRawInsights.length} Extract insights to LLM for transformation...`);
-          
+
           const smartExtractAngles = await transformToEditorialAngles(
             extractRawInsights,
             {
@@ -2067,14 +2067,14 @@ FORMAT: Return ONLY a valid JSON array:
               industry: brandData.industry || 'general'
             }
           );
-          
+
           if (smartExtractAngles.length > 0) {
             // Dedupe against existing insights
             const existingPains = new Set(
               (brandData.industryInsights || [])
                 .map((i: any) => i.painPoint?.toLowerCase().slice(0, 30))
             );
-            
+
             const newAngles = smartExtractAngles
               .filter(a => !existingPains.has(a.painPoint.toLowerCase().slice(0, 30)))
               .map(angle => ({
@@ -2085,7 +2085,7 @@ FORMAT: Return ONLY a valid JSON array:
                 isEnriched: true,
                 isTransformed: true
               }));
-            
+
             if (newAngles.length > 0) {
               brandData.industryInsights = [
                 ...(brandData.industryInsights || []),
@@ -2109,7 +2109,7 @@ FORMAT: Return ONLY a valid JSON array:
         // Mark that we enriched
         (mergedContentNuggets as any)._meta.enrichedFromSearch = true;
         (mergedContentNuggets as any)._meta.enrichedFromExtract = extractEnrichment.painPoints.length > 0 || extractEnrichment.trends.length > 0;
-        
+
       } catch (enrichError) {
         console.warn('Firecrawl enrichment failed:', enrichError);
         // Continue without enrichment
@@ -2118,22 +2118,22 @@ FORMAT: Return ONLY a valid JSON array:
 
     // Also validate suggestedPosts - mark which ones use real data
     if (Array.isArray(brandData.suggestedPosts)) {
-        brandData.suggestedPosts = brandData.suggestedPosts.map((post: any) => {
-            // Check if this post's content matches any real extracted data
-            const postText = (post.headline || '') + (post.metric || '') + (post.metricLabel || '');
-            const usesRealStat = mergedContentNuggets.realStats.some((stat: string) => 
-                postText.toLowerCase().includes(stat.toLowerCase().slice(0, 20))
-            );
-            const usesRealTestimonial = mergedContentNuggets.testimonials.some((t: any) =>
-                postText.toLowerCase().includes(t.quote?.toLowerCase().slice(0, 30) || '')
-            );
-            
-            return {
-                ...post,
-                source: usesRealStat || usesRealTestimonial ? 'real_data' : (post.source || 'generated'),
-                _verified: usesRealStat || usesRealTestimonial
-            };
-        });
+      brandData.suggestedPosts = brandData.suggestedPosts.map((post: any) => {
+        // Check if this post's content matches any real extracted data
+        const postText = (post.headline || '') + (post.metric || '') + (post.metricLabel || '');
+        const usesRealStat = mergedContentNuggets.realStats.some((stat: string) =>
+          postText.toLowerCase().includes(stat.toLowerCase().slice(0, 20))
+        );
+        const usesRealTestimonial = mergedContentNuggets.testimonials.some((t: any) =>
+          postText.toLowerCase().includes(t.quote?.toLowerCase().slice(0, 30) || '')
+        );
+
+        return {
+          ...post,
+          source: usesRealStat || usesRealTestimonial ? 'real_data' : (post.source || 'generated'),
+          _verified: usesRealStat || usesRealTestimonial
+        };
+      });
     }
 
     // ═══════════════════════════════════════════════════════════════════════════
@@ -2170,16 +2170,16 @@ FORMAT: Return ONLY a valid JSON array:
 
     const filterInsight = (insight: any): boolean => {
       const text = (insight.painPoint || insight.hook || insight.fact || '').toLowerCase();
-      
+
       // Reject if matches any bad pattern (even if marked as real data)
       if (BAD_PATTERNS.some(pattern => pattern.test(text))) {
         console.log(`   ❌ Filtered market stat: "${text.slice(0, 60)}..."`);
         return false;
       }
-      
+
       // Reject if too short
       if (text.length < 15) return false;
-      
+
       // Keep otherwise
       return true;
     };
@@ -2192,43 +2192,168 @@ FORMAT: Return ONLY a valid JSON array:
     }
 
     // ═══════════════════════════════════════════════════════════════════════════
-    // STEP D: MAP editorialHooks to industryInsights 
-    // IMPORTANT: editorialHooks come from LLM with quality rules already applied
-    // We apply LIGHTER filtering here - only reject truly empty/broken hooks
+    // STEP D: TWO-TIER CONTENT ANGLES SYSTEM
+    // Tier 1 (Primary): Direct from brand data - reliable, specific
+    // Tier 2 (Secondary): LLM-generated editorial hooks - creative, varied
     // ═══════════════════════════════════════════════════════════════════════════
+
+    const primaryAngles: any[] = [];
+    const detectedLanguage = brandData.detectedLanguage || 'fr';
+    const brandName = brandData.name || 'nous';
+
+    console.log(`🎯 Building two-tier content angles for "${brandName}"...`);
+
+    // ─────────────────────────────────────────────────────────────────────────────
+    // TIER 1: PRIMARY ANGLES - Direct from brand data (high reliability)
+    // ─────────────────────────────────────────────────────────────────────────────
+
+    // 1. Tagline → Direct angle (most important, brand-defining)
+    if (brandData.tagline && brandData.tagline.length > 10 && brandData.tagline.length < 100) {
+      primaryAngles.push({
+        painPoint: brandData.tagline,
+        consequence: '',
+        type: 'primary',
+        tier: 'primary',
+        source: 'tagline'
+      });
+    }
+
+    // 2. UVP → Direct angle (key value proposition)
+    if (brandData.uniqueValueProposition &&
+      brandData.uniqueValueProposition.length > 10 &&
+      brandData.uniqueValueProposition !== brandData.tagline) {
+      primaryAngles.push({
+        painPoint: brandData.uniqueValueProposition,
+        consequence: '',
+        type: 'primary',
+        tier: 'primary',
+        source: 'uvp'
+      });
+    }
+
+    // 3. Features → Each feature can be an angle (top 3)
+    if (Array.isArray(brandData.features)) {
+      brandData.features
+        .filter((f: string) => f && f.length > 5 && f.length < 80)
+        .slice(0, 3)
+        .forEach((feature: string) => {
+          primaryAngles.push({
+            painPoint: feature,
+            consequence: '',
+            type: 'primary',
+            tier: 'primary',
+            source: 'feature'
+          });
+        });
+    }
+
+    // 4. Services → Each service can be an angle (top 2)
+    if (Array.isArray(brandData.services)) {
+      brandData.services
+        .filter((s: string) => s && s.length > 5 && s.length < 80)
+        .slice(0, 2)
+        .forEach((service: string) => {
+          // Format as a question if not already
+          const formatted = service.endsWith('?')
+            ? service
+            : (detectedLanguage === 'fr'
+              ? `Besoin de ${service.toLowerCase()} ?`
+              : `Need ${service.toLowerCase()}?`);
+          primaryAngles.push({
+            painPoint: formatted,
+            consequence: `${brandName} ${detectedLanguage === 'fr' ? 'peut vous aider' : 'can help'}.`,
+            type: 'tip',
+            tier: 'primary',
+            source: 'service'
+          });
+        });
+    }
+
+    // 5. Pain Points (direct) → Question format
+    if (Array.isArray(brandData.painPoints)) {
+      brandData.painPoints
+        .filter((p: string) => p && p.length > 10 && p.length < 100)
+        .slice(0, 2)
+        .forEach((pain: string) => {
+          const isQuestion = pain.endsWith('?');
+          const formatted = isQuestion
+            ? pain
+            : (detectedLanguage === 'fr'
+              ? `Marre de ${pain.toLowerCase()} ?`
+              : `Tired of ${pain.toLowerCase()}?`);
+          primaryAngles.push({
+            painPoint: formatted,
+            consequence: `${brandName} ${detectedLanguage === 'fr' ? 'a la solution' : 'has the solution'}.`,
+            type: 'pain_point',
+            tier: 'primary',
+            source: 'painpoint'
+          });
+        });
+    }
+
+    console.log(`  ⭐ Built ${primaryAngles.length} primary angles from direct brand data`);
+
+    // ─────────────────────────────────────────────────────────────────────────────
+    // TIER 2: SECONDARY ANGLES - LLM editorial hooks (varied, creative)
+    // ─────────────────────────────────────────────────────────────────────────────
+
+    let secondaryAngles: any[] = [];
+
     if (Array.isArray(brandData.editorialHooks) && brandData.editorialHooks.length > 0) {
-      console.log(`📝 Processing ${brandData.editorialHooks.length} editorial hooks from LLM...`);
-      
-      // Light filter for LLM hooks - they're already quality-controlled by the prompt
-      // Only reject empty, too short, or obviously broken hooks
+      console.log(`  📝 Processing ${brandData.editorialHooks.length} LLM editorial hooks...`);
+
+      // Light filter - only reject truly broken hooks
       const lightFilterHook = (h: any): boolean => {
         const text = h.hook || '';
-        if (text.length < 10) return false; // Too short to be useful
-        if (!text.includes(' ')) return false; // Single word = broken
+        if (text.length < 10) return false;
+        if (!text.includes(' ')) return false;
         return true;
       };
-      
-      const hooksAsInsights = brandData.editorialHooks
+
+      secondaryAngles = brandData.editorialHooks
         .filter(lightFilterHook)
         .map((h: any) => ({
           painPoint: h.hook,
           consequence: h.subtext || '',
-          type: h.emotion === 'urgency' ? 'trend' : 'pain_point', // Map emotion to type
+          type: h.emotion === 'urgency' ? 'trend' : 'pain_point',
           emotion: h.emotion,
+          tier: 'secondary',
+          source: 'llm'
         }));
-      
-      // Take up to 8 hooks - they're curated by LLM, trust them
-      brandData.industryInsights = hooksAsInsights.slice(0, 8);
-      
-      console.log(`✅ Mapped ${hooksAsInsights.length} LLM editorial hooks to industryInsights (kept ${brandData.industryInsights.length})`);
+
+      console.log(`  💡 Kept ${secondaryAngles.length} secondary angles from LLM`);
     } else {
-      // Fallback: Filter raw insights if no LLM hooks available
-      console.log(`⚠️ No editorial hooks from LLM, filtering raw industryInsights...`);
-      brandData.industryInsights = (brandData.industryInsights || [])
-        .filter(filterInsight) // Apply aggressive filter only to raw data
-        .slice(0, 8);
-      console.log(`   Kept ${brandData.industryInsights.length} raw insights after filtering`);
+      console.log(`  ⚠️ No editorial hooks from LLM, using filtered raw insights...`);
+      secondaryAngles = (brandData.industryInsights || [])
+        .filter(filterInsight)
+        .slice(0, 4)
+        .map((i: any) => ({ ...i, tier: 'secondary', source: 'raw' }));
     }
+
+    // ─────────────────────────────────────────────────────────────────────────────
+    // MERGE: Primary first (reliable), then Secondary (creative)
+    // Deduplicate by similarity to avoid redundant angles
+    // ─────────────────────────────────────────────────────────────────────────────
+
+    const allAngles = [...primaryAngles, ...secondaryAngles];
+
+    // Deduplicate by text similarity (first 30 chars lowercase)
+    const seen = new Set<string>();
+    const deduped = allAngles.filter(angle => {
+      const text = (angle.painPoint || '').toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 30);
+      if (text.length < 5) return false; // Too short
+      if (seen.has(text)) return false;
+      seen.add(text);
+      return true;
+    });
+
+    // Final: Max 12 angles, ensure at least some primary appear first
+    brandData.industryInsights = deduped.slice(0, 12);
+
+    const primaryCount = brandData.industryInsights.filter((a: any) => a.tier === 'primary').length;
+    const secondaryCount = brandData.industryInsights.filter((a: any) => a.tier === 'secondary').length;
+
+    console.log(`✅ Final content angles: ${brandData.industryInsights.length} total (${primaryCount} primary ⭐, ${secondaryCount} secondary 💡)`);
 
     return NextResponse.json({
       success: true,
@@ -2240,10 +2365,10 @@ FORMAT: Return ONLY a valid JSON array:
         labeledImages: labeledImages,
         contentNuggets: mergedContentNuggets, // OVERRIDE with real data
         _crawlStats: {
-            mainPageLength: firecrawlMarkdown.length,
-            deepCrawlLength: deepCrawlContent.length,
-            pagesScraped: mergedContentNuggets._meta.pagesScraped,
-            nuggetsExtracted: mergedContentNuggets._meta.extractedNuggets
+          mainPageLength: firecrawlMarkdown.length,
+          deepCrawlLength: deepCrawlContent.length,
+          pagesScraped: mergedContentNuggets._meta.pagesScraped,
+          nuggetsExtracted: mergedContentNuggets._meta.extractedNuggets
         }
       },
       isUpdate: !!existingBrandId, // Let frontend know if this is an update

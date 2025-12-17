@@ -2505,7 +2505,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
               const visibleInsights = showAllAngles ? validInsights : validInsights.slice(0, 4);
               const hasMore = validInsights.length > 4;
 
-              // Type-based styling
+              // Type-based styling for secondary angles
               const typeStyles: Record<string, { emoji: string; bg: string; border: string; hover: string }> = {
                 'pain_point': { emoji: '⚡', bg: 'bg-rose-50', border: 'border-rose-200', hover: 'hover:border-rose-400' },
                 'trend': { emoji: '📈', bg: 'bg-blue-50', border: 'border-blue-200', hover: 'hover:border-blue-400' },
@@ -2513,13 +2513,19 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                 'social_proof': { emoji: '💬', bg: 'bg-amber-50', border: 'border-amber-200', hover: 'hover:border-amber-400' },
                 'tip': { emoji: '💡', bg: 'bg-emerald-50', border: 'border-emerald-200', hover: 'hover:border-emerald-400' },
                 'competitive': { emoji: '🏆', bg: 'bg-indigo-50', border: 'border-indigo-200', hover: 'hover:border-indigo-400' },
+                // Special styling for primary angles (gold/amber highlight)
+                'primary': { emoji: '⭐', bg: 'bg-gradient-to-r from-amber-50 to-yellow-50', border: 'border-amber-300', hover: 'hover:border-amber-500' },
               };
 
               return (
                 <div className="flex flex-wrap gap-2">
                   {visibleInsights.map((insight: any, i: number) => {
                     const hookText = insight.painPoint || insight.hook || insight.fact;
-                    const style = typeStyles[insight.type] || { emoji: '💡', bg: 'bg-gray-50', border: 'border-gray-200', hover: 'hover:border-gray-400' };
+                    const isPrimary = insight.tier === 'primary';
+                    // Primary angles use their own style, secondary use type-based
+                    const style = isPrimary
+                      ? typeStyles['primary']
+                      : (typeStyles[insight.type] || { emoji: '💡', bg: 'bg-gray-50', border: 'border-gray-200', hover: 'hover:border-gray-400' });
 
                     return (
                       <button
