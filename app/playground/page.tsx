@@ -325,6 +325,7 @@ function PlaygroundContent() {
   const [tagDropdownOpen, setTagDropdownOpen] = useState<string | null>(null); // URL of image with open dropdown
   const [showAssetHint, setShowAssetHint] = useState(false); // Hint to add assets when typing custom prompt
   const [showGiftOverlay, setShowGiftOverlay] = useState(false); // Celebrate free generation gift
+  const [hasReceivedFreeGen, setHasReceivedFreeGen] = useState(false); // Track if user got their free gen already
 
   // Aspect ratio options
   const ASPECT_RATIOS = [
@@ -1027,9 +1028,13 @@ function PlaygroundContent() {
     const freshCredits = await fetch('/api/user/credits').then(r => r.json()).catch(() => null);
     const isEarlyBird = freshCredits?.credits?.isEarlyBird ?? creditsInfo?.isEarlyBird ?? false;
 
-    console.log('🐦 Early bird check:', { isEarlyBird, freshCredits: freshCredits?.credits?.isEarlyBird, cachedCredits: creditsInfo?.isEarlyBird });
+    console.log('🐦 Early bird check:', { isEarlyBird, hasReceivedFreeGen, freshCredits: freshCredits?.credits?.isEarlyBird, cachedCredits: creditsInfo?.isEarlyBird });
 
-    if (smartPrompt && allImages.length > 0 && isEarlyBird) {
+    // Only give free generation if: early bird + has images + hasn't already received one
+    if (smartPrompt && allImages.length > 0 && isEarlyBird && !hasReceivedFreeGen) {
+      // Mark as received BEFORE triggering to prevent double triggers
+      setHasReceivedFreeGen(true);
+
       // Early bird gets 1 FREE auto-generation
       setBrief(smartPrompt.brief);
       setSelectedTemplate(smartPrompt.templateId);
@@ -2645,8 +2650,8 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                 </div>
               )}
 
-              {/* Selected assets preview - Full width scrollable */}
-              <div className="flex gap-2 items-center overflow-x-auto pb-1 no-scrollbar">
+              {/* Selected assets preview - Overflow visible when dropdown open */}
+              <div className={`flex gap-2 items-center pb-1 no-scrollbar ${tagDropdownOpen ? 'overflow-visible' : 'overflow-x-auto'}`}>
                 {/* Logo - always first */}
                 {brandData?.logo && (
                   <div
@@ -2733,15 +2738,15 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                   );
                 })}
 
-                {/* Add more button */}
+                {/* Add more button - triggers file input */}
                 <button
-                  onClick={() => setShowAssetManager(true)}
+                  onClick={() => fileInputRef.current?.click()}
                   className="h-14 w-14 rounded-xl border-2 border-dashed border-gray-300 flex flex-col items-center justify-center cursor-pointer hover:border-accent hover:bg-accent/5 transition-all flex-shrink-0"
                 >
                   <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                     <path d="M12 4v16m8-8H4" />
                   </svg>
-                  <span className="text-[8px] text-gray-400 mt-0.5">{brandData?.images?.length || 0}</span>
+                  <span className="text-[8px] text-gray-400 mt-0.5">+</span>
                 </button>
               </div>
 
