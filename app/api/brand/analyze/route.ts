@@ -7,6 +7,7 @@ import { db } from '@/db';
 import { brands } from '@/db/schema';
 import { eq, and, like } from 'drizzle-orm';
 import { firecrawlScrape, firecrawlMap, firecrawlExtract, firecrawlSearch, firecrawlBatchScrape } from '@/lib/firecrawl';
+import { callGeminiWithFallback, USE_GEMINI_FOR_BRAND_ANALYSIS } from '@/lib/gemini';
 
 // Content nugget types for editorial extraction
 interface ContentNugget {
@@ -1489,115 +1490,39 @@ export async function POST(request: Request) {
       });
     }
 
-    // Using Claude-3.5-Sonnet: 200K context, excellent at JSON, rarely refuses
-    const aiResponse = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${process.env.OPENROUTER_API_KEY}`,
-        "Content-Type": "application/json",
-        "HTTP-Referer": "https://thepalette.app",
-        "X-Title": "Palette"
-      },
-      body: JSON.stringify({
-        "model": "anthropic/claude-3.5-sonnet", // 200K context, great at JSON, rarely refuses
-        "messages": [
-          { "role": "system", "content": "You are a Brand Analyst. Extract brand identity from website content. Return ONLY valid JSON matching the requested schema. No markdown, no explanations, just the JSON object." },
-          { "role": "user", "content": userMessageContent }
-        ],
-        "max_tokens": 8000,
-        "temperature": 0.2
-      })
-    });
+    // ═══════════════════════════════════════════════════════════════════════════
+    // MAIN LLM CALL: Gemini 3 Flash (primary) → Claude Sonnet (fallback)
+    // Feature flag USE_GEMINI_FOR_BRAND_ANALYSIS allows easy rollback
+    // ═══════════════════════════════════════════════════════════════════════════
 
-    if (!aiResponse.ok) {
-      const err = await aiResponse.text();
-      console.error("OpenRouter Error:", err);
+    const systemPrompt = "You are a Brand Analyst. Extract brand identity from website content. Return ONLY valid JSON matching the requested schema. No markdown, no explanations, just the JSON object.";
+    const userPromptText = typeof userMessageContent === 'string'
+      ? userMessageContent
+      : userMessageContent[0]?.text || '';
 
-      // Fallback manual extraction if AI fails
-      const fallbackData = {
-        name: firecrawlMetadata.title || "Brand Name",
-        tagline: firecrawlMetadata.description || "",
-        description: firecrawlMetadata.description || "",
-        colors: ["#000000", "#ffffff"],
-        fonts: ["Sans-serif"],
-        values: ["Quality", "Innovation"],
-        aesthetic: "Modern",
-        toneVoice: "Professional",
-        logo: firecrawlMetadata.ogImage || null
-      };
+    let brandData: any = null;
 
-      return NextResponse.json({
-        success: true,
-        brand: {
-          ...fallbackData,
-          id: existingBrandId, // Include existing brand ID if found
-          url: url,
-          images: uniqueImages.length > 0 ? uniqueImages : [fallbackData.logo].filter(Boolean)
-        },
-        isUpdate: !!existingBrandId,
-      });
-    }
+    if (USE_GEMINI_FOR_BRAND_ANALYSIS) {
+      console.log('🌟 Using Gemini 3 Flash Preview (with Claude fallback)...');
 
-    const aiData = await aiResponse.json();
-    let text = aiData.choices[0].message.content;
+      brandData = await callGeminiWithFallback(
+        systemPrompt,
+        userPromptText,
+        { temperature: 0.2, maxTokens: 8000, fallbackToOpenRouter: true }
+      );
 
-    // Detect model refusals (safety filters) - shouldn't happen with Claude but just in case
-    const isRefusal = text.toLowerCase().includes("i'm sorry") ||
-      text.toLowerCase().includes("i cannot") ||
-      text.toLowerCase().includes("can't assist") ||
-      text.toLowerCase().includes("i can't help") ||
-      text.toLowerCase().includes("unable to assist");
-
-    if (isRefusal) {
-      console.warn("⚠️ Claude refused, trying GPT-4o-mini fallback...");
-
-      // Fallback to GPT-4o-mini with simplified prompt
-      const fallbackResponse = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${process.env.OPENROUTER_API_KEY}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          "model": "openai/gpt-4o-mini",
-          "messages": [
-            { "role": "system", "content": "Extract brand info as JSON. Be helpful and complete the task." },
-            { "role": "user", "content": typeof userMessageContent === 'string' ? userMessageContent : userMessageContent[0]?.text || 'Analyze this brand' }
-          ],
-          "max_tokens": 4000
-        })
-      });
-
-      if (fallbackResponse.ok) {
-        const fallbackData = await fallbackResponse.json();
-        text = fallbackData.choices?.[0]?.message?.content || '';
-        console.log("✅ Fallback GPT-4o-mini responded");
-      } else {
-        console.warn("⚠️ Fallback also failed:", await fallbackResponse.text());
+      if (brandData) {
+        console.log(`📝 LLM generated editorialHooks: ${brandData.editorialHooks?.length || 0} hooks`);
+        if (brandData.editorialHooks?.length) {
+          console.log(`   First hook: "${brandData.editorialHooks[0]?.hook?.slice(0, 50)}..."`);
+          console.log(`   Emotions: ${brandData.editorialHooks.map((h: any) => h.emotion).join(', ')}`);
+        }
       }
     }
 
-    // Clean up markdown code blocks if present
-    text = text.replace(/```json\n?/g, '').replace(/```/g, '').trim();
-
-    let brandData;
-    try {
-      // Ensure we have valid JSON content even if model adds chatter
-      const jsonMatch = text.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        text = jsonMatch[0];
-      }
-      brandData = JSON.parse(text);
-
-      // DEBUG: Log editorial hooks generation
-      console.log(`📝 LLM generated editorialHooks: ${brandData.editorialHooks?.length || 0} hooks`);
-      if (brandData.editorialHooks?.length) {
-        console.log(`   First hook: "${brandData.editorialHooks[0]?.hook?.slice(0, 50)}..."`);
-        console.log(`   Emotions: ${brandData.editorialHooks.map((h: any) => h.emotion).join(', ')}`);
-      }
-    } catch (e) {
-      console.error("Failed to parse JSON:", text.slice(0, 200));
-      // Fallback data on parse error - extract what we can from metadata
+    // If Gemini disabled or both Gemini and Claude failed, use manual fallback
+    if (!brandData) {
+      console.log('⚠️ All LLM calls failed, using metadata fallback...');
       brandData = {
         name: firecrawlMetadata.title?.split('|')[0]?.split('-')[0]?.trim() || "Brand",
         description: firecrawlMetadata.description || "",
