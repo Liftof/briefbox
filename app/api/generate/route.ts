@@ -871,29 +871,29 @@ ${logoRule}${imageDescriptions.join('\n')}
         creditsRemaining: creditCheck.remaining,
         plan: creditCheck.plan,
       });
-    } catch (falError: any) {
-      // Catch Fal specific errors
-      console.error("Fal API Error:", falError);
+    } catch (generationError: any) {
+      // Catch generation errors (Google AI)
+      console.error("❌ Generation API Error:", generationError);
 
-      let errorMessage = falError.message || "Failed to generate images";
+      let errorMessage = generationError.message || "Failed to generate images";
       let statusCode = 500;
 
       // Check for specific error types
-      if (falError.status === 403 || errorMessage.toLowerCase().includes('forbidden')) {
+      if (generationError.status === 403 || errorMessage.toLowerCase().includes('forbidden')) {
         errorMessage = "Service de génération temporairement indisponible. Réessayez dans quelques instants.";
         statusCode = 503;
-      } else if (falError.status === 429 || errorMessage.toLowerCase().includes('rate limit')) {
+      } else if (generationError.status === 429 || errorMessage.toLowerCase().includes('rate limit')) {
         errorMessage = "Trop de requêtes. Attendez quelques secondes avant de réessayer.";
         statusCode = 429;
-      } else if (falError.body) {
+      } else if (generationError.body) {
         try {
-          const body = typeof falError.body === 'string' ? JSON.parse(falError.body) : falError.body;
+          const body = typeof generationError.body === 'string' ? JSON.parse(generationError.body) : generationError.body;
           errorMessage = body.message || errorMessage;
           if (body.detail && Array.isArray(body.detail)) {
             errorMessage += ` Details: ${JSON.stringify(body.detail)}`;
           }
         } catch (e) {
-          errorMessage = typeof falError.body === 'object' ? JSON.stringify(falError.body) : String(falError.body);
+          errorMessage = typeof generationError.body === 'object' ? JSON.stringify(generationError.body) : String(generationError.body);
         }
       }
 
