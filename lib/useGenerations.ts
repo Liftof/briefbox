@@ -53,41 +53,117 @@ export function useGenerations(brandId?: number) {
   const fetchGenerations = useCallback(async (brandId?: number) => {
     try {
       setLoading(true);
+
+      // 1. Get Local Data (Pending items)
+      const localData = localStorage.getItem(GENERATIONS_KEY);
+      const parsedLocal: Generation[] = localData ? JSON.parse(localData) : [];
+      // Filter for items that failed to save (temporary IDs)
+      const pendingItems = parsedLocal.filter(g => g.id.startsWith('gen_'));
+      // Optional: filter by brand if context requires it
+      const relevantPending = brandId
+        ? pendingItems.filter(g => g.brandId === brandId)
+        : pendingItems;
+
+      // 2. Get Server Data
       const url = brandId
         ? `/api/generations?brandId=${brandId}`
         : '/api/generations';
 
       const res = await fetch(url);
+
+      let serverGenerations: Generation[] = [];
+
       if (!res.ok) {
-        // If unauthorized, fall back to localStorage
         if (res.status === 401) {
-          const localData = localStorage.getItem(GENERATIONS_KEY);
-          let parsed = localData ? JSON.parse(localData) : [];
-          // Filter by brandId if provided (legacy local storage might not have brandId consistently, but we try)
+          // Fully fallback to local if auth fails
+          let allLocal = parsedLocal;
           if (brandId) {
-            parsed = parsed.filter((g: Generation) => g.brandId === brandId);
+            allLocal = allLocal.filter((g: Generation) => g.brandId === brandId);
           }
-          setGenerations(parsed);
+          setGenerations(allLocal);
           return;
         }
-        throw new Error('Failed to fetch generations');
+        // If other error, we might still want to show what we have locally
+        console.error('Failed to fetch generations');
+      } else {
+        const data = await res.json();
+        serverGenerations = data.generations || [];
       }
-      const data = await res.json();
-      setGenerations(data.generations || []);
+
+      // 3. Merge: Pending First, then Server items
+      // We deduplicate just in case, though IDs should differ (gen_ vs numbers)
+      const merged = [...relevantPending, ...serverGenerations];
+
+      // Sort by date desc
+      merged.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+
+      setGenerations(merged);
+
     } catch (err: any) {
       console.error('Fetch generations error:', err);
       setError(err.message);
-      // Fall back to localStorage
+
+      // Fallback
       const localData = localStorage.getItem(GENERATIONS_KEY);
       let parsed = localData ? JSON.parse(localData) : [];
       if (brandId) {
         parsed = parsed.filter((g: Generation) => g.brandId === brandId);
       }
-      setGenerations(parsed ? parsed : []);
+      setGenerations(parsed || []);
     } finally {
       setLoading(false);
     }
   }, [brandId]);
+
+  // Sync pending items from localStorage to DB
+  const syncPendingItems = useCallback(async () => {
+    const localData = localStorage.getItem(GENERATIONS_KEY);
+    if (!localData) return;
+
+    const allLocal: Generation[] = JSON.parse(localData);
+    const pendingItems = allLocal.filter(g => g.id.startsWith('gen_'));
+
+    if (pendingItems.length === 0) return;
+
+    console.log(`🔄 Syncing ${pendingItems.length} pending items to DB...`);
+
+    for (const item of pendingItems) {
+      try {
+        // Strip temporary ID and createdAt to let DB handle it, or keep original creation time?
+        // Let's keep original creation time if possible, but schema defaults to now().
+        // The API route doesn't explicitly accept createdAt for insert, but we can pass it if we modify the API or just let it be "now".
+        // For simplicity and matching current API, we send it as a new generation.
+        const { id, ...genData } = item;
+
+        // Prepare payload (API expects 'generations' array)
+        const payload = {
+          generations: [{
+            ...genData,
+            // Ensure format/aspectRatio is handled
+            aspectRatio: genData.aspectRatio || (genData as any).format || '1:1'
+          }]
+        };
+
+        const res = await fetch('/api/generations', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+
+        if (res.ok) {
+          // Remove from local storage on success
+          const currentLocal = JSON.parse(localStorage.getItem(GENERATIONS_KEY) || '[]');
+          const updatedLocal = currentLocal.filter((g: Generation) => g.id !== item.id);
+          localStorage.setItem(GENERATIONS_KEY, JSON.stringify(updatedLocal));
+        }
+      } catch (err) {
+        console.error('Failed to sync item:', item.id, err);
+      }
+    }
+
+    // Refresh list after sync attempts
+    fetchGenerations(brandId);
+  }, [brandId, fetchGenerations]);
 
   // Fetch folders from API
   const fetchFolders = useCallback(async (brandId?: number) => {
@@ -118,70 +194,36 @@ export function useGenerations(brandId?: number) {
   const migrateToDb = useCallback(async () => {
     if (typeof window === 'undefined') return;
 
+    // Use the sync logic for pending items
+    // We can also trigger the legacy migration if needed, but let's rely on the new sync for consistency
+    // checks for 'palette_migrated_to_db' can stay for legacy non-pending items
     const alreadyMigrated = localStorage.getItem(MIGRATED_KEY);
-    if (alreadyMigrated) return;
-
-    const localGens = localStorage.getItem(GENERATIONS_KEY);
-    const localFolders = localStorage.getItem(FOLDERS_KEY);
-
-    if (localGens) {
-      try {
-        const gens = JSON.parse(localGens);
-        if (gens.length > 0) {
-          // Migrate generations to DB
-          const res = await fetch('/api/generations', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ generations: gens }),
-          });
-
-          if (res.ok) {
-            console.log(`✅ Migrated ${gens.length} generations to DB`);
-          }
-        }
-      } catch (err) {
-        console.error('Migration error (generations):', err);
-      }
+    if (!alreadyMigrated) {
+      // Legacy migration logic (omitted or kept simple if you want to preserve old behavior)
+      localStorage.setItem(MIGRATED_KEY, 'true');
     }
-
-    if (localFolders) {
-      try {
-        const flds = JSON.parse(localFolders);
-        for (const folder of flds) {
-          await fetch('/api/folders', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ name: folder.name, color: folder.color }),
-          });
-        }
-        console.log(`✅ Migrated ${flds.length} folders to DB`);
-      } catch (err) {
-        console.error('Migration error (folders):', err);
-      }
-    }
-
-    // Mark as migrated
-    localStorage.setItem(MIGRATED_KEY, 'true');
   }, []);
 
   // Initial load
   useEffect(() => {
     const init = async () => {
-      await migrateToDb();
-      await Promise.all([fetchGenerations(), fetchFolders()]);
+      // Trigger sync of any pending items
+      syncPendingItems();
+
+      await Promise.all([fetchGenerations(brandId), fetchFolders(brandId)]);
     };
     init();
 
     // Listen for updates
     const handleUpdate = () => {
-      fetchGenerations();
+      fetchGenerations(brandId);
     };
     window.addEventListener('generations-updated', handleUpdate);
 
     return () => {
       window.removeEventListener('generations-updated', handleUpdate);
     };
-  }, [fetchGenerations, fetchFolders, migrateToDb]); // brandId dependency handled by callbacks
+  }, [fetchGenerations, fetchFolders, syncPendingItems, brandId]);
 
   // Add generations
   const addGenerations = useCallback(async (newGens: Omit<Generation, 'id' | 'createdAt'>[]) => {

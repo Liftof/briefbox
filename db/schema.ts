@@ -162,7 +162,7 @@ export const brands = pgTable('brands', {
 // Table des Campagnes (Projets)
 export const campaigns = pgTable('campaigns', {
   id: serial('id').primaryKey(),
-  brandId: serial('brand_id').references(() => brands.id),
+  brandId: integer('brand_id').references(() => brands.id),
   userId: text('user_id'), // Pour filtrage rapide
 
   name: text('name').notNull(), // ex: "Noël 2025", "Lancement Produit X"
@@ -179,8 +179,8 @@ export const campaigns = pgTable('campaigns', {
 // Table du Calendrier (Posts planifiés)
 export const posts = pgTable('posts', {
   id: serial('id').primaryKey(),
-  brandId: serial('brand_id').references(() => brands.id),
-  campaignId: serial('campaign_id').references(() => campaigns.id), // Optionnel, lié à une campagne
+  brandId: integer('brand_id').references(() => brands.id),
+  campaignId: integer('campaign_id').references(() => campaigns.id), // Optionnel, lié à une campagne
   userId: text('user_id'),
 
   content: text('content'), // La caption / légende
@@ -197,8 +197,8 @@ export const posts = pgTable('posts', {
 // Table des Générations (L'historique des créations)
 export const generations = pgTable('generations', {
   id: serial('id').primaryKey(),
-  brandId: serial('brand_id').references(() => brands.id),
-  campaignId: serial('campaign_id').references(() => campaigns.id), // Lien vers une campagne spécifique
+  brandId: integer('brand_id').references(() => brands.id),
+  campaignId: integer('campaign_id').references(() => campaigns.id), // Lien vers une campagne spécifique
   userId: text('user_id').notNull(), // Pour accès rapide
 
   type: text('type'), // 'teaser', 'boom', 'social_post', 'edit'

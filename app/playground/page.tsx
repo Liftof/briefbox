@@ -207,6 +207,7 @@ function PlaygroundContent() {
     progress: number;
     statusMessage: string;
     timestamp: number;
+    aspectRatio?: string;
   }
   const [generationQueue, setGenerationQueue] = useState<GenerationJob[]>([]);
   const activeGenerations = generationQueue.filter(job => job.status === 'preparing' || job.status === 'running');
@@ -1562,7 +1563,8 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
       status: 'preparing',
       progress: 10,
       statusMessage: '🎨 Le Creative Director analyse votre brief...',
-      timestamp: Date.now()
+      timestamp: Date.now(),
+      aspectRatio: aspectRatio // Store ratio for the skeleton loader
     };
 
     setGenerationQueue(prev => [...prev, newJob]);
@@ -2989,8 +2991,8 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
           </div>
         )}
 
-        {/* Loading State - Enhanced with brand colors */}
-        {(status === 'preparing' || status === 'running') && (
+        {/* Loading State - Grid of Active Generations */}
+        {(status === 'preparing' || status === 'running') && activeGenerations.length > 0 && (
           <div className="mb-8">
             {/* Status header */}
             <div className="flex items-center gap-3 mb-4">
@@ -3008,7 +3010,9 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
               </div>
               <div>
                 <p className="text-sm font-medium text-gray-900">
-                  {locale === 'fr' ? 'Création de votre visuel...' : 'Creating your visual...'}
+                  {locale === 'fr'
+                    ? (activeGenerations.length > 1 ? `${activeGenerations.length} visuels en cours...` : 'Création de votre visuel...')
+                    : (activeGenerations.length > 1 ? `${activeGenerations.length} visuals processing...` : 'Creating your visual...')}
                 </p>
                 <p className="text-xs text-gray-500">
                   {statusMessage || (locale === 'fr' ? '~30 secondes' : '~30 seconds')}
@@ -3016,9 +3020,14 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
               </div>
             </div>
 
-            {/* Single skeleton card with brand gradient */}
-            <div className="max-w-md mx-auto w-full">
-              {(() => {
+            {/* Grid of Skeleton Cards */}
+            <div className={`grid gap-4 ${
+              // Use the first job's ratio to guess the grid, or default to responsive
+              (activeGenerations[0]?.aspectRatio === '9:16') ? 'grid-cols-2 sm:grid-cols-3' :
+                (activeGenerations[0]?.aspectRatio === '16:9' || activeGenerations[0]?.aspectRatio === '21:9') ? 'grid-cols-1' :
+                  'grid-cols-1 sm:grid-cols-2'
+              }`}>
+              {activeGenerations.map((job) => {
                 const aspectClasses: Record<string, string> = {
                   '1:1': 'aspect-square',
                   '4:5': 'aspect-[4/5]',
@@ -3027,11 +3036,13 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                   '21:9': 'aspect-[21/9]',
                   '3:2': 'aspect-[3/2]',
                 };
-                const aspectClass = aspectClasses[aspectRatio] || 'aspect-square';
+                const jobRatio = job.aspectRatio || aspectRatio || '1:1';
+                const aspectClass = aspectClasses[jobRatio] || 'aspect-square';
 
                 return (
                   <div
-                    className={`${aspectClass} rounded-xl relative overflow-hidden border border-gray-200`}
+                    key={job.id}
+                    className={`${aspectClass} rounded-xl relative overflow-hidden border border-gray-200 animate-fade-in`}
                     style={{
                       background: `linear-gradient(135deg, ${brandData?.colors?.[0] || '#f3f4f6'}15, ${brandData?.colors?.[1] || '#e5e7eb'}25)`
                     }}
@@ -3043,34 +3054,36 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                     />
 
                     {/* Content preview */}
-                    <div className="absolute inset-0 flex flex-col items-center justify-center p-6">
+                    <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center">
                       {/* Brand logo preview if available */}
                       {brandData?.logo && (
-                        <div className="w-16 h-16 mb-4 opacity-20">
+                        <div className="w-16 h-16 mb-4 opacity-20 hidden sm:block">
                           <img src={brandData.logo} className="w-full h-full object-contain" alt="" />
                         </div>
                       )}
 
                       {/* Skeleton lines */}
-                      <div className="space-y-2 w-full max-w-[60%]">
-                        <div className="h-3 bg-gray-200/50 rounded-full animate-pulse" />
-                        <div className="h-3 bg-gray-200/50 rounded-full w-3/4 mx-auto animate-pulse" style={{ animationDelay: '0.2s' }} />
+                      <div className="space-y-2 w-full max-w-[80%] mb-4">
+                        <div className="h-2 bg-gray-200/50 rounded-full animate-pulse" />
+                        <div className="h-2 bg-gray-200/50 rounded-full w-2/3 mx-auto animate-pulse" style={{ animationDelay: '0.2s' }} />
                       </div>
 
+                      {/* Job-specific Label */}
+                      <p className="text-[10px] text-gray-500 font-medium mb-1 line-clamp-1 px-4 max-w-full">
+                        {job.brief}
+                      </p>
+
                       {/* Progress indicator */}
-                      <div className="mt-6 flex items-center gap-2">
-                        <div className="flex gap-1">
-                          {[0, 1, 2].map((dot) => (
-                            <div
-                              key={dot}
-                              className="w-1.5 h-1.5 rounded-full bg-gray-400 animate-bounce"
-                              style={{ animationDelay: `${dot * 0.2}s` }}
-                            />
-                          ))}
-                        </div>
-                        <span className="text-[10px] text-gray-400 font-medium">
-                          {locale === 'fr' ? 'Création en cours...' : 'Creating...'}
+                      <div className="flex items-center gap-2">
+                        <span className="text-[9px] text-gray-400 font-mono">
+                          {job.progress}%
                         </span>
+                        <div className="w-12 h-1 bg-gray-200 rounded-full overflow-hidden">
+                          <div
+                            className="h-full bg-blue-500 transition-all duration-300"
+                            style={{ width: `${job.progress}%` }}
+                          />
+                        </div>
                       </div>
                     </div>
 
@@ -3086,7 +3099,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                     </div>
                   </div>
                 );
-              })()}
+              })}
             </div>
 
             {/* Fun fact during loading */}
