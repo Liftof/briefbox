@@ -25,16 +25,6 @@ export default function Hero() {
       colors: ['bg-gray-900', 'bg-[#D4AF37]', 'bg-gray-200']
     },
     {
-      image: '/hero-lifestyle.png',
-      prompt: 'Minimalist fashion brand social media post featuring a luxury watch',
-      colors: ['bg-gray-900', 'bg-amber-800', 'bg-gray-100']
-    },
-    {
-      image: '/hero-skincare.png',
-      prompt: "Clean skincare brand social media post for 'Glow' serum",
-      colors: ['bg-emerald-900', 'bg-white', 'bg-stone-200']
-    },
-    {
       image: '/hero-traderepublic.jpg',
       prompt: 'An ad for @TradeRepublic featuring a model and KPIs',
       colors: ['bg-black', 'bg-zinc-400', 'bg-white']
