@@ -143,6 +143,32 @@ const mergeUniqueStrings = (base: string[] = [], extra: string[] = []) => {
 
 const createId = () => `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
+// Helper: Convert GIF to PNG (extracts first frame if animated)
+const convertGifToPng = (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+          resolve(e.target?.result as string); // Fallback
+          return;
+        }
+        ctx.drawImage(img, 0, 0);
+        resolve(canvas.toDataURL('image/png'));
+      };
+      img.onerror = reject;
+      img.src = e.target?.result as string;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+};
+
 // Fallback prompt builder when Creative Director API fails
 const buildFallbackPrompt = (brief: string, brand: any): string => {
   const primaryColor = Array.isArray(brand.colors) && brand.colors.length > 0 ? brand.colors[0] : '#1a365d';
@@ -330,7 +356,7 @@ function PlaygroundContent() {
   const [showCreditsToast, setShowCreditsToast] = useState(false);
 
   // Recent generations for the bottom section
-  const { generations: recentGenerations, refresh: refreshGenerations } = useGenerations();
+  const { generations: recentGenerations, refresh: refreshGenerations } = useGenerations(selectedBrandId || undefined);
   const [lastCreditsRemaining, setLastCreditsRemaining] = useState<number | null>(null);
   const [aspectRatio, setAspectRatio] = useState<string>('1:1');
   const [resolution, setResolution] = useState<'2K' | '4K'>('2K');
@@ -1168,6 +1194,20 @@ function PlaygroundContent() {
   const processFiles = (files: FileList | null, label = 'other') => {
     if (!files || !files.length) return;
     Array.from(files).forEach((file) => {
+      // Automatic GIF to PNG conversion
+      if (file.type === 'image/gif') {
+        convertGifToPng(file)
+          .then((pngDataUrl) => {
+            addImagesToState([pngDataUrl], label);
+            showToast(locale === 'fr' ? 'GIF converti en PNG' : 'GIF converted to PNG', 'success');
+          })
+          .catch((err) => {
+            console.error('GIF conversion error:', err);
+            showToast(locale === 'fr' ? 'Erreur de conversion GIF' : 'GIF conversion error', 'error');
+          });
+        return;
+      }
+
       const reader = new FileReader();
       reader.onload = (event) => {
         if (typeof event.target?.result === 'string') {
@@ -1199,6 +1239,38 @@ function PlaygroundContent() {
     if (!file) return;
 
     setIsUploadingLogo(true);
+
+    // Automatic GIF to PNG conversion for Logos
+    if (file.type === 'image/gif') {
+      convertGifToPng(file)
+        .then((logoDataUrl) => {
+          if (logoDataUrl) {
+            setBrandData((prev: any) => {
+              if (!prev) return prev;
+              const existingLabeled = Array.isArray(prev.labeledImages) ? prev.labeledImages : [];
+              const filteredLabeled = existingLabeled.filter((img: any) => img.category !== 'main_logo');
+              return {
+                ...prev,
+                logo: logoDataUrl,
+                labeledImages: [
+                  { url: logoDataUrl, category: 'main_logo', description: 'Brand logo (converted from GIF)' },
+                  ...filteredLabeled
+                ]
+              };
+            });
+            showToast(locale === 'fr' ? 'Logo GIF converti !' : 'GIF logo converted!', 'success');
+          }
+          setIsUploadingLogo(false);
+        })
+        .catch((err) => {
+          console.error('Logo GIF conversion error:', err);
+          showToast(locale === 'fr' ? 'Erreur de conversion' : 'Conversion error', 'error');
+          setIsUploadingLogo(false);
+        });
+      event.target.value = '';
+      return;
+    }
+
     const reader = new FileReader();
     reader.onload = (e) => {
       const logoDataUrl = e.target?.result as string;
