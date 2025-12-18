@@ -379,14 +379,22 @@ export default function Hero() {
                       <path d="M5 12h14M12 5l7 7-7 7" />
                     </svg>
                     <span className="font-mono">
-                      {locale === 'fr' ? 'DÉMO' : 'DEMO'}
+                      TRY
                     </span>
                   </div>
 
                   <div className="flex items-center gap-2">
-                    <div className="text-[9px] font-mono text-gray-400 uppercase tracking-tighter">
-                      Step {carouselIndex + 1}/{carouselData.length}
-                    </div>
+                    {isFocused ? (
+                      <SignInButton mode="modal" forceRedirectUrl="/playground">
+                        <button className="bg-gray-900 text-white text-[10px] font-semibold px-3 py-1.5 hover:bg-black transition-all">
+                          {locale === 'fr' ? 'GÉNÉRER' : 'GENERATE'}
+                        </button>
+                      </SignInButton>
+                    ) : (
+                      <div className="text-[9px] font-mono text-gray-400 uppercase tracking-tighter">
+                        Made in 40sec
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
