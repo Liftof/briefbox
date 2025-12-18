@@ -37,9 +37,9 @@ export default async function Home() {
               )}
             </h2>
             <p className="text-gray-500 leading-relaxed text-lg">
-              {locale === 'fr' 
-                ? "Vous connaissez la suite : brief à l'agence, devis dans 48h, premiers retours dans 2 semaines, résultat qui ressemble à tout sauf à votre marque. Ou alors Canva, et ce rendu \"template gratuit\" que tout le monde reconnaît."
-                : "You know how it goes: brief the agency, quote in 48h, first feedback in 2 weeks, result that looks nothing like your brand. Or Canva, and that \"free template\" look everyone recognizes."
+              {locale === 'fr'
+                ? <>Vous connaissez la suite : brief à l'agence, devis dans 48h, premiers retours dans 2 semaines, résultat qui ressemble à tout sauf à votre marque. Ou alors <img src="/canva-logo.png" alt="Canva" className="inline-block h-5 align-baseline mx-1" />, et ce rendu "template gratuit" que tout le monde reconnaît.</>
+                : <>You know how it goes: brief the agency, quote in 48h, first feedback in 2 weeks, result that looks nothing like your brand. Or <img src="/canva-logo.png" alt="Canva" className="inline-block h-5 align-baseline mx-1" />, and that "free template" look everyone recognizes.</>
               }
             </p>
           </div>
@@ -53,7 +53,7 @@ export default async function Home() {
                 <div className="flex items-center gap-3 mb-8">
                   <span className="text-xs font-mono uppercase tracking-widest text-red-400">{locale === 'fr' ? "Ce que vous faites aujourd'hui" : "What you do today"}</span>
                 </div>
-                
+
                 <div className="space-y-6">
                   <div className="flex items-start gap-4">
                     <div className="w-8 h-8 bg-red-50 rounded-full flex items-center justify-center text-red-400 text-sm flex-shrink-0">✗</div>
@@ -87,7 +87,7 @@ export default async function Home() {
                 {/* Subtle color blobs */}
                 <div className="absolute top-0 right-0 w-32 h-32 bg-blue-200/30 rounded-full blur-3xl" />
                 <div className="absolute bottom-0 left-0 w-24 h-24 bg-amber-200/20 rounded-full blur-2xl" />
-                
+
                 <div className="relative z-10">
                   <div className="flex items-center gap-3 mb-8">
                     <div className="flex -space-x-1">
@@ -97,7 +97,7 @@ export default async function Home() {
                     </div>
                     <span className="text-xs font-mono uppercase tracking-widest text-blue-600">{locale === 'fr' ? "Ce que vous pourriez faire" : "What you could do"}</span>
                   </div>
-                  
+
                   <div className="space-y-6">
                     <div className="flex items-start gap-4">
                       <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm flex-shrink-0 shadow-lg shadow-blue-500/30">✓</div>
@@ -145,7 +145,7 @@ export default async function Home() {
               )}
             </h2>
             <p className="text-gray-500 leading-relaxed text-lg">
-              {locale === 'fr' 
+              {locale === 'fr'
                 ? 'Pas de formation. Pas de tutoriel de 45 minutes. Si vous savez écrire un SMS, vous savez utiliser Palette.'
                 : 'No training. No 45-minute tutorial. If you can write a text, you can use Palette.'
               }
@@ -165,7 +165,7 @@ export default async function Home() {
                 </div>
                 <h3 className="text-xl font-medium text-gray-900 mb-3">{locale === 'fr' ? 'Collez votre site web' : 'Paste your website'}</h3>
                 <p className="text-gray-500 leading-relaxed">
-                  {locale === 'fr' 
+                  {locale === 'fr'
                     ? 'Palette scanne votre marque : logo, couleurs, typos, ton. Une seule fois, pour toujours.'
                     : 'Palette scans your brand: logo, colors, fonts, tone. Once, forever.'
                   }
@@ -184,7 +184,7 @@ export default async function Home() {
                 </div>
                 <h3 className="text-xl font-medium text-gray-900 mb-3">{locale === 'fr' ? 'Dites ce que vous voulez' : 'Say what you want'}</h3>
                 <p className="text-gray-500 leading-relaxed">
-                  {locale === 'fr' 
+                  {locale === 'fr'
                     ? '"Une story pour le Black Friday". "Un carousel LinkedIn sur notre levée de fonds". En français, comme vous parleriez à un humain.'
                     : '"A Black Friday story". "A LinkedIn carousel about our fundraise". In plain English, like you\'d talk to a human.'
                   }
@@ -203,7 +203,7 @@ export default async function Home() {
                 </div>
                 <h3 className="text-xl font-medium text-gray-900 mb-3">{locale === 'fr' ? 'Publiez ou ajustez' : 'Publish or adjust'}</h3>
                 <p className="text-gray-500 leading-relaxed">
-                  {locale === 'fr' 
+                  {locale === 'fr'
                     ? 'Visuels générés en 60 secondes. Un détail à changer ? Un clic. Pas satisfait ? Régénérez. Gratuit.'
                     : 'Visuals generated in 60 seconds. Need a change? One click. Not happy? Regenerate. Free.'
                   }
@@ -221,7 +221,7 @@ export default async function Home() {
         <div className="absolute top-20 right-20 w-64 h-64 bg-red-200/20 rounded-full blur-3xl" />
         <div className="absolute bottom-20 left-20 w-64 h-64 bg-blue-200/20 rounded-full blur-3xl" />
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-amber-200/15 rounded-full blur-3xl" />
-        
+
         <div className="max-w-6xl mx-auto px-6 relative z-10">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-light text-gray-900 leading-tight mb-4">
@@ -233,21 +233,21 @@ export default async function Home() {
             </h2>
             <p className="text-gray-500">{locale === 'fr' ? 'De vrais visuels, générés en quelques clics.' : 'Real visuals, generated in a few clicks.'}</p>
           </div>
-          
+
           {/* Infinite scrolling gallery */}
           <div className="relative overflow-hidden">
             {/* Fade edges */}
             <div className="absolute left-0 top-0 bottom-0 w-20 bg-gradient-to-r from-gray-50 to-transparent z-10 pointer-events-none" />
             <div className="absolute right-0 top-0 bottom-0 w-20 bg-gradient-to-l from-gray-50 to-transparent z-10 pointer-events-none" />
-            
+
             {/* Scrolling container */}
             <div className="flex gap-4 animate-marquee hover:[animation-play-state:paused]">
               {/* First set */}
               {[1, 2, 3, 4, 5, 6, 7].map((i) => (
                 <div key={`a-${i}`} className="w-48 md:w-64 flex-shrink-0">
                   <div className="aspect-square bg-gray-100 rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
-                    <img 
-                      src={`/gallery/gal-${i}.png`} 
+                    <img
+                      src={`/gallery/gal-${i}.png`}
                       alt={`Visuel créé avec Palette ${i}`}
                       className="w-full h-full object-cover"
                     />
@@ -258,8 +258,8 @@ export default async function Home() {
               {[1, 2, 3, 4, 5, 6, 7].map((i) => (
                 <div key={`b-${i}`} className="w-48 md:w-64 flex-shrink-0">
                   <div className="aspect-square bg-gray-100 rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
-                    <img 
-                      src={`/gallery/gal-${i}.png`} 
+                    <img
+                      src={`/gallery/gal-${i}.png`}
                       alt={`Visuel créé avec Palette ${i}`}
                       className="w-full h-full object-cover"
                     />
@@ -268,7 +268,7 @@ export default async function Home() {
               ))}
             </div>
           </div>
-          
+
           <div className="text-center mt-8">
             <Link href="/playground" className="text-sm text-gray-500 hover:text-gray-900 transition-colors">
               Créer votre premier visuel →
@@ -285,7 +285,7 @@ export default async function Home() {
               <span className="font-semibold">{locale === 'fr' ? '"Oui mais..."' : '"But wait..."'}</span>
             </h2>
           </div>
-          
+
           <div className="space-y-8">
             {/* Objection 1 */}
             <div className="border border-gray-200 p-6 md:p-8">
@@ -293,13 +293,13 @@ export default async function Home() {
                 {locale === 'fr' ? '"Ça fait des trucs moches, non ?"' : '"Does it make ugly stuff?"'}
               </h3>
               <p className="text-gray-500 leading-relaxed">
-                {locale === 'fr' 
+                {locale === 'fr'
                   ? <>Palette ne génère pas d'images génériques. Elle apprend <span className="text-gray-900 font-medium">votre marque</span>. Vos couleurs. Votre style. C'est pour ça que le résultat ressemble à vous, pas à une banque d'images.</>
                   : <>Palette doesn't generate generic images. It learns <span className="text-gray-900 font-medium">your brand</span>. Your colors. Your style. That's why the result looks like you, not a stock photo.</>
                 }
               </p>
             </div>
-            
+
             {/* Objection 2 */}
             <div className="border border-gray-200 p-6 md:p-8">
               <h3 className="text-lg font-medium text-gray-900 mb-3">
@@ -312,7 +312,7 @@ export default async function Home() {
                 }
               </p>
             </div>
-            
+
             {/* Objection 3 */}
             <div className="border border-gray-200 p-6 md:p-8">
               <h3 className="text-lg font-medium text-gray-900 mb-3">
@@ -351,7 +351,7 @@ export default async function Home() {
               )}
             </h2>
             <p className="text-gray-500 max-w-xl mx-auto">
-              {locale === 'fr' 
+              {locale === 'fr'
                 ? 'Pas de devis. Pas de "ça dépend du scope". Tous les visuels en 2K haute résolution.'
                 : 'No quotes. No "it depends on scope". All visuals in 2K high resolution.'
               }
@@ -366,7 +366,7 @@ export default async function Home() {
               </div>
               <div className="text-4xl font-light text-gray-900 mb-2">{locale === 'fr' ? 'Gratuit' : 'Free'}</div>
               <p className="text-sm text-gray-500 mb-8">{locale === 'fr' ? 'Pour voir si ça marche vraiment' : 'To see if it really works'}</p>
-              
+
               <ul className="space-y-3 mb-8">
                 <li className="flex items-center gap-3 text-sm text-gray-600">
                   <span className="text-blue-500">✓</span>
@@ -385,7 +385,7 @@ export default async function Home() {
                   {locale === 'fr' ? "Visuel quotidien automatique" : "Daily automatic visual"}
                 </li>
               </ul>
-              
+
               <Link href="/playground" className="block w-full py-3 text-center text-sm font-medium text-gray-900 border border-gray-200 hover:border-gray-900 transition-colors">
                 {locale === 'fr' ? 'Créer mon premier visuel' : 'Create my first visual'}
               </Link>
@@ -396,13 +396,13 @@ export default async function Home() {
               <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-blue-500 text-white text-[10px] font-mono uppercase tracking-widest px-3 py-1">
                 {locale === 'fr' ? 'Populaire' : 'Popular'}
               </div>
-              
+
               <div className="text-xs font-mono uppercase tracking-widest text-blue-400 mb-4">Pro</div>
               <div className="text-4xl font-light text-white mb-2">{locale === 'fr' ? '19€' : '$19'}<span className="text-lg text-gray-500">/{locale === 'fr' ? 'mois' : 'mo'}</span></div>
               <p className="text-sm text-gray-400 mb-8">{locale === 'fr' ? 'Pour ceux qui publient chaque semaine' : 'For those who publish weekly'}</p>
-              
+
               <div className="text-xs font-mono text-gray-500 mb-6">{locale === 'fr' ? '50 crédits/mois' : '50 credits/mo'}</div>
-              
+
               <ul className="space-y-3 mb-8">
                 <li className="flex items-center gap-3 text-sm text-gray-300">
                   <span className="text-amber-400">★</span>
@@ -429,7 +429,7 @@ export default async function Home() {
                   {locale === 'fr' ? 'Génération 4K' : '4K Generation'}
                 </li>
               </ul>
-              
+
               <button className="w-full py-3 text-center text-sm font-medium bg-white text-gray-900 hover:bg-gray-100 transition-colors">
                 {locale === 'fr' ? 'Essai gratuit 7 jours' : '7-day free trial'}
               </button>
@@ -440,9 +440,9 @@ export default async function Home() {
               <div className="text-xs font-mono uppercase tracking-widest text-gray-400 mb-4">Premium</div>
               <div className="text-4xl font-light text-gray-900 mb-2">{locale === 'fr' ? '49€' : '$49'}<span className="text-lg text-gray-400">/{locale === 'fr' ? 'mois' : 'mo'}</span></div>
               <p className="text-sm text-gray-500 mb-8">{locale === 'fr' ? 'Pour les équipes qui produisent' : 'For teams that produce'}</p>
-              
+
               <div className="text-xs font-mono text-gray-400 mb-6">{locale === 'fr' ? '150 crédits/mois' : '150 credits/mo'}</div>
-              
+
               <ul className="space-y-3 mb-8">
                 <li className="flex items-center gap-3 text-sm text-gray-600">
                   <span className="text-amber-500">★</span>
@@ -465,7 +465,7 @@ export default async function Home() {
                   {locale === 'fr' ? 'Support prioritaire' : 'Priority support'}
                 </li>
               </ul>
-              
+
               <button className="block w-full py-3 text-center text-sm font-medium text-gray-900 border border-gray-200 hover:border-gray-900 transition-colors">
                 {locale === 'fr' ? 'Contacter les ventes' : 'Contact sales'}
               </button>
@@ -500,7 +500,7 @@ export default async function Home() {
                 </svg>
               </summary>
               <div className="px-6 pb-6 text-sm text-gray-500 leading-relaxed border-t border-gray-100 pt-4">
-                {locale === 'fr' 
+                {locale === 'fr'
                   ? "Palette fait le travail d'un directeur artistique. Entrez votre site, on récupère votre charte, et vous générez des visuels pro qui respectent votre identité."
                   : "Palette does the work of an art director. Enter your site, we extract your brand guidelines, and you generate pro visuals that respect your identity."
                 }
@@ -515,7 +515,7 @@ export default async function Home() {
                 </svg>
               </summary>
               <div className="px-6 pb-6 text-sm text-gray-500 leading-relaxed border-t border-gray-100 pt-4">
-                {locale === 'fr' 
+                {locale === 'fr'
                   ? "Instagram (Stories, Posts), LinkedIn, Facebook, Twitter/X, Pinterest. Chaque export est optimisé pour la plateforme."
                   : "Instagram (Stories, Posts), LinkedIn, Facebook, Twitter/X, Pinterest. Each export is optimized for the platform."
                 }
@@ -530,7 +530,7 @@ export default async function Home() {
                 </svg>
               </summary>
               <div className="px-6 pb-6 text-sm text-gray-500 leading-relaxed border-t border-gray-100 pt-4">
-                {locale === 'fr' 
+                {locale === 'fr'
                   ? "Oui, absolument. Vous détenez 100% des droits commerciaux sur toutes les images générées."
                   : "Yes, absolutely. You own 100% commercial rights to all generated images."
                 }
@@ -545,7 +545,7 @@ export default async function Home() {
                 </svg>
               </summary>
               <div className="px-6 pb-6 text-sm text-gray-500 leading-relaxed border-t border-gray-100 pt-4">
-                {locale === 'fr' 
+                {locale === 'fr'
                   ? "Régénérez autant de fois que vous voulez. Modifiez un détail en un clic. Et si vraiment ça ne va pas, on rembourse sans poser de questions."
                   : "Regenerate as many times as you want. Modify a detail in one click. And if it really doesn't work, we refund no questions asked."
                 }
