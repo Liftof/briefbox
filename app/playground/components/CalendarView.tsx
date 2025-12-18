@@ -17,7 +17,7 @@ export default function CalendarView({ brandId, creditsInfo }: CalendarViewProps
 
    const isPremium = creditsInfo?.plan === 'premium';
    const isPro = creditsInfo?.plan === 'pro';
-   const hasCredits = (creditsInfo?.creditsRemaining || 0) > 0;
+   const hasCredits = (creditsInfo?.remaining || 0) > 0;
 
 
    const getDaysInMonth = (date: Date) => {
