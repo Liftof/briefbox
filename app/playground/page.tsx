@@ -199,6 +199,18 @@ function PlaygroundContent() {
   const [status, setStatus] = useState<'idle' | 'preparing' | 'running' | 'complete' | 'error'>('idle');
   const [loadingStage, setLoadingStage] = useState(0);
 
+  // Generation queue for parallel non-blocking generations
+  interface GenerationJob {
+    id: string;
+    brief: string;
+    status: 'preparing' | 'running' | 'complete' | 'error';
+    progress: number;
+    statusMessage: string;
+    timestamp: number;
+  }
+  const [generationQueue, setGenerationQueue] = useState<GenerationJob[]>([]);
+  const activeGenerations = generationQueue.filter(job => job.status === 'preparing' || job.status === 'running');
+
   // Fun loading messages that cycle through (locale-aware)
   const LOADING_STAGES = locale === 'fr' ? [
     { emoji: '🔍', message: 'Exploration du site...', sub: 'On scrape les pages clés' },
@@ -1542,8 +1554,29 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
       return;
     }
 
+    // Create a unique job ID and add to queue
+    const jobId = `gen-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    const newJob: GenerationJob = {
+      id: jobId,
+      brief: finalPrompt.substring(0, 50) + (finalPrompt.length > 50 ? '...' : ''),
+      status: 'preparing',
+      progress: 10,
+      statusMessage: '🎨 Le Creative Director analyse votre brief...',
+      timestamp: Date.now()
+    };
+
+    setGenerationQueue(prev => [...prev, newJob]);
+
+    // Helper function to update this job's progress
+    const updateJob = (updates: Partial<GenerationJob>) => {
+      setGenerationQueue(prev =>
+        prev.map(job => job.id === jobId ? { ...job, ...updates } : job)
+      );
+    };
+
+    // Keep legacy status for backwards compatibility (show as running if any job is active)
     setStatus('preparing');
-    setStatusMessage('🎨 Le Creative Director analyse votre brief...');
+    setStatusMessage(newJob.statusMessage);
     setProgress(10);
 
     try {
@@ -1610,6 +1643,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
 
           console.log('🎬 Creative Director:', promptVariations ? `${promptVariations.length} variations` : 'single prompt');
           console.log('🚫 Negative prompt:', negativePrompt.substring(0, 50) + '...');
+          updateJob({ progress: 30, statusMessage: locale === 'fr' ? '✨ Création en cours, veuillez patienter' : '✨ Creating your visual, please wait' });
           setProgress(30);
           setStatusMessage(locale === 'fr' ? '✨ Création en cours, veuillez patienter' : '✨ Creating your visual, please wait');
         } else {
@@ -1621,6 +1655,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
         finalGenerationPrompt = buildFallbackPrompt(finalPrompt, targetBrand);
       }
 
+      updateJob({ progress: 40 });
       setProgress(40);
 
       // ========================================
@@ -1815,6 +1850,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
       window.dispatchEvent(new Event('generations-updated'));
 
       setGeneratedImages((prev) => [...normalized, ...prev].slice(0, 16));
+      updateJob({ status: 'complete', progress: 100, statusMessage: locale === 'fr' ? 'Visuel généré !' : 'Visual generated!' });
       setStatus('complete');
       setProgress(100);
       setShowGiftOverlay(false); // Dismiss gift overlay if it was showing
@@ -1847,12 +1883,30 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
       }
     } catch (error: any) {
       console.error('Generation error', error);
+      updateJob({ status: 'error', progress: 0, statusMessage: error.message || 'Error' });
       setStatus('error');
       showToast(error.message || (locale === 'fr' ? 'Erreur pendant la génération' : 'Error generating'), 'error');
-    } finally {
+
+      // Remove failed job after a delay
       setTimeout(() => {
-        setStatus('idle');
-        setProgress(0);
+        setGenerationQueue(prev => prev.filter(job => job.id !== jobId));
+      }, 3000);
+    } finally {
+      // Mark job as complete and remove from queue after delay
+      setTimeout(() => {
+        setGenerationQueue(prev => prev.filter(job => job.id !== jobId));
+      }, 2000);
+
+      // Only set global status to idle if this was the last active generation
+      setTimeout(() => {
+        setGenerationQueue(prev => {
+          const stillActive = prev.filter(job => job.status === 'preparing' || job.status === 'running');
+          if (stillActive.length === 0) {
+            setStatus('idle');
+            setProgress(0);
+          }
+          return prev;
+        });
       }, 1200);
     }
   };
@@ -2869,16 +2923,16 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
 
             <button
               onClick={() => handleGenerate()}
-              disabled={status !== 'idle' || !brief.trim() || uploadedImages.length === 0}
+              disabled={!brief.trim() || uploadedImages.length === 0}
               className="w-full group bg-gray-900 text-white py-4 font-medium disabled:opacity-30 disabled:cursor-not-allowed transition-all hover:bg-black flex items-center justify-center gap-3"
             >
-              {status === 'preparing' || status === 'running' ? (
+              {activeGenerations.length > 0 ? (
                 <>
                   <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                   </svg>
-                  <span>{locale === 'fr' ? 'Génération en cours...' : 'Generating...'}</span>
+                  <span>{locale === 'fr' ? 'Générer' : 'Generate'} {activeGenerations.length > 0 && `(${activeGenerations.length})`}</span>
                 </>
               ) : (
                 <>
@@ -2904,6 +2958,36 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
         {/* ═══════════════════════════════════════════════════════════════════════════
             RESULTS SECTION
             ═══════════════════════════════════════════════════════════════════════════ */}
+
+        {/* Active Generations Queue - Compact Indicator */}
+        {activeGenerations.length > 0 && (
+          <div className="mb-6 space-y-2">
+            {activeGenerations.map((job, idx) => (
+              <div key={job.id} className="bg-white border border-gray-200 p-3 rounded-lg animate-fade-in">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2 flex-1 min-w-0">
+                    <div className="w-6 h-6 rounded-full flex items-center justify-center bg-blue-500 flex-shrink-0">
+                      <svg className="w-3 h-3 text-white animate-spin" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                      </svg>
+                    </div>
+                    <span className="text-xs text-gray-600 truncate font-medium">
+                      {job.brief}
+                    </span>
+                  </div>
+                  <span className="text-[10px] text-gray-400 ml-2 flex-shrink-0">{job.progress}%</span>
+                </div>
+                <div className="h-1 bg-gray-100 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-blue-500 transition-all duration-500"
+                    style={{ width: `${job.progress}%` }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
 
         {/* Loading State - Enhanced with brand colors */}
         {(status === 'preparing' || status === 'running') && (
@@ -3772,16 +3856,16 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
       <div className="md:hidden fixed bottom-16 left-0 right-0 z-40 px-4 pb-2 bg-gradient-to-t from-[#F9F9F9] via-[#F9F9F9] to-transparent pt-4">
         <button
           onClick={() => handleGenerate()}
-          disabled={status !== 'idle' || !brief.trim() || uploadedImages.length === 0}
+          disabled={!brief.trim() || uploadedImages.length === 0}
           className="w-full bg-gray-900 text-white py-3.5 font-medium disabled:opacity-30 disabled:cursor-not-allowed transition-all hover:bg-black flex items-center justify-center gap-2 shadow-lg"
         >
-          {status === 'preparing' || status === 'running' ? (
+          {activeGenerations.length > 0 ? (
             <>
               <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
               </svg>
-              <span className="text-sm">{locale === 'fr' ? 'Création...' : 'Creating...'}</span>
+              <span className="text-sm">{locale === 'fr' ? 'Générer' : 'Generate'} ({activeGenerations.length})</span>
             </>
           ) : (
             <>
