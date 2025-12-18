@@ -21,19 +21,29 @@ export default function Hero() {
   const carouselData = [
     {
       image: '/hero-illustration.jpg',
-      prompt: 'Social media post for @Finary, a centralized wealth management platform'
+      prompt: 'Social media post for @Finary, a centralized wealth management platform',
+      colors: ['bg-gray-900', 'bg-[#D4AF37]', 'bg-gray-200']
     },
     {
       image: '/hero-lifestyle.png',
-      prompt: 'Minimalist fashion brand social media post featuring a luxury watch'
+      prompt: 'Minimalist fashion brand social media post featuring a luxury watch',
+      colors: ['bg-gray-900', 'bg-amber-800', 'bg-gray-100']
     },
     {
       image: '/hero-skincare.png',
-      prompt: "Clean skincare brand social media post for 'Glow' serum"
+      prompt: "Clean skincare brand social media post for 'Glow' serum",
+      colors: ['bg-emerald-900', 'bg-white', 'bg-stone-200']
     },
     {
       image: '/hero-traderepublic.jpg',
-      prompt: 'An ad for @TradeRepublic featuring a model and KPIs'
+      prompt: 'An ad for @TradeRepublic featuring a model and KPIs',
+      colors: ['bg-black', 'bg-zinc-400', 'bg-white']
+    },
+    {
+      image: '/hero-blablacar.jpg',
+      prompt: 'Static image for @BlaBlaCar with a powerful marketing tagline',
+      colors: ['bg-[#054752]', 'bg-[#00D0A1]', 'bg-white'],
+      position: 'object-left'
     }
   ];
 
@@ -307,7 +317,7 @@ export default function Hero() {
                       src={item.image}
                       alt={`Hero carousel - ${idx}`}
                       className={`absolute inset-0 w-full h-full object-cover transition-all duration-1000 ease-in-out ${idx === carouselIndex ? 'opacity-100 scale-100' : 'opacity-0 scale-110'
-                        }`}
+                        } ${item.position || 'object-center'}`}
                     />
                   ))}
 
@@ -400,9 +410,13 @@ export default function Hero() {
                   </span>
                 </div>
                 <div className="flex gap-2">
-                  <div className="w-10 h-10 bg-gray-900 rounded-lg animate-pulse" style={{ animationDelay: '0ms' }} />
-                  <div className="w-10 h-10 bg-orange-500 rounded-lg animate-pulse" style={{ animationDelay: '200ms' }} />
-                  <div className="w-10 h-10 bg-gray-200 rounded-lg animate-pulse" style={{ animationDelay: '400ms' }} />
+                  {carouselData[carouselIndex].colors.map((color, colorIdx) => (
+                    <div
+                      key={colorIdx}
+                      className={`w-10 h-10 rounded-lg transition-all duration-700 ${color}`}
+                      style={{ transitionDelay: `${colorIdx * 100}ms` }}
+                    />
+                  ))}
                 </div>
               </div>
             </div>
