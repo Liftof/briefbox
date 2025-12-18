@@ -4,11 +4,14 @@ import CtaSection from '@/components/CtaSection';
 import Link from 'next/link';
 import { headers } from 'next/headers';
 import { getServerLocale } from '@/lib/i18n-server';
+import Gallery from '@/components/Gallery';
+import I18nComparison from '@/components/I18nComparison';
 
 export default async function Home() {
   const headersList = await headers();
   const acceptLanguage = headersList.get('accept-language') || 'fr';
   const locale = getServerLocale(acceptLanguage);
+
   return (
     <div className="min-h-screen bg-[#FAFAFA] font-sans text-gray-900">
       <Navigation />
@@ -16,14 +19,12 @@ export default async function Home() {
 
       {/* Problem Section */}
       <section className="py-24 md:py-32 relative">
-        {/* Subtle grid */}
         <div className="absolute inset-0 opacity-[0.02]" style={{
           backgroundImage: `linear-gradient(#000 1px, transparent 1px), linear-gradient(90deg, #000 1px, transparent 1px)`,
           backgroundSize: '60px 60px'
         }} />
 
         <div className="max-w-6xl mx-auto px-6 relative z-10">
-          {/* Section header */}
           <div className="max-w-3xl mb-16">
             <div className="flex items-center gap-3 mb-6">
               <div className="w-2 h-2 bg-red-500 rounded-full" />
@@ -44,16 +45,13 @@ export default async function Home() {
             </p>
           </div>
 
-          {/* Comparison Grid */}
           <div className="grid gap-6 md:grid-cols-2">
-            {/* What you do today */}
             <div className="relative">
               <div className="absolute -top-3 -left-3 w-6 h-6 border-l-2 border-t-2 border-red-200" />
               <div className="bg-white border border-gray-200 p-8 md:p-10">
                 <div className="flex items-center gap-3 mb-8">
                   <span className="text-xs font-mono uppercase tracking-widest text-red-400">{locale === 'fr' ? "Ce que vous faites aujourd'hui" : "What you do today"}</span>
                 </div>
-
                 <div className="space-y-6">
                   <div className="flex items-start gap-4">
                     <div className="w-8 h-8 bg-red-50 rounded-full flex items-center justify-center text-red-400 text-sm flex-shrink-0">✗</div>
@@ -80,14 +78,11 @@ export default async function Home() {
               </div>
             </div>
 
-            {/* What you could do - Light gradient with Palette colors */}
             <div className="relative">
               <div className="absolute -bottom-3 -right-3 w-6 h-6 border-r-2 border-b-2 border-blue-400" />
               <div className="bg-gradient-to-br from-blue-50 via-white to-amber-50 border border-blue-100 p-8 md:p-10 h-full relative overflow-hidden">
-                {/* Subtle color blobs */}
                 <div className="absolute top-0 right-0 w-32 h-32 bg-blue-200/30 rounded-full blur-3xl" />
                 <div className="absolute bottom-0 left-0 w-24 h-24 bg-amber-200/20 rounded-full blur-2xl" />
-
                 <div className="relative z-10">
                   <div className="flex items-center gap-3 mb-8">
                     <div className="flex -space-x-1">
@@ -97,7 +92,6 @@ export default async function Home() {
                     </div>
                     <span className="text-xs font-mono uppercase tracking-widest text-blue-600">{locale === 'fr' ? "Ce que vous pourriez faire" : "What you could do"}</span>
                   </div>
-
                   <div className="space-y-6">
                     <div className="flex items-start gap-4">
                       <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white text-sm flex-shrink-0 shadow-lg shadow-blue-500/30">✓</div>
@@ -131,7 +125,6 @@ export default async function Home() {
       {/* How it Works */}
       <section id="fonctionnement" className="py-24 md:py-32 bg-white relative">
         <div className="max-w-6xl mx-auto px-6">
-          {/* Section header */}
           <div className="max-w-3xl mb-16">
             <div className="flex items-center gap-3 mb-6">
               <div className="w-2 h-2 bg-gray-900 rounded-full" />
@@ -153,7 +146,6 @@ export default async function Home() {
           </div>
 
           <div className="grid gap-8 md:grid-cols-3 md:gap-12">
-            {/* Step 1 */}
             <div className="relative">
               <div className="text-8xl font-light text-red-100 absolute -top-4 -left-2">1</div>
               <div className="relative z-10 pt-12">
@@ -173,7 +165,6 @@ export default async function Home() {
               </div>
             </div>
 
-            {/* Step 2 */}
             <div className="relative">
               <div className="text-8xl font-light text-blue-100 absolute -top-4 -left-2">2</div>
               <div className="relative z-10 pt-12">
@@ -192,7 +183,6 @@ export default async function Home() {
               </div>
             </div>
 
-            {/* Step 3 */}
             <div className="relative">
               <div className="text-8xl font-light text-amber-100 absolute -top-4 -left-2">3</div>
               <div className="relative z-10 pt-12">
@@ -204,7 +194,7 @@ export default async function Home() {
                 <h3 className="text-xl font-medium text-gray-900 mb-3">{locale === 'fr' ? 'Publiez ou ajustez' : 'Publish or adjust'}</h3>
                 <p className="text-gray-500 leading-relaxed">
                   {locale === 'fr'
-                    ? 'Visuels générés en 60 secondes. Un détail à changer ? Un clic. Pas satisfait ? Régénérez. Gratuit.'
+                    ? 'Visuels générés en 60 secondes. Un detail à changer ? Un clic. Pas satisfait ? Régénérez. Gratuit.'
                     : 'Visuals generated in 60 seconds. Need a change? One click. Not happy? Regenerate. Free.'
                   }
                 </p>
@@ -214,75 +204,9 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* International Section */}
-      <section className="py-24 bg-gray-900 text-white relative overflow-hidden">
-        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-red-500 via-blue-500 to-amber-400" />
-        <div className="max-w-6xl mx-auto px-6 relative z-10">
-          <div className="grid md:grid-cols-2 gap-12 items-center">
-            <div>
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
-                <span className="text-xs font-mono uppercase tracking-[0.2em] text-blue-400">
-                  {locale === 'fr' ? 'International' : 'International'}
-                </span>
-              </div>
-              <h2 className="text-3xl md:text-4xl font-light leading-tight mb-6">
-                {locale === 'fr' ? (
-                  <>Une marque,<br /><span className="font-semibold text-white">toutes les langues.</span></>
-                ) : (
-                  <>One brand,<br /><span className="font-semibold text-white">all languages.</span></>
-                )}
-              </h2>
-              <p className="text-gray-400 text-lg leading-relaxed mb-8">
-                {locale === 'fr'
-                  ? "Traduction parfaite de vos contenus en 20 secondes. Palette adapte vos visuels pour tous vos marchés internationaux en gardant une cohérence absolue."
-                  : "Perfect content translation in 20 seconds. Palette adapts your visuals for all international markets while maintaining absolute brand consistency."
-                }
-              </p>
-              <div className="flex gap-4">
-                <div className="px-4 py-2 bg-white/5 border border-white/10 rounded-lg">
-                  <div className="text-2xl font-semibold text-white mb-1">20s</div>
-                  <div className="text-[10px] text-gray-500 uppercase tracking-wider">{locale === 'fr' ? 'Par pays' : 'Per country'}</div>
-                </div>
-                <div className="px-4 py-2 bg-white/5 border border-white/10 rounded-lg">
-                  <div className="text-2xl font-semibold text-white mb-1">100%</div>
-                  <div className="text-[10px] text-gray-500 uppercase tracking-wider">{locale === 'fr' ? 'Fidèle' : 'Consistent'}</div>
-                </div>
-              </div>
-            </div>
-            <div className="relative">
-              <div className="aspect-[4/5] bg-gradient-to-br from-blue-500/10 to-purple-500/10 rounded-2xl border border-white/10 flex items-center justify-center relative group p-8">
-                {/* Visual representation of translation with real images */}
-                <div className="absolute inset-0 flex items-center justify-center">
-                  {/* French Image (Bottom/Left) */}
-                  <div className="relative w-2/3 aspect-[3/4] bg-gray-800 rounded-lg shadow-2xl transform -rotate-6 -translate-x-8 border border-white/20 overflow-hidden">
-                    <img
-                      src="/gallery/i18n-fr.jpg"
-                      alt="French version"
-                      className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity"
-                    />
-                    <div className="absolute top-2 left-2 px-2 py-0.5 bg-black/50 backdrop-blur-md rounded text-[10px] font-mono text-white/70">FR</div>
-                  </div>
-                  {/* English Image (Top/Right) */}
-                  <div className="relative w-2/3 aspect-[3/4] bg-gray-800 rounded-lg shadow-2xl transform rotate-6 translate-x-8 -translate-y-4 border border-white/30 overflow-hidden group-hover:translate-y-0 group-hover:translate-x-4 transition-transform duration-500">
-                    <img
-                      src="/gallery/i18n-en.jpg"
-                      alt="English version"
-                      className="w-full h-full object-cover"
-                    />
-                    <div className="absolute top-2 right-2 px-2 py-0.5 bg-blue-500/80 backdrop-blur-md rounded text-[10px] font-mono text-white">EN</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
       {/* Proof Section - Gallery */}
       <section className="py-24 md:py-32 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-gray-50 to-white" />
-        {/* Palette color accents */}
         <div className="absolute top-20 right-20 w-64 h-64 bg-red-200/20 rounded-full blur-3xl" />
         <div className="absolute bottom-20 left-20 w-64 h-64 bg-blue-200/20 rounded-full blur-3xl" />
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-amber-200/15 rounded-full blur-3xl" />
@@ -305,51 +229,50 @@ export default async function Home() {
             </p>
           </div>
 
-          {/* Infinite scrolling gallery */}
-          <div className="relative overflow-hidden mb-12">
-            {/* Fade edges */}
-            <div className="absolute left-0 top-0 bottom-0 w-20 bg-gradient-to-r from-gray-50 to-transparent z-10 pointer-events-none" />
-            <div className="absolute right-0 top-0 bottom-0 w-20 bg-gradient-to-l from-gray-50 to-transparent z-10 pointer-events-none" />
+          <Gallery />
 
-            {/* Scrolling container */}
-            <div className="flex gap-8 animate-marquee hover:[animation-play-state:paused]">
-              {/* First set */}
-              {[2, 3, 4, 6, 7, 8, 9].map((i) => (
-                <div key={`a-${i}`} className="w-72 md:w-[480px] flex-shrink-0">
-                  <div className="aspect-square bg-gray-100 rounded-2xl overflow-hidden shadow-2xl hover:shadow-3xl transition-all duration-500 hover:scale-[1.02]">
-                    <img
-                      src={`/gallery/gal-${i}.${i === 9 ? 'jpg' : 'png'}`}
-                      alt={`Visuel créé avec Palette ${i}`}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                </div>
-              ))}
-              {/* Duplicate for seamless loop */}
-              {[2, 3, 4, 6, 7, 8, 9].map((i) => (
-                <div key={`b-${i}`} className="w-72 md:w-[480px] flex-shrink-0">
-                  <div className="aspect-square bg-gray-100 rounded-2xl overflow-hidden shadow-2xl hover:shadow-3xl transition-all duration-500 hover:scale-[1.02]">
-                    <img
-                      src={`/gallery/gal-${i}.${i === 9 ? 'jpg' : 'png'}`}
-                      alt={`Visuel créé avec Palette ${i}`}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="text-center mt-8">
-            <Link href="/playground" className="text-sm text-gray-500 hover:text-gray-900 transition-colors">
-              Créer votre premier visuel →
+          <div className="text-center mt-12">
+            <Link href="/playground" className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-gray-900 transition-colors group">
+              {locale === 'fr' ? 'Créer votre premier visuel' : 'Create your first visual'}
+              <span className="group-hover:translate-x-1 transition-transform">→</span>
             </Link>
           </div>
         </div>
       </section>
 
+      {/* International Section */}
+      <section className="py-24 md:py-32 bg-white relative overflow-hidden border-t border-gray-50">
+        <div className="max-w-6xl mx-auto px-6 relative z-10">
+          <div className="grid md:grid-cols-2 gap-16 items-center">
+            <div>
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-2 h-2 bg-blue-500 rounded-full" />
+                <span className="text-xs font-mono uppercase tracking-[0.2em] text-gray-400">
+                  {locale === 'fr' ? 'International' : 'International'}
+                </span>
+              </div>
+              <h2 className="text-3xl md:text-4xl lg:text-5xl font-light text-gray-900 leading-tight mb-6">
+                {locale === 'fr' ? (
+                  <>Une marque,<br /><span className="font-semibold text-gray-900">toutes les langues.</span></>
+                ) : (
+                  <>One brand,<br /><span className="font-semibold text-gray-900">all languages.</span></>
+                )}
+              </h2>
+              <p className="text-gray-500 text-lg leading-relaxed mb-8">
+                {locale === 'fr'
+                  ? "Traduction parfaite de vos contenus en 20 secondes. Palette adapte vos visuels pour tous vos marchés internationaux en gardant une cohérence absolue."
+                  : "Perfect content translation in 20 seconds. Palette adapts your visuals for all international markets while maintaining absolute brand consistency."
+                }
+              </p>
+            </div>
+
+            <I18nComparison locale={locale} />
+          </div>
+        </div>
+      </section>
+
       {/* Objection Handling */}
-      <section className="py-24 md:py-32 bg-white">
+      <section className="py-24 md:py-32 bg-white border-t border-gray-50">
         <div className="max-w-4xl mx-auto px-6">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-light text-gray-900 leading-tight">
@@ -358,7 +281,6 @@ export default async function Home() {
           </div>
 
           <div className="space-y-8">
-            {/* Objection 1 */}
             <div className="border border-gray-200 p-6 md:p-8">
               <h3 className="text-lg font-medium text-gray-900 mb-3">
                 {locale === 'fr' ? '"Ça fait des trucs moches, non ?"' : '"Does it make ugly stuff?"'}
@@ -371,7 +293,6 @@ export default async function Home() {
               </p>
             </div>
 
-            {/* Objection 2 */}
             <div className="border border-gray-200 p-6 md:p-8">
               <h3 className="text-lg font-medium text-gray-900 mb-3">
                 {locale === 'fr' ? '"J\'ai déjà Canva"' : '"I already have Canva"'}
@@ -384,7 +305,6 @@ export default async function Home() {
               </p>
             </div>
 
-            {/* Objection 3 */}
             <div className="border border-gray-200 p-6 md:p-8">
               <h3 className="text-lg font-medium text-gray-900 mb-3">
                 {locale === 'fr' ? '"Mon agence connaît ma marque"' : '"My agency knows my brand"'}
@@ -401,14 +321,13 @@ export default async function Home() {
       </section>
 
       {/* Pricing */}
-      <section id="tarifs" className="py-24 md:py-32 relative">
+      <section id="tarifs" className="py-24 md:py-32 relative border-t border-gray-50">
         <div className="absolute inset-0 opacity-[0.02]" style={{
           backgroundImage: `linear-gradient(#000 1px, transparent 1px), linear-gradient(90deg, #000 1px, transparent 1px)`,
           backgroundSize: '60px 60px'
         }} />
 
         <div className="max-w-5xl mx-auto px-6 relative z-10">
-          {/* Section header */}
           <div className="text-center mb-6">
             <div className="inline-flex items-center gap-3 mb-6">
               <div className="w-2 h-2 bg-gray-900 rounded-full" />
@@ -430,14 +349,12 @@ export default async function Home() {
           </div>
 
           <div className="grid gap-6 lg:grid-cols-3 items-start mt-12">
-            {/* Starter */}
             <div className="bg-white border border-gray-200 p-8">
               <div className="flex items-center justify-between mb-4">
                 <div className="text-xs font-mono uppercase tracking-widest text-gray-400">{locale === 'fr' ? 'Starter' : 'Starter'}</div>
               </div>
               <div className="text-4xl font-light text-gray-900 mb-2">{locale === 'fr' ? 'Gratuit' : 'Free'}</div>
               <p className="text-sm text-gray-500 mb-8">{locale === 'fr' ? 'Pour voir si ça marche vraiment' : 'To see if it really works'}</p>
-
               <ul className="space-y-3 mb-8">
                 <li className="flex items-center gap-3 text-sm text-gray-600">
                   <span className="text-blue-500">✓</span>
@@ -456,24 +373,19 @@ export default async function Home() {
                   {locale === 'fr' ? "Visuel quotidien automatique" : "Daily automatic visual"}
                 </li>
               </ul>
-
               <Link href="/playground" className="block w-full py-3 text-center text-sm font-medium text-gray-900 border border-gray-200 hover:border-gray-900 transition-colors">
                 {locale === 'fr' ? 'Créer mon premier visuel' : 'Create my first visual'}
               </Link>
             </div>
 
-            {/* Pro - Featured */}
             <div className="relative bg-gray-900 text-white p-8 lg:-mt-4 lg:-mb-4">
               <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-blue-500 text-white text-[10px] font-mono uppercase tracking-widest px-3 py-1">
                 {locale === 'fr' ? 'Populaire' : 'Popular'}
               </div>
-
               <div className="text-xs font-mono uppercase tracking-widest text-blue-400 mb-4">Pro</div>
               <div className="text-4xl font-light text-white mb-2">{locale === 'fr' ? '19€' : '$19'}<span className="text-lg text-gray-500">/{locale === 'fr' ? 'mois' : 'mo'}</span></div>
               <p className="text-sm text-gray-400 mb-8">{locale === 'fr' ? 'Pour ceux qui publient chaque semaine' : 'For those who publish weekly'}</p>
-
               <div className="text-xs font-mono text-gray-500 mb-6">{locale === 'fr' ? '50 crédits/mois' : '50 credits/mo'}</div>
-
               <ul className="space-y-3 mb-8">
                 <li className="flex items-center gap-3 text-sm text-gray-300">
                   <span className="text-amber-400">★</span>
@@ -500,20 +412,16 @@ export default async function Home() {
                   {locale === 'fr' ? 'Génération 4K' : '4K Generation'}
                 </li>
               </ul>
-
               <button className="w-full py-3 text-center text-sm font-medium bg-white text-gray-900 hover:bg-gray-100 transition-colors">
                 {locale === 'fr' ? 'Essai gratuit 7 jours' : '7-day free trial'}
               </button>
             </div>
 
-            {/* Premium */}
             <div className="bg-white border border-gray-200 p-8">
               <div className="text-xs font-mono uppercase tracking-widest text-gray-400 mb-4">Premium</div>
               <div className="text-4xl font-light text-gray-900 mb-2">{locale === 'fr' ? '49€' : '$49'}<span className="text-lg text-gray-400">/{locale === 'fr' ? 'mois' : 'mo'}</span></div>
               <p className="text-sm text-gray-500 mb-8">{locale === 'fr' ? 'Pour les équipes qui produisent' : 'For teams that produce'}</p>
-
               <div className="text-xs font-mono text-gray-400 mb-6">{locale === 'fr' ? '150 crédits/mois' : '150 credits/mo'}</div>
-
               <ul className="space-y-3 mb-8">
                 <li className="flex items-center gap-3 text-sm text-gray-600">
                   <span className="text-amber-500">★</span>
@@ -540,7 +448,6 @@ export default async function Home() {
                   {locale === 'fr' ? 'Génération 4K' : '4K Generation'}
                 </li>
               </ul>
-
               <button className="block w-full py-3 text-center text-sm font-medium text-gray-900 border border-gray-200 hover:border-gray-900 transition-colors">
                 {locale === 'fr' ? 'Contacter les ventes' : 'Contact sales'}
               </button>
@@ -550,7 +457,7 @@ export default async function Home() {
       </section>
 
       {/* FAQ */}
-      <section id="faq" className="py-24 md:py-32 bg-white">
+      <section id="faq" className="py-24 md:py-32 bg-white border-t border-gray-50">
         <div className="max-w-2xl mx-auto px-6">
           <div className="mb-16">
             <div className="flex items-center gap-3 mb-6">
