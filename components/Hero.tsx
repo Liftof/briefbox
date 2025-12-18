@@ -30,6 +30,10 @@ export default function Hero() {
     {
       image: '/hero-skincare.png',
       prompt: "Clean skincare brand social media post for 'Glow' serum"
+    },
+    {
+      image: '/hero-traderepublic.jpg',
+      prompt: 'An ad for @TradeRepublic featuring a model and KPIs'
     }
   ];
 
@@ -318,8 +322,8 @@ export default function Hero() {
               {/* Floating prompt card - RESTORED & DYNAMIC */}
               <div
                 className={`absolute -left-20 top-20 w-80 bg-white border-2 p-5 shadow-xl transition-all duration-500 cursor-text z-30 ${isFocused
-                    ? 'border-blue-500 rotate-0 scale-105 shadow-2xl shadow-blue-500/20'
-                    : 'border-gray-200 -rotate-2 hover:rotate-0 hover:border-gray-300'
+                  ? 'border-blue-500 rotate-0 scale-105 shadow-2xl shadow-blue-500/20'
+                  : 'border-gray-200 -rotate-2 hover:rotate-0 hover:border-gray-300'
                   }`}
                 onClick={() => {
                   setIsFocused(true);
@@ -381,7 +385,7 @@ export default function Hero() {
 
                   <div className="flex items-center gap-2">
                     <div className="text-[9px] font-mono text-gray-400 uppercase tracking-tighter">
-                      Step {carouselIndex + 1}/3
+                      Step {carouselIndex + 1}/{carouselData.length}
                     </div>
                   </div>
                 </div>
