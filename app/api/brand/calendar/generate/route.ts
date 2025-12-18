@@ -8,32 +8,54 @@ export const maxDuration = 300; // 5 minutes timeout for Vercel Pro
 
 // Helper: Transform Agent result to Calendar Plan
 async function generateCalendarPlan(agentData: any, month: number, year: number, userPlan: string = 'free') {
+    // 4. Distribute posts (Mon, Wed, Fri) throughout the month
     const posts: any[] = [];
+    let currentDay = 1;
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
 
-    // 1. Create posts from Trends (High priority)
-    if (agentData.trends) {
-        agentData.trends.slice(0, 4).forEach((trend: any, i: number) => {
-            posts.push({
-                day: (i * 7) + 2, // Spread out (Tue)
-                idea: `Trend: ${trend.trend}`,
-                content: `Analyzing the shift: ${trend.trend}. Evidence suggests ${trend.source || 'market data'} supports this.`,
-                platform: 'linkedin',
-                isPremium: false
-            });
-        });
-    }
+    // Combine all ideas
+    const allIdeas = [
+        ...(agentData.trends || []).map((t: any) => ({ type: 'trend', ...t })),
+        ...(agentData.painPoints || []).map((p: any) => ({ type: 'pain', ...p })),
+        ...(agentData.competitors || []).map((c: any) => ({ type: 'competitor', ...c })),
+    ];
 
-    // 2. Create posts from Pain Points (Empathy)
-    if (agentData.painPoints) {
-        agentData.painPoints.slice(0, 4).forEach((pain: any, i: number) => {
-            posts.push({
-                day: (i * 7) + 4, // Spread out (Thu)
-                idea: `Problem: ${pain.point}`,
-                content: `Do you struggle with ${pain.point}? You're not alone.`,
-                platform: 'instagram',
-                isPremium: false
-            });
-        });
+    let ideaIndex = 0;
+
+    // Iterate through days
+    while (currentDay <= daysInMonth && ideaIndex < allIdeas.length) {
+        const date = new Date(year, month, currentDay);
+        const dayOfWeek = date.getDay(); // 0=Sun, 1=Mon, ...
+
+        // Schedule on Mon (1), Wed (3), Fri (5)
+        if (dayOfWeek === 1 || dayOfWeek === 3 || dayOfWeek === 5) {
+            const idea = allIdeas[ideaIndex];
+            if (idea) {
+                let content = '';
+                let platform = 'linkedin';
+
+                if (idea.type === 'trend') {
+                    content = `Analyzing the shift: ${idea.trend}. Evidence suggests ${idea.source || 'market data'} supports this.`;
+                    platform = 'linkedin';
+                } else if (idea.type === 'pain') {
+                    content = `Do you struggle with ${idea.point}? You're not alone.`;
+                    platform = 'instagram';
+                } else {
+                    content = `Alternative to ${idea.name}: Here is why users are switching.`;
+                    platform = 'twitter';
+                }
+
+                posts.push({
+                    day: currentDay,
+                    idea: idea.type === 'trend' ? `Trend: ${idea.trend}` : (idea.type === 'pain' ? `Problem: ${idea.point}` : `Vs: ${idea.name}`),
+                    content,
+                    platform,
+                    isPremium: false
+                });
+                ideaIndex++;
+            }
+        }
+        currentDay++;
     }
 
     // PREMIUM LOGIC: The first 2 posts get "Auto-Generated" flag
@@ -42,9 +64,6 @@ async function generateCalendarPlan(agentData: any, month: number, year: number,
         if (posts.length > 1) posts[1].isPremium = true;
     }
 
-    // Sort by day
-    posts.sort((a, b) => a.day - b.day);
-
     // Map to final structure with dates
     const finalPosts = posts.map(p => {
         const date = new Date(year, month, p.day);
@@ -52,8 +71,8 @@ async function generateCalendarPlan(agentData: any, month: number, year: number,
             scheduledDate: date.toISOString(),
             content: p.content,
             platform: p.platform,
-            status: p.isPremium ? 'generated' : 'idea', // Premium gets 'generated' status (stub)
-            imageUrl: p.isPremium ? 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2564&auto=format&fit=crop' : null // Mock URL for now
+            status: p.isPremium ? 'generated' : 'idea',
+            imageUrl: p.isPremium ? 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2564&auto=format&fit=crop' : null
         };
     });
 
