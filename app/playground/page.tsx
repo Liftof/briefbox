@@ -2582,7 +2582,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
     }
 
     if (activeTab === 'calendar') {
-      return <CalendarView brandId={brandData?.id} />;
+      return <CalendarView brandId={brandData?.id} creditsInfo={creditsInfo || null} />;
     }
 
     if (activeTab === 'projects') {

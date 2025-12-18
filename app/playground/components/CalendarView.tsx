@@ -1,17 +1,24 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { CreditsInfo } from '@/lib/useCredits';
 
 interface CalendarViewProps {
    brandId?: number;
+   creditsInfo?: CreditsInfo | null;
 }
 
-export default function CalendarView({ brandId }: CalendarViewProps) {
+export default function CalendarView({ brandId, creditsInfo }: CalendarViewProps) {
    const [currentDate, setCurrentDate] = useState(new Date());
    const [posts, setPosts] = useState<any[]>([]);
    const [loading, setLoading] = useState(false);
 
    const days = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
+
+   const isPremium = creditsInfo?.plan === 'premium';
+   const isPro = creditsInfo?.plan === 'pro';
+   const hasCredits = (creditsInfo?.creditsRemaining || 0) > 0;
+
 
    const getDaysInMonth = (date: Date) => {
       const year = date.getFullYear();
@@ -71,15 +78,7 @@ export default function CalendarView({ brandId }: CalendarViewProps) {
                brandId,
                month: currentDate.getMonth(),
                year: currentDate.getFullYear(),
-               // Pass context if we had it from props, or fetch it. 
-               // For now assuming the API fetches brand details itself (it should).
-               // Actually the API needs these. Let's fetch brand data first or update API to fetch it.
-               // Simplified: We'll assume the API fetches the brand from DB using brandId.
-               // Update: The API logic in Step 189 expects brandName, industry, etc in body!
-               // We need to pass them or update API to fetch from DB. 
-               // Let's assume for this step we need to pass them.
-               // But we don't have them here easily without context.
-               // Let's patch the API to fetch from DB instead. It's safer.
+               userPlan: creditsInfo?.plan || 'free' // Pass user plan for Premium logic
             })
          });
 
@@ -110,17 +109,26 @@ export default function CalendarView({ brandId }: CalendarViewProps) {
             <div className="flex gap-2 items-center">
                {/* GENERATE BUTTON */}
                <button
-                  onClick={generateCalendar}
-                  disabled={loading}
-                  className="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-medium rounded-lg shadow-lg hover:shadow-indigo-500/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                  onClick={() => {
+                     if (!hasCredits && !isPremium) {
+                        alert('Crédits insuffisants. Passez à Pro !');
+                        return;
+                     }
+                     generateCalendar();
+                  }}
+                  disabled={loading || (!hasCredits && !isPremium)}
+                  className={`px-4 py-2 font-medium rounded-lg shadow-lg transition-all flex items-center gap-2 ${loading || (!hasCredits && !isPremium)
+                     ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                     : 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:shadow-indigo-500/30'
+                     }`}
                >
                   {loading ? (
                      <>
-                        <span className="animate-spin">⏳</span> Recherche en cours...
+                        <span className="animate-spin">⏳</span> Recherche...
                      </>
                   ) : (
                      <>
-                        <span>✨</span> Générer avec IA
+                        <span>✨</span> Générer {isPremium ? '(2 gratuits)' : '(1 crédit)'}
                      </>
                   )}
                </button>

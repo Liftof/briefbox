@@ -7,21 +7,68 @@ import { eq } from 'drizzle-orm';
 export const maxDuration = 300; // 5 minutes timeout for Vercel Pro
 
 // Helper: Transform Agent result to Calendar Plan
-// This would typically involve another LLM call, but we'll mock the structure for now or use a basic transform.
-async function generateCalendarPlan(agentData: any, month: number, year: number) {
-    // TODO: Use Gemini/Claude to generate actual posts from insights
+async function generateCalendarPlan(agentData: any, month: number, year: number, userPlan: string = 'free') {
+    const posts: any[] = [];
+
+    // 1. Create posts from Trends (High priority)
+    if (agentData.trends) {
+        agentData.trends.slice(0, 4).forEach((trend: any, i: number) => {
+            posts.push({
+                day: (i * 7) + 2, // Spread out (Tue)
+                idea: `Trend: ${trend.trend}`,
+                content: `Analyzing the shift: ${trend.trend}. Evidence suggests ${trend.source || 'market data'} supports this.`,
+                platform: 'linkedin',
+                isPremium: false
+            });
+        });
+    }
+
+    // 2. Create posts from Pain Points (Empathy)
+    if (agentData.painPoints) {
+        agentData.painPoints.slice(0, 4).forEach((pain: any, i: number) => {
+            posts.push({
+                day: (i * 7) + 4, // Spread out (Thu)
+                idea: `Problem: ${pain.point}`,
+                content: `Do you struggle with ${pain.point}? You're not alone.`,
+                platform: 'instagram',
+                isPremium: false
+            });
+        });
+    }
+
+    // PREMIUM LOGIC: The first 2 posts get "Auto-Generated" flag
+    if (userPlan === 'premium') {
+        if (posts.length > 0) posts[0].isPremium = true;
+        if (posts.length > 1) posts[1].isPremium = true;
+    }
+
+    // Sort by day
+    posts.sort((a, b) => a.day - b.day);
+
+    // Map to final structure with dates
+    const finalPosts = posts.map(p => {
+        const date = new Date(year, month, p.day);
+        return {
+            scheduledDate: date.toISOString(),
+            content: p.content,
+            platform: p.platform,
+            status: p.isPremium ? 'generated' : 'idea', // Premium gets 'generated' status (stub)
+            imageUrl: p.isPremium ? 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=2564&auto=format&fit=crop' : null // Mock URL for now
+        };
+    });
+
     return {
         month,
         year,
         topics: agentData.trends?.map((t: any) => t.trend) || [],
-        posts: [] // To be filled
+        posts: finalPosts
     };
 }
 
 export async function POST(req: NextRequest) {
     try {
         const body = await req.json();
-        const { brandId, month, year } = body;
+        const { brandId, month, year, userPlan } = body; // userPlan passed from frontend
 
         if (!brandId) {
             return NextResponse.json({ success: false, error: 'Brand ID required' }, { status: 400 });
@@ -123,8 +170,9 @@ export async function POST(req: NextRequest) {
 
         console.log('✅ Agent research complete!');
 
-        // 2. Generate Calendar Plan (Stub)
-        const plan = await generateCalendarPlan(agentResult.data, month, year);
+        // 2. Generate Calendar Plan 
+        // Pass userPlan to handle "Premium gets 2 free visuals" logic
+        const plan = await generateCalendarPlan(agentResult.data, month, year, userPlan);
 
         // 3. Save to DB (Stub - in real app we'd save to a 'CalendarGenerations' table)
         // For now, return the data directly for the UI to handle or poll
