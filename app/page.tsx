@@ -214,8 +214,69 @@ export default async function Home() {
         </div>
       </section>
 
+      {/* International Section */}
+      <section className="py-24 bg-gray-900 text-white relative overflow-hidden">
+        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-red-500 via-blue-500 to-amber-400" />
+        <div className="max-w-6xl mx-auto px-6 relative z-10">
+          <div className="grid md:grid-cols-2 gap-12 items-center">
+            <div>
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse" />
+                <span className="text-xs font-mono uppercase tracking-[0.2em] text-blue-400">
+                  {locale === 'fr' ? 'International' : 'International'}
+                </span>
+              </div>
+              <h2 className="text-3xl md:text-4xl font-light leading-tight mb-6">
+                {locale === 'fr' ? (
+                  <>Une marque,<br /><span className="font-semibold text-white">toutes les langues.</span></>
+                ) : (
+                  <>One brand,<br /><span className="font-semibold text-white">all languages.</span></>
+                )}
+              </h2>
+              <p className="text-gray-400 text-lg leading-relaxed mb-8">
+                {locale === 'fr'
+                  ? "Traduction parfaite de vos contenus en 20 secondes. Palette adapte vos visuels pour tous vos marchés internationaux en gardant une cohérence absolue."
+                  : "Perfect content translation in 20 seconds. Palette adapts your visuals for all international markets while maintaining absolute brand consistency."
+                }
+              </p>
+              <div className="flex gap-4">
+                <div className="px-4 py-2 bg-white/5 border border-white/10 rounded-lg">
+                  <div className="text-2xl font-semibold text-white mb-1">20s</div>
+                  <div className="text-[10px] text-gray-500 uppercase tracking-wider">{locale === 'fr' ? 'Par pays' : 'Per country'}</div>
+                </div>
+                <div className="px-4 py-2 bg-white/5 border border-white/10 rounded-lg">
+                  <div className="text-2xl font-semibold text-white mb-1">100%</div>
+                  <div className="text-[10px] text-gray-500 uppercase tracking-wider">{locale === 'fr' ? 'Fidèle' : 'Consistent'}</div>
+                </div>
+              </div>
+            </div>
+            <div className="relative">
+              <div className="aspect-[4/3] bg-gradient-to-br from-blue-500/10 to-purple-500/10 rounded-2xl border border-white/10 flex items-center justify-center relative group">
+                {/* Visual representation of translation */}
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="relative w-48 h-64 bg-gray-800 rounded-lg shadow-2xl transform -rotate-6 border border-white/10 overflow-hidden">
+                    <div className="p-4 space-y-2">
+                      <div className="w-12 h-1 bg-red-500" />
+                      <div className="text-[8px] text-white/40">FRANCE</div>
+                      <div className="text-xs font-bold text-white">Soldes d'été</div>
+                    </div>
+                  </div>
+                  <div className="relative w-48 h-64 bg-gray-800 rounded-lg shadow-2xl transform rotate-6 -translate-x-12 border border-white/10 overflow-hidden group-hover:translate-x-0 transition-transform duration-500">
+                    <div className="p-4 space-y-2">
+                      <div className="w-12 h-1 bg-blue-500" />
+                      <div className="text-[8px] text-white/40">US / UK</div>
+                      <div className="text-xs font-bold text-white">Summer Sales</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Proof Section - Gallery */}
-      <section className="py-24 md:py-32 relative overflow-hidden">
+      <section className="py-32 md:py-48 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-gray-50 to-white" />
         {/* Palette color accents */}
         <div className="absolute top-20 right-20 w-64 h-64 bg-red-200/20 rounded-full blur-3xl" />
@@ -243,11 +304,11 @@ export default async function Home() {
             {/* Scrolling container */}
             <div className="flex gap-4 animate-marquee hover:[animation-play-state:paused]">
               {/* First set */}
-              {[1, 2, 3, 4, 5, 6, 7].map((i) => (
-                <div key={`a-${i}`} className="w-48 md:w-64 flex-shrink-0">
+              {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((i) => (
+                <div key={`a-${i}`} className="w-56 md:w-80 flex-shrink-0">
                   <div className="aspect-square bg-gray-100 rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
                     <img
-                      src={`/gallery/gal-${i}.png`}
+                      src={`/gallery/gal-${i}.${i === 9 ? 'jpg' : 'png'}`}
                       alt={`Visuel créé avec Palette ${i}`}
                       className="w-full h-full object-cover"
                     />
@@ -255,11 +316,11 @@ export default async function Home() {
                 </div>
               ))}
               {/* Duplicate for seamless loop */}
-              {[1, 2, 3, 4, 5, 6, 7].map((i) => (
-                <div key={`b-${i}`} className="w-48 md:w-64 flex-shrink-0">
+              {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((i) => (
+                <div key={`b-${i}`} className="w-56 md:w-80 flex-shrink-0">
                   <div className="aspect-square bg-gray-100 rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
                     <img
-                      src={`/gallery/gal-${i}.png`}
+                      src={`/gallery/gal-${i}.${i === 9 ? 'jpg' : 'png'}`}
                       alt={`Visuel créé avec Palette ${i}`}
                       className="w-full h-full object-cover"
                     />
@@ -352,8 +413,8 @@ export default async function Home() {
             </h2>
             <p className="text-gray-500 max-w-xl mx-auto">
               {locale === 'fr'
-                ? 'Pas de devis. Pas de "ça dépend du scope". Tous les visuels en 2K haute résolution.'
-                : 'No quotes. No "it depends on scope". All visuals in 2K high resolution.'
+                ? 'Pas de devis. Pas de "ça dépend du scope". Tous les visuels en haute résolution.'
+                : 'No quotes. No "it depends on scope". All visuals in high resolution.'
               }
             </p>
           </div>
@@ -463,6 +524,10 @@ export default async function Home() {
                 <li className="flex items-center gap-3 text-sm text-gray-600">
                   <span className="text-blue-500">✓</span>
                   {locale === 'fr' ? 'Support prioritaire' : 'Priority support'}
+                </li>
+                <li className="flex items-center gap-3 text-sm text-gray-600">
+                  <span className="text-blue-500">✓</span>
+                  {locale === 'fr' ? 'Génération 4K' : '4K Generation'}
                 </li>
               </ul>
 
