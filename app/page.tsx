@@ -251,22 +251,26 @@ export default async function Home() {
               </div>
             </div>
             <div className="relative">
-              <div className="aspect-[4/3] bg-gradient-to-br from-blue-500/10 to-purple-500/10 rounded-2xl border border-white/10 flex items-center justify-center relative group">
-                {/* Visual representation of translation */}
+              <div className="aspect-[4/5] bg-gradient-to-br from-blue-500/10 to-purple-500/10 rounded-2xl border border-white/10 flex items-center justify-center relative group p-8">
+                {/* Visual representation of translation with real images */}
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="relative w-48 h-64 bg-gray-800 rounded-lg shadow-2xl transform -rotate-6 border border-white/10 overflow-hidden">
-                    <div className="p-4 space-y-2">
-                      <div className="w-12 h-1 bg-red-500" />
-                      <div className="text-[8px] text-white/40">FRANCE</div>
-                      <div className="text-xs font-bold text-white">Soldes d'été</div>
-                    </div>
+                  {/* French Image (Bottom/Left) */}
+                  <div className="relative w-2/3 aspect-[3/4] bg-gray-800 rounded-lg shadow-2xl transform -rotate-6 -translate-x-8 border border-white/20 overflow-hidden">
+                    <img
+                      src="/gallery/i18n-fr.jpg"
+                      alt="French version"
+                      className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity"
+                    />
+                    <div className="absolute top-2 left-2 px-2 py-0.5 bg-black/50 backdrop-blur-md rounded text-[10px] font-mono text-white/70">FR</div>
                   </div>
-                  <div className="relative w-48 h-64 bg-gray-800 rounded-lg shadow-2xl transform rotate-6 -translate-x-12 border border-white/10 overflow-hidden group-hover:translate-x-0 transition-transform duration-500">
-                    <div className="p-4 space-y-2">
-                      <div className="w-12 h-1 bg-blue-500" />
-                      <div className="text-[8px] text-white/40">US / UK</div>
-                      <div className="text-xs font-bold text-white">Summer Sales</div>
-                    </div>
+                  {/* English Image (Top/Right) */}
+                  <div className="relative w-2/3 aspect-[3/4] bg-gray-800 rounded-lg shadow-2xl transform rotate-6 translate-x-8 -translate-y-4 border border-white/30 overflow-hidden group-hover:translate-y-0 group-hover:translate-x-4 transition-transform duration-500">
+                    <img
+                      src="/gallery/i18n-en.jpg"
+                      alt="English version"
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute top-2 right-2 px-2 py-0.5 bg-blue-500/80 backdrop-blur-md rounded text-[10px] font-mono text-white">EN</div>
                   </div>
                 </div>
               </div>
@@ -276,7 +280,7 @@ export default async function Home() {
       </section>
 
       {/* Proof Section - Gallery */}
-      <section className="py-32 md:py-48 relative overflow-hidden">
+      <section className="py-48 md:py-64 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-gray-50 to-white" />
         {/* Palette color accents */}
         <div className="absolute top-20 right-20 w-64 h-64 bg-red-200/20 rounded-full blur-3xl" />
@@ -302,11 +306,11 @@ export default async function Home() {
             <div className="absolute right-0 top-0 bottom-0 w-20 bg-gradient-to-l from-gray-50 to-transparent z-10 pointer-events-none" />
 
             {/* Scrolling container */}
-            <div className="flex gap-4 animate-marquee hover:[animation-play-state:paused]">
+            <div className="flex gap-8 animate-marquee hover:[animation-play-state:paused]">
               {/* First set */}
-              {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((i) => (
-                <div key={`a-${i}`} className="w-56 md:w-80 flex-shrink-0">
-                  <div className="aspect-square bg-gray-100 rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
+              {[2, 3, 4, 6, 7, 8, 9].map((i) => (
+                <div key={`a-${i}`} className="w-72 md:w-[480px] flex-shrink-0">
+                  <div className="aspect-square bg-gray-100 rounded-2xl overflow-hidden shadow-2xl hover:shadow-3xl transition-all duration-500 hover:scale-[1.02]">
                     <img
                       src={`/gallery/gal-${i}.${i === 9 ? 'jpg' : 'png'}`}
                       alt={`Visuel créé avec Palette ${i}`}
@@ -316,9 +320,9 @@ export default async function Home() {
                 </div>
               ))}
               {/* Duplicate for seamless loop */}
-              {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((i) => (
-                <div key={`b-${i}`} className="w-56 md:w-80 flex-shrink-0">
-                  <div className="aspect-square bg-gray-100 rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-shadow">
+              {[2, 3, 4, 6, 7, 8, 9].map((i) => (
+                <div key={`b-${i}`} className="w-72 md:w-[480px] flex-shrink-0">
+                  <div className="aspect-square bg-gray-100 rounded-2xl overflow-hidden shadow-2xl hover:shadow-3xl transition-all duration-500 hover:scale-[1.02]">
                     <img
                       src={`/gallery/gal-${i}.${i === 9 ? 'jpg' : 'png'}`}
                       alt={`Visuel créé avec Palette ${i}`}
