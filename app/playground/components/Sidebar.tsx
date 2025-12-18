@@ -25,10 +25,10 @@ interface SidebarProps {
   creditsInfo?: CreditsInfo | null;
 }
 
-export default function Sidebar({ 
-  activeTab, 
-  setActiveTab, 
-  brandData, 
+export default function Sidebar({
+  activeTab,
+  setActiveTab,
+  brandData,
   onEditBrand,
   isCollapsed,
   toggleCollapse,
@@ -46,7 +46,7 @@ export default function Sidebar({
   const [hoveredItem, setHoveredItem] = useState<string | null>(null);
   const [showBrandPicker, setShowBrandPicker] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  
+
   const isFree = credits?.plan === 'free';
 
   // Direct labels - no need for translation system, we have locale
@@ -62,25 +62,24 @@ export default function Sidebar({
   const menuItems = [
     { id: 'create', icon: '✦', label: labels.create },
     { id: 'projects', icon: '◫', label: labels.projects },
-    { id: 'calendar', icon: '▤', label: labels.calendar, disabled: true },
+    { id: 'calendar', icon: '▤', label: labels.calendar },
     { id: 'stats', icon: '◔', label: labels.stats, disabled: true },
   ];
 
   return (
     <>
       {/* Sidebar */}
-      <aside 
-        className={`fixed left-0 top-0 bottom-0 bg-white border-r border-gray-200 z-40 flex flex-col transition-all duration-300 ease-out ${
-          isCollapsed ? 'w-16' : 'w-56'
-        }`}
+      <aside
+        className={`fixed left-0 top-0 bottom-0 bg-white border-r border-gray-200 z-40 flex flex-col transition-all duration-300 ease-out ${isCollapsed ? 'w-16' : 'w-56'
+          }`}
       >
         {/* Header with logo */}
         <div className={`flex items-center h-16 border-b border-gray-100 ${isCollapsed ? 'justify-center px-2' : 'px-4'}`}>
           <Link href="/" className="flex items-center gap-2 group">
-            <img 
-              src="/logo-icon.png" 
-              alt="Palette" 
-              className="w-8 h-8 object-contain flex-shrink-0" 
+            <img
+              src="/logo-icon.png"
+              alt="Palette"
+              className="w-8 h-8 object-contain flex-shrink-0"
             />
             {!isCollapsed && (
               <span className="font-semibold text-gray-900 tracking-tight">Palette</span>
@@ -94,7 +93,7 @@ export default function Sidebar({
             {menuItems.map((item) => {
               const isActive = activeTab === item.id;
               const isDisabled = item.disabled;
-              
+
               return (
                 <div key={item.id} className="relative">
                   <button
@@ -102,15 +101,13 @@ export default function Sidebar({
                     onMouseEnter={() => setHoveredItem(item.id)}
                     onMouseLeave={() => setHoveredItem(null)}
                     disabled={isDisabled}
-                    className={`w-full flex items-center gap-3 rounded-lg transition-all duration-150 ${
-                      isCollapsed ? 'justify-center h-11 px-0' : 'px-3 h-10'
-                    } ${
-                      isDisabled 
-                        ? 'text-gray-300 cursor-not-allowed' 
-                        : isActive 
-                          ? 'bg-gray-900 text-white' 
+                    className={`w-full flex items-center gap-3 rounded-lg transition-all duration-150 ${isCollapsed ? 'justify-center h-11 px-0' : 'px-3 h-10'
+                      } ${isDisabled
+                        ? 'text-gray-300 cursor-not-allowed'
+                        : isActive
+                          ? 'bg-gray-900 text-white'
                           : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-                    }`}
+                      }`}
                   >
                     <span className={`text-base flex-shrink-0 ${isActive ? 'text-blue-400' : ''}`}>
                       {item.icon}
@@ -124,7 +121,7 @@ export default function Sidebar({
                       </span>
                     )}
                   </button>
-                  
+
                   {/* Tooltip when collapsed */}
                   {isCollapsed && hoveredItem === item.id && (
                     <div className="absolute left-full top-1/2 -translate-y-1/2 ml-2 bg-gray-900 text-white text-xs font-medium px-2.5 py-1.5 rounded-md whitespace-nowrap z-50 shadow-lg">
@@ -149,9 +146,8 @@ export default function Sidebar({
           {brandData ? (
             <button
               onClick={() => setShowBrandPicker(!showBrandPicker)}
-              className={`w-full bg-gray-50 hover:bg-gray-100 border border-gray-200 hover:border-gray-300 rounded-lg transition-all group ${
-                isCollapsed ? 'p-2' : 'p-3'
-              }`}
+              className={`w-full bg-gray-50 hover:bg-gray-100 border border-gray-200 hover:border-gray-300 rounded-lg transition-all group ${isCollapsed ? 'p-2' : 'p-3'
+                }`}
             >
               <div className={`flex items-center ${isCollapsed ? 'justify-center' : 'gap-3'}`}>
                 {/* Brand logo */}
@@ -162,7 +158,7 @@ export default function Sidebar({
                     <span className="text-gray-400 text-xs">◆</span>
                   )}
                 </div>
-                
+
                 {!isCollapsed && (
                   <div className="flex-1 min-w-0 text-left">
                     <div className="text-sm font-medium text-gray-900 truncate">
@@ -177,12 +173,12 @@ export default function Sidebar({
                   </div>
                 )}
               </div>
-              
+
               {/* Color palette preview */}
               {!isCollapsed && brandData.colors?.length > 0 && (
                 <div className="flex gap-1 mt-2">
                   {brandData.colors.slice(0, 5).map((color: string, i: number) => (
-                    <div 
+                    <div
                       key={i}
                       className="w-4 h-4 rounded-sm border border-gray-200"
                       style={{ backgroundColor: color }}
@@ -198,7 +194,7 @@ export default function Sidebar({
               </div>
             </div>
           )}
-          
+
           {/* Brand Picker Dropdown */}
           {showBrandPicker && !isCollapsed && brandData && (
             <div className="absolute bottom-full left-3 right-3 mb-2 bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden z-50 max-h-64 overflow-y-auto">
@@ -214,9 +210,8 @@ export default function Sidebar({
                     onSwitchBrand?.(brand);
                     setShowBrandPicker(false);
                   }}
-                  className={`w-full flex items-center gap-3 p-3 hover:bg-gray-50 transition-colors ${
-                    brand.id === selectedBrandId ? 'bg-blue-50 border-l-2 border-blue-500' : ''
-                  }`}
+                  className={`w-full flex items-center gap-3 p-3 hover:bg-gray-50 transition-colors ${brand.id === selectedBrandId ? 'bg-blue-50 border-l-2 border-blue-500' : ''
+                    }`}
                 >
                   <div className="w-6 h-6 bg-white rounded border border-gray-200 flex items-center justify-center overflow-hidden flex-shrink-0">
                     {brand.logo ? (
@@ -235,7 +230,7 @@ export default function Sidebar({
                   )}
                 </button>
               ))}
-              
+
               {/* Add brand button */}
               <button
                 onClick={() => {
@@ -251,7 +246,7 @@ export default function Sidebar({
                   {locale === 'fr' ? 'Ajouter une marque' : 'Add a brand'}
                 </span>
               </button>
-              
+
               {/* Edit current brand */}
               {brandData && (
                 <button
@@ -271,7 +266,7 @@ export default function Sidebar({
                   </span>
                 </button>
               )}
-              
+
               {/* Re-scrape brand (Pro+ only) */}
               {brandData && (
                 <button
@@ -283,13 +278,11 @@ export default function Sidebar({
                       setShowBrandPicker(false);
                     }
                   }}
-                  className={`w-full flex items-center gap-3 p-3 hover:bg-gray-50 transition-colors border-t border-gray-100 ${
-                    isFree ? 'text-gray-300' : 'text-blue-600'
-                  }`}
+                  className={`w-full flex items-center gap-3 p-3 hover:bg-gray-50 transition-colors border-t border-gray-100 ${isFree ? 'text-gray-300' : 'text-blue-600'
+                    }`}
                 >
-                  <div className={`w-6 h-6 rounded border flex items-center justify-center ${
-                    isFree ? 'border-gray-200' : 'border-blue-200'
-                  }`}>
+                  <div className={`w-6 h-6 rounded border flex items-center justify-center ${isFree ? 'border-gray-200' : 'border-blue-200'
+                    }`}>
                     <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                     </svg>
@@ -302,7 +295,7 @@ export default function Sidebar({
                   </span>
                 </button>
               )}
-              
+
               {/* Delete brand */}
               {brandData && selectedBrandId && (
                 <button
@@ -321,7 +314,7 @@ export default function Sidebar({
               )}
             </div>
           )}
-          
+
           {/* Delete Confirmation Modal */}
           {showDeleteConfirm && (
             <div className="fixed inset-0 bg-black/50 z-[100] flex items-center justify-center p-4" onClick={() => setShowDeleteConfirm(false)}>
@@ -336,7 +329,7 @@ export default function Sidebar({
                     {locale === 'fr' ? 'Supprimer cette marque ?' : 'Delete this brand?'}
                   </h3>
                   <p className="text-sm text-gray-500 mb-6">
-                    {locale === 'fr' 
+                    {locale === 'fr'
                       ? `"${brandData?.name}" sera définitivement supprimée. Cette action est irréversible.`
                       : `"${brandData?.name}" will be permanently deleted. This action cannot be undone.`
                     }
@@ -371,13 +364,11 @@ export default function Sidebar({
         <div className={`border-t border-gray-100 ${isCollapsed ? 'p-2' : 'px-3 py-2'}`}>
           <button
             onClick={() => setActiveTab('settings')}
-            className={`w-full flex items-center gap-3 rounded-lg transition-all duration-150 ${
-              isCollapsed ? 'justify-center h-10 px-0' : 'px-3 h-10'
-            } ${
-              activeTab === 'settings'
+            className={`w-full flex items-center gap-3 rounded-lg transition-all duration-150 ${isCollapsed ? 'justify-center h-10 px-0' : 'px-3 h-10'
+              } ${activeTab === 'settings'
                 ? 'bg-gray-900 text-white'
                 : 'text-gray-500 hover:bg-gray-100 hover:text-gray-900'
-            }`}
+              }`}
           >
             <span className={`text-base flex-shrink-0 ${activeTab === 'settings' ? 'text-blue-400' : ''}`}>⚙</span>
             {!isCollapsed && (
@@ -392,11 +383,11 @@ export default function Sidebar({
             onClick={toggleCollapse}
             className="w-full flex items-center justify-center h-9 rounded-lg text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-all"
           >
-            <svg 
+            <svg
               className={`w-4 h-4 transition-transform duration-300 ${isCollapsed ? 'rotate-180' : ''}`}
-              fill="none" 
-              stroke="currentColor" 
-              strokeWidth="2" 
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
               viewBox="0 0 24 24"
             >
               <path strokeLinecap="round" strokeLinejoin="round" d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />

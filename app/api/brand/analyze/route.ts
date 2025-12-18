@@ -1845,6 +1845,7 @@ FORMAT: Return ONLY a valid JSON array:
       console.log('⚠️ Sparse data detected, triggering Firecrawl enrichment (Search + Extract)...');
 
       try {
+        console.log('🔄 Running Legacy Enrichment Fallback (Search + Extract)...');
         // Run BOTH Search and Extract in parallel for maximum enrichment
         const [searchEnrichment, extractEnrichment] = await Promise.all([
           enrichWithFirecrawlSearch(
@@ -2037,7 +2038,6 @@ FORMAT: Return ONLY a valid JSON array:
 
       } catch (enrichError) {
         console.warn('Firecrawl enrichment failed:', enrichError);
-        // Continue without enrichment
       }
     }
 

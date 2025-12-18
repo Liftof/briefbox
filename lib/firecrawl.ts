@@ -62,6 +62,14 @@ interface FirecrawlSearchOptions {
   timeout?: number;
 }
 
+interface FirecrawlAgentOptions {
+  prompt: string;
+  schema?: Record<string, any>;
+  title?: string;
+  timeout?: number;
+  pollTimeout?: number;
+}
+
 /**
  * Sleep utility for retry delays
  */
@@ -76,13 +84,13 @@ function isRetryableError(error: any, status?: number): boolean {
   // Network errors
   if (error?.name === 'AbortError') return true;
   if (error?.code === 'ECONNRESET' || error?.code === 'ETIMEDOUT') return true;
-  
+
   // Server errors (5xx)
   if (status && status >= 500 && status < 600) return true;
-  
+
   // Rate limiting (429) - worth retrying after delay
   if (status === 429) return true;
-  
+
   return false;
 }
 
@@ -147,12 +155,12 @@ export async function firecrawlScrape(
       if (!response.ok) {
         const errorText = await response.text();
         lastError = new Error(`HTTP ${response.status}: ${errorText.slice(0, 200)}`);
-        
+
         if (isRetryableError(null, response.status)) {
           console.warn(`⚠️ Firecrawl scrape failed (${response.status}), will retry...`);
           continue;
         }
-        
+
         // Non-retryable error (4xx except 429)
         return {
           success: false,
@@ -336,7 +344,7 @@ export async function firecrawlExtract<T = Record<string, any>>(
     if (data.jobId || data.id) {
       const jobId = data.jobId || data.id;
       console.log(`🔄 Firecrawl Extract job started: ${jobId}, polling for up to ${pollTimeout}ms...`);
-      
+
       const pollResult = await pollExtractJob<T>(jobId, pollTimeout);
       return pollResult;
     }
@@ -404,6 +412,79 @@ async function pollExtractJob<T>(
 
   console.log(`⏰ Extract job ${jobId} timed out after ${maxWaitMs}ms (continuing without results)`);
   return { success: false, data: null, error: 'Polling timeout' };
+}
+
+
+
+/**
+ * Agentic search via Firecrawl Agent (/agent)
+ * "Gather data wherever it lives... No URLs Required"
+ */
+export async function firecrawlAgent<T = Record<string, any>>(
+  options: FirecrawlAgentOptions
+): Promise<{ success: boolean; data: T | null; error?: string }> {
+  const {
+    prompt,
+    schema,
+    timeout = 60000, // Agents take longer
+    pollTimeout = 45000,
+  } = options;
+
+  if (!FIRECRAWL_API_KEY) {
+    console.warn('⚠️ FIRECRAWL_API_KEY not set, skipping agent');
+    return { success: false, data: null, error: 'API key not configured' };
+  }
+
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeout);
+
+  try {
+    console.log(`🕵️‍♂️ Firecrawl Agent: "${prompt.slice(0, 60)}..."`);
+
+    const response = await fetch(`${FIRECRAWL_BASE_URL}/agent`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${FIRECRAWL_API_KEY}`,
+      },
+      body: JSON.stringify({
+        prompt,
+        schema,
+      }),
+      signal: controller.signal,
+    });
+
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.warn('⚠️ Firecrawl Agent API error:', errorText.slice(0, 200));
+      return { success: false, data: null, error: `HTTP ${response.status}` };
+    }
+
+    const data = await response.json();
+
+    // Handle async job - poll for completion
+    if (data.jobId || data.id) {
+      const jobId = data.jobId || data.id;
+      console.log(`🔄 Firecrawl Agent job started: ${jobId}, polling for up to ${pollTimeout}ms...`);
+
+      const pollResult = await pollExtractJob<T>(jobId, pollTimeout); // Reusing extract poller as it works the same way
+      return pollResult;
+    }
+
+    // Immediate result
+    if (data.success && data.data) {
+      console.log(`✅ Firecrawl Agent success (immediate)`);
+      return { success: true, data: data.data as T };
+    }
+
+    return { success: false, data: null, error: 'No data returned' };
+  } catch (error: any) {
+    clearTimeout(timeoutId);
+    console.error('❌ Firecrawl Agent error:', error.message || error);
+    return { success: false, data: null, error: error.message || 'Unknown error' };
+  }
 }
 
 /**

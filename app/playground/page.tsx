@@ -1599,6 +1599,25 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
     }
   };
 
+  /* 
+   * DIVERSITY MODES (Client-side replication of server logic)
+   * Used when we have to generate multiple images from a single prompt (Fallback)
+   */
+  const MODE_FAITHFUL = `
+[GENERATION MODE: FAITHFUL]
+- Stay close to the provided assets and references
+- Reproduce UI screenshots and diagrams as accurately as possible
+- Maintain the exact layout and structure shown in references
+- Be precise with brand elements`;
+
+  const MODE_CREATIVE = `
+[GENERATION MODE: CREATIVE INTERPRETATION]
+- Take more artistic liberty while respecting the brand
+- Simplify complex diagrams into cleaner, more impactful visuals
+- Reinterpret UI elements in a fresh, modern way
+- Add creative flair while keeping the core message
+- Make it visually striking and scroll-stopping`;
+
   const handleGenerate = async (
     customPrompt?: string,
     useCurrentBrief = true,
@@ -1614,6 +1633,8 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
     }
 
     const references = referenceOverride && referenceOverride.length > 0 ? referenceOverride : uploadedImages;
+    // Note: It's possible to generate without references if it's a text-only generation, but usually we enforce it.
+    // Keeping existing check:
     if (!references.length) {
       showToast('Sélectionnez au moins une image source', 'error');
       return;
@@ -1627,36 +1648,49 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
       return;
     }
 
-    // Create a unique job ID and add to queue
-    const jobId = `gen-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-    const newJob: GenerationJob = {
-      id: jobId,
+    // Create a unique job ID for EACH image we want to generate
+    const jobIds = Array.from({ length: numImagesToGenerate }, () =>
+      `gen-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+    );
+
+    const newJobs: GenerationJob[] = jobIds.map(id => ({
+      id,
       brief: finalPrompt.substring(0, 50) + (finalPrompt.length > 50 ? '...' : ''),
       status: 'preparing',
-      progress: 10,
+      progress: 5,
       statusMessage: '🎨 Le Creative Director analyse votre brief...',
       timestamp: Date.now(),
       aspectRatio: aspectRatio // Store ratio for the skeleton loader
+    }));
+
+    setGenerationQueue(prev => [...prev, ...newJobs]);
+
+    // Helper function to update a specific job's progress
+    const updateJob = (id: string, updates: Partial<GenerationJob>) => {
+      setGenerationQueue(prev =>
+        prev.map(job => job.id === id ? { ...job, ...updates } : job)
+      );
     };
 
-    setGenerationQueue(prev => [...prev, newJob]);
-
-    // Helper function to update this job's progress
-    const updateJob = (updates: Partial<GenerationJob>) => {
+    // Helper to update ALL jobs in this batch (e.g. during CD phase)
+    const updateAllThisBatch = (updates: Partial<GenerationJob>) => {
       setGenerationQueue(prev =>
-        prev.map(job => job.id === jobId ? { ...job, ...updates } : job)
+        prev.map(job => jobIds.includes(job.id) ? { ...job, ...updates } : job)
       );
     };
 
     // Keep legacy status for backwards compatibility (show as running if any job is active)
     setStatus('preparing');
-    setStatusMessage(newJob.statusMessage);
+    setStatusMessage('🎨 Le Creative Director analyse votre brief...');
     setProgress(10);
 
     try {
+      // ==========================================================================================
       // STEP 1: Call Creative Director API to get prompt variations + smart image selection
+      // (We do this once for the whole batch)
+      // ==========================================================================================
       let promptVariations: string[] | null = null;
-      let finalGenerationPrompt: string;
+      let finalGenerationPrompt: string = finalPrompt;
       let negativePrompt: string = 'blurry, low quality, watermark, amateur, generic stock photo, clipart';
       let smartImageSelection: string[] | null = null;
       let styleReferenceImages: string[] = [];
@@ -1717,7 +1751,8 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
 
           console.log('🎬 Creative Director:', promptVariations ? `${promptVariations.length} variations` : 'single prompt');
           console.log('🚫 Negative prompt:', negativePrompt.substring(0, 50) + '...');
-          updateJob({ progress: 30, statusMessage: locale === 'fr' ? '✨ Création en cours, veuillez patienter' : '✨ Creating your visual, please wait' });
+
+          updateAllThisBatch({ progress: 30, statusMessage: locale === 'fr' ? '✨ Création en cours, veuillez patienter' : '✨ Creating your visual, please wait' });
           setProgress(30);
           setStatusMessage(locale === 'fr' ? '✨ Création en cours, veuillez patienter' : '✨ Creating your visual, please wait');
         } else {
@@ -1729,14 +1764,11 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
         finalGenerationPrompt = buildFallbackPrompt(finalPrompt, targetBrand);
       }
 
-      updateJob({ progress: 40 });
+      updateAllThisBatch({ progress: 40 });
       setProgress(40);
 
       // ========================================
-      // IMAGE SELECTION PRIORITY (UPDATED)
-      // 1. Logo ALWAYS first (protected)
-      // 2. User selection is PRIORITY (not overridden by CD)
-      // 3. Labels from brandData for proper context
+      // STEP 2: Prepare Images & Context
       // ========================================
 
       const imagesToUse: string[] = [];
@@ -1744,14 +1776,11 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
       // 1. LOGO FIRST - Always include and protect it
       console.log('🔍 LOGO DEBUG - handleGenerate:');
       console.log(`   targetBrand?.logo exists: ${!!targetBrand?.logo}`);
-      console.log(`   targetBrand?.logo value: ${targetBrand?.logo ? targetBrand.logo.slice(0, 80) + '...' : 'NONE'}`);
 
       if (targetBrand?.logo) {
         imagesToUse.push(targetBrand.logo);
         imageContextMap[targetBrand.logo] = "BRAND_LOGO (CRITICAL): This is the official brand logo. Display it clearly and prominently. DO NOT distort, warp, or modify it in any way. It must remain perfectly legible.";
         console.log('✅ Logo added to imagesToUse and imageContextMap');
-      } else {
-        console.log('⚠️ NO LOGO in targetBrand - will check references for main_logo category');
       }
 
       // 2. USER SELECTION IS PRIORITY - Add all user-selected images (except logo already added)
@@ -1802,7 +1831,6 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
       }
 
       console.log('📸 Images to use (user priority):', imagesToUse.length, 'images');
-      console.log('   Labels:', Object.entries(imageContextMap).map(([k, v]) => `${k.slice(-20)}: ${v.slice(0, 30)}`).slice(0, 4));
 
       // Add manual style references if present (with optional notes)
       if (styleRefImages.length > 0) {
@@ -1820,158 +1848,192 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
           finalGenerationPrompt += `\n\n[USER STYLE NOTES: ${styleNotes}]`;
           console.log('📝 Style notes:', styleNotes);
         }
-
-        console.log('🎨 User style refs added:', styleRefImages.length, 'images');
-        console.log('   URLs:', styleRefUrls.map(u => u.slice(0, 50) + '...'));
       }
 
-      console.log('📤 Final style reference images:', styleReferenceImages.length);
+      // ==========================================================================================
+      // STEP 3: Determine Prompts for Parallel Requests
+      // ==========================================================================================
+      let promptsToRun: string[] = [];
 
-      // STEP 2: Generate with Gemini using variations (or single prompt)
-      const response = await fetch('/api/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          prompt: finalGenerationPrompt,
-          promptVariations: promptVariations, // NEW: 4 different prompts
-          negativePrompt: negativePrompt,
-          imageUrls: imagesToUse,
-          referenceImages: styleReferenceImages, // Style reference images
-          imageContextMap: imageContextMap, // NEW: Pass explicit roles
-          numImages: numImagesToGenerate, // 1 credit = 1 image
-          aspectRatio,
-          resolution // 2K by default, 4K for pro users
-        })
-      });
-      const payload = await response.json();
-      if (!response.ok || !payload.success) {
-        throw new Error(payload.error || 'Impossible de générer des visuels');
-      }
-
-      // Force the USER-SELECTED aspect ratio on all generated images
-      // This ensures consistent display - no guessing from API response
-      const rawImages = (payload.images || [])
-        .map((img: any, index: number) => {
-          const url = typeof img === 'string' ? img : img?.url || img?.image;
-          if (!url) return null;
-          return {
-            id: `${createId()}-${index}`,
-            url,
-            aspectRatio: aspectRatio // Always use user-selected ratio
-          };
-        })
-        .filter(Boolean) as GeneratedImage[];
-
-      if (!rawImages.length) {
-        throw new Error('Aucune image retournée par le générateur');
-      }
-
-      // Upload data URLs to Vercel Blob to avoid localStorage quota issues
-      setStatusMessage('📤 Sauvegarde des images...');
-      const uploadedImages = await Promise.all(
-        rawImages.map(async (img) => {
-          // Only upload if it's a data URL (base64)
-          if (img.url.startsWith('data:')) {
-            try {
-              const uploadResponse = await fetch('/api/upload', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ imageData: img.url })
-              });
-              const uploadResult = await uploadResponse.json();
-              if (uploadResult.success && uploadResult.url) {
-                console.log('✅ Image uploaded to Blob:', uploadResult.url.slice(0, 50) + '...');
-                return { ...img, url: uploadResult.url };
-              } else {
-                // Upload failed - return null to filter out
-                console.error('❌ Blob upload failed:', uploadResult.error);
-                showToast(locale === 'fr' ? 'Erreur de sauvegarde' : 'Save error', 'error');
-                return { ...img, url: img.url, skipSave: true }; // Mark to skip localStorage
-              }
-            } catch (e) {
-              console.error('❌ Blob upload error:', e);
-              showToast(locale === 'fr' ? 'Erreur de sauvegarde' : 'Save error', 'error');
-              return { ...img, url: img.url, skipSave: true };
-            }
-          }
-          return img;
-        })
-      );
-
-      const normalized = uploadedImages as (GeneratedImage & { skipSave?: boolean })[];
-
-      // Save to Projects (localStorage) - only save successfully uploaded images
-      const generationsToSave = normalized
-        .filter(img => !img.skipSave) // Don't save data URLs to localStorage
-        .map(img => ({
-          url: img.url,
-          prompt: finalPrompt,
-          templateId: selectedTemplate || undefined,
-          brandId: brandData?.id || undefined,
-          brandName: brandData?.name,
-          aspectRatio: img.aspectRatio || aspectRatio, // Save the ratio used
-        }));
-
-      console.log('🗂️ SAVE DEBUG: generationsToSave count:', generationsToSave.length);
-      if (generationsToSave.length > 0) {
-        console.log('🗂️ SAVE DEBUG: Saving to DB/localStorage:', generationsToSave.map(g => g.url?.slice(0, 50)));
-        await addGenerations(generationsToSave);
+      if (promptVariations && promptVariations.length > 0) {
+        // CASE A: We have CD variations. Use them.
+        // If we want more images than variations, cycle through them.
+        for (let i = 0; i < numImagesToGenerate; i++) {
+          promptsToRun.push(promptVariations[i % promptVariations.length]);
+        }
       } else {
-        console.log('⚠️ SAVE DEBUG: No generations to save! All have skipSave=true');
+        // CASE B: Fallback (Single prompt). Replicate server-side diversity logic.
+        // Mode 1: Faithful, Mode 2: Creative, Mode 3: Faithful, ...
+        // We only append modes if we are generating multiple images from ONE prompt
+        if (numImagesToGenerate > 1) {
+          for (let i = 0; i < numImagesToGenerate; i++) {
+            const isFaithful = i % 2 === 0; // Even = Faithful, Odd = Creative
+            const suffix = isFaithful ? MODE_FAITHFUL : MODE_CREATIVE;
+            promptsToRun.push(finalGenerationPrompt + "\n\n" + suffix);
+          }
+        } else {
+          // Just 1 image? Just use the prompt as is (Faithful by default mostly)
+          promptsToRun.push(finalGenerationPrompt + "\n\n" + MODE_FAITHFUL);
+        }
       }
 
-      // Trigger update event for ProjectsView
-      window.dispatchEvent(new Event('generations-updated'));
+      updateAllThisBatch({ progress: 45, statusMessage: locale === 'fr' ? '🚀 Lancement des générations...' : '🚀 Starting generations...' });
 
-      setGeneratedImages((prev) => [...normalized, ...prev].slice(0, 16));
-      updateJob({ status: 'complete', progress: 100, statusMessage: locale === 'fr' ? 'Visuel généré !' : 'Visual generated!' });
-      setStatus('complete');
+      // ==========================================================================================
+      // STEP 4: Launch Parallel Requests (Incremental Display)
+      // ==========================================================================================
+
+      const generationPromises = jobIds.map(async (jobId, index) => {
+        const myPrompt = promptsToRun[index];
+        updateJob(jobId, { status: 'running', progress: 50, statusMessage: locale === 'fr' ? '✨ Génération en cours...' : '✨ Generating...' });
+
+        try {
+          const response = await fetch('/api/generate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              // KEY CHANGE: Send as 'promptVariations' (array of 1) to bypass server's 
+              // auto-mode-appending logic, since we already handled diversity client-side.
+              promptVariations: [myPrompt],
+              negativePrompt: negativePrompt,
+              imageUrls: imagesToUse,
+              referenceImages: styleReferenceImages, // Style reference images
+              imageContextMap: imageContextMap, // NEW: Pass explicit roles
+              numImages: 1, // Generate 1 image per request
+              aspectRatio,
+              resolution // 2K by default, 4K for pro users
+            })
+          });
+
+          const payload = await response.json();
+
+          if (!response.ok || !payload.success) {
+            throw new Error(payload.error || 'Impossible de générer des visuels');
+          }
+
+          // Handle Success for this single image
+          const rawImages = (payload.images || [])
+            .map((img: any) => {
+              const url = typeof img === 'string' ? img : img?.url || img?.image;
+              if (!url) return null;
+              return {
+                id: `${createId()}-${index}`,
+                url,
+                aspectRatio: aspectRatio // Always use user-selected ratio
+              };
+            })
+            .filter(Boolean) as GeneratedImage[];
+
+          if (!rawImages.length) {
+            throw new Error('Aucune image retournée par le générateur');
+          }
+
+          // Upload data URLs to Vercel Blob (Parallelized inside this job)
+          updateJob(jobId, { progress: 80, statusMessage: '📤 Sauvegarde...' });
+
+          const uploadedImages = await Promise.all(
+            rawImages.map(async (img) => {
+              // Only upload if it's a data URL (base64)
+              if (img.url.startsWith('data:')) {
+                try {
+                  const uploadResponse = await fetch('/api/upload', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ imageData: img.url })
+                  });
+                  const uploadResult = await uploadResponse.json();
+                  if (uploadResult.success && uploadResult.url) {
+                    console.log('✅ Image uploaded to Blob:', uploadResult.url.slice(0, 50) + '...');
+                    return { ...img, url: uploadResult.url };
+                  } else {
+                    console.error('❌ Blob upload failed:', uploadResult.error);
+                    return { ...img, url: img.url, skipSave: true }; // Mark to skip localStorage
+                  }
+                } catch (e) {
+                  console.error('❌ Blob upload error:', e);
+                  return { ...img, url: img.url, skipSave: true };
+                }
+              }
+              return img;
+            })
+          );
+
+          const normalized = uploadedImages as (GeneratedImage & { skipSave?: boolean })[];
+          const validToSave = normalized.filter(img => !img.skipSave);
+
+          // Add to global state one by one
+          if (validToSave.length > 0) {
+            const gensToSave = validToSave.map(img => ({
+              url: img.url,
+              prompt: myPrompt, // Save the specific prompt used
+              templateId: selectedTemplate || undefined,
+              brandId: brandData?.id || undefined,
+              brandName: brandData?.name,
+              aspectRatio: img.aspectRatio || aspectRatio, // Save the ratio used
+            }));
+
+            console.log('🗂️ SAVE DEBUG: Incremental save:', gensToSave.length);
+            await addGenerations(gensToSave);
+
+            // Update Credits info from the response
+            if (payload.creditsRemaining !== undefined) {
+              setLastCreditsRemaining(payload.creditsRemaining);
+              updateCreditsRemaining(payload.creditsRemaining);
+
+              // Show toast for low credits (optional logic)
+              if (payload.plan === 'free' && payload.creditsRemaining <= 1) {
+                setShowCreditsToast(true);
+                setTimeout(() => setShowCreditsToast(false), 4000);
+              }
+            }
+
+            // Update UI immediately for this image
+            setGeneratedImages(prev => [...validToSave, ...prev].slice(0, 20));
+            window.dispatchEvent(new Event('generations-updated'));
+          }
+
+          // Update Job Completion
+          updateJob(jobId, {
+            status: 'complete',
+            progress: 100,
+            statusMessage: locale === 'fr' ? 'Terminé !' : 'Done!'
+          });
+
+          // Show Toast/Notify
+          showToast(locale === 'fr' ? 'Nouveau visuel prêt !' : 'New visual ready!', 'success');
+          notify.visualReady(1);
+
+          // Remove job from queue after delay
+          setTimeout(() => {
+            setGenerationQueue(prev => prev.filter(j => j.id !== jobId));
+          }, 4000);
+
+        } catch (err: any) {
+          console.error(`Job ${jobId} failed:`, err);
+          updateJob(jobId, { status: 'error', progress: 0, statusMessage: 'Erreur' });
+          showToast(err.message || (locale === 'fr' ? 'Erreur pendant la génération' : 'Error generating'), 'error');
+          setTimeout(() => {
+            setGenerationQueue(prev => prev.filter(j => j.id !== jobId));
+          }, 5000);
+        }
+      });
+
+      // Wait for all promises to clean up global busy state
+      await Promise.all(generationPromises);
+
+      // Clean up global status only after all are done
+      setStatus('idle');
       setProgress(100);
-      setShowGiftOverlay(false); // Dismiss gift overlay if it was showing
-      showToast(locale === 'fr' ? 'Visuel généré et sauvegardé !' : 'Visual generated and saved!', 'success');
-      notify.visualReady(normalized.length); // Browser notification with sound
+      setShowGiftOverlay(false);
 
-      // ====== CREDITS TRACKING (inline upgrade card, no popup) ======
-      const creditsRemaining = payload.creditsRemaining;
-      const plan = payload.plan;
+    } catch (globalError: any) {
+      console.error('Fatal generation error', globalError);
+      // Fail all jobs
+      jobIds.forEach(id => updateJob(id, { status: 'error', progress: 0, statusMessage: 'Erreur critique' }));
 
-      if (creditsRemaining !== undefined) {
-        setLastCreditsRemaining(creditsRemaining);
-
-        // Update the credits hook so sidebar shows correct count
-        updateCreditsRemaining(creditsRemaining);
-
-        if (plan === 'free') {
-          // Free tier can be 1 or 2 credits depending on early bird status
-          const maxFreeCredits = creditsInfo?.isEarlyBird ? 2 : 1;
-          setCreditsUsed(maxFreeCredits - creditsRemaining);
-        }
-
-        // Show toast for credits feedback (only for free users with low credits)
-        if (plan === 'free' && creditsRemaining <= 1) {
-          setShowCreditsToast(true);
-          setTimeout(() => setShowCreditsToast(false), 4000);
-        }
-
-        // Note: Popup removed - now using inline upgrade card instead
-      }
-    } catch (error: any) {
-      console.error('Generation error', error);
-      updateJob({ status: 'error', progress: 0, statusMessage: error.message || 'Error' });
       setStatus('error');
-      showToast(error.message || (locale === 'fr' ? 'Erreur pendant la génération' : 'Error generating'), 'error');
+      showToast(globalError.message || (locale === 'fr' ? 'Erreur pendant la génération' : 'Error generating'), 'error');
 
-      // Remove failed job after a delay
-      setTimeout(() => {
-        setGenerationQueue(prev => prev.filter(job => job.id !== jobId));
-      }, 3000);
-    } finally {
-      // Mark job as complete and remove from queue after delay
-      setTimeout(() => {
-        setGenerationQueue(prev => prev.filter(job => job.id !== jobId));
-      }, 2000);
-
-      // Only set global status to idle if this was the last active generation
       setTimeout(() => {
         setGenerationQueue(prev => {
           const stillActive = prev.filter(job => job.status === 'preparing' || job.status === 'running');
@@ -1981,7 +2043,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
           }
           return prev;
         });
-      }, 1200);
+      }, 2000);
     }
   };
 
