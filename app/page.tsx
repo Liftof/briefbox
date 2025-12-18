@@ -280,7 +280,7 @@ export default async function Home() {
       </section>
 
       {/* Proof Section - Gallery */}
-      <section className="py-48 md:py-64 relative overflow-hidden">
+      <section className="py-24 md:py-32 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-gray-50 to-white" />
         {/* Palette color accents */}
         <div className="absolute top-20 right-20 w-64 h-64 bg-red-200/20 rounded-full blur-3xl" />
@@ -288,19 +288,25 @@ export default async function Home() {
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-amber-200/15 rounded-full blur-3xl" />
 
         <div className="max-w-6xl mx-auto px-6 relative z-10">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-light text-gray-900 leading-tight mb-4">
+          <div className="max-w-3xl mb-16">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-2 h-2 bg-amber-400 rounded-full" />
+              <span className="text-xs font-mono uppercase tracking-[0.2em] text-gray-400">{locale === 'fr' ? 'Exemples' : 'Examples'}</span>
+            </div>
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-light text-gray-900 leading-tight mb-6">
               {locale === 'fr' ? (
                 <>Ce que nos utilisateurs<br /><span className="font-semibold">créent avec Palette</span></>
               ) : (
                 <>What our users<br /><span className="font-semibold">create with Palette</span></>
               )}
             </h2>
-            <p className="text-gray-500">{locale === 'fr' ? 'De vrais visuels, générés en quelques clics.' : 'Real visuals, generated in a few clicks.'}</p>
+            <p className="text-gray-500 text-lg leading-relaxed">
+              {locale === 'fr' ? 'De vrais visuels, générés en quelques clics.' : 'Real visuals, generated in a few clicks.'}
+            </p>
           </div>
 
           {/* Infinite scrolling gallery */}
-          <div className="relative overflow-hidden">
+          <div className="relative overflow-hidden mb-12">
             {/* Fade edges */}
             <div className="absolute left-0 top-0 bottom-0 w-20 bg-gradient-to-r from-gray-50 to-transparent z-10 pointer-events-none" />
             <div className="absolute right-0 top-0 bottom-0 w-20 bg-gradient-to-l from-gray-50 to-transparent z-10 pointer-events-none" />
