@@ -546,15 +546,18 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
         {/* Validate button in header - always visible */}
         <button
           onClick={onValidate}
-          className="group flex items-center gap-2 px-4 py-2 bg-gray-900 text-white text-sm font-medium transition-all hover:bg-blue-600"
+          className="group flex items-center gap-2 px-5 py-2.5 bg-gray-900 text-white text-sm font-medium transition-all hover:bg-black hover:scale-105 shadow-lg hover:shadow-xl ring-1 ring-gray-900/10 rounded-lg relative overflow-hidden"
         >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-600/20 to-purple-600/20 opacity-0 group-hover:opacity-100 transition-opacity" />
+          <svg className="w-4 h-4 relative z-10" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
             <path d="M5 13l4 4L19 7" />
           </svg>
-          {isFirstTimeSetup
-            ? (locale === 'fr' ? 'Valider et créer' : 'Validate & create')
-            : (locale === 'fr' ? 'Sauvegarder' : 'Save')}
-          <svg className="w-4 h-4 transition-transform group-hover:translate-x-0.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+          <span className="relative z-10">
+            {isFirstTimeSetup
+              ? (locale === 'fr' ? 'Valider et créer' : 'Validate & create')
+              : (locale === 'fr' ? 'Sauvegarder' : 'Save')}
+          </span>
+          <svg className="w-4 h-4 transition-transform group-hover:translate-x-0.5 relative z-10" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
             <path d="M5 12h14M12 5l7 7-7 7" />
           </svg>
         </button>
@@ -1016,22 +1019,26 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
         </div>
         <button
           onClick={onValidate}
-          className="w-full group relative py-4 bg-gray-900 text-white text-sm font-medium transition-all hover:bg-black"
+          className="w-full group relative py-4 bg-gray-900 text-white text-sm font-medium transition-all hover:bg-black overflow-hidden shadow-xl hover:shadow-2xl hover:scale-[1.01] rounded-lg"
         >
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-purple-600 opacity-20 group-hover:opacity-30 transition-opacity" />
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
+
           <span className="relative z-10 flex items-center justify-center gap-3">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
               <path d="M5 13l4 4L19 7" />
             </svg>
-            {isFirstTimeSetup
-              ? (locale === 'fr' ? 'Valider et créer' : 'Validate & create')
-              : (locale === 'fr' ? 'Sauvegarder et continuer' : 'Save and continue')}
+            <span className="font-semibold tracking-wide">
+              {isFirstTimeSetup
+                ? (locale === 'fr' ? 'Valider et créer' : 'Validate & create')
+                : (locale === 'fr' ? 'Sauvegarder et continuer' : 'Save and continue')}
+            </span>
             <svg className="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
               <path d="M5 12h14M12 5l7 7-7 7" />
             </svg>
           </span>
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-sky-600 opacity-0 group-hover:opacity-100 transition-opacity" />
         </button>
       </section>
-    </div>
+    </div >
   );
 }

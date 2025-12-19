@@ -86,9 +86,9 @@ export const translations = {
     },
     howItWorks: {
       eyebrow: { fr: 'Comment ça marche', en: 'How it works' },
-      headline: { 
-        fr: 'Plus simple que d\'expliquer à votre stagiaire', 
-        en: 'Simpler than explaining to your intern' 
+      headline: {
+        fr: 'Plus simple que d\'expliquer à votre stagiaire',
+        en: 'Simpler than explaining to your intern'
       },
       subheadline: {
         fr: 'Pas de tutoriel. Pas de formation. Pas de "c\'est compliqué au début".',
@@ -205,7 +205,11 @@ export const translations = {
       subheadline: { fr: 'Entrez l\'URL de votre site pour commencer', en: 'Enter your website URL to start' },
       placeholder: { fr: 'https://votresite.com', en: 'https://yoursite.com' },
       cta: { fr: 'Analyser', en: 'Analyze' },
-      ctaLoading: { fr: 'Analyse en cours...', en: 'Analyzing...' }
+      ctaLoading: { fr: 'Analyse en cours...', en: 'Analyzing...' },
+      scrapingTime: {
+        fr: 'Le processus peut prendre jusqu\'à 2 minutes. Vous serez notifié dès que c\'est prêt.',
+        en: 'The process can take up to 2 minutes. You will be notified when it is ready.'
+      }
     },
     logoConfirm: {
       headline: { fr: 'Est-ce bien votre logo ?', en: 'Is this your logo?' },
@@ -231,7 +235,7 @@ export const translations = {
       angles: { fr: 'Angles de contenu', en: 'Content angles' },
       styleRef: { fr: 'Style ref', en: 'Style ref' },
       yourBrief: { fr: 'Votre brief', en: 'Your brief' },
-      briefPlaceholder: { 
+      briefPlaceholder: {
         fr: 'Décrivez le visuel que vous voulez créer...\n\nExemples :\n• "Story Instagram Black Friday avec mon logo"\n• "Post LinkedIn pour annoncer notre nouvelle feature"\n• "Bannière web moderne avec nos couleurs"',
         en: 'Describe the visual you want to create...\n\nExamples:\n• "Instagram Story Black Friday with my logo"\n• "LinkedIn post to announce our new feature"\n• "Modern web banner with our colors"'
       },
@@ -240,7 +244,7 @@ export const translations = {
       generate: { fr: 'Générer', en: 'Generate' },
       generating: { fr: 'Génération...', en: 'Generating...' },
       yourCreations: { fr: 'Vos créations', en: 'Your creations' },
-      editHint: { 
+      editHint: {
         fr: '💡 Une faute d\'orthographe, un logo à corriger ou un détail à changer ? Cliquez sur ✏️ pour modifier n\'importe quelle image.',
         en: '💡 A typo, a logo to fix or a detail to change? Click ✏️ to edit any image.'
       },

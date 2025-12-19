@@ -347,7 +347,9 @@ function PlaygroundContent() {
   const [generatedImages, setGeneratedImages] = useState<GeneratedImage[]>([]);
   const [lightboxImage, setLightboxImage] = useState<GeneratedImage | null>(null);
   const [isThinking, setIsThinking] = useState(false);
-  const [contentLanguage, setContentLanguage] = useState<'fr' | 'en' | 'es' | 'de'>('fr');
+  const [contentLanguage, setContentLanguage] = useState<'fr' | 'en' | 'es' | 'de'>(
+    ['fr', 'en', 'es', 'de'].includes(locale) ? (locale as any) : 'fr'
+  );
 
   // Credits & Upgrade state
   const { credits: creditsInfo, updateRemaining: updateCreditsRemaining, refresh: refreshCredits } = useCredits();
@@ -2367,9 +2369,9 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
               </p>
             </div>
 
-            {/* Time estimate */}
-            <p className="mt-4 text-[10px] font-mono text-gray-400 uppercase tracking-widest">
-              ~60-90 secondes
+            {/* Time estimate & Notification info */}
+            <p className="mt-4 text-[10px] font-mono text-gray-400 uppercase tracking-widest text-center max-w-xs mx-auto leading-relaxed">
+              {t('playground.urlStep.scrapingTime')}
             </p>
           </div>
         </div>

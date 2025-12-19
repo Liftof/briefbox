@@ -2,7 +2,7 @@
 
 import { useRef, useState, useEffect } from 'react';
 
-const IMAGES = [2, 3, 4, 6, 7, 8, 9];
+const IMAGES = [2, 3, 4, 6, 8, 9];
 
 export default function Gallery() {
     const scrollRef = useRef<HTMLDivElement>(null);

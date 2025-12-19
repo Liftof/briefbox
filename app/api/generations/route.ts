@@ -95,6 +95,7 @@ export async function POST(request: NextRequest) {
         // Accept both 'format' and 'aspectRatio' for backwards compatibility
         format: gen.aspectRatio || gen.format || '1:1',
         type: gen.type || 'social_post',
+        campaignId: gen.campaignId ? parseInt(gen.campaignId) : null,
       };
       // Only add brandId if it's a valid number
       if (gen.brandId) {
