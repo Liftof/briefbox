@@ -45,7 +45,7 @@ export default function I18nComparison({ locale }: I18nComparisonProps) {
                 </div>
             </div>
 
-            <div className="relative aspect-[4/3] rounded-2xl overflow-hidden bg-gray-50 border border-gray-100">
+            <div className="relative aspect-[4/5] rounded-2xl overflow-hidden bg-gray-50 border border-gray-100">
                 <div className={`absolute inset-0 transition-opacity duration-500 ${activeSide === 'fr' ? 'opacity-100 z-10' : 'opacity-0 z-0'}`}>
                     <img
                         src="/gallery/i18n-fr.jpg"
