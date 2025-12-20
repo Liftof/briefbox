@@ -119,6 +119,172 @@ Retourne UNIQUEMENT le JSON array, rien d'autre.`
 }
 
 // ==========================================
+// REFINE CONTENT ANGLES WITH LLM
+// ==========================================
+// Takes all angles (primary + secondary) and refines them for quality
+async function refineContentAnglesWithLLM(params: {
+  angles: any[];
+  brandName: string;
+  targetAudience: string;
+  industry: string;
+  uniqueValueProposition: string;
+  detectedLanguage: string;
+  features: string[];
+}): Promise<any[]> {
+  const { angles, brandName, targetAudience, industry, uniqueValueProposition, detectedLanguage, features } = params;
+
+  if (!angles.length || !process.env.OPENROUTER_API_KEY) {
+    console.warn('⚠️ No angles to refine or missing API key, returning original');
+    return angles;
+  }
+
+  try {
+    const isFrench = detectedLanguage === 'fr';
+    const languageName = isFrench ? 'FRANÇAIS' : 'ENGLISH';
+
+    console.log(`🎨 Refining ${angles.length} angles with LLM (language: ${languageName})...`);
+
+    const systemPrompt = isFrench
+      ? `Tu es un expert en copywriting et marketing de contenu. Tu vas raffiner des angles de contenu pour les rendre plus percutants et engageants.`
+      : `You are a copywriting and content marketing expert. You will refine content angles to make them more impactful and engaging.`;
+
+    const userPrompt = isFrench
+      ? `Je travaille sur les angles de contenu pour ${brandName} (${industry}).
+
+CONTEXTE DE LA MARQUE:
+- Cible: ${targetAudience}
+- Proposition de valeur: ${uniqueValueProposition}
+- Fonctionnalités clés: ${features.slice(0, 3).join(', ')}
+
+ANGLES ACTUELS (${angles.length}):
+${angles.map((a, i) => `${i + 1}. [${a.tier || 'unknown'}] "${a.painPoint}" ${a.consequence ? `→ ${a.consequence}` : ''}`).join('\n')}
+
+MISSION:
+1. SÉLECTIONNE les 10 meilleurs angles (les plus pertinents et impactants pour la cible)
+2. REFORMULE chaque angle sélectionné pour qu'il soit:
+   - ✅ Punchy et accrocheur (max 80 caractères)
+   - ✅ Directement adressé à la cible (utilise "vous", "votre")
+   - ✅ Spécifique au produit/service de ${brandName}
+   - ✅ En FRANÇAIS correct et naturel
+   - ❌ PAS générique ou bateau
+   - ❌ PAS de stats de marché ou projections
+
+3. Pour chaque angle, adapte le TON à l'industrie:
+   ${industry.match(/finance|law|consulting|healthcare|enterprise|b2b/i)
+     ? '→ TON PROFESSIONNEL: Focus ROI, efficacité, conformité, risque'
+     : '→ TON ACCESSIBLE: Plus émotionnel, relatable, fun'}
+
+CRITÈRES DE SÉLECTION (priorité):
+- Les angles qui parlent directement d'un problème concret de la cible
+- Les angles qui mettent en avant une solution spécifique de ${brandName}
+- Les questions provocantes qui font réfléchir
+- REJETTE: stats de marché, projections, tendances génériques
+
+FORMAT DE SORTIE (JSON uniquement):
+[
+  {
+    "painPoint": "Angle reformulé en français, punchy, max 80 chars",
+    "consequence": "Impact concret ou bénéfice en 1 phrase courte",
+    "type": "pain_point|trend|social_proof|tip|competitive|primary",
+    "tier": "primary|secondary"
+  }
+]
+
+IMPORTANT: Retourne EXACTEMENT 10 angles. Uniquement le JSON array, rien d'autre.`
+      : `I'm working on content angles for ${brandName} (${industry}).
+
+BRAND CONTEXT:
+- Target audience: ${targetAudience}
+- Value proposition: ${uniqueValueProposition}
+- Key features: ${features.slice(0, 3).join(', ')}
+
+CURRENT ANGLES (${angles.length}):
+${angles.map((a, i) => `${i + 1}. [${a.tier || 'unknown'}] "${a.painPoint}" ${a.consequence ? `→ ${a.consequence}` : ''}`).join('\n')}
+
+MISSION:
+1. SELECT the 10 best angles (most relevant and impactful for the target)
+2. REWRITE each selected angle to be:
+   - ✅ Punchy and catchy (max 80 characters)
+   - ✅ Directly addressed to target (use "you", "your")
+   - ✅ Specific to ${brandName}'s product/service
+   - ✅ In correct and natural ENGLISH
+   - ❌ NOT generic or bland
+   - ❌ NO market stats or projections
+
+3. For each angle, adapt the TONE to the industry:
+   ${industry.match(/finance|law|consulting|healthcare|enterprise|b2b/i)
+     ? '→ PROFESSIONAL TONE: Focus on ROI, efficiency, compliance, risk'
+     : '→ ACCESSIBLE TONE: More emotional, relatable, fun'}
+
+SELECTION CRITERIA (priority):
+- Angles that speak directly to a concrete problem of the target
+- Angles that highlight a specific solution from ${brandName}
+- Provocative questions that make you think
+- REJECT: market stats, projections, generic trends
+
+OUTPUT FORMAT (JSON only):
+[
+  {
+    "painPoint": "Refined angle in English, punchy, max 80 chars",
+    "consequence": "Concrete impact or benefit in 1 short sentence",
+    "type": "pain_point|trend|social_proof|tip|competitive|primary",
+    "tier": "primary|secondary"
+  }
+]
+
+IMPORTANT: Return EXACTLY 10 angles. Only the JSON array, nothing else.`;
+
+    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${process.env.OPENROUTER_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        "model": "anthropic/claude-3.5-sonnet", // Use Sonnet for better quality
+        "messages": [
+          { "role": "system", "content": systemPrompt },
+          { "role": "user", "content": userPrompt }
+        ],
+        "max_tokens": 1500,
+        "temperature": 0.4
+      })
+    });
+
+    if (!response.ok) {
+      console.warn('⚠️ LLM refinement failed:', response.status);
+      return angles; // Return original if refinement fails
+    }
+
+    const data = await response.json();
+    const content = data.choices?.[0]?.message?.content || '[]';
+
+    // Parse JSON from response
+    const jsonMatch = content.match(/\[[\s\S]*\]/);
+    if (!jsonMatch) {
+      console.warn('⚠️ No JSON found in LLM response');
+      return angles;
+    }
+
+    const refinedAngles = JSON.parse(jsonMatch[0]);
+
+    if (!Array.isArray(refinedAngles) || refinedAngles.length === 0) {
+      console.warn('⚠️ Invalid refined angles, returning original');
+      return angles;
+    }
+
+    console.log(`✅ Refined ${angles.length} → ${refinedAngles.length} high-quality angles (${languageName})`);
+    console.log(`   Sample: "${refinedAngles[0]?.painPoint?.slice(0, 60)}..."`);
+
+    return refinedAngles;
+
+  } catch (error) {
+    console.warn('⚠️ Failed to refine angles:', error);
+    return angles; // Fallback to original angles
+  }
+}
+
+// ==========================================
 // INSIGHT QUALITY FILTER - Apply at SOURCE
 // ==========================================
 // Filter out generic market stats that nobody cares about
@@ -922,33 +1088,8 @@ export async function POST(request: Request) {
       return NextResponse.json({
         success: true,
         brand: {
-          id: existingBrand.id,
-          name: existingBrand.name,
-          url: existingBrand.url,
-          logo: existingBrand.logo,
-          colors: existingBrand.colors,
-          fonts: existingBrand.fonts,
-          values: existingBrand.values,
-          aesthetic: existingBrand.aesthetic,
-          toneVoice: existingBrand.toneVoice,
-          description: existingBrand.description,
-          tagline: existingBrand.tagline,
-          industry: existingBrand.industry,
-          targetAudience: existingBrand.targetAudience,
-          uniqueValueProposition: existingBrand.uniqueValueProposition,
-          features: existingBrand.features,
-          services: existingBrand.services,
-          keyPoints: existingBrand.keyPoints,
-          labeledImages: existingBrand.labeledImages,
+          ...existingBrand,
           images: (existingBrand.labeledImages as any[])?.map((img: any) => img.url) || [],
-          visualMotifs: existingBrand.visualMotifs,
-          vocabulary: existingBrand.vocabulary,
-          painPoints: existingBrand.painPoints,
-          backgroundPrompts: existingBrand.backgroundPrompts,
-          suggestedPosts: existingBrand.suggestedPosts,
-          industryInsights: existingBrand.industryInsights,
-          contentNuggets: existingBrand.contentNuggets,
-          editorialHooks: existingBrand.editorialHooks,
         },
         isUpdate: true,
       });
@@ -2272,8 +2413,23 @@ FORMAT: Return ONLY a valid JSON array:
       return true;
     });
 
+    // ─────────────────────────────────────────────────────────────────────────────
+    // LLM REFINEMENT PASS: Improve quality of all content angles
+    // ─────────────────────────────────────────────────────────────────────────────
+    console.log(`🔍 Running LLM refinement on ${deduped.length} content angles...`);
+
+    const refinedAngles = await refineContentAnglesWithLLM({
+      angles: deduped,
+      brandName: brandData.name || 'la marque',
+      targetAudience: brandData.targetAudience || '',
+      industry: brandData.industry || '',
+      uniqueValueProposition: brandData.uniqueValueProposition || '',
+      detectedLanguage,
+      features: brandData.features || []
+    });
+
     // Final: Max 12 angles, ensure at least some primary appear first
-    brandData.industryInsights = deduped.slice(0, 12);
+    brandData.industryInsights = refinedAngles.slice(0, 12);
 
     const primaryCount = brandData.industryInsights.filter((a: any) => a.tier === 'primary').length;
     const secondaryCount = brandData.industryInsights.filter((a: any) => a.tier === 'secondary').length;
