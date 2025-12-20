@@ -4,6 +4,7 @@ import CtaSection from '@/components/CtaSection';
 import Link from 'next/link';
 import { headers } from 'next/headers';
 import { getServerLocale } from '@/lib/i18n-server';
+import { translations } from '@/lib/i18n/translations';
 import Gallery from '@/components/Gallery';
 import I18nComparison from '@/components/I18nComparison';
 
@@ -417,7 +418,10 @@ export default async function Home() {
               </button>
             </div>
 
-            <div className="bg-white border border-gray-200 p-8">
+            <div className="relative bg-white border border-gray-200 p-8">
+              <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[10px] font-mono uppercase tracking-widest px-3 py-1">
+                {translations.landing.pricing.plans.business.badge[locale]}
+              </div>
               <div className="text-xs font-mono uppercase tracking-widest text-gray-400 mb-4">Premium</div>
               <div className="text-4xl font-light text-gray-900 mb-2">{locale === 'fr' ? '49€' : '$49'}<span className="text-lg text-gray-400">/{locale === 'fr' ? 'mois' : 'mo'}</span></div>
               <p className="text-sm text-gray-500 mb-8">{locale === 'fr' ? 'Pour les équipes qui produisent' : 'For teams that produce'}</p>
@@ -434,10 +438,6 @@ export default async function Home() {
                 <li className="flex items-center gap-3 text-sm text-gray-600">
                   <span className="text-blue-500">✓</span>
                   {locale === 'fr' ? 'Tout du plan Pro' : 'Everything in Pro'}
-                </li>
-                <li className="flex items-center gap-3 text-sm text-gray-600">
-                  <span className="text-blue-500">✓</span>
-                  {locale === 'fr' ? "3 membres d'équipe" : '3 team members'}
                 </li>
                 <li className="flex items-center gap-3 text-sm text-gray-600">
                   <span className="text-blue-500">✓</span>
@@ -549,37 +549,37 @@ export default async function Home() {
                 <img src="/logo.png" alt="Palette" className="h-8 object-contain" />
               </div>
               <p className="text-xs text-gray-400 leading-relaxed">
-                Des visuels pros, cohérents, générés automatiquement.
+                {translations.landing.footer.tagline[locale]}
               </p>
             </div>
             <div>
-              <div className="text-[10px] font-mono uppercase tracking-widest text-gray-400 mb-4">{locale === 'fr' ? 'Produit' : 'Product'}</div>
+              <div className="text-[10px] font-mono uppercase tracking-widest text-gray-400 mb-4">{translations.landing.footer.product[locale]}</div>
               <div className="space-y-2 text-sm text-gray-500">
-                <a href="#fonctionnement" className="block hover:text-gray-900 transition-colors">Comment ça marche</a>
-                <a href="#tarifs" className="block hover:text-gray-900 transition-colors">Tarifs</a>
-                <a href="/playground" className="block hover:text-gray-900 transition-colors">Playground</a>
+                <a href="#fonctionnement" className="block hover:text-gray-900 transition-colors">{translations.landing.footer.links.howItWorks[locale]}</a>
+                <a href="#tarifs" className="block hover:text-gray-900 transition-colors">{translations.landing.footer.links.pricing[locale]}</a>
+                <a href="/playground" className="block hover:text-gray-900 transition-colors">{translations.landing.footer.links.playground[locale]}</a>
               </div>
             </div>
             <div>
-              <div className="text-[10px] font-mono uppercase tracking-widest text-gray-400 mb-4">{locale === 'fr' ? 'Ressources' : 'Resources'}</div>
+              <div className="text-[10px] font-mono uppercase tracking-widest text-gray-400 mb-4">{translations.landing.footer.resources[locale]}</div>
               <div className="space-y-2 text-sm text-gray-500">
-                <a href="#faq" className="block hover:text-gray-900 transition-colors">FAQ</a>
+                <a href="#faq" className="block hover:text-gray-900 transition-colors">{translations.landing.footer.links.faq[locale]}</a>
               </div>
             </div>
             <div>
-              <div className="text-[10px] font-mono uppercase tracking-widest text-gray-400 mb-4">Légal</div>
+              <div className="text-[10px] font-mono uppercase tracking-widest text-gray-400 mb-4">{translations.landing.footer.legal[locale]}</div>
               <div className="space-y-2 text-sm text-gray-500">
-                <a href="#" className="block hover:text-gray-900 transition-colors">CGU</a>
-                <a href="#" className="block hover:text-gray-900 transition-colors">Confidentialité</a>
+                <a href="#" className="block hover:text-gray-900 transition-colors">{translations.landing.footer.links.terms[locale]}</a>
+                <a href="#" className="block hover:text-gray-900 transition-colors">{translations.landing.footer.links.privacy[locale]}</a>
               </div>
             </div>
           </div>
           <div className="pt-8 border-t border-gray-200 flex flex-col md:flex-row justify-between items-center gap-4">
-            <span className="text-xs text-gray-400">© 2025 Palette. Tous droits réservés.</span>
+            <span className="text-xs text-gray-400">© 2025 Palette. {translations.landing.footer.copyright[locale]}</span>
             <div className="flex items-center gap-4 text-xs text-gray-400">
               <span className="flex items-center gap-2">
                 <div className="w-1.5 h-1.5 bg-blue-500 rounded-full" />
-                Tous les systèmes opérationnels
+                {translations.landing.footer.systemsOperational[locale]}
               </span>
             </div>
           </div>

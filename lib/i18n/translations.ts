@@ -164,9 +164,10 @@ export const translations = {
           desc: { fr: 'Pour les équipes qui produisent', en: 'For teams that produce' },
           credits: { fr: '150 crédits/mois', en: '150 credits/month' },
           cta: { fr: 'Contacter les ventes', en: 'Contact sales' },
+          badge: { fr: 'Meilleur rapport', en: 'Best value' },
           features: {
-            fr: ['150 générations/mois', 'Tout du plan Pro', '3 membres d\'équipe', 'Support prioritaire', 'Génération 4K'],
-            en: ['150 generations/month', 'Everything in Pro', '3 team members', 'Priority support', '4K Generation']
+            fr: ['150 générations/mois', 'Tout du plan Pro', 'Support prioritaire', 'Génération 4K'],
+            en: ['150 generations/month', 'Everything in Pro', 'Priority support', '4K Generation']
           }
         }
       }
@@ -178,21 +179,20 @@ export const translations = {
       subtitle: { fr: 'Gratuit • Sans engagement • En 60 secondes', en: 'Free • No commitment • In 60 seconds' }
     },
     footer: {
-      tagline: { fr: 'Des visuels de marque, en 60 secondes.', en: 'Brand visuals, in 60 seconds.' },
+      tagline: { fr: 'Des visuels pros, cohérents, générés automatiquement.', en: 'Professional, consistent visuals, automatically generated.' },
       product: { fr: 'Produit', en: 'Product' },
       resources: { fr: 'Ressources', en: 'Resources' },
       legal: { fr: 'Légal', en: 'Legal' },
       links: {
-        features: { fr: 'Fonctionnalités', en: 'Features' },
+        howItWorks: { fr: 'Comment ça marche', en: 'How it works' },
         pricing: { fr: 'Tarifs', en: 'Pricing' },
-        examples: { fr: 'Exemples', en: 'Examples' },
-        blog: { fr: 'Blog', en: 'Blog' },
-        help: { fr: 'Centre d\'aide', en: 'Help Center' },
-        contact: { fr: 'Contact', en: 'Contact' },
+        playground: { fr: 'Playground', en: 'Playground' },
+        faq: { fr: 'FAQ', en: 'FAQ' },
         privacy: { fr: 'Confidentialité', en: 'Privacy' },
         terms: { fr: 'CGU', en: 'Terms' }
       },
-      copyright: { fr: 'Tous droits réservés.', en: 'All rights reserved.' }
+      copyright: { fr: 'Tous droits réservés.', en: 'All rights reserved.' },
+      systemsOperational: { fr: 'Tous les systèmes opérationnels', en: 'All systems operational' }
     }
   },
 
@@ -291,7 +291,60 @@ export const translations = {
       tone: { fr: 'Ton & Langage', en: 'Tone & Language' },
       painPoints: { fr: 'Pain Points & Contexte', en: 'Pain Points & Context' },
       target: { fr: 'Cible', en: 'Target' },
-      uvp: { fr: 'Proposition de valeur', en: 'Value proposition' }
+      uvp: { fr: 'Proposition de valeur', en: 'Value proposition' },
+      header: {
+        identity: { fr: 'Identité & Direction Artistique', en: 'Identity & Art Direction' },
+        strategy: { fr: 'Stratégie & Cible', en: 'Strategy & Target' },
+        story: { fr: 'Histoire de marque', en: 'Brand Story' },
+        intelligence: { fr: 'Intelligence Content', en: 'Content Intelligence' },
+        validateCreate: { fr: 'Valider et créer', en: 'Validate & create' },
+        save: { fr: 'Sauvegarder', en: 'Save' },
+        saveContinue: { fr: 'Sauvegarder et continuer', en: 'Save and continue' },
+        importRef: { fr: 'Importer des fichiers', en: 'Import files' },
+        importRefVisuals: { fr: 'Importer des visuels de référence', en: 'Import reference visuals' },
+        changeLogo: { fr: 'Changer le logo', en: 'Change logo' }
+      },
+      sections: {
+        colors: { fr: 'Palette', en: 'Palette' },
+        typography: { fr: 'Typographies', en: 'Typography' },
+        tagline: { fr: 'Accroche', en: 'Tagline' },
+        taglinePlaceholder: { fr: 'Slogan...', en: 'Tagline...' },
+        targetAudience: { fr: 'Cible (Target Audience)', en: 'Target Audience' },
+        targetPlaceholder: { fr: 'Qui sont vos clients idéaux ?', en: 'Who are your ideal customers?' },
+        uvp: { fr: 'Promesse (Unique Value Prop)', en: 'Promise (Unique Value Prop)' },
+        uvpPlaceholder: { fr: 'Quelle est votre promesse unique ?', en: 'What is your unique promise?' },
+        storyTitle: { fr: 'Notre Histoire', en: 'Our Story' },
+        storyPlaceholder: { fr: 'Racontez l\'histoire de votre marque...', en: 'Tell your brand story...' },
+        targetPromise: { fr: 'Cible & Promesse', en: 'Target & Promise' },
+        targetLabel: { fr: 'Audience cible', en: 'Target Audience' },
+        uvpLabel: { fr: 'Promesse unique (UVP)', en: 'Unique Value Proposition' },
+        strengths: { fr: 'Forces & USPs', en: 'Strengths & USPs' },
+        addStrength: { fr: 'Ajouter vos forces et USPs', en: 'Add your strengths and USPs' },
+        tone: { fr: 'Ton & Langage', en: 'Tone & Language' },
+        noTone: { fr: 'Aucun ton défini', en: 'No tone defined' },
+        titleTone: { fr: 'Ton', en: 'Tone' },
+        painPoints: { fr: 'Pain Points', en: 'Pain Points' },
+        competitors: { fr: 'Concurrents identifiés', en: 'Identified Competitors' },
+        add: { fr: 'Ajouter', en: 'Add' },
+        change: { fr: 'Changer', en: 'Change' },
+        assetLibrary: { fr: 'Bibliothèque d\'assets', en: 'Asset library' },
+        images: { fr: 'images', en: 'images' },
+        crawledPages: { fr: 'pages crawlées', en: 'pages crawled' },
+        noImages: { fr: 'Aucune image trouvée', en: 'No images found' },
+        noImagesHint: { fr: 'Ajoutez des images ou vérifiez l\'URL du site', en: 'Add images or check the site URL' },
+        autoSave: { fr: '💾 Vos modifications seront sauvegardées automatiquement', en: '💾 Your changes will be saved automatically' },
+        strengthsPlaceholder: { fr: 'Ex: Gain de temps 10x, Support 24/7', en: 'E.g.: 10x time savings, 24/7 support' },
+        tonePlaceholder: { fr: 'Ton (Pro, Fun) ou terme clé', en: 'Tone (Pro, Fun) or key term' },
+        painPointPlaceholder: { fr: 'Ajouter un pain point...', en: 'Add a pain point...' }
+      },
+      import: {
+        guideText: { fr: 'Ces visuels guideront le style de vos créations :', en: 'These visuals will guide your creations\' style:' },
+        guideDetails: { fr: 'couleurs, composition, ambiance.', en: 'colors, composition, mood.' },
+        autoTag: { fr: 'Ils seront automatiquement tagués "Visuel de référence".', en: 'They will be automatically tagged "Reference visual".' },
+        dragDrop: { fr: 'Glissez-déposez vos images ici', en: 'Drag and drop your images here' },
+        browse: { fr: 'ou cliquez pour parcourir', en: 'or click to browse' },
+        referenceTag: { fr: '🎨 Référence', en: '🎨 Reference' }
+      }
     },
     lightbox: {
       yourCreation: { fr: 'Votre création', en: 'Your creation' },
