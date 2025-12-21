@@ -33,6 +33,11 @@ const translations: Record<Locale, Record<string, any>> = {
       expand: 'Épingler la sidebar',
       collapse: 'Réduire la sidebar',
     },
+    playground: {
+      urlStep: {
+        scrapingTime: 'Le processus peut prendre jusqu\'à 2 minutes. Vous serez notifié dès que c\'est prêt.',
+      },
+    },
     landing: {
       hero: {
         headline1: 'Vos visuels de marque.',
@@ -83,6 +88,11 @@ const translations: Record<Locale, Record<string, any>> = {
       expand: 'Pin sidebar',
       collapse: 'Collapse sidebar',
     },
+    playground: {
+      urlStep: {
+        scrapingTime: 'The process can take up to 2 minutes. You will be notified when it\'s ready.',
+      },
+    },
     landing: {
       hero: {
         headline1: 'Your brand visuals.',
@@ -127,13 +137,22 @@ function interpolate(template: string, values: Record<string, any> = {}): string
   return template.replace(/\{\{(\w+)\}\}/g, (_, key) => values[key] ?? `{{${key}}}`);
 }
 
-export function useTranslation() {
-  const [locale, setLocale] = useState<Locale>('fr');
-  
+export function useTranslation(overrideLocale?: Locale) {
+  const [locale, setLocale] = useState<Locale>(overrideLocale || 'fr');
+
   useEffect(() => {
-    setLocale(detectLocale());
-  }, []);
-  
+    if (!overrideLocale) {
+      setLocale(detectLocale());
+    }
+  }, [overrideLocale]);
+
+  // Update locale when override changes
+  useEffect(() => {
+    if (overrideLocale) {
+      setLocale(overrideLocale);
+    }
+  }, [overrideLocale]);
+
   const t = (key: string, values?: Record<string, any>): string => {
     const translation = getNestedValue(translations[locale], key);
     if (typeof translation === 'string') {
@@ -141,8 +160,8 @@ export function useTranslation() {
     }
     return key; // Fallback to key if not found
   };
-  
-  return { t, locale };
+
+  return { t, locale, setLocale };
 }
 
 // For server components (using headers)

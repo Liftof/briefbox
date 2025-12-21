@@ -197,7 +197,7 @@ AVOID: Flat backgrounds, distorted logos, cluttered layout, amateur design, 3D r
 };
 
 function PlaygroundContent() {
-  const { t, locale } = useTranslation();
+  const { t, locale, setLocale } = useTranslation();
   const searchParams = useSearchParams();
   const brandId = searchParams.get('brandId');
   const analyzeUrl = searchParams.get('analyzeUrl'); // From Hero input
@@ -410,6 +410,17 @@ function PlaygroundContent() {
       Object.values(toastTimeouts.current).forEach(clearTimeout);
     };
   }, []);
+
+  // Auto-detect and set locale from brand's detected language
+  useEffect(() => {
+    if (brandData?.detectedLanguage) {
+      const brandLocale = brandData.detectedLanguage === 'en' ? 'en' : 'fr';
+      if (brandLocale !== locale) {
+        console.log(`🌐 Setting locale to ${brandLocale} (from brand detectedLanguage)`);
+        setLocale(brandLocale);
+      }
+    }
+  }, [brandData?.detectedLanguage, locale, setLocale]);
 
   // Listen for "use-angle" events from BentoGrid (legacy)
   useEffect(() => {
