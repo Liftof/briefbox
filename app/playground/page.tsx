@@ -413,6 +413,7 @@ function PlaygroundContent() {
   }, []);
 
   // Auto-detect and set locale from brand's detected language
+  // Only run when detectedLanguage changes, not when locale changes (prevents infinite loop)
   useEffect(() => {
     if (brandData?.detectedLanguage) {
       const brandLocale = brandData.detectedLanguage === 'en' ? 'en' : 'fr';
@@ -421,7 +422,8 @@ function PlaygroundContent() {
         setLocale(brandLocale);
       }
     }
-  }, [brandData?.detectedLanguage, locale, setLocale]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [brandData?.detectedLanguage]); // Only depend on detectedLanguage, not locale!
 
   // Listen for "use-angle" events from BentoGrid (legacy)
   useEffect(() => {

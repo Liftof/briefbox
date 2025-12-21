@@ -160,18 +160,14 @@ function interpolate(template: string, values: Record<string, any> = {}): string
 export function useTranslation(overrideLocale?: Locale) {
   const [locale, setLocale] = useState<Locale>(overrideLocale || 'fr');
 
+  // Detect browser locale only once on mount (if no override)
   useEffect(() => {
     if (!overrideLocale) {
       setLocale(detectLocale());
     }
-  }, [overrideLocale]);
-
-  // Update locale when override changes
-  useEffect(() => {
-    if (overrideLocale) {
-      setLocale(overrideLocale);
-    }
-  }, [overrideLocale]);
+    // Only run on mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const t = (key: string, values?: Record<string, any>): string => {
     const translation = getNestedValue(translations[locale], key);
