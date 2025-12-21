@@ -415,12 +415,25 @@ function PlaygroundContent() {
   // Auto-detect and set locale from brand's detected language
   // Only run when detectedLanguage changes, not when locale changes (prevents infinite loop)
   useEffect(() => {
+    console.log('🔍 Locale detection check:', {
+      hasDetectedLanguage: !!brandData?.detectedLanguage,
+      detectedLanguage: brandData?.detectedLanguage,
+      currentLocale: locale,
+      brandName: brandData?.name
+    });
+
     if (brandData?.detectedLanguage) {
       const brandLocale = brandData.detectedLanguage === 'en' ? 'en' : 'fr';
+      console.log(`🌐 Brand locale should be: ${brandLocale}, current locale: ${locale}`);
+
       if (brandLocale !== locale) {
-        console.log(`🌐 Setting locale to ${brandLocale} (from brand detectedLanguage)`);
+        console.log(`✅ Switching locale from ${locale} to ${brandLocale}`);
         setLocale(brandLocale);
+      } else {
+        console.log(`✓ Locale already correct (${locale})`);
       }
+    } else {
+      console.log('⚠️ No detectedLanguage in brandData');
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [brandData?.detectedLanguage]); // Only depend on detectedLanguage, not locale!
