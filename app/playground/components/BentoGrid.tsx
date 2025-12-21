@@ -57,6 +57,7 @@ function ImportPopup({ isOpen, onClose, onImport, forReferences = false, locale 
   const [pendingFiles, setPendingFiles] = useState<{ file: File; preview: string; tag: string }[]>([]);
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { t } = useTranslation();
 
   const handleFiles = useCallback((files: FileList | null) => {
     if (!files) return;
@@ -129,8 +130,8 @@ function ImportPopup({ isOpen, onClose, onImport, forReferences = false, locale 
           <h2 className="text-sm font-medium text-gray-900 uppercase tracking-wider flex items-center gap-2">
             <span className={`w-2 h-2 rounded-full ${forReferences ? 'bg-purple-500' : 'bg-blue-500'}`} />
             {forReferences
-              ? (locale === 'fr' ? '🎨 Importer des visuels de référence' : '🎨 Import reference visuals')
-              : (locale === 'fr' ? 'Importer des fichiers' : 'Import files')
+              ? t('playground.bento.header.importRefVisuals')
+              : t('playground.bento.header.importRef')
             }
           </h2>
           <button onClick={handleClose} className="text-gray-400 hover:text-gray-900">×</button>
@@ -139,8 +140,8 @@ function ImportPopup({ isOpen, onClose, onImport, forReferences = false, locale 
         {/* Info banner for reference imports */}
         {forReferences && (
           <div className="mx-6 mt-4 p-3 bg-purple-50 border border-purple-200 text-xs text-purple-700">
-            <strong>{locale === 'fr' ? 'Ces visuels guideront le style de vos créations :' : 'These visuals will guide your creations\' style:'}</strong> {locale === 'fr' ? 'couleurs, composition, ambiance.' : 'colors, composition, mood.'}
-            {locale === 'fr' ? 'Ils seront automatiquement tagués "Visuel de référence".' : 'They will be automatically tagged "Reference visual".'}
+            <strong>{t('playground.bento.import.guideText')}</strong> {t('playground.bento.import.guideDetails')}
+            {t('playground.bento.import.autoTag')}
           </div>
         )}
 
@@ -162,8 +163,8 @@ function ImportPopup({ isOpen, onClose, onImport, forReferences = false, locale 
             className="hidden"
             onChange={(e) => handleFiles(e.target.files)}
           />
-          <p className="text-sm text-gray-600">{locale === 'fr' ? 'Glissez-déposez vos images ici' : 'Drag and drop your images here'}</p>
-          <p className="text-xs text-gray-400">{locale === 'fr' ? 'ou cliquez pour parcourir' : 'or click to browse'}</p>
+          <p className="text-sm text-gray-600">{t('playground.bento.import.dragDrop')}</p>
+          <p className="text-xs text-gray-400">{t('playground.bento.import.browse')}</p>
         </div>
 
         {pendingFiles.length > 0 && (
@@ -193,7 +194,7 @@ function ImportPopup({ isOpen, onClose, onImport, forReferences = false, locale 
                   )}
                   {forReferences && (
                     <div className="p-2 border-t border-purple-100 bg-purple-50">
-                      <span className="text-[10px] font-mono uppercase text-purple-600">🎨 Référence</span>
+                      <span className="text-[10px] font-mono uppercase text-purple-600">{t('playground.bento.import.referenceTag')}</span>
                     </div>
                   )}
                   <button
@@ -320,6 +321,7 @@ function TagEditor({ currentTag, onTagChange, position }: {
 function AddItemInput({ placeholder, onAdd, locale = 'fr' }: { placeholder: string, onAdd: (value: string) => void, locale?: string }) {
   const [value, setValue] = useState('');
   const [isAdding, setIsAdding] = useState(false);
+  const { t } = useTranslation();
 
   if (!isAdding) {
     return (
@@ -327,7 +329,7 @@ function AddItemInput({ placeholder, onAdd, locale = 'fr' }: { placeholder: stri
         onClick={() => setIsAdding(true)}
         className="w-full py-2 mt-2 text-xs text-gray-400 hover:text-gray-600 border border-dashed border-gray-200 hover:border-gray-300 flex items-center justify-center gap-1 transition-all"
       >
-        <span>+</span> {locale === 'fr' ? 'Ajouter' : 'Add'}
+        <span>+</span> {t('playground.bento.sections.add')}
       </button>
     );
   }
@@ -365,17 +367,18 @@ function AddItemInput({ placeholder, onAdd, locale = 'fr' }: { placeholder: stri
   );
 }
 
-export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBackgrounds = false, onUpdate, onValidate, onAddSource, onBack, isFirstTimeSetup = false }: {
+export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBackgrounds = false, isSaving = false, onUpdate, onValidate, onAddSource, onBack, isFirstTimeSetup = false }: {
   brandData: any,
   backgrounds?: string[],
   isGeneratingBackgrounds?: boolean,
+  isSaving?: boolean,
   onUpdate: (data: any) => void,
   onValidate: () => void,
   onAddSource?: () => void,
   onBack?: () => void,
   isFirstTimeSetup?: boolean
 }) {
-  const { locale } = useTranslation();
+  const { t, locale } = useTranslation();
   const localizedTags = getTagOptions(locale);
   const [localData, setLocalData] = useState(brandData);
   const [importPopupOpen, setImportPopupOpen] = useState(false);
@@ -504,7 +507,7 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
           <div className="bg-white w-full max-w-lg max-h-[70vh] flex flex-col shadow-2xl border border-gray-200">
             <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
-              <h2 className="text-sm font-medium text-gray-900 uppercase tracking-wider">{locale === 'fr' ? 'Changer le logo' : 'Change logo'}</h2>
+              <h2 className="text-sm font-medium text-gray-900 uppercase tracking-wider">{t('playground.bento.header.changeLogo')}</h2>
               <button onClick={() => setLogoSelectorOpen(false)} className="text-gray-400 hover:text-gray-900">×</button>
             </div>
             <div className="flex-1 overflow-y-auto p-6">
@@ -546,20 +549,33 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
         {/* Validate button in header - always visible */}
         <button
           onClick={onValidate}
-          className="group flex items-center gap-2 px-5 py-2.5 bg-gray-900 text-white text-sm font-medium transition-all hover:bg-black hover:scale-105 shadow-lg hover:shadow-xl ring-1 ring-gray-900/10 rounded-lg relative overflow-hidden"
+          disabled={isSaving}
+          className="group flex items-center gap-2 px-5 py-2.5 bg-gray-900 text-white text-sm font-medium transition-all hover:bg-black hover:scale-105 shadow-lg hover:shadow-xl ring-1 ring-gray-900/10 rounded-lg relative overflow-hidden disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
         >
           <div className="absolute inset-0 bg-gradient-to-r from-blue-600/20 to-purple-600/20 opacity-0 group-hover:opacity-100 transition-opacity" />
-          <svg className="w-4 h-4 relative z-10" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-            <path d="M5 13l4 4L19 7" />
-          </svg>
-          <span className="relative z-10">
-            {isFirstTimeSetup
-              ? (locale === 'fr' ? 'Valider et créer' : 'Validate & create')
-              : (locale === 'fr' ? 'Sauvegarder' : 'Save')}
-          </span>
-          <svg className="w-4 h-4 transition-transform group-hover:translate-x-0.5 relative z-10" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-            <path d="M5 12h14M12 5l7 7-7 7" />
-          </svg>
+          {isSaving ? (
+            <>
+              <svg className="w-4 h-4 relative z-10 animate-spin" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+              </svg>
+              <span className="relative z-10">{locale === 'fr' ? 'Sauvegarde...' : 'Saving...'}</span>
+            </>
+          ) : (
+            <>
+              <svg className="w-4 h-4 relative z-10" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path d="M5 13l4 4L19 7" />
+              </svg>
+              <span className="relative z-10">
+                {isFirstTimeSetup
+                  ? t('playground.bento.header.validateCreate')
+                  : t('playground.bento.header.save')}
+              </span>
+              <svg className="w-4 h-4 transition-transform group-hover:translate-x-0.5 relative z-10" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path d="M5 12h14M12 5l7 7-7 7" />
+              </svg>
+            </>
+          )}
         </button>
       </header>
 
@@ -569,7 +585,7 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
       <section className="mb-10">
         <div className="flex items-center gap-3 mb-6">
           <span className="w-2 h-2 bg-gray-900 rounded-full" />
-          <h3 className="text-lg font-semibold text-gray-900">{locale === 'fr' ? 'Identité & Direction Artistique' : 'Identity & Art Direction'}</h3>
+          <h3 className="text-lg font-semibold text-gray-900">{t('playground.bento.header.identity')}</h3>
         </div>
 
         {/* MOBILE-RESPONSIVE: stack on mobile, grid on desktop */}
@@ -588,7 +604,7 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
               )}
               <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center z-20">
                 <span className="text-white text-xs font-medium flex items-center gap-1">
-                  <span className="text-blue-400">✎</span> {locale === 'fr' ? 'Changer' : 'Change'}
+                  <span className="text-blue-400">✎</span> {t('playground.bento.sections.change')}
                 </span>
               </div>
             </button>
@@ -597,7 +613,7 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
           {/* Colors */}
           <div className="col-span-1 md:col-span-3 bg-gray-900 p-3 md:p-4 border border-gray-800">
             <div className="flex items-center justify-between mb-2 md:mb-3">
-              <span className="text-[9px] md:text-[10px] font-mono uppercase tracking-widest text-gray-500">Palette</span>
+              <span className="text-[9px] md:text-[10px] font-mono uppercase tracking-widest text-gray-500">{t('playground.bento.sections.colors')}</span>
               <EditButton onClick={() => setColorEditorOpen(true)} />
             </div>
             <div className="flex flex-wrap gap-1 md:gap-2">
@@ -612,7 +628,7 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
 
           {/* Fonts - Show ALL fonts */}
           <div className="col-span-1 md:col-span-3 bg-white border border-gray-200 p-3 md:p-4">
-            <span className="text-[9px] md:text-[10px] font-mono uppercase tracking-widest text-gray-400 block mb-2 md:mb-3">{locale === 'fr' ? 'Typographies' : 'Typography'}</span>
+            <span className="text-[9px] md:text-[10px] font-mono uppercase tracking-widest text-gray-400 block mb-2 md:mb-3">{t('playground.bento.sections.typography')}</span>
             <div className="space-y-1 md:space-y-2">
               {localData.fonts?.map((font: string, i: number) => (
                 <div key={i} className={`flex items-center gap-1 md:gap-2 ${i === 0 ? '' : 'opacity-60'}`}>
@@ -626,37 +642,37 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
 
           {/* Tagline */}
           <div className="col-span-1 md:col-span-3 bg-white border border-gray-200 p-3 md:p-4">
-            <span className="text-[9px] md:text-[10px] font-mono uppercase tracking-widest text-gray-400 block mb-2 md:mb-3">{locale === 'fr' ? 'Accroche' : 'Tagline'}</span>
+            <span className="text-[9px] md:text-[10px] font-mono uppercase tracking-widest text-gray-400 block mb-2 md:mb-3">{t('playground.bento.sections.tagline')}</span>
             <textarea
               value={localData.tagline || ''}
               onChange={(e) => handleChange('tagline', e.target.value)}
               className="w-full bg-transparent outline-none text-xs md:text-sm text-gray-900 resize-none h-12 md:h-16 leading-relaxed placeholder:text-gray-300"
-              placeholder="Slogan..."
+              placeholder={t('playground.bento.sections.taglinePlaceholder')}
             />
           </div>
 
           {/* STRATEGIE DE MARQUE - New Block */}
           <div className="col-span-2 md:col-span-6 bg-white border border-gray-200 p-3 md:p-4">
             <div className="flex items-center gap-2 mb-4">
-              <span className="text-[10px] font-mono uppercase tracking-widest text-gray-400">{locale === 'fr' ? 'Stratégie & Cible' : 'Strategy & Target'}</span>
+              <span className="text-[10px] font-mono uppercase tracking-widest text-gray-400">{t('playground.bento.header.strategy')}</span>
             </div>
             <div className="space-y-4">
               <div>
-                <span className="text-[9px] text-blue-600 font-bold uppercase tracking-wider block mb-1">🎯 Cible (Target Audience)</span>
+                <span className="text-[9px] text-blue-600 font-bold uppercase tracking-wider block mb-1">🎯 {t('playground.bento.sections.targetAudience')}</span>
                 <textarea
                   value={localData.targetAudience || ''}
                   onChange={(e) => handleChange('targetAudience', e.target.value)}
                   className="w-full bg-blue-50/50 border-b border-blue-100 p-2 outline-none text-sm text-gray-700 resize-none h-14 leading-relaxed placeholder:text-gray-300"
-                  placeholder="Qui sont vos clients idéaux ?"
+                  placeholder={t('playground.bento.sections.targetPlaceholder')}
                 />
               </div>
               <div>
-                <span className="text-[9px] text-amber-600 font-bold uppercase tracking-wider block mb-1">⚡ Promesse (Unique Value Prop)</span>
+                <span className="text-[9px] text-amber-600 font-bold uppercase tracking-wider block mb-1">⚡ {t('playground.bento.sections.uvp')}</span>
                 <textarea
                   value={localData.uniqueValueProposition || ''}
                   onChange={(e) => handleChange('uniqueValueProposition', e.target.value)}
                   className="w-full bg-amber-50/50 border-b border-amber-100 p-2 outline-none text-sm text-gray-700 resize-none h-14 leading-relaxed placeholder:text-gray-300"
-                  placeholder="Quelle est votre promesse unique ?"
+                  placeholder={t('playground.bento.sections.uvpPlaceholder')}
                 />
               </div>
             </div>
@@ -665,15 +681,15 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
           {/* Storytelling */}
           <div className="col-span-2 md:col-span-6 bg-white border border-gray-200 p-3 md:p-4">
             <div className="flex items-center gap-2 mb-3 md:mb-4">
-              <span className="text-[9px] md:text-[10px] font-mono uppercase tracking-widest text-gray-400">{locale === 'fr' ? 'Histoire de marque' : 'Brand Story'}</span>
+              <span className="text-[9px] md:text-[10px] font-mono uppercase tracking-widest text-gray-400">{t('playground.bento.header.story')}</span>
             </div>
             <div className="h-full">
-              <span className="text-[8px] md:text-[9px] text-purple-600 font-bold uppercase tracking-wider block mb-1">📖 Notre Histoire</span>
+              <span className="text-[8px] md:text-[9px] text-purple-600 font-bold uppercase tracking-wider block mb-1">📖 {t('playground.bento.sections.storyTitle')}</span>
               <textarea
                 value={localData.brandStory || ''}
                 onChange={(e) => handleChange('brandStory', e.target.value)}
                 className="w-full bg-purple-50/50 border-b border-purple-100 p-2 outline-none text-xs md:text-sm text-gray-700 resize-none h-24 md:h-32 leading-relaxed placeholder:text-gray-300"
-                placeholder="Racontez l'histoire de votre marque..."
+                placeholder={t('playground.bento.sections.storyPlaceholder')}
               />
             </div>
           </div>
@@ -685,7 +701,7 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
         <section className="mt-6 mb-6">
           <div className="flex items-center gap-3 mb-4">
             <span className="w-2 h-2 bg-blue-500 rounded-full" />
-            <h3 className="text-lg font-semibold text-gray-900">Intelligence Content</h3>
+            <h3 className="text-lg font-semibold text-gray-900">{t('playground.bento.header.intelligence')}</h3>
           </div>
 
           {/* Dynamic grid - only show cards with content + useful alternatives */}
@@ -695,12 +711,12 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
             <div className="bg-gradient-to-br from-indigo-50 to-purple-50 border border-indigo-100 p-4 rounded-lg">
               <div className="flex items-center gap-2 mb-3">
                 <span className="text-lg">🎯</span>
-                <span className="text-[10px] font-mono uppercase tracking-widest text-indigo-600">Cible & Promesse</span>
+                <span className="text-[10px] font-mono uppercase tracking-widest text-indigo-600">{t('playground.bento.sections.targetPromise')}</span>
               </div>
 
               {/* Target Audience */}
               <div className="mb-3">
-                <label className="text-[9px] text-gray-500 uppercase mb-1 block">Audience cible</label>
+                <label className="text-[9px] text-gray-500 uppercase mb-1 block">{t('playground.bento.sections.targetLabel')}</label>
                 <input
                   type="text"
                   value={localData.targetAudience || ''}
@@ -712,7 +728,7 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
 
               {/* UVP */}
               <div>
-                <label className="text-[9px] text-gray-500 uppercase mb-1 block">Promesse unique (UVP)</label>
+                <label className="text-[9px] text-gray-500 uppercase mb-1 block">{t('playground.bento.sections.uvpLabel')}</label>
                 <textarea
                   value={localData.uniqueValueProposition || ''}
                   onChange={(e) => handleChange('uniqueValueProposition', e.target.value)}
@@ -727,7 +743,7 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
             <div className="bg-gradient-to-br from-blue-50 to-sky-50 border border-blue-100 p-4 rounded-lg">
               <div className="flex items-center gap-2 mb-3">
                 <span className="text-lg">💎</span>
-                <span className="text-[10px] font-mono uppercase tracking-widest text-blue-600">Forces & USPs</span>
+                <span className="text-[10px] font-mono uppercase tracking-widest text-blue-600">{t('playground.bento.sections.strengths')}</span>
               </div>
 
               <div className="space-y-1.5 max-h-44 overflow-y-auto">
@@ -756,12 +772,12 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
                   </div>
                 ))}
                 {(!localData.features?.length && !localData.keyPoints?.length) && (
-                  <p className="text-[10px] text-gray-400 text-center py-2">Ajoutez vos forces et USPs</p>
+                  <p className="text-[10px] text-gray-400 text-center py-2">{t('playground.bento.sections.addStrength')}</p>
                 )}
               </div>
 
               <AddItemInput
-                placeholder={locale === 'fr' ? "Ex: Gain de temps 10x, Support 24/7" : "E.g.: 10x time savings, 24/7 support"}
+                placeholder={t('playground.bento.sections.strengthsPlaceholder')}
                 onAdd={(val) => handleChange('features', [...(localData.features || []), val])}
                 locale={locale}
               />
@@ -771,7 +787,7 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
             <div className="bg-gradient-to-br from-violet-50 to-purple-50 border border-violet-100 p-4 rounded-lg">
               <div className="flex items-center gap-2 mb-3">
                 <span className="text-lg">🎤</span>
-                <span className="text-[10px] font-mono uppercase tracking-widest text-violet-600">Ton & Langage</span>
+                <span className="text-[10px] font-mono uppercase tracking-widest text-violet-600">{t('playground.bento.sections.tone')}</span>
               </div>
 
               {/* Tone pills */}
@@ -787,7 +803,7 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
                   </span>
                 ))}
                 {!localData.toneVoice?.length && (
-                  <span className="text-[10px] text-gray-400">Aucun ton défini</span>
+                  <span className="text-[10px] text-gray-400">{t('playground.bento.sections.noTone')}</span>
                 )}
               </div>
 
@@ -807,7 +823,7 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
               </div>
 
               <AddItemInput
-                placeholder={locale === 'fr' ? "Ton (Pro, Fun) ou terme clé" : "Tone (Pro, Fun) or key term"}
+                placeholder={t('playground.bento.sections.tonePlaceholder')}
                 onAdd={(val) => {
                   // If it's a short word, add to tone, otherwise to vocabulary
                   if (val.length < 15 && !val.includes(' ')) {
@@ -826,7 +842,7 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2">
                     <span className="text-lg">⚡</span>
-                    <span className="text-[10px] font-mono uppercase tracking-widest text-rose-600">{locale === 'fr' ? 'Pain Points' : 'Pain Points'}</span>
+                    <span className="text-[10px] font-mono uppercase tracking-widest text-rose-600">{t('playground.bento.sections.painPoints')}</span>
                   </div>
                   {(localData.industryInsights?.length || 0) > 0 && (
                     <span className="bg-rose-100 text-rose-700 text-[9px] px-1.5 py-0.5 font-bold rounded">
@@ -853,7 +869,7 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
                 </div>
 
                 <AddItemInput
-                  placeholder={locale === 'fr' ? "Ajouter un pain point..." : "Add a pain point..."}
+                  placeholder={t('playground.bento.sections.painPointPlaceholder')}
                   onAdd={(val) => {
                     handleChange('industryInsights', [...(localData.industryInsights || []), { painPoint: val, type: 'pain_point' }]);
                   }}
@@ -867,7 +883,7 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
               <div className="bg-gradient-to-br from-violet-50 to-indigo-50 border border-violet-100 p-4 rounded-lg">
                 <div className="flex items-center gap-2 mb-3">
                   <span className="text-lg">🎯</span>
-                  <span className="text-[10px] font-mono uppercase tracking-widest text-violet-600">Concurrents identifiés</span>
+                  <span className="text-[10px] font-mono uppercase tracking-widest text-violet-600">{t('playground.bento.sections.competitors')}</span>
                   <span className="bg-violet-100 text-violet-700 text-[9px] px-1.5 py-0.5 font-bold rounded ml-auto">
                     {localData.competitors.length}
                   </span>
@@ -893,7 +909,7 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
               <div className="bg-gradient-to-br from-cyan-50 to-sky-50 border border-cyan-100 p-4 rounded-lg">
                 <div className="flex items-center gap-2 mb-3">
                   <span className="text-lg">📰</span>
-                  <span className="text-[10px] font-mono uppercase tracking-widest text-cyan-600">Actualités récentes</span>
+                  <span className="text-[10px] font-mono uppercase tracking-widest text-cyan-600">{t('playground.bento.sections.news')}</span>
                   <span className="bg-cyan-100 text-cyan-700 text-[9px] px-1.5 py-0.5 font-bold rounded ml-auto">
                     {localData.newsHighlights.length}
                   </span>
@@ -925,15 +941,15 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-3">
               <span className="text-[10px] font-mono uppercase tracking-widest text-gray-400">
-                {locale === 'fr' ? "Bibliothèque d'assets" : "Asset library"}
+                {t('playground.bento.sections.assetLibrary')}
               </span>
               <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-[10px] font-bold">
-                {assetImages.length || 0} images
+                {assetImages.length || 0} {t('playground.bento.sections.images')}
               </span>
               {/* Crawl stats indicator */}
               {localData._crawlStats && (
                 <span className="px-2 py-0.5 bg-blue-50 text-blue-600 text-[9px] font-mono">
-                  {localData._crawlStats.pagesScraped || 0} pages crawlées
+                  {localData._crawlStats.pagesScraped || 0} {t('playground.bento.sections.crawledPages')}
                 </span>
               )}
             </div>
@@ -941,7 +957,7 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
               onClick={() => openImportPopup(false)}
               className="px-2 py-1 bg-blue-500 text-white text-[9px] font-medium uppercase hover:bg-blue-600 flex items-center gap-1"
             >
-              <span>+</span> {locale === 'fr' ? 'Ajouter' : 'Add'}
+              <span>+</span> {t('playground.bento.sections.add')}
             </button>
           </div>
 
@@ -980,8 +996,8 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
           {/* No images hint */}
           {assetImages.length === 0 && (
             <div className="text-center py-6 bg-gray-50 border border-dashed border-gray-200">
-              <span className="text-gray-400 text-sm">Aucune image trouvée</span>
-              <p className="text-[10px] text-gray-300 mt-1">Ajoutez des images ou vérifiez l'URL du site</p>
+              <span className="text-gray-400 text-sm">{t('playground.bento.sections.noImages')}</span>
+              <p className="text-[10px] text-gray-300 mt-1">{t('playground.bento.sections.noImagesHint')}</p>
             </div>
           )}
 
@@ -1012,30 +1028,41 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
       <section className="border-t border-gray-200 pt-6">
         <div className="text-center mb-3">
           <p className="text-xs text-gray-400">
-            {locale === 'fr'
-              ? '💾 Vos modifications seront sauvegardées automatiquement'
-              : '💾 Your changes will be saved automatically'}
+            {t('playground.bento.sections.autoSave')}
           </p>
         </div>
         <button
           onClick={onValidate}
-          className="w-full group relative py-4 bg-gray-900 text-white text-sm font-medium transition-all hover:bg-black overflow-hidden shadow-xl hover:shadow-2xl hover:scale-[1.01] rounded-lg"
+          disabled={isSaving}
+          className="w-full group relative py-4 bg-gray-900 text-white text-sm font-medium transition-all hover:bg-black overflow-hidden shadow-xl hover:shadow-2xl hover:scale-[1.01] rounded-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
         >
           <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-purple-600 opacity-20 group-hover:opacity-30 transition-opacity" />
           <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
 
           <span className="relative z-10 flex items-center justify-center gap-3">
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <path d="M5 13l4 4L19 7" />
-            </svg>
-            <span className="font-semibold tracking-wide">
-              {isFirstTimeSetup
-                ? (locale === 'fr' ? 'Valider et créer' : 'Validate & create')
-                : (locale === 'fr' ? 'Sauvegarder et continuer' : 'Save and continue')}
-            </span>
-            <svg className="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-              <path d="M5 12h14M12 5l7 7-7 7" />
-            </svg>
+            {isSaving ? (
+              <>
+                <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                </svg>
+                <span className="font-semibold tracking-wide">{locale === 'fr' ? 'Sauvegarde...' : 'Saving...'}</span>
+              </>
+            ) : (
+              <>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path d="M5 13l4 4L19 7" />
+                </svg>
+                <span className="font-semibold tracking-wide">
+                  {isFirstTimeSetup
+                    ? t('playground.bento.header.validateCreate')
+                    : t('playground.bento.header.saveContinue')}
+                </span>
+                <svg className="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path d="M5 12h14M12 5l7 7-7 7" />
+                </svg>
+              </>
+            )}
           </span>
         </button>
       </section>

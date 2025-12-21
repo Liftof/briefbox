@@ -367,6 +367,7 @@ function PlaygroundContent() {
   const [tagDropdownOpen, setTagDropdownOpen] = useState<string | null>(null); // URL of image with open dropdown
   const [showAssetHint, setShowAssetHint] = useState(false); // Hint to add assets when typing custom prompt
   const [showGiftOverlay, setShowGiftOverlay] = useState(false); // Celebrate free generation gift
+  const [isSavingBrand, setIsSavingBrand] = useState(false); // Loading state for brand save button
   const [hasReceivedFreeGen, setHasReceivedFreeGen] = useState(false); // Track if user got their free gen already
 
   // Aspect ratio options
@@ -1046,6 +1047,8 @@ function PlaygroundContent() {
       return;
     }
 
+    setIsSavingBrand(true); // Start loading
+
     // SYNC images from bento: prioritize logo + relevant categories
     const labeledImages = Array.isArray(brandData.labeledImages) ? brandData.labeledImages : [];
 
@@ -1067,8 +1070,11 @@ function PlaygroundContent() {
       await handleSaveBrand();
     } catch (e) {
       console.error("Auto-save failed", e);
+      setIsSavingBrand(false); // Stop loading on error
+      return; // Don't proceed if save failed
     }
 
+    setIsSavingBrand(false); // Stop loading
     setStep('playground');
     setActiveTab('create');
 
@@ -2577,6 +2583,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
           brandData={brandData || {}}
           backgrounds={backgrounds}
           isGeneratingBackgrounds={isGeneratingBackgrounds}
+          isSaving={isSavingBrand}
           onUpdate={setBrandData}
           onValidate={handleValidateBento}
           onAddSource={() => setShowSourceManager(true)}
