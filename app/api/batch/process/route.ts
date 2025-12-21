@@ -78,7 +78,7 @@ export async function POST(request: NextRequest) {
           // Create daily generation job (scheduled for now)
           await db.insert(batchGenerationQueue).values({
             userId: user.clerkId,
-            brandId: userBrand.id,
+            brandId: userBrand.id!, // Non-null assertion - code is disabled anyway
             status: 'pending',
             scheduledFor: new Date(),
             prompt: `daily-${today}`, // Mark as daily job
