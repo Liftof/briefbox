@@ -53,6 +53,7 @@ export async function GET(request: NextRequest) {
         url: g.imageUrl,
         prompt: g.prompt,
         templateId: g.templateId,
+        brandId: g.brandId, // FIXED: Include brandId for filtering
         brandName: g.brandName,
         createdAt: g.createdAt?.toISOString() || new Date().toISOString(),
         folderId: g.folderId,
@@ -113,6 +114,7 @@ export async function POST(request: NextRequest) {
         url: g.imageUrl,
         prompt: g.prompt,
         templateId: g.templateId,
+        brandId: g.brandId, // FIXED: Include brandId for filtering
         brandName: g.brandName,
         createdAt: g.createdAt?.toISOString() || new Date().toISOString(),
         folderId: g.folderId,
@@ -172,6 +174,7 @@ export async function PATCH(request: NextRequest) {
         url: result[0].imageUrl,
         prompt: result[0].prompt,
         templateId: result[0].templateId,
+        brandId: result[0].brandId, // FIXED: Include brandId for filtering
         brandName: result[0].brandName,
         createdAt: result[0].createdAt?.toISOString() || new Date().toISOString(),
         folderId: result[0].folderId,
