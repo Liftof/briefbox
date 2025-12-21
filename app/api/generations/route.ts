@@ -14,16 +14,23 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const folderId = searchParams.get('folderId');
-    const brandId = searchParams.get('brandId');
+    const brandIdParam = searchParams.get('brandId');
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '50');
     const offset = (page - 1) * limit;
 
+    console.log('📥 GET /api/generations:', { brandIdParam, folderId, userId });
+
     // Build query conditions
     const conditions = [eq(generations.userId, userId)];
 
-    if (brandId) {
-      conditions.push(eq(generations.brandId, parseInt(brandId)));
+    if (brandIdParam) {
+      const brandId = parseInt(brandIdParam);
+      if (!isNaN(brandId)) {
+        conditions.push(eq(generations.brandId, brandId));
+      } else {
+        console.warn(`⚠️ Invalid brandId param: ${brandIdParam}`);
+      }
     }
 
     if (folderId === 'null' || folderId === '') {
@@ -66,8 +73,17 @@ export async function GET(request: NextRequest) {
     });
 
   } catch (error: any) {
-    console.error('Get Generations Error:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error('❌ GET Generations Error:', error);
+    console.error('Error stack:', error.stack);
+    console.error('Error details:', {
+      message: error.message,
+      code: error.code,
+      name: error.name,
+    });
+    return NextResponse.json({
+      error: error.message || 'Failed to fetch generations',
+      details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    }, { status: 500 });
   }
 }
 
