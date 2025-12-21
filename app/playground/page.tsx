@@ -2605,7 +2605,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
       return <CalendarView brandId={brandData?.id} creditsInfo={creditsInfo || null} />;
     }
 
-    if (activeTab === 'projects') {
+    if (activeTab === 'gallery') {
       return <ProjectsView brandId={selectedBrandId || undefined} />;;
     }
 
@@ -3404,7 +3404,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
         {/* Recent Visuals - bottom section */}
         <RecentVisuals
           generations={recentGenerations}
-          onViewAll={() => setActiveTab('projects')}
+          onViewAll={() => setActiveTab('gallery')}
           onImageClick={(gen) => {
             // Convert Generation to GeneratedImage format for lightbox
             setLightboxImage({

@@ -19,10 +19,20 @@ export async function POST(request: NextRequest) {
     // Verify internal API key (for cron job security)
     const authHeader = request.headers.get('authorization');
     const cronSecret = process.env.CRON_SECRET;
-    
+
     if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
+
+    // 🚧 FEATURE DISABLED: Daily automatic generation for Pro/Premium users
+    // This feature will be launched later. For now, we skip all batch processing.
+    console.log('⚠️ Batch generation is currently disabled');
+    return NextResponse.json({
+      success: true,
+      message: 'Batch generation feature is disabled',
+      processed: 0,
+      dailyJobsCreated: 0,
+    });
 
     // STEP 1: Process existing pending jobs (new user reactivation)
     const pendingJobs = await db.query.batchGenerationQueue.findMany({

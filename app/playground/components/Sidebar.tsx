@@ -52,8 +52,9 @@ export default function Sidebar({
   // Direct labels - no need for translation system, we have locale
   const labels = {
     create: locale === 'fr' ? 'Créer' : 'Create',
-    projects: locale === 'fr' ? 'Projets' : 'Projects',
+    gallery: locale === 'fr' ? 'Galerie' : 'Gallery',
     calendar: locale === 'fr' ? 'Calendrier' : 'Calendar',
+    publish: locale === 'fr' ? 'Publier' : 'Publish',
     stats: locale === 'fr' ? 'Stats' : 'Stats',
     settings: locale === 'fr' ? 'Réglages' : 'Settings',
     soon: locale === 'fr' ? 'bientôt' : 'soon',
@@ -61,8 +62,9 @@ export default function Sidebar({
 
   const menuItems = [
     { id: 'create', icon: '✦', label: labels.create },
-    { id: 'projects', icon: '◫', label: labels.projects },
-    { id: 'calendar', icon: '▤', label: labels.calendar },
+    { id: 'gallery', icon: '◰', label: labels.gallery },
+    { id: 'calendar', icon: '▤', label: labels.calendar, disabled: true },
+    { id: 'publish', icon: '↗', label: labels.publish, disabled: true },
     { id: 'stats', icon: '◔', label: labels.stats, disabled: true },
   ];
 
