@@ -37,6 +37,16 @@ const translations: Record<Locale, Record<string, any>> = {
       urlStep: {
         scrapingTime: 'Le processus peut prendre jusqu\'à 2 minutes. Vous serez notifié dès que c\'est prêt.',
       },
+      bento: {
+        header: {
+          validateCreate: 'Valider et créer',
+          save: 'Sauvegarder',
+          saveContinue: 'Sauvegarder et continuer',
+        },
+        sections: {
+          autoSave: 'Vos modifications sont sauvegardées automatiquement',
+        },
+      },
     },
     landing: {
       hero: {
@@ -91,6 +101,16 @@ const translations: Record<Locale, Record<string, any>> = {
     playground: {
       urlStep: {
         scrapingTime: 'The process can take up to 2 minutes. You will be notified when it\'s ready.',
+      },
+      bento: {
+        header: {
+          validateCreate: 'Validate & create',
+          save: 'Save',
+          saveContinue: 'Save and continue',
+        },
+        sections: {
+          autoSave: 'Your changes are saved automatically',
+        },
       },
     },
     landing: {
