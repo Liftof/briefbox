@@ -1145,6 +1145,14 @@ function PlaygroundContent() {
       if (!response.ok || !data.success) {
         throw new Error(data.error || 'Sauvegarde impossible');
       }
+
+      // IMPORTANT: Update brandData with the ID returned from DB
+      if (data.brandId && !brandData.id) {
+        console.log(`✅ Assigning brand ID: ${data.brandId}`);
+        setBrandData((prev: any) => ({ ...prev, id: data.brandId }));
+        setSelectedBrandId(data.brandId);
+      }
+
       showToast(locale === 'fr' ? 'Marque sauvegardée' : 'Brand saved', 'success');
     } catch (error: any) {
       console.error('Save brand error', error);
