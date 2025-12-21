@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { db } from '@/db';
-import { generations, folders } from '@/db/schema';
-import { eq, and, desc, isNull } from 'drizzle-orm';
+import { generations, folders, brands } from '@/db/schema';
+import { eq, and, desc, isNull, inArray } from 'drizzle-orm';
 
 // GET - Fetch user's generations (with optional folder filter)
 export async function GET(request: NextRequest) {
@@ -86,6 +86,24 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'generations array required' }, { status: 400 });
     }
 
+    // Validate brandIds exist before inserting
+    const brandIds = newGens
+      .map((g: any) => g.brandId)
+      .filter((id: any) => id != null)
+      .map((id: any) => parseInt(id));
+
+    let validBrandIds = new Set<number>();
+    if (brandIds.length > 0) {
+      const existingBrands = await db.query.brands.findMany({
+        where: and(
+          eq(brands.userId, userId),
+          inArray(brands.id, brandIds)
+        ),
+        columns: { id: true },
+      });
+      validBrandIds = new Set(existingBrands.map(b => b.id));
+    }
+
     const toInsert = newGens.map((gen: any) => {
       const item: any = {
         userId,
@@ -98,9 +116,11 @@ export async function POST(request: NextRequest) {
         type: gen.type || 'social_post',
         campaignId: gen.campaignId ? parseInt(gen.campaignId) : null,
       };
-      // Only add brandId if it's a valid number
-      if (gen.brandId) {
+      // Only add brandId if it exists in DB (prevents foreign key errors)
+      if (gen.brandId && validBrandIds.has(parseInt(gen.brandId))) {
         item.brandId = parseInt(gen.brandId);
+      } else if (gen.brandId) {
+        console.warn(`⚠️ Skipping invalid brandId ${gen.brandId} (brand not found)`);
       }
       return item;
     });

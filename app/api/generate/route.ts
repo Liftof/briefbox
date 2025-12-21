@@ -208,6 +208,13 @@ async function urlToBase64(url: string): Promise<{ data: string; mimeType: strin
     if (!response.ok) return null;
 
     const contentType = response.headers.get('content-type') || 'image/jpeg';
+
+    // IMPORTANT: Skip non-image responses (e.g., HTML from Notion proxies)
+    if (!contentType.startsWith('image/')) {
+      console.warn(`⚠️ Skipping non-image URL (${contentType}): ${url.slice(0, 60)}...`);
+      return null;
+    }
+
     const buffer = await response.arrayBuffer();
 
     // If fetched URL is SVG, convert to PNG
