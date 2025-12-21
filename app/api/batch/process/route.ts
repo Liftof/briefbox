@@ -34,6 +34,8 @@ export async function POST(request: NextRequest) {
       dailyJobsCreated: 0,
     });
 
+    /* DISABLED CODE - Feature will be launched later
+
     // STEP 1: Process existing pending jobs (new user reactivation)
     const pendingJobs = await db.query.batchGenerationQueue.findMany({
       where: and(
@@ -127,11 +129,15 @@ export async function POST(request: NextRequest) {
       dailyJobsCreated,
     });
 
+    END DISABLED CODE */
+
   } catch (error: any) {
     console.error('Batch process error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
+
+/* DISABLED CODE - processBatchJob will be re-enabled when feature launches
 
 async function processBatchJob(job: typeof batchGenerationQueue.$inferSelect) {
   try {
@@ -373,3 +379,7 @@ export async function GET(request: NextRequest) {
     })),
   });
 }
+
+
+END DISABLED CODE - processBatchJob */
+
