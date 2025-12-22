@@ -83,7 +83,7 @@ export function rateLimit(
 
 // Preset configurations
 export const RATE_LIMITS = {
-  // Generation: 10 per minute per user
+  // Generation: 10 per minute per user (for paid users)
   generate: { max: 10, windowMs: 60 * 1000 },
 
   // Brand analysis: 5 per minute per user (expensive operation)
@@ -96,22 +96,47 @@ export const RATE_LIMITS = {
   stripe: { max: 10, windowMs: 60 * 1000 },
 } as const;
 
-// Global rate limits (across all users)
-export const GLOBAL_RATE_LIMITS = {
-  // Total generations: 200 per minute (20 concurrent users @ 10 each)
-  generate: { max: 200, windowMs: 60 * 1000 },
+// Stricter limits for FREE users (to prevent abuse)
+export const FREE_USER_RATE_LIMITS = {
+  // Free users: 2 generations per hour (very restrictive)
+  generate: { max: 2, windowMs: 60 * 60 * 1000 }, // 1 hour window
 
-  // Total brand analysis: 50 per minute (10 concurrent users @ 5 each)
-  analyze: { max: 50, windowMs: 60 * 1000 },
+  // Free users: 1 brand analysis per hour (scraping is expensive)
+  analyze: { max: 1, windowMs: 60 * 60 * 1000 },
+} as const;
+
+// Global rate limits (across all users)
+// NOTE: These are safety limits to prevent total server overload
+// In production with Upstash Redis, you can use more sophisticated strategies
+export const GLOBAL_RATE_LIMITS = {
+  // Total generations: 1000 per minute (allows ~100 concurrent users @ 10 each)
+  // Adjust based on your Google AI quota and server capacity
+  generate: { max: 1000, windowMs: 60 * 1000 },
+
+  // Total brand analysis: 200 per minute (allows ~40 concurrent users @ 5 each)
+  // This is more expensive (scraping + LLM), so more conservative
+  analyze: { max: 200, windowMs: 60 * 1000 },
 } as const;
 
 /**
  * Rate limit by user ID with preset
+ * @param userId - User ID
+ * @param preset - Rate limit preset
+ * @param userPlan - User's plan (free, pro, premium) - uses stricter limits for free users
  */
 export function rateLimitByUser(
   userId: string,
-  preset: keyof typeof RATE_LIMITS
+  preset: keyof typeof RATE_LIMITS,
+  userPlan?: 'free' | 'pro' | 'premium'
 ): RateLimitResult {
+  // Use stricter limits for free users on expensive operations
+  if (userPlan === 'free' && (preset === 'generate' || preset === 'analyze')) {
+    return rateLimit(
+      `${preset}:free:${userId}`,
+      FREE_USER_RATE_LIMITS[preset as keyof typeof FREE_USER_RATE_LIMITS]
+    );
+  }
+
   return rateLimit(`${preset}:${userId}`, RATE_LIMITS[preset]);
 }
 

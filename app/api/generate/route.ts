@@ -370,6 +370,12 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
   }
 
+  // ====== GET USER PLAN (for rate limiting) ======
+  const user = await db.query.users.findFirst({
+    where: eq(users.clerkId, userId),
+  });
+  const userPlan = user?.plan || 'free';
+
   // ====== RATE LIMITING ======
   // 1. Check global rate limit (protects against mass abuse)
   const globalLimit = rateLimitGlobal('generate');
@@ -381,13 +387,17 @@ export async function POST(request: NextRequest) {
     }, { status: 429 });
   }
 
-  // 2. Check per-user rate limit
-  const rateLimitResult = rateLimitByUser(userId, 'generate');
+  // 2. Check per-user rate limit (stricter for free users)
+  const rateLimitResult = rateLimitByUser(userId, 'generate', userPlan as 'free' | 'pro' | 'premium');
   if (!rateLimitResult.success) {
+    const waitTime = Math.ceil((rateLimitResult.reset - Date.now()) / 1000);
+    const isFree = userPlan === 'free';
     return NextResponse.json({
       success: false,
-      error: 'Trop de requêtes. Réessayez dans quelques secondes.',
-      retryAfter: Math.ceil((rateLimitResult.reset - Date.now()) / 1000),
+      error: isFree
+        ? `Limite atteinte pour les comptes gratuits. Réessayez dans ${Math.ceil(waitTime / 60)} minutes ou passez Pro.`
+        : 'Trop de requêtes. Réessayez dans quelques secondes.',
+      retryAfter: waitTime,
     }, { status: 429 });
   }
 
