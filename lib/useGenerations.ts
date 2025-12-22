@@ -50,9 +50,10 @@ export function useGenerations(brandId?: number) {
   const [error, setError] = useState<string | null>(null);
 
   // Fetch generations from API
-  const fetchGenerations = useCallback(async (brandId?: number) => {
+  const fetchGenerations = useCallback(async (specificBrandId?: number) => {
     try {
       setLoading(true);
+      const targetBrandId = specificBrandId !== undefined ? specificBrandId : brandId;
 
       // 1. Get Local Data (Pending items)
       const localData = localStorage.getItem(GENERATIONS_KEY);
@@ -60,13 +61,13 @@ export function useGenerations(brandId?: number) {
       // Filter for items that failed to save (temporary IDs)
       const pendingItems = parsedLocal.filter(g => g.id.startsWith('gen_'));
       // Optional: filter by brand if context requires it
-      const relevantPending = brandId
-        ? pendingItems.filter(g => g.brandId === brandId)
+      const relevantPending = targetBrandId
+        ? pendingItems.filter(g => g.brandId === targetBrandId)
         : pendingItems;
 
       // 2. Get Server Data
-      const url = brandId
-        ? `/api/generations?brandId=${brandId}`
+      const url = targetBrandId
+        ? `/api/generations?brandId=${targetBrandId}`
         : '/api/generations';
 
       const res = await fetch(url);
@@ -77,8 +78,8 @@ export function useGenerations(brandId?: number) {
         if (res.status === 401) {
           // Fully fallback to local if auth fails
           let allLocal = parsedLocal;
-          if (brandId) {
-            allLocal = allLocal.filter((g: Generation) => g.brandId === brandId);
+          if (targetBrandId) {
+            allLocal = allLocal.filter((g: Generation) => g.brandId === targetBrandId);
           }
           setGenerations(allLocal);
           return;
@@ -106,7 +107,7 @@ export function useGenerations(brandId?: number) {
       // Fallback
       const localData = localStorage.getItem(GENERATIONS_KEY);
       let parsed = localData ? JSON.parse(localData) : [];
-      if (brandId) {
+      if (typeof brandId !== 'undefined') { // Use hook prop for fallback context
         parsed = parsed.filter((g: Generation) => g.brandId === brandId);
       }
       setGenerations(parsed || []);
@@ -162,14 +163,15 @@ export function useGenerations(brandId?: number) {
     }
 
     // Refresh list after sync attempts
-    fetchGenerations(brandId);
-  }, [brandId, fetchGenerations]);
+    fetchGenerations();
+  }, [fetchGenerations]);
 
   // Fetch folders from API
-  const fetchFolders = useCallback(async (brandId?: number) => {
+  const fetchFolders = useCallback(async (specificBrandId?: number) => {
     try {
-      const url = brandId
-        ? `/api/folders?brandId=${brandId}`
+      const targetBrandId = specificBrandId !== undefined ? specificBrandId : brandId;
+      const url = targetBrandId
+        ? `/api/folders?brandId=${targetBrandId}`
         : '/api/folders';
 
       const res = await fetch(url);

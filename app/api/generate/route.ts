@@ -557,15 +557,15 @@ export async function POST(request: NextRequest) {
       return context.toLowerCase().includes('logo') && context.toLowerCase().includes('brand');
     });
 
-    // Build final order: LOGO FIRST, then style refs, then other content
+    // Build final order: LOGO FIRST, then brand assets (high priority), then style refs (aesthetic only)
     const contentWithoutLogo = processedImageUrls.filter(url => url !== logoUrl);
     const allImageUrls = [
-      ...(logoUrl ? [logoUrl] : []), // Logo first if exists
-      ...processedReferenceUrls,      // Style refs second
-      ...contentWithoutLogo           // Other content last
+      ...(logoUrl ? [logoUrl] : []), // Logo first if exists (CRITICAL)
+      ...contentWithoutLogo,          // Brand assets second (products, UI, etc.)
+      ...processedReferenceUrls,      // Style refs last (aesthetic inspiration only)
     ];
 
-    console.log(`🎯 IMAGE ORDER: Logo=${logoUrl ? 'Position 1' : 'NOT FOUND'}, StyleRefs=${processedReferenceUrls.length}, Content=${contentWithoutLogo.length}`);
+    console.log(`🎯 IMAGE ORDER: Logo=${logoUrl ? 'Position 1' : 'NOT FOUND'}, BrandAssets=${contentWithoutLogo.length}, StyleRefs=${processedReferenceUrls.length}`);
 
     // For Flux Pro, we don't strictly need images, but we process them in case we switch back
     // or if we implement a specific img2img endpoint later.

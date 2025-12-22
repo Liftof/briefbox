@@ -413,13 +413,19 @@ function PlaygroundContent() {
   }, []);
 
   // Auto-detect and set locale from brand's detected language
-  // Only run when detectedLanguage changes, not when locale changes (prevents infinite loop)
+  // Runs when brand changes or detectedLanguage is set
   useEffect(() => {
+    if (!brandData) {
+      console.log('🔍 No brand data yet, skipping locale detection');
+      return;
+    }
+
     console.log('🔍 Locale detection check:', {
       hasDetectedLanguage: !!brandData?.detectedLanguage,
       detectedLanguage: brandData?.detectedLanguage,
       currentLocale: locale,
-      brandName: brandData?.name
+      brandName: brandData?.name,
+      brandId: brandData?.id
     });
 
     if (brandData?.detectedLanguage) {
@@ -427,16 +433,17 @@ function PlaygroundContent() {
       console.log(`🌐 Brand locale should be: ${brandLocale}, current locale: ${locale}`);
 
       if (brandLocale !== locale) {
-        console.log(`✅ Switching locale from ${locale} to ${brandLocale}`);
+        console.log(`✅ Switching locale from ${locale} to ${brandLocale} for brand #${brandData.id}`);
         setLocale(brandLocale);
       } else {
         console.log(`✓ Locale already correct (${locale})`);
       }
     } else {
-      console.log('⚠️ No detectedLanguage in brandData');
+      console.log('⚠️ No detectedLanguage in brandData - might be an old brand');
+      console.log('   Available keys:', Object.keys(brandData).join(', '));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [brandData?.detectedLanguage]); // Only depend on detectedLanguage, not locale!
+  }, [brandData?.id, brandData?.detectedLanguage]); // Trigger on brand change OR language change
 
   // Listen for "use-angle" events from BentoGrid (legacy)
   useEffect(() => {
@@ -1785,10 +1792,10 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
             }
           }
 
-          // Extract reference images for style guidance
-          if (cdData.concept.imageSelection?.references?.length > 0) {
+          // Extract reference images for style guidance (only if user hasn't manually selected any)
+          if (cdData.concept.imageSelection?.references?.length > 0 && styleRefImages.length === 0) {
             styleReferenceImages = cdData.concept.imageSelection.references;
-            console.log('🎨 Reference visuals for style:', styleReferenceImages.length);
+            console.log('🎨 Auto-detected reference visuals for style:', styleReferenceImages.length);
           }
 
           console.log('🎬 Creative Director:', promptVariations ? `${promptVariations.length} variations` : 'single prompt');
@@ -1874,10 +1881,15 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
 
       console.log('📸 Images to use (user priority):', imagesToUse.length, 'images');
 
-      // Add manual style references if present (with optional notes)
+      // ==========================================================================================
+      // STYLE REFERENCES - Only for artistic guidance, NEVER affects logo/content
+      // Priority: User-selected style refs > Auto-detected style refs
+      // ==========================================================================================
       if (styleRefImages.length > 0) {
         const styleRefUrls = styleRefImages.map(ref => ref.url);
-        styleReferenceImages = [...styleRefUrls, ...styleReferenceImages];
+        // User manually selected style refs from gallery - use ONLY these (ignore auto-detected)
+        styleReferenceImages = styleRefUrls;
+        console.log(`🎨 Using ${styleRefImages.length} user-selected style references (ignoring auto-detected)`);
 
         // Build style notes for the prompt
         const styleNotes = styleRefImages
@@ -1890,6 +1902,8 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
           finalGenerationPrompt += `\n\n[USER STYLE NOTES: ${styleNotes}]`;
           console.log('📝 Style notes:', styleNotes);
         }
+      } else if (styleReferenceImages.length > 0) {
+        console.log(`🎨 Using ${styleReferenceImages.length} auto-detected style references`);
       }
 
       // ==========================================================================================
@@ -3169,7 +3183,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
         )}
 
         {/* Loading State - Grid of Active Generations */}
-        {(status === 'preparing' || status === 'running') && activeGenerations.length > 0 && (
+        {activeGenerations.length > 0 && (
           <div className="mb-8">
             {/* Status header */}
             <div className="flex items-center gap-3 mb-4">

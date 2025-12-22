@@ -7,6 +7,7 @@ import {
   type Folder,
   type GenerationFeedback,
 } from '@/lib/useGenerations';
+import { useTranslation } from '@/lib/i18n';
 
 // Re-export types for backward compatibility
 export type { Generation, Folder, GenerationFeedback };
@@ -48,6 +49,8 @@ const FOLDER_COLORS = [
 const ITEMS_PER_PAGE = 20;
 
 export default function ProjectsView({ brandId }: { brandId?: number }) {
+  const { t } = useTranslation();
+
   // Use the hook for data management (API + localStorage fallback)
   const {
     generations,
@@ -65,7 +68,10 @@ export default function ProjectsView({ brandId }: { brandId?: number }) {
   const [newFolderColor, setNewFolderColor] = useState(FOLDER_COLORS[0].value);
   const [selectedFolder, setSelectedFolder] = useState<string | null>(null);
   const [draggedGen, setDraggedGen] = useState<string | null>(null);
-  const [lightboxImage, setLightboxImage] = useState<string | null>(null);
+  const [lightboxImage, setLightboxImage] = useState<Generation | null>(null);
+  const [editingImage, setEditingImage] = useState<string | null>(null);
+  const [editPrompt, setEditPrompt] = useState('');
+  const [editAdditionalImages, setEditAdditionalImages] = useState<string[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
 
   // Favorites filter
@@ -198,14 +204,212 @@ export default function ProjectsView({ brandId }: { brandId?: number }) {
 
   return (
     <div className="animate-fade-in">
-      {/* Lightbox */}
+      {/* Edit Modal */}
+      {editingImage && (
+        <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in">
+          <div className="bg-white w-full max-w-4xl flex flex-col md:flex-row relative border border-gray-200">
+            {/* Close button */}
+            <button
+              onClick={() => {
+                setEditingImage(null);
+                setEditAdditionalImages([]);
+                setEditPrompt('');
+              }}
+              className="absolute top-4 right-4 z-10 w-8 h-8 border border-gray-200 bg-white flex items-center justify-center text-gray-400 hover:text-gray-900 hover:border-gray-400 transition-colors"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+
+            {/* Image preview */}
+            <div className="flex-1 bg-gray-50 flex items-center justify-center p-6 border-r border-gray-100">
+              <img src={editingImage} className="max-h-[60vh] w-auto object-contain" />
+            </div>
+
+            {/* Edit form */}
+            <div className="flex-1 flex flex-col justify-center p-8">
+              <div className="text-[10px] font-mono uppercase tracking-widest text-blue-600 mb-2">
+                ✏️ {t('playground.gallery.editMode')}
+              </div>
+              <h3 className="text-xl font-semibold mb-2">{t('playground.gallery.editThisImage')}</h3>
+              <p className="text-sm text-gray-500 mb-6">
+                {t('playground.gallery.editDescription')}
+              </p>
+
+              <textarea
+                value={editPrompt}
+                onChange={(e) => setEditPrompt(e.target.value)}
+                className="w-full h-28 p-4 border border-gray-200 resize-none mb-4 bg-white focus:border-blue-400 focus:ring-1 focus:ring-blue-100 outline-none transition-all text-sm"
+                placeholder={t('playground.gallery.editPlaceholder')}
+              />
+
+              {/* Additional Images for Editing */}
+              <div className="mb-6">
+                <div className="flex items-center justify-between mb-2">
+                  <label className="text-[10px] font-mono uppercase tracking-widest text-gray-400">{t('playground.gallery.referenceImages')}</label>
+                  <span className="text-[10px] text-gray-400">{editAdditionalImages.length}/3</span>
+                </div>
+                <p className="text-[10px] text-gray-400 mb-2">
+                  {t('playground.gallery.referenceImagesHint')}
+                </p>
+
+                <div className="grid grid-cols-4 gap-2">
+                  {editAdditionalImages.map((img, i) => (
+                    <div key={i} className="relative aspect-square group rounded overflow-hidden border border-gray-200">
+                      <img src={img} className="w-full h-full object-cover" />
+                      <button
+                        onClick={() => setEditAdditionalImages(prev => prev.filter((_, idx) => idx !== i))}
+                        className="absolute top-0.5 right-0.5 w-4 h-4 bg-black/50 text-white rounded-full flex items-center justify-center text-[10px] hover:bg-red-500 transition-colors"
+                      >×</button>
+                    </div>
+                  ))}
+
+                  {editAdditionalImages.length < 3 && (
+                    <div
+                      className="aspect-square border-2 border-dashed border-gray-200 rounded flex flex-col items-center justify-center cursor-pointer hover:border-gray-400 hover:bg-gray-50 transition-all"
+                      onClick={() => document.getElementById('edit-image-upload')?.click()}
+                    >
+                      <span className="text-gray-400 text-xl">+</span>
+                    </div>
+                  )}
+                </div>
+                <input
+                  id="edit-image-upload"
+                  type="file"
+                  multiple
+                  accept="image/*"
+                  className="hidden"
+                  onChange={(e) => {
+                    if (e.target.files) {
+                      Array.from(e.target.files).forEach(file => {
+                        const reader = new FileReader();
+                        reader.onload = (ev) => {
+                          if (typeof ev.target?.result === 'string') {
+                            setEditAdditionalImages(prev => [...prev, ev.target!.result as string].slice(0, 3));
+                          }
+                        };
+                        reader.readAsDataURL(file);
+                      });
+                    }
+                  }}
+                />
+              </div>
+
+              <button
+                onClick={() => {
+                  if (!editPrompt.trim() || !editingImage) return;
+                  // TODO: Call edit API
+                  alert('Edition feature coming soon!');
+                  setEditingImage(null);
+                  setEditPrompt('');
+                  setEditAdditionalImages([]);
+                }}
+                className="group bg-gray-900 text-white py-4 font-medium text-sm hover:bg-black transition-colors disabled:opacity-30 flex items-center justify-center gap-2"
+                disabled={!editPrompt.trim()}
+              >
+                <span className="text-blue-400">✏️</span>
+                {t('playground.gallery.applyEdit')}
+                <svg className="w-4 h-4 transition-transform group-hover:translate-x-0.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path d="M5 12h14M12 5l7 7-7 7" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Lightbox with Options Panel */}
       {lightboxImage && (
         <div
-          className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-8 cursor-pointer"
+          className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-sm flex animate-fade-in"
           onClick={() => setLightboxImage(null)}
         >
-          <img src={lightboxImage} alt="" className="max-w-full max-h-full object-contain" />
-          <button className="absolute top-4 right-4 text-white/60 hover:text-white text-2xl">×</button>
+          {/* Close button */}
+          <button
+            className="absolute top-4 right-4 z-10 w-10 h-10 border border-white/20 flex items-center justify-center text-white/50 hover:text-white hover:border-white/50 transition rounded-full bg-black/50"
+            onClick={() => setLightboxImage(null)}
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+              <path d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+
+          {/* Main content area */}
+          <div className="flex flex-col md:flex-row w-full h-full" onClick={(e) => e.stopPropagation()}>
+            {/* Image preview - takes most of the space */}
+            <div className="flex-1 flex items-center justify-center p-4 md:p-8 overflow-hidden">
+              <img
+                src={lightboxImage.url}
+                alt="Full view"
+                className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
+              />
+            </div>
+
+            {/* Options Panel - Right side on desktop, bottom on mobile */}
+            <div className="w-full md:w-80 bg-gray-900 border-t md:border-t-0 md:border-l border-white/10 p-6 flex flex-col gap-4">
+              {/* Header */}
+              <div className="border-b border-white/10 pb-4">
+                <h3 className="text-white font-medium text-lg mb-1">{t('playground.gallery.yourCreation')}</h3>
+                <p className="text-gray-400 text-xs">
+                  {lightboxImage.aspectRatio || '1:1'} • {t('playground.gallery.readyForExport')}
+                </p>
+              </div>
+
+              {/* Actions */}
+              <div className="space-y-3">
+                {/* Edit */}
+                <button
+                  onClick={() => {
+                    setEditingImage(lightboxImage.url);
+                    setLightboxImage(null);
+                  }}
+                  className="w-full flex items-center gap-3 px-4 py-3 bg-blue-600 hover:bg-blue-700 transition-colors text-white rounded-lg font-medium"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                  </svg>
+                  <span>{t('playground.gallery.edit')}</span>
+                </button>
+
+                {/* Download */}
+                <a
+                  href={lightboxImage.url}
+                  download
+                  className="w-full flex items-center gap-3 px-4 py-3 bg-white/10 hover:bg-white/20 transition-colors text-white rounded-lg"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                  </svg>
+                  <span>{t('playground.gallery.download')}</span>
+                </a>
+
+                {/* Delete */}
+                <button
+                  onClick={() => {
+                    if (confirm(t('playground.gallery.confirmDelete'))) {
+                      handleDeleteGeneration(lightboxImage.id);
+                      setLightboxImage(null);
+                    }
+                  }}
+                  className="w-full flex items-center gap-3 px-4 py-3 bg-red-600/20 hover:bg-red-600/30 transition-colors text-red-400 rounded-lg"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                  <span>{t('playground.gallery.delete')}</span>
+                </button>
+              </div>
+
+              {/* Metadata */}
+              {lightboxImage.prompt && (
+                <div className="mt-auto pt-4 border-t border-white/10">
+                  <p className="text-gray-400 text-xs mb-1">{t('playground.gallery.promptUsed')}</p>
+                  <p className="text-gray-300 text-sm leading-relaxed">{lightboxImage.prompt}</p>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       )}
 
@@ -242,7 +446,7 @@ export default function ProjectsView({ brandId }: { brandId?: number }) {
       <section className="mb-10">
         <div className="flex items-center gap-2 mb-4">
           <span className="text-lg">🕐</span>
-          <h3 className="text-sm font-medium text-gray-900 uppercase tracking-wider">Générations récentes</h3>
+          <h3 className="text-sm font-medium text-gray-900 uppercase tracking-wider">Mes générations</h3>
           <span className="text-xs text-gray-400 font-mono">{unorganizedGenerations.length} visuel{unorganizedGenerations.length !== 1 ? 's' : ''}</span>
         </div>
 
@@ -261,8 +465,8 @@ export default function ProjectsView({ brandId }: { brandId?: number }) {
                   <img
                     src={gen.url}
                     alt=""
-                    className="w-full h-full object-cover"
-                    onClick={() => setLightboxImage(gen.url)}
+                    className="w-full h-full object-cover cursor-pointer"
+                    onClick={() => setLightboxImage(gen)}
                   />
 
                   {/* Favorite indicator (if favorited) */}
@@ -529,7 +733,7 @@ export default function ProjectsView({ brandId }: { brandId?: number }) {
                                 src={gen.url}
                                 alt=""
                                 className="w-full h-full object-cover cursor-pointer"
-                                onClick={() => setLightboxImage(gen.url)}
+                                onClick={() => setLightboxImage(gen)}
                               />
                               <button
                                 onClick={() => handleRemoveFromFolder(gen.id)}
