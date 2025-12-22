@@ -81,28 +81,37 @@ export function rateLimit(
   };
 }
 
-// Preset configurations
+// Preset configurations - GENEROUS for paid users (they pay, so no worries!)
 export const RATE_LIMITS = {
-  // Generation: 10 per minute per user (for paid users)
-  generate: { max: 10, windowMs: 60 * 1000 },
+  // Paid users: 50 per minute (very generous, they're paying!)
+  generate: { max: 50, windowMs: 60 * 1000 },
 
-  // Brand analysis: 5 per minute per user (expensive operation)
-  analyze: { max: 5, windowMs: 60 * 1000 },
+  // Paid users: 20 per minute (generous for brand analysis too)
+  analyze: { max: 20, windowMs: 60 * 1000 },
 
-  // API calls: 60 per minute per user
-  api: { max: 60, windowMs: 60 * 1000 },
+  // API calls: 100 per minute per user
+  api: { max: 100, windowMs: 60 * 1000 },
 
   // Stripe operations: 10 per minute per user
   stripe: { max: 10, windowMs: 60 * 1000 },
 } as const;
 
-// Stricter limits for FREE users (to prevent abuse)
+// SMART limits for FREE users - Multi-layer protection against abuse
 export const FREE_USER_RATE_LIMITS = {
-  // Free users: 2 generations per hour (very restrictive)
+  // Free users: 2 generations per hour PER USER
   generate: { max: 2, windowMs: 60 * 60 * 1000 }, // 1 hour window
 
-  // Free users: 1 brand analysis per hour (scraping is expensive)
+  // Free users: 1 brand analysis per hour PER USER
   analyze: { max: 1, windowMs: 60 * 60 * 1000 },
+} as const;
+
+// IP-based rate limits for FREE users (prevents multi-account abuse)
+export const FREE_USER_IP_LIMITS = {
+  // Max 5 generations per hour from same IP (catches multi-account abuse)
+  generate: { max: 5, windowMs: 60 * 60 * 1000 },
+
+  // Max 2 brand analyses per hour from same IP
+  analyze: { max: 2, windowMs: 60 * 60 * 1000 },
 } as const;
 
 // Global rate limits (across all users)
@@ -132,12 +141,27 @@ export function rateLimitByUser(
   // Use stricter limits for free users on expensive operations
   if (userPlan === 'free' && (preset === 'generate' || preset === 'analyze')) {
     return rateLimit(
-      `${preset}:free:${userId}`,
+      `${preset}:free:user:${userId}`,
       FREE_USER_RATE_LIMITS[preset as keyof typeof FREE_USER_RATE_LIMITS]
     );
   }
 
+  // Paid users get generous limits
   return rateLimit(`${preset}:${userId}`, RATE_LIMITS[preset]);
+}
+
+/**
+ * IP-based rate limit for FREE users (prevents multi-account abuse)
+ * Only called for free users on expensive operations
+ */
+export function rateLimitByIP(
+  ip: string,
+  preset: 'generate' | 'analyze'
+): RateLimitResult {
+  return rateLimit(
+    `${preset}:free:ip:${ip}`,
+    FREE_USER_IP_LIMITS[preset]
+  );
 }
 
 /**

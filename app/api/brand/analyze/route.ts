@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import getColors from 'get-image-colors';
 import sharp from 'sharp';
-import { rateLimitByUser, rateLimitGlobal } from '@/lib/rateLimit';
+import { rateLimitByUser, rateLimitGlobal, rateLimitByIP } from '@/lib/rateLimit';
 import { db } from '@/db';
 import { brands } from '@/db/schema';
 import { eq, and, like } from 'drizzle-orm';
@@ -1042,6 +1042,7 @@ export async function POST(request: Request) {
       where: eq(users.clerkId, userId),
     });
     const userPlan = existingUser?.plan || 'free';
+    const isFreeUser = userPlan === 'free';
 
     // ====== RATE LIMITING ======
     // 1. Check global rate limit (protects against mass abuse)
@@ -1053,13 +1054,28 @@ export async function POST(request: Request) {
       }, { status: 429 });
     }
 
-    // 2. Check per-user rate limit (stricter for free users)
+    // 2. For FREE users: Check IP-based limit FIRST (catches multi-account abuse)
+    if (isFreeUser) {
+      const ip = request.headers.get('x-forwarded-for')?.split(',')[0]
+        || request.headers.get('x-real-ip')
+        || 'unknown';
+
+      const ipLimit = rateLimitByIP(ip, 'analyze');
+      if (!ipLimit.success) {
+        const waitTime = Math.ceil((ipLimit.reset - Date.now()) / 1000);
+        return NextResponse.json({
+          error: `Trop de comptes gratuits depuis cette adresse IP. Réessayez dans ${Math.ceil(waitTime / 60)} minutes ou passez Pro.`,
+          retryAfter: waitTime,
+        }, { status: 429 });
+      }
+    }
+
+    // 3. Check per-user rate limit (stricter for free, generous for paid)
     const rateLimitResult = rateLimitByUser(userId, 'analyze', userPlan as 'free' | 'pro' | 'premium');
     if (!rateLimitResult.success) {
       const waitTime = Math.ceil((rateLimitResult.reset - Date.now()) / 1000);
-      const isFree = userPlan === 'free';
       return NextResponse.json({
-        error: isFree
+        error: isFreeUser
           ? `Limite atteinte pour les comptes gratuits. Réessayez dans ${Math.ceil(waitTime / 60)} minutes ou passez Pro.`
           : 'Trop de requêtes. Réessayez dans quelques secondes.',
         retryAfter: waitTime,
