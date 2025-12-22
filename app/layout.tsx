@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Lexend } from "next/font/google";
 import { ClerkProvider } from '@clerk/nextjs';
+import { Analytics } from "@vercel/analytics/next";
 import Script from "next/script";
 import "./globals.css";
 
@@ -37,6 +38,7 @@ export default function RootLayout({
             strategy="afterInteractive"
           />
           {children}
+          <Analytics />
         </body>
       </html>
     </ClerkProvider>
