@@ -4,7 +4,7 @@ import getColors from 'get-image-colors';
 import sharp from 'sharp';
 import { rateLimitByUser, rateLimitGlobal, rateLimitByIP } from '@/lib/rateLimit';
 import { db } from '@/db';
-import { brands } from '@/db/schema';
+import { brands, users } from '@/db/schema';
 import { eq, and, like } from 'drizzle-orm';
 import { firecrawlScrape, firecrawlMap, firecrawlExtract, firecrawlSearch, firecrawlBatchScrape } from '@/lib/firecrawl';
 import { callGeminiWithFallback, USE_GEMINI_FOR_BRAND_ANALYSIS } from '@/lib/gemini';
