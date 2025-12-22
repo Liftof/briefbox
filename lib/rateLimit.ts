@@ -83,17 +83,26 @@ export function rateLimit(
 
 // Preset configurations
 export const RATE_LIMITS = {
-  // Generation: 10 per minute
+  // Generation: 10 per minute per user
   generate: { max: 10, windowMs: 60 * 1000 },
-  
-  // Brand analysis: 5 per minute (expensive operation)
+
+  // Brand analysis: 5 per minute per user (expensive operation)
   analyze: { max: 5, windowMs: 60 * 1000 },
-  
-  // API calls: 60 per minute
+
+  // API calls: 60 per minute per user
   api: { max: 60, windowMs: 60 * 1000 },
-  
-  // Stripe operations: 10 per minute
+
+  // Stripe operations: 10 per minute per user
   stripe: { max: 10, windowMs: 60 * 1000 },
+} as const;
+
+// Global rate limits (across all users)
+export const GLOBAL_RATE_LIMITS = {
+  // Total generations: 200 per minute (20 concurrent users @ 10 each)
+  generate: { max: 200, windowMs: 60 * 1000 },
+
+  // Total brand analysis: 50 per minute (10 concurrent users @ 5 each)
+  analyze: { max: 50, windowMs: 60 * 1000 },
 } as const;
 
 /**
@@ -104,4 +113,13 @@ export function rateLimitByUser(
   preset: keyof typeof RATE_LIMITS
 ): RateLimitResult {
   return rateLimit(`${preset}:${userId}`, RATE_LIMITS[preset]);
+}
+
+/**
+ * Global rate limit (across all users) for expensive operations
+ */
+export function rateLimitGlobal(
+  preset: keyof typeof GLOBAL_RATE_LIMITS
+): RateLimitResult {
+  return rateLimit(`global:${preset}`, GLOBAL_RATE_LIMITS[preset]);
 }

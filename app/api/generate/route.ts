@@ -5,7 +5,7 @@ import { auth } from "@clerk/nextjs/server";
 import { db } from "@/db";
 import { users, teams } from "@/db/schema";
 import { eq } from "drizzle-orm";
-import { rateLimitByUser } from "@/lib/rateLimit";
+import { rateLimitByUser, rateLimitGlobal } from "@/lib/rateLimit";
 
 // NOTE: Fal has been removed - we now use Google AI (Gemini 3 Pro) exclusively
 // This is cheaper ($0.067/image vs $0.15) and supports more features (14 images, thinking)
@@ -371,6 +371,17 @@ export async function POST(request: NextRequest) {
   }
 
   // ====== RATE LIMITING ======
+  // 1. Check global rate limit (protects against mass abuse)
+  const globalLimit = rateLimitGlobal('generate');
+  if (!globalLimit.success) {
+    return NextResponse.json({
+      success: false,
+      error: 'Serveur surchargé. Réessayez dans quelques instants.',
+      retryAfter: Math.ceil((globalLimit.reset - Date.now()) / 1000),
+    }, { status: 429 });
+  }
+
+  // 2. Check per-user rate limit
   const rateLimitResult = rateLimitByUser(userId, 'generate');
   if (!rateLimitResult.success) {
     return NextResponse.json({

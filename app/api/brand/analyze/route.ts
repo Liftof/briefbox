@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import getColors from 'get-image-colors';
 import sharp from 'sharp';
-import { rateLimitByUser } from '@/lib/rateLimit';
+import { rateLimitByUser, rateLimitGlobal } from '@/lib/rateLimit';
 import { db } from '@/db';
 import { brands } from '@/db/schema';
 import { eq, and, like } from 'drizzle-orm';
@@ -1038,6 +1038,16 @@ export async function POST(request: Request) {
     }
 
     // ====== RATE LIMITING ======
+    // 1. Check global rate limit (protects against mass abuse)
+    const globalLimit = rateLimitGlobal('analyze');
+    if (!globalLimit.success) {
+      return NextResponse.json({
+        error: 'Serveur surchargé. Réessayez dans quelques instants.',
+        retryAfter: Math.ceil((globalLimit.reset - Date.now()) / 1000),
+      }, { status: 429 });
+    }
+
+    // 2. Check per-user rate limit
     const rateLimitResult = rateLimitByUser(userId, 'analyze');
     if (!rateLimitResult.success) {
       return NextResponse.json({
