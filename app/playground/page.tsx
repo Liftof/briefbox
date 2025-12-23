@@ -2647,7 +2647,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
     }
 
     if (activeTab === 'settings') {
-      return <SettingsView locale={locale} />;
+      return <SettingsView />;
     }
 
     // Strategy view merged into Create - angles carousel at top of the page
