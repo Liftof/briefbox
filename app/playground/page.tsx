@@ -3729,18 +3729,18 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
             {/* Edit form */}
             <div className="flex-1 flex flex-col justify-center p-8">
               <div className="text-[10px] font-mono uppercase tracking-widest text-blue-600 mb-2">
-                ✏️ Mode édition directe
+                {t('playground.gallery.editModeLabel')}
               </div>
-              <h3 className="text-xl font-semibold mb-2">{locale === 'fr' ? 'Modifier cette image' : 'Edit this image'}</h3>
+              <h3 className="text-xl font-semibold mb-2">{t('playground.gallery.editThisImage')}</h3>
               <p className="text-sm text-gray-500 mb-6">
-                Décrivez précisément ce que vous voulez changer. L'IA modifiera l'image en gardant le reste intact.
+                {t('playground.gallery.editDescription')}
               </p>
 
               <textarea
                 value={editPrompt}
                 onChange={(e) => setEditPrompt(e.target.value)}
                 className="w-full h-28 p-4 border border-gray-200 resize-none mb-4 bg-white focus:border-blue-400 focus:ring-1 focus:ring-blue-100 outline-none transition-all text-sm"
-                placeholder="Ex: Change le fond en bleu nuit, ajoute un effet de lumière sur le produit, mets le logo en blanc..."
+                placeholder={t('playground.gallery.editPlaceholder')}
               />
 
               {/* Quick Logo Fix Button */}
@@ -3748,14 +3748,14 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                 <div className="mb-6 p-4 bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 rounded-lg">
                   <div className="flex items-center gap-3">
                     <div className="w-12 h-12 bg-white rounded-lg border border-amber-300 p-1 flex-shrink-0">
-                      <img src={brandData.logo} className="w-full h-full object-contain" alt="Logo" />
+                      <img src={brandData.logo} className="w-full h-full object-contain" alt={t('playground.gallery.logo')} />
                     </div>
                     <div className="flex-1">
                       <p className="text-sm font-medium text-amber-900">
-                        {locale === 'fr' ? 'Logo mal reproduit ?' : 'Logo badly reproduced?'}
+                        {t('playground.gallery.logoBadlyReproduced')}
                       </p>
                       <p className="text-xs text-amber-700">
-                        {locale === 'fr' ? 'Cliquez ici pour le corriger automatiquement' : 'Click here to fix it automatically'}
+                        {t('playground.gallery.fixLogoAutomatically')}
                       </p>
                     </div>
                     <button
@@ -3771,7 +3771,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                       }}
                       className="px-4 py-2 bg-amber-500 text-white text-sm font-medium rounded-lg hover:bg-amber-600 transition-colors flex items-center gap-2"
                     >
-                      🔧 {locale === 'fr' ? 'Réparer' : 'Fix'}
+                      {t('playground.gallery.fix')}
                     </button>
                   </div>
                 </div>
@@ -3780,13 +3780,11 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
               {/* Additional Images for Editing */}
               <div className="mb-6">
                 <div className="flex items-center justify-between mb-2">
-                  <label className="text-[10px] font-mono uppercase tracking-widest text-gray-400">Images de référence</label>
+                  <label className="text-[10px] font-mono uppercase tracking-widest text-gray-400">{t('playground.gallery.referenceImages')}</label>
                   <span className="text-[10px] text-gray-400">{editAdditionalImages.length}/3</span>
                 </div>
                 <p className="text-[10px] text-gray-400 mb-2">
-                  {locale === 'fr'
-                    ? '💡 Ajoutez des images pour guider la modification (ex: nouveau logo, produit, texture...)'
-                    : '💡 Add images to guide the edit (e.g., new logo, product, texture...)'}
+                  {t('playground.gallery.referenceImagesHint')}
                 </p>
 
                 <div className="grid grid-cols-4 gap-2">
@@ -3848,7 +3846,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                 disabled={!editPrompt.trim()}
               >
                 <span className="text-blue-400">✏️</span>
-                Appliquer la modification
+                {t('playground.gallery.applyEdit')}
                 <svg className="w-4 h-4 transition-transform group-hover:translate-x-0.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                   <path d="M5 12h14M12 5l7 7-7 7" />
                 </svg>
