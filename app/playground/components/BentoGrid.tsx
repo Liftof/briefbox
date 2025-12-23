@@ -208,7 +208,7 @@ function ImportPopup({ isOpen, onClose, onImport, forReferences = false, locale 
         )}
 
         <div className={`px-6 py-4 border-t flex items-center justify-between ${forReferences ? 'border-purple-200 bg-purple-50/50' : 'border-gray-200 bg-gray-50'}`}>
-          <button onClick={handleClose} className="px-4 py-2 text-sm text-gray-600">{locale === 'fr' ? 'Annuler' : 'Cancel'}</button>
+          <button onClick={handleClose} className="px-4 py-2 text-sm text-gray-600">{t('common.cancel')}</button>
           <button
             onClick={handleImport}
             disabled={pendingFiles.length === 0}
@@ -216,7 +216,7 @@ function ImportPopup({ isOpen, onClose, onImport, forReferences = false, locale 
               ? (forReferences ? 'bg-purple-500 text-white hover:bg-purple-600' : 'bg-blue-500 text-white hover:bg-blue-600')
               : 'bg-gray-200 text-gray-400'
               }`}
-          >{locale === 'fr' ? 'Importer' : 'Import'} {pendingFiles.length > 0 && `(${pendingFiles.length})`}</button>
+          >{t('playground.bento.import.import')} {pendingFiles.length > 0 && `(${pendingFiles.length})`}</button>
         </div>
       </div>
     </div>
@@ -231,6 +231,7 @@ function ColorEditorPopup({ isOpen, onClose, colors, onSave, locale = 'fr' }: {
   locale?: string;
   onSave: (colors: string[]) => void;
 }) {
+  const { t } = useTranslation();
   const [editableColors, setEditableColors] = useState<string[]>([]);
 
   useEffect(() => {
@@ -258,7 +259,7 @@ function ColorEditorPopup({ isOpen, onClose, colors, onSave, locale = 'fr' }: {
         <div className="px-6 py-4 border-b border-gray-800 flex items-center justify-between">
           <h2 className="text-sm font-medium text-white uppercase tracking-wider flex items-center gap-2">
             <span className="w-2 h-2 bg-blue-500 rounded-full" />
-            {locale === 'fr' ? 'Modifier la palette' : 'Edit palette'}
+            {t('playground.bento.colors.editPalette')}
           </h2>
           <button onClick={onClose} className="text-gray-400 hover:text-white">×</button>
         </div>
@@ -281,13 +282,13 @@ function ColorEditorPopup({ isOpen, onClose, colors, onSave, locale = 'fr' }: {
             </div>
           ))}
           <button onClick={addColor} className="w-full p-3 border-2 border-dashed border-gray-700 text-gray-500 hover:border-blue-500 hover:text-blue-400 transition-all flex items-center justify-center gap-2 rounded">
-            + {locale === 'fr' ? 'Ajouter une couleur' : 'Add a color'}
+            + {t('playground.bento.colors.addColor')}
           </button>
         </div>
 
         <div className="px-6 py-4 border-t border-gray-800 flex items-center justify-between">
-          <button onClick={onClose} className="px-4 py-2 text-sm text-gray-400">{locale === 'fr' ? 'Annuler' : 'Cancel'}</button>
-          <button onClick={handleSave} className="px-6 py-2 bg-blue-500 text-white text-sm font-medium hover:bg-blue-600">{locale === 'fr' ? 'Enregistrer' : 'Save'}</button>
+          <button onClick={onClose} className="px-4 py-2 text-sm text-gray-400">{t('common.cancel')}</button>
+          <button onClick={handleSave} className="px-6 py-2 bg-blue-500 text-white text-sm font-medium hover:bg-blue-600">{t('common.save')}</button>
         </div>
       </div>
     </div>
@@ -559,7 +560,7 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
               </svg>
-              <span className="relative z-10">{locale === 'fr' ? 'Sauvegarde...' : 'Saving...'}</span>
+              <span className="relative z-10">{t('playground.bento.sections.saving')}</span>
             </>
           ) : (
             <>
@@ -634,7 +635,7 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
                 <div key={i} className={`flex items-center gap-1 md:gap-2 ${i === 0 ? '' : 'opacity-60'}`}>
                   {i === 0 && <span className="w-1 h-1 md:w-1.5 md:h-1.5 bg-blue-500 rounded-full" />}
                   <span className={`text-xs md:text-sm ${i === 0 ? 'font-medium text-gray-900' : 'text-gray-500'} truncate`}>{font}</span>
-                  {i === 0 && <span className="text-[7px] md:text-[8px] text-blue-600 font-mono uppercase ml-auto hidden sm:inline">principale</span>}
+                  {i === 0 && <span className="text-[7px] md:text-[8px] text-blue-600 font-mono uppercase ml-auto hidden sm:inline">{t('playground.bento.sections.primary')}</span>}
                 </div>
               )) || <span className="text-xs md:text-sm text-gray-400">Sans-serif</span>}
             </div>
@@ -1046,7 +1047,7 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                 </svg>
-                <span className="font-semibold tracking-wide">{locale === 'fr' ? 'Sauvegarde...' : 'Saving...'}</span>
+                <span className="font-semibold tracking-wide">{t('playground.bento.sections.saving')}</span>
               </>
             ) : (
               <>

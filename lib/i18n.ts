@@ -199,8 +199,15 @@ const translations: Record<Locale, Record<string, any>> = {
           dragDrop: 'Glissez-déposez vos images ici',
           browse: 'ou cliquez pour parcourir',
           referenceTag: 'Style',
+          import: 'Importer',
+        },
+        colors: {
+          editPalette: 'Modifier la palette',
+          addColor: 'Ajouter une couleur',
         },
         sections: {
+          saving: 'Sauvegarde...',
+          primary: 'principale',
           autoSave: 'Vos modifications sont sauvegardées automatiquement',
           add: 'Ajouter',
           change: 'Changer',
@@ -578,8 +585,15 @@ const translations: Record<Locale, Record<string, any>> = {
           dragDrop: 'Drag and drop your images here',
           browse: 'or click to browse',
           referenceTag: 'Style',
+          import: 'Import',
+        },
+        colors: {
+          editPalette: 'Edit palette',
+          addColor: 'Add a color',
         },
         sections: {
+          saving: 'Saving...',
+          primary: 'primary',
           autoSave: 'Your changes are saved automatically',
           add: 'Add',
           change: 'Change',
