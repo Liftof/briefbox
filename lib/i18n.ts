@@ -330,6 +330,38 @@ const translations: Record<Locale, Record<string, any>> = {
       subtitle: 'C\'est cadeau ✨',
       generating: 'Création en cours...',
     },
+    credits: {
+      upgrade: 'Upgrade',
+      widget: {
+        credits: 'crédits',
+      },
+      popup: {
+        exhausted: 'Crédits épuisés',
+        loving: 'Vous aimez ce que vous voyez ?',
+        goPro: 'Passez à Pro pour continuer à créer.',
+        creationsLeft: 'Plus que {{count}} création{{plural}} gratuite{{plural}}.',
+        maybeLater: 'Plus tard',
+      },
+      plans: {
+        pro: 'Pro',
+        proVisuals: '50 visuels/mois',
+        choosePro: 'Choisir Pro →',
+        premium: 'Premium',
+        premiumVisuals: '150 visuels/mois + équipe',
+        choosePremium: 'Choisir Premium →',
+      },
+      toast: {
+        twoLeft: 'Plus que 2 crédits gratuits',
+        oneLeft: 'Dernier crédit gratuit',
+        exhausted: 'Crédits épuisés',
+      },
+      inline: {
+        creditsLeft: '{{count}} crédit{{plural}} restant{{plural}}',
+        goPro: 'Passez à Pro pour continuer à créer',
+        lastCredit: 'Dernier crédit ! Pensez à upgrader',
+        proCta: 'Pro — 19€/mois →',
+      },
+    },
     landing: {
       hero: {
         headline1: 'Vos visuels de marque.',
@@ -676,6 +708,38 @@ const translations: Record<Locale, Record<string, any>> = {
       message: 'Your first visual is on us',
       subtitle: 'It\'s a gift ✨',
       generating: 'Creating...',
+    },
+    credits: {
+      upgrade: 'Upgrade',
+      widget: {
+        credits: 'credits',
+      },
+      popup: {
+        exhausted: 'Credits exhausted',
+        loving: 'Loving what you see?',
+        goPro: 'Go Pro to keep creating.',
+        creationsLeft: '{{count}} free creation{{plural}} left.',
+        maybeLater: 'Maybe later',
+      },
+      plans: {
+        pro: 'Pro',
+        proVisuals: '50 visuals/mo',
+        choosePro: 'Choose Pro →',
+        premium: 'Premium',
+        premiumVisuals: '150 visuals/mo + team',
+        choosePremium: 'Choose Premium →',
+      },
+      toast: {
+        twoLeft: '2 free credits left',
+        oneLeft: 'Last free credit',
+        exhausted: 'No credits left',
+      },
+      inline: {
+        creditsLeft: '{{count}} credit{{plural}} left',
+        goPro: 'Go Pro to keep creating',
+        lastCredit: 'Last credit! Consider upgrading',
+        proCta: 'Pro — $19/mo →',
+      },
     },
     landing: {
       hero: {

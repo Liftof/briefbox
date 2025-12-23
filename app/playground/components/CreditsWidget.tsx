@@ -10,7 +10,7 @@ interface CreditsWidgetProps {
 }
 
 export default function CreditsWidget({ isCollapsed = false, creditsOverride }: CreditsWidgetProps) {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
   const { credits: hookCredits, loading } = useCredits();
   const credits = creditsOverride ?? hookCredits; // Use override if provided
   const [isHovered, setIsHovered] = useState(false);
@@ -108,7 +108,7 @@ export default function CreditsWidget({ isCollapsed = false, creditsOverride }: 
             {/* Upgrade button */}
             {isFree && (
               <div className="flex items-center gap-1.5 text-blue-600 font-medium text-xs">
-                <span>{locale === 'fr' ? 'Upgrade' : 'Upgrade'}</span>
+                <span>{t('credits.upgrade')}</span>
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                   <path d="M5 12h14M12 5l7 7-7 7" />
                 </svg>
@@ -130,7 +130,7 @@ export default function CreditsWidget({ isCollapsed = false, creditsOverride }: 
           {isHovered && isFree && (
             <div className="absolute inset-0 bg-gray-900 flex items-center justify-center">
               <span className="text-white text-xs font-medium tracking-wide">
-                {locale === 'fr' ? 'UPGRADE →' : 'UPGRADE →'}
+                {t('credits.upgrade').toUpperCase()} →
               </span>
             </div>
           )}
@@ -151,7 +151,7 @@ interface UpgradePopupProps {
 }
 
 export function UpgradePopup({ isOpen, onClose, creditsRemaining }: UpgradePopupProps) {
-  const { t } = useTranslation();
+  const { t, locale } = useTranslation();
   const [isLoading, setIsLoading] = useState(false);
 
   if (!isOpen) return null;
@@ -193,19 +193,12 @@ export function UpgradePopup({ isOpen, onClose, creditsRemaining }: UpgradePopup
         {/* Header */}
         <div className="p-8 text-center border-b border-gray-100">
           <h2 className="text-xl font-light text-gray-900 mb-2">
-            {locale === 'fr' 
-              ? (isBlocked ? 'Crédits épuisés' : 'Vous aimez ce que vous voyez ?')
-              : (isBlocked ? 'Credits exhausted' : 'Loving what you see?')
-            }
+            {isBlocked ? t('credits.popup.exhausted') : t('credits.popup.loving')}
           </h2>
           <p className="text-sm text-gray-500">
-            {locale === 'fr'
-              ? (isBlocked 
-                  ? 'Passez à Pro pour continuer à créer.' 
-                  : `Plus que ${creditsRemaining} création${creditsRemaining > 1 ? 's' : ''} gratuite${creditsRemaining > 1 ? 's' : ''}.`)
-              : (isBlocked 
-                  ? 'Go Pro to keep creating.' 
-                  : `${creditsRemaining} free creation${creditsRemaining > 1 ? 's' : ''} left.`)
+            {isBlocked
+              ? t('credits.popup.goPro')
+              : t('credits.popup.creationsLeft', { count: creditsRemaining, plural: creditsRemaining > 1 ? 's' : '' })
             }
           </p>
         </div>
@@ -219,14 +212,14 @@ export function UpgradePopup({ isOpen, onClose, creditsRemaining }: UpgradePopup
             className="group text-left p-5 border border-gray-200 hover:border-gray-900 transition-colors disabled:opacity-50"
           >
             <div className="flex items-center justify-between mb-3">
-              <span className="font-medium text-gray-900">Pro</span>
-              <span className="text-sm font-mono text-gray-500">19€</span>
+              <span className="font-medium text-gray-900">{t('credits.plans.pro')}</span>
+              <span className="text-sm font-mono text-gray-500">{locale === 'fr' ? '19€' : '$19'}</span>
             </div>
             <div className="text-xs text-gray-400 mb-3">
-              {locale === 'fr' ? '50 visuels/mois' : '50 visuals/mo'}
+              {t('credits.plans.proVisuals')}
             </div>
             <div className="text-xs text-gray-900 group-hover:translate-x-1 transition-transform">
-              {locale === 'fr' ? 'Choisir Pro →' : 'Choose Pro →'}
+              {t('credits.plans.choosePro')}
             </div>
           </button>
 
@@ -237,14 +230,14 @@ export function UpgradePopup({ isOpen, onClose, creditsRemaining }: UpgradePopup
             className="group text-left p-5 border border-gray-200 hover:border-gray-900 transition-colors disabled:opacity-50"
           >
             <div className="flex items-center justify-between mb-3">
-              <span className="font-medium text-gray-900">Premium</span>
-              <span className="text-sm font-mono text-gray-500">49€</span>
+              <span className="font-medium text-gray-900">{t('credits.plans.premium')}</span>
+              <span className="text-sm font-mono text-gray-500">{locale === 'fr' ? '49€' : '$49'}</span>
             </div>
             <div className="text-xs text-gray-400 mb-3">
-              {locale === 'fr' ? '150 visuels/mois + équipe' : '150 visuals/mo + team'}
+              {t('credits.plans.premiumVisuals')}
             </div>
             <div className="text-xs text-gray-900 group-hover:translate-x-1 transition-transform">
-              {locale === 'fr' ? 'Choisir Premium →' : 'Choose Premium →'}
+              {t('credits.plans.choosePremium')}
             </div>
           </button>
         </div>
@@ -256,7 +249,7 @@ export function UpgradePopup({ isOpen, onClose, creditsRemaining }: UpgradePopup
               onClick={onClose}
               className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
             >
-              {locale === 'fr' ? 'Plus tard' : 'Maybe later'}
+              {t('credits.popup.maybeLater')}
             </button>
           </div>
         )}
@@ -276,22 +269,16 @@ interface CreditsToastProps {
 }
 
 export function CreditsToast({ creditsRemaining, isVisible, locale = 'fr' }: CreditsToastProps) {
+  const { t } = useTranslation();
   if (!isVisible) return null;
 
-  const messages: Record<'fr' | 'en', Record<number, string>> = {
-    fr: {
-      2: "Plus que 2 crédits gratuits",
-      1: "Dernier crédit gratuit",
-      0: "Crédits épuisés",
-    },
-    en: {
-      2: "2 free credits left",
-      1: "Last free credit",
-      0: "No credits left",
-    },
+  const messageMap: Record<number, string> = {
+    2: t('credits.toast.twoLeft'),
+    1: t('credits.toast.oneLeft'),
+    0: t('credits.toast.exhausted'),
   };
 
-  const message = messages[locale][creditsRemaining] || '';
+  const message = messageMap[creditsRemaining] || '';
   if (!message) return null;
 
   return (
@@ -302,7 +289,7 @@ export function CreditsToast({ creditsRemaining, isVisible, locale = 'fr' }: Cre
       text-sm font-medium
     `}>
       <div className="flex items-center gap-3">
-        <span className="font-mono">{creditsRemaining} crédit{creditsRemaining > 1 ? 's' : ''}</span>
+        <span className="font-mono">{t('credits.inline.creditsLeft', { count: creditsRemaining, plural: creditsRemaining > 1 ? 's' : '' })}</span>
         <span className="text-gray-400">—</span>
         <span>{message}</span>
       </div>
@@ -321,9 +308,10 @@ interface UpgradeInlineProps {
 }
 
 export function UpgradeInline({ creditsRemaining, plan, locale = 'fr' }: UpgradeInlineProps) {
+  const { t } = useTranslation();
   const [isLoading, setIsLoading] = useState(false);
   const [isDismissed, setIsDismissed] = useState(false);
-  
+
   // Don't show if not free plan, or has more than 1 credit, or dismissed
   if (plan !== 'free' || creditsRemaining > 1 || isDismissed) return null;
 
@@ -380,14 +368,11 @@ export function UpgradeInline({ creditsRemaining, plan, locale = 'fr' }: Upgrade
               {creditsRemaining}
             </span>
             <span className={`text-xs font-mono uppercase tracking-wider ${isBlocked ? 'text-gray-500' : 'text-gray-400'}`}>
-              {locale === 'fr' ? `crédit${creditsRemaining > 1 ? 's' : ''} restant${creditsRemaining > 1 ? 's' : ''}` : `credit${creditsRemaining > 1 ? 's' : ''} left`}
+              {t('credits.inline.creditsLeft', { count: creditsRemaining, plural: creditsRemaining > 1 ? 's' : '' })}
             </span>
           </div>
           <p className={`text-sm ${isBlocked ? 'text-gray-400' : 'text-gray-500'}`}>
-            {locale === 'fr'
-              ? (isBlocked ? 'Passez à Pro pour continuer à créer' : 'Dernier crédit ! Pensez à upgrader')
-              : (isBlocked ? 'Go Pro to keep creating' : 'Last credit! Consider upgrading')
-            }
+            {isBlocked ? t('credits.inline.goPro') : t('credits.inline.lastCredit')}
           </p>
         </div>
         
@@ -397,17 +382,14 @@ export function UpgradeInline({ creditsRemaining, plan, locale = 'fr' }: Upgrade
           disabled={isLoading}
           className={`
             px-6 py-3 text-sm font-medium whitespace-nowrap transition-all
-            ${isBlocked 
-              ? 'bg-white text-gray-900 hover:bg-gray-100' 
+            ${isBlocked
+              ? 'bg-white text-gray-900 hover:bg-gray-100'
               : 'bg-gray-900 text-white hover:bg-black'
             }
             disabled:opacity-50
           `}
         >
-          {isLoading 
-            ? '...' 
-            : (locale === 'fr' ? 'Pro — 19€/mois →' : 'Pro — $19/mo →')
-          }
+          {isLoading ? '...' : t('credits.inline.proCta')}
         </button>
       </div>
     </div>
