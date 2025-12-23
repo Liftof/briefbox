@@ -4049,7 +4049,6 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
             setActiveTab={setActiveTab}
             brandData={brandData}
             onEditBrand={() => setStep('bento')}
-            locale={locale}
           />
         </>
       )}
