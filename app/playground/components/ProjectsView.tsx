@@ -181,7 +181,7 @@ export default function ProjectsView({ brandId }: { brandId?: number }) {
         }}
         className={`transition-all hover:scale-110 ${isFavorite ? 'text-red-500' : 'text-gray-300 hover:text-red-400'
           }`}
-        title={isFavorite ? 'Retirer des favoris' : 'Ajouter aux favoris'}
+        title={isFavorite ? t('projects.removeFromFavorites') : t('projects.addToFavorites')}
       >
         <svg className={size} fill={isFavorite ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
@@ -416,10 +416,10 @@ export default function ProjectsView({ brandId }: { brandId?: number }) {
       {/* Header */}
       <header className="flex items-center justify-between mb-8">
         <div>
-          <h2 className="text-2xl font-bold mb-1">Mes Projets</h2>
+          <h2 className="text-2xl font-bold mb-1">{t('projects.title')}</h2>
           <p className="text-gray-500 text-sm">
-            {generations.length} génération{generations.length !== 1 ? 's' : ''} · {folders.length} dossier{folders.length !== 1 ? 's' : ''}
-            {favoritesCount > 0 && ` · ${favoritesCount} favori${favoritesCount !== 1 ? 's' : ''}`}
+            {generations.length} {generations.length !== 1 ? t('projects.generationsPlural') : t('projects.generations')} · {folders.length} {folders.length !== 1 ? t('projects.foldersPlural') : t('projects.folders')}
+            {favoritesCount > 0 && ` · ${favoritesCount} ${favoritesCount !== 1 ? t('projects.favoritesPlural') : t('projects.favorites')}`}
           </p>
         </div>
 
@@ -436,7 +436,7 @@ export default function ProjectsView({ brandId }: { brandId?: number }) {
               <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
             </svg>
             <span className="text-sm font-medium">
-              {showFavoritesOnly ? 'Tous' : 'Favoris'}
+              {showFavoritesOnly ? t('projects.showAll') : t('projects.showFavorites')}
             </span>
           </button>
         )}
@@ -446,8 +446,8 @@ export default function ProjectsView({ brandId }: { brandId?: number }) {
       <section className="mb-10">
         <div className="flex items-center gap-2 mb-4">
           <span className="text-lg">🕐</span>
-          <h3 className="text-sm font-medium text-gray-900 uppercase tracking-wider">Mes générations</h3>
-          <span className="text-xs text-gray-400 font-mono">{unorganizedGenerations.length} visuel{unorganizedGenerations.length !== 1 ? 's' : ''}</span>
+          <h3 className="text-sm font-medium text-gray-900 uppercase tracking-wider">{t('projects.myGenerations')}</h3>
+          <span className="text-xs text-gray-400 font-mono">{unorganizedGenerations.length} {unorganizedGenerations.length !== 1 ? t('projects.visualsPlural') : t('projects.visuals')}</span>
         </div>
 
         {recentGenerations.length > 0 ? (
@@ -500,7 +500,7 @@ export default function ProjectsView({ brandId }: { brandId?: number }) {
                       }}
                       className={`w-6 h-6 bg-white/90 flex items-center justify-center hover:bg-white transition-colors ${gen.feedback?.rating === 3 ? 'text-red-500' : 'text-gray-400'
                         }`}
-                      title={gen.feedback?.rating === 3 ? "Retirer des favoris" : "Ajouter aux favoris"}
+                      title={gen.feedback?.rating === 3 ? t('projects.removeFromFavorites') : t('projects.addToFavorites')}
                     >
                       <svg className="w-4 h-4" fill={gen.feedback?.rating === 3 ? 'currentColor' : 'none'} stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
@@ -585,8 +585,8 @@ export default function ProjectsView({ brandId }: { brandId?: number }) {
         ) : (
           <div className="bg-gray-50 border border-gray-200 p-8 text-center">
             <span className="text-3xl mb-3 block">🎨</span>
-            <p className="text-gray-500 text-sm">Aucune génération pour l'instant</p>
-            <p className="text-gray-400 text-xs mt-1">Créez votre premier visuel dans l'espace Créer</p>
+            <p className="text-gray-500 text-sm">{t('projects.noGenerations')}</p>
+            <p className="text-gray-400 text-xs mt-1">{t('projects.createFirst')}</p>
           </div>
         )}
       </section>
@@ -602,7 +602,7 @@ export default function ProjectsView({ brandId }: { brandId?: number }) {
             onClick={() => setShowNewFolder(true)}
             className="px-3 py-1.5 bg-gray-900 text-white text-xs font-medium hover:bg-black transition-colors flex items-center gap-1"
           >
-            <span>+</span> Nouveau dossier
+            <span>+</span> {t('projects.newFolder')}
           </button>
         </div>
 
@@ -614,7 +614,7 @@ export default function ProjectsView({ brandId }: { brandId?: number }) {
                 type="text"
                 value={newFolderName}
                 onChange={(e) => setNewFolderName(e.target.value)}
-                placeholder="Nom du dossier..."
+                placeholder={t('projects.folderName')}
                 className="flex-1 px-3 py-2 border border-gray-200 text-sm outline-none focus:border-gray-400"
                 autoFocus
               />
@@ -639,14 +639,14 @@ export default function ProjectsView({ brandId }: { brandId?: number }) {
                 }}
                 className="px-3 py-1.5 text-xs text-gray-500 hover:text-gray-700"
               >
-                Annuler
+                {t('projects.cancel')}
               </button>
               <button
                 onClick={handleCreateFolder}
                 disabled={!newFolderName.trim()}
                 className="px-3 py-1.5 bg-gray-900 text-white text-xs font-medium hover:bg-black disabled:opacity-30 disabled:cursor-not-allowed"
               >
-                Créer
+                {t('projects.create')}
               </button>
             </div>
           </div>
@@ -759,8 +759,8 @@ export default function ProjectsView({ brandId }: { brandId?: number }) {
         ) : (
           <div className="bg-gray-50 border border-dashed border-gray-300 p-8 text-center">
             <span className="text-3xl mb-3 block">📂</span>
-            <p className="text-gray-500 text-sm">Créez des dossiers pour organiser vos visuels</p>
-            <p className="text-gray-400 text-xs mt-1">Glissez-déposez les images dans les dossiers</p>
+            <p className="text-gray-500 text-sm">{t('projects.emptyFolders')}</p>
+            <p className="text-gray-400 text-xs mt-1">{t('projects.dragDrop')}</p>
           </div>
         )}
       </section>

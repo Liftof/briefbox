@@ -6,7 +6,7 @@ import { useAuth, SignInButton } from '@clerk/nextjs';
 import { useTranslation } from '@/lib/i18n';
 
 export default function CtaSection() {
-  const { locale } = useTranslation();
+  const { t, locale } = useTranslation();
   const [url, setUrl] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const { isSignedIn, isLoaded } = useAuth();
@@ -60,7 +60,7 @@ export default function CtaSection() {
               </svg>
               <input
                 type="text"
-                placeholder="votresite.com"
+                placeholder={t('landing.hero.placeholder')}
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
                 onKeyDown={handleKeyDown}
