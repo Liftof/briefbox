@@ -129,7 +129,7 @@ export default function Sidebar({
 
         {/* Credits Widget - Always visible */}
         <div className={`border-t border-gray-100 ${isCollapsed ? 'p-2' : 'p-3'}`}>
-          <CreditsWidget isCollapsed={isCollapsed} locale={locale} creditsOverride={credits} />
+          <CreditsWidget isCollapsed={isCollapsed} creditsOverride={credits} />
         </div>
 
         {/* Brand Selector */}
