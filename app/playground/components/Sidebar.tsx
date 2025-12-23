@@ -360,7 +360,7 @@ export default function Sidebar({
           >
             <span className={`text-base flex-shrink-0 ${activeTab === 'settings' ? 'text-blue-400' : ''}`}>⚙</span>
             {!isCollapsed && (
-              <span className="text-sm font-medium">{labels.settings}</span>
+              <span className="text-sm font-medium">{t('sidebar.settings')}</span>
             )}
           </button>
         </div>

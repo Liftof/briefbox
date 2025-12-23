@@ -2,14 +2,15 @@
 
 import { useState } from 'react';
 import { useCredits, PLAN_NAMES, CreditsInfo } from '@/lib/useCredits';
+import { useTranslation } from '@/lib/i18n';
 
 interface CreditsWidgetProps {
   isCollapsed?: boolean;
-  locale?: 'fr' | 'en';
   creditsOverride?: CreditsInfo | null; // Pass from parent to keep in sync
 }
 
-export default function CreditsWidget({ isCollapsed = false, locale = 'fr', creditsOverride }: CreditsWidgetProps) {
+export default function CreditsWidget({ isCollapsed = false, creditsOverride }: CreditsWidgetProps) {
+  const { t } = useTranslation();
   const { credits: hookCredits, loading } = useCredits();
   const credits = creditsOverride ?? hookCredits; // Use override if provided
   const [isHovered, setIsHovered] = useState(false);
@@ -95,7 +96,7 @@ export default function CreditsWidget({ isCollapsed = false, locale = 'fr', cred
               <div>
                 <div className="flex items-center gap-2">
                   <span className="text-[10px] font-mono uppercase tracking-wider text-gray-400">
-                    {locale === 'fr' ? 'crédits' : 'credits'}
+                    {t('common.credits')}
                   </span>
                 </div>
                 <div className="text-xs text-gray-500">
@@ -147,10 +148,10 @@ interface UpgradePopupProps {
   isOpen: boolean;
   onClose: () => void;
   creditsRemaining: number;
-  locale?: 'fr' | 'en';
 }
 
-export function UpgradePopup({ isOpen, onClose, creditsRemaining, locale = 'fr' }: UpgradePopupProps) {
+export function UpgradePopup({ isOpen, onClose, creditsRemaining }: UpgradePopupProps) {
+  const { t } = useTranslation();
   const [isLoading, setIsLoading] = useState(false);
 
   if (!isOpen) return null;

@@ -3,12 +3,12 @@
 import { useState } from 'react';
 import { useUser, useClerk } from '@clerk/nextjs';
 import { useCredits } from '@/lib/useCredits';
+import { useTranslation } from '@/lib/i18n';
 
-interface SettingsViewProps {
-  locale: 'fr' | 'en';
-}
+interface SettingsViewProps {}
 
-export default function SettingsView({ locale }: SettingsViewProps) {
+export default function SettingsView({}: SettingsViewProps) {
+  const { t } = useTranslation();
   const { user } = useUser();
   const { signOut } = useClerk();
   const { credits, loading } = useCredits();
@@ -27,10 +27,10 @@ export default function SettingsView({ locale }: SettingsViewProps) {
       if (data.url) {
         window.location.href = data.url;
       } else if (data.error) {
-        alert(`Erreur: ${data.error}`);
+        alert(t('settings.errorGeneric', { error: data.error }));
       }
     } catch (err) {
-      alert('Erreur de connexion');
+      alert(t('settings.errorConnection'));
     } finally {
       setIsUpgrading(false);
     }
@@ -44,10 +44,10 @@ export default function SettingsView({ locale }: SettingsViewProps) {
       if (data.url) {
         window.location.href = data.url;
       } else if (data.error) {
-        alert(`Erreur: ${data.error}`);
+        alert(t('settings.errorGeneric', { error: data.error }));
       }
     } catch (err) {
-      alert('Erreur de connexion');
+      alert(t('settings.errorConnection'));
     } finally {
       setIsManaging(false);
     }
@@ -57,12 +57,12 @@ export default function SettingsView({ locale }: SettingsViewProps) {
     {
       id: 'free',
       name: 'Starter',
-      price: locale === 'fr' ? 'Gratuit' : 'Free',
+      price: t('settings.plans.free'),
       credits: '1-2',
       features: [
-        locale === 'fr' ? '1 visuel offert' : '1 free visual',
-        locale === 'fr' ? 'Export 2K' : '2K export',
-        locale === 'fr' ? '1 marque' : '1 brand',
+        t('settings.plans.freeFeatures.visual'),
+        t('settings.plans.freeFeatures.export'),
+        t('settings.plans.freeFeatures.brands'),
       ],
     },
     {
@@ -72,10 +72,10 @@ export default function SettingsView({ locale }: SettingsViewProps) {
       credits: '50',
       popular: true,
       features: [
-        locale === 'fr' ? '50 visuels/mois' : '50 visuals/mo',
-        locale === 'fr' ? 'Export 4K' : '4K export',
-        locale === 'fr' ? '5 marques' : '5 brands',
-        locale === 'fr' ? '1 visuel auto/jour' : '1 auto visual/day',
+        t('settings.plans.proFeatures.visuals'),
+        t('settings.plans.proFeatures.export'),
+        t('settings.plans.proFeatures.brands'),
+        t('settings.plans.proFeatures.auto'),
       ],
     },
     {
@@ -84,11 +84,11 @@ export default function SettingsView({ locale }: SettingsViewProps) {
       price: '49€/mo',
       credits: '200',
       features: [
-        locale === 'fr' ? '200 visuels/mois' : '200 visuals/mo',
-        locale === 'fr' ? 'Export 4K' : '4K export',
-        locale === 'fr' ? 'Marques illimitées' : 'Unlimited brands',
-        locale === 'fr' ? '1 visuel auto/jour' : '1 auto visual/day',
-        locale === 'fr' ? 'Support prioritaire' : 'Priority support',
+        t('settings.plans.premiumFeatures.visuals'),
+        t('settings.plans.premiumFeatures.export'),
+        t('settings.plans.premiumFeatures.brands'),
+        t('settings.plans.premiumFeatures.auto'),
+        t('settings.plans.premiumFeatures.support'),
       ],
     },
   ];
@@ -100,19 +100,19 @@ export default function SettingsView({ locale }: SettingsViewProps) {
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-2xl font-semibold text-gray-900 mb-1">
-          {locale === 'fr' ? 'Réglages' : 'Settings'}
+          {t('settings.title')}
         </h1>
         <p className="text-gray-500">
-          {locale === 'fr' ? 'Gérez votre compte et votre abonnement' : 'Manage your account and subscription'}
+          {t('settings.subtitle')}
         </p>
       </div>
 
       {/* Profile Section */}
       <section className="bg-white border border-gray-200 p-6 mb-6">
         <h2 className="text-sm font-mono uppercase tracking-wider text-gray-400 mb-4">
-          {locale === 'fr' ? 'Profil' : 'Profile'}
+          {t('settings.profile')}
         </h2>
-        
+
         <div className="flex items-center gap-4">
           {user?.imageUrl ? (
             <img src={user.imageUrl} alt="" className="w-16 h-16 rounded-full" />
@@ -123,7 +123,7 @@ export default function SettingsView({ locale }: SettingsViewProps) {
               </span>
             </div>
           )}
-          
+
           <div className="flex-1">
             <div className="font-medium text-gray-900">
               {user?.firstName} {user?.lastName}
@@ -137,7 +137,7 @@ export default function SettingsView({ locale }: SettingsViewProps) {
             onClick={() => signOut()}
             className="px-4 py-2 text-sm text-gray-500 hover:text-gray-900 hover:bg-gray-100 transition-colors"
           >
-            {locale === 'fr' ? 'Déconnexion' : 'Sign out'}
+            {t('settings.signOut')}
           </button>
         </div>
       </section>
@@ -146,7 +146,7 @@ export default function SettingsView({ locale }: SettingsViewProps) {
       <section className="bg-white border border-gray-200 p-6 mb-6">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-sm font-mono uppercase tracking-wider text-gray-400">
-            {locale === 'fr' ? 'Abonnement' : 'Subscription'}
+            {t('settings.subscription')}
           </h2>
           {currentPlan !== 'free' && (
             <button
@@ -154,10 +154,7 @@ export default function SettingsView({ locale }: SettingsViewProps) {
               disabled={isManaging}
               className="text-sm text-blue-600 hover:text-blue-700 font-medium disabled:opacity-50"
             >
-              {isManaging 
-                ? (locale === 'fr' ? 'Chargement...' : 'Loading...') 
-                : (locale === 'fr' ? 'Gérer la facturation' : 'Manage billing')
-              }
+              {isManaging ? t('common.loading') : t('settings.manageBilling')}
             </button>
           )}
         </div>
@@ -169,17 +166,17 @@ export default function SettingsView({ locale }: SettingsViewProps) {
               <span className="font-semibold text-gray-900 capitalize">{currentPlan}</span>
               {currentPlan !== 'free' && (
                 <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">
-                  {locale === 'fr' ? 'Actif' : 'Active'}
+                  {t('settings.active')}
                 </span>
               )}
             </div>
             <div className="text-sm text-gray-500 mt-1">
-              {loading ? '...' : `${credits?.remaining ?? 0} ${locale === 'fr' ? 'crédits restants' : 'credits remaining'}`}
+              {loading ? '...' : `${credits?.remaining ?? 0} ${t('common.creditsRemaining')}`}
             </div>
           </div>
           {currentPlan === 'free' && (
             <span className="text-xs text-gray-400">
-              {locale === 'fr' ? 'Passez à Pro pour plus de visuels' : 'Upgrade to Pro for more visuals'}
+              {t('settings.upgradeToProMore')}
             </span>
           )}
         </div>
@@ -204,20 +201,20 @@ export default function SettingsView({ locale }: SettingsViewProps) {
               >
                 {plan.popular && !isCurrent && (
                   <div className="absolute -top-2.5 left-4 bg-blue-600 text-white text-[10px] font-medium px-2 py-0.5">
-                    {locale === 'fr' ? 'POPULAIRE' : 'POPULAR'}
+                    {t('settings.popular')}
                   </div>
                 )}
-                
+
                 {isCurrent && (
                   <div className="absolute -top-2.5 left-4 bg-gray-900 text-white text-[10px] font-medium px-2 py-0.5">
-                    {locale === 'fr' ? 'ACTUEL' : 'CURRENT'}
+                    {t('settings.current')}
                   </div>
                 )}
 
                 <div className="mb-4">
                   <div className="font-semibold text-gray-900">{plan.name}</div>
                   <div className="text-2xl font-bold text-gray-900 mt-1">{plan.price}</div>
-                  <div className="text-xs text-gray-500">{plan.credits} {locale === 'fr' ? 'crédits' : 'credits'}</div>
+                  <div className="text-xs text-gray-500">{plan.credits} {t('common.credits')}</div>
                 </div>
 
                 <ul className="space-y-2 mb-5">
@@ -241,10 +238,7 @@ export default function SettingsView({ locale }: SettingsViewProps) {
                         : 'bg-gray-900 text-white hover:bg-gray-800'
                     }`}
                   >
-                    {isUpgrading 
-                      ? (locale === 'fr' ? 'Chargement...' : 'Loading...') 
-                      : (locale === 'fr' ? 'Choisir ce plan' : 'Choose this plan')
-                    }
+                    {isUpgrading ? t('common.loading') : t('settings.choosePlan')}
                   </button>
                 )}
 
@@ -254,13 +248,13 @@ export default function SettingsView({ locale }: SettingsViewProps) {
                     disabled={isManaging}
                     className="w-full py-2.5 text-sm font-medium border border-gray-300 text-gray-700 hover:bg-gray-100 transition-colors disabled:opacity-50"
                   >
-                    {locale === 'fr' ? 'Changer de plan' : 'Switch plan'}
+                    {t('settings.switchPlan')}
                   </button>
                 )}
 
                 {isCurrent && (
                   <div className="w-full py-2.5 text-sm font-medium text-center text-gray-400">
-                    {locale === 'fr' ? 'Plan actuel' : 'Current plan'}
+                    {t('settings.currentPlan')}
                   </div>
                 )}
               </div>
@@ -272,35 +266,35 @@ export default function SettingsView({ locale }: SettingsViewProps) {
       {/* Preferences Section */}
       <section className="bg-white border border-gray-200 p-6 mb-6">
         <h2 className="text-sm font-mono uppercase tracking-wider text-gray-400 mb-4">
-          {locale === 'fr' ? 'Préférences' : 'Preferences'}
+          {t('settings.preferences')}
         </h2>
 
         <div className="space-y-4">
           <div className="flex items-center justify-between py-3 border-b border-gray-100">
             <div>
               <div className="font-medium text-gray-900">
-                {locale === 'fr' ? 'Langue de l\'interface' : 'Interface language'}
+                {t('settings.interfaceLanguage')}
               </div>
               <div className="text-sm text-gray-500">
-                {locale === 'fr' ? 'Français' : 'English'}
+                {t('settings.french')}
               </div>
             </div>
             <span className="text-xs text-gray-400">
-              {locale === 'fr' ? 'Automatique (navigateur)' : 'Automatic (browser)'}
+              {t('settings.automatic')}
             </span>
           </div>
 
           <div className="flex items-center justify-between py-3 border-b border-gray-100">
             <div>
               <div className="font-medium text-gray-900">
-                {locale === 'fr' ? 'Notifications email' : 'Email notifications'}
+                {t('settings.emailNotifications')}
               </div>
               <div className="text-sm text-gray-500">
-                {locale === 'fr' ? 'Recevez des updates sur vos visuels' : 'Get updates about your visuals'}
+                {t('settings.getUpdates')}
               </div>
             </div>
             <span className="text-xs bg-gray-100 text-gray-500 px-2 py-1 rounded">
-              {locale === 'fr' ? 'Bientôt' : 'Soon'}
+              {t('settings.soon')}
             </span>
           </div>
         </div>
@@ -309,34 +303,28 @@ export default function SettingsView({ locale }: SettingsViewProps) {
       {/* Danger Zone */}
       <section className="bg-white border border-red-200 p-6">
         <h2 className="text-sm font-mono uppercase tracking-wider text-red-400 mb-4">
-          {locale === 'fr' ? 'Zone dangereuse' : 'Danger zone'}
+          {t('settings.dangerZone')}
         </h2>
 
         <div className="flex items-center justify-between">
           <div>
             <div className="font-medium text-gray-900">
-              {locale === 'fr' ? 'Supprimer mon compte' : 'Delete my account'}
+              {t('settings.deleteAccount')}
             </div>
             <div className="text-sm text-gray-500">
-              {locale === 'fr' 
-                ? 'Supprime définitivement votre compte et toutes vos données' 
-                : 'Permanently delete your account and all data'
-              }
+              {t('settings.deleteAccountWarning')}
             </div>
           </div>
           <button
             onClick={() => {
-              if (confirm(locale === 'fr' 
-                ? 'Êtes-vous sûr de vouloir supprimer votre compte ? Cette action est irréversible.' 
-                : 'Are you sure you want to delete your account? This action cannot be undone.'
-              )) {
+              if (confirm(t('settings.deleteConfirm'))) {
                 // TODO: Implement account deletion
-                alert(locale === 'fr' ? 'Contactez support@usepalette.app' : 'Contact support@usepalette.app');
+                alert(t('settings.contactSupport'));
               }
             }}
             className="px-4 py-2 text-sm text-red-600 border border-red-200 hover:bg-red-50 transition-colors"
           >
-            {locale === 'fr' ? 'Supprimer' : 'Delete'}
+            {t('settings.deleteButton')}
           </button>
         </div>
       </section>

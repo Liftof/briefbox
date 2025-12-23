@@ -147,6 +147,7 @@ const translations: Record<Locale, Record<string, any>> = {
         identity: 'Identité',
       },
       buttons: {
+        generate: 'Générer',
         generateWithCount: 'Générer ({{count}})',
         clear: 'Effacer',
         regenerate: 'Ré-générer',
@@ -156,6 +157,7 @@ const translations: Record<Locale, Record<string, any>> = {
         generate: '"Générer"',
         toCreate: 'pour créer',
       },
+      editingHint: '💡 Une faute d\'orthographe, un logo à corriger ou un détail à changer ? Cliquez sur ✏️ pour modifier n\'importe quelle image.',
       gallery: {
         yourCreation: 'Votre création',
         readyForExport: 'Prêt pour export',
@@ -274,9 +276,15 @@ const translations: Record<Locale, Record<string, any>> = {
       automatic: 'Automatique (navigateur)',
       emailNotifications: 'Notifications email',
       getUpdates: 'Recevez des updates sur vos visuels',
+      soon: 'Bientôt',
       dangerZone: 'Zone dangereuse',
       deleteAccount: 'Supprimer mon compte',
+      deleteAccountWarning: 'Supprime définitivement votre compte et toutes vos données',
+      deleteConfirm: 'Êtes-vous sûr de vouloir supprimer votre compte ? Cette action est irréversible.',
+      deleteButton: 'Supprimer',
       contactSupport: 'Contactez support@usepalette.app',
+      errorConnection: 'Erreur de connexion',
+      errorGeneric: 'Erreur: {{error}}',
       popular: 'POPULAIRE',
       current: 'ACTUEL',
       choosePlan: 'Choisir ce plan',
@@ -315,6 +323,12 @@ const translations: Record<Locale, Record<string, any>> = {
       projects: 'Projets',
       calendar: 'Calendrier',
       stats: 'Stats',
+    },
+    welcomeModal: {
+      title: 'Bienvenue !',
+      message: 'Votre premier visuel est offert',
+      subtitle: 'C\'est cadeau ✨',
+      generating: 'Création en cours...',
     },
     landing: {
       hero: {
@@ -480,6 +494,7 @@ const translations: Record<Locale, Record<string, any>> = {
         identity: 'Identity',
       },
       buttons: {
+        generate: 'Generate',
         generateWithCount: 'Generate ({{count}})',
         clear: 'Clear',
         regenerate: 'Re-generate',
@@ -489,6 +504,7 @@ const translations: Record<Locale, Record<string, any>> = {
         generate: '"Generate"',
         toCreate: 'to create',
       },
+      editingHint: '💡 A typo, logo to fix, or detail to change? Click ✏️ to edit any image.',
       gallery: {
         yourCreation: 'Your creation',
         readyForExport: 'Ready for export',
@@ -607,9 +623,15 @@ const translations: Record<Locale, Record<string, any>> = {
       automatic: 'Automatic (browser)',
       emailNotifications: 'Email notifications',
       getUpdates: 'Get updates about your visuals',
+      soon: 'Soon',
       dangerZone: 'Danger zone',
       deleteAccount: 'Delete my account',
+      deleteAccountWarning: 'Permanently delete your account and all data',
+      deleteConfirm: 'Are you sure you want to delete your account? This action cannot be undone.',
+      deleteButton: 'Delete',
       contactSupport: 'Contact support@usepalette.app',
+      errorConnection: 'Connection error',
+      errorGeneric: 'Error: {{error}}',
       popular: 'POPULAR',
       current: 'CURRENT',
       choosePlan: 'Choose this plan',
@@ -648,6 +670,12 @@ const translations: Record<Locale, Record<string, any>> = {
       projects: 'Projects',
       calendar: 'Calendar',
       stats: 'Stats',
+    },
+    welcomeModal: {
+      title: 'Welcome!',
+      message: 'Your first visual is on us',
+      subtitle: 'It\'s a gift ✨',
+      generating: 'Creating...',
     },
     landing: {
       hero: {

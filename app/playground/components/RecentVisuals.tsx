@@ -63,11 +63,11 @@ export default function RecentVisuals({
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
           <span className="text-xs font-mono uppercase tracking-widest text-gray-400">
-            {locale === 'fr' ? 'Visuels récents' : 'Recent visuals'}
+            {t('recentVisuals.title')}
           </span>
           {recent.some(isNew) && (
             <span className="bg-blue-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full animate-pulse">
-              {locale === 'fr' ? 'NOUVEAU' : 'NEW'}
+              {t('recentVisuals.new')}
             </span>
           )}
         </div>
@@ -75,7 +75,7 @@ export default function RecentVisuals({
           onClick={onViewAll}
           className="text-xs text-gray-500 hover:text-gray-900 transition-colors flex items-center gap-1"
         >
-          {locale === 'fr' ? 'Gérer mes visuels' : 'Manage visuals'}
+          {t('recentVisuals.manageVisuals')}
           <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
             <path d="M5 12h14M12 5l7 7-7 7" />
           </svg>
@@ -126,7 +126,7 @@ export default function RecentVisuals({
           >
             <span className="text-lg font-light">+{generations.length - 5}</span>
             <span className="text-[8px] uppercase tracking-wider">
-              {locale === 'fr' ? 'autres' : 'more'}
+              {t('common.others')}
             </span>
           </button>
         )}

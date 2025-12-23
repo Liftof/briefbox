@@ -220,7 +220,7 @@ function PlaygroundContent() {
   const [hasCheckedBrands, setHasCheckedBrands] = useState(false);
   const [activeTab, setActiveTab] = useState('create');
   const [websiteUrl, setWebsiteUrl] = useState('');
-  const [statusMessage, setStatusMessage] = useState(locale === 'fr' ? 'Nous analysons votre identité...' : 'Analyzing your brand identity...');
+  const [statusMessage, setStatusMessage] = useState(t('status.analyzingBrand'));
   const [progress, setProgress] = useState(0);
   const [status, setStatus] = useState<'idle' | 'preparing' | 'running' | 'complete' | 'error'>('idle');
   const [loadingStage, setLoadingStage] = useState(0);
@@ -586,7 +586,7 @@ function PlaygroundContent() {
 
     if (!silent) {
       setStep('analyzing');
-      setStatusMessage(locale === 'fr' ? 'Chargement de la marque...' : 'Loading brand...');
+      setStatusMessage(t('status.loadingBrand'));
       setProgress(5);
 
       timer = setInterval(() => {
@@ -637,7 +637,7 @@ function PlaygroundContent() {
       if (error.message?.includes('Forbidden')) {
         clearLastUsedBrandId();
       }
-      showToast(error.message || (locale === 'fr' ? 'Erreur pendant le chargement' : 'Error loading'), 'error');
+      showToast(error.message || t('toast.errorLoading'), 'error');
       setStep('url');
     }
   };
@@ -654,7 +654,7 @@ function PlaygroundContent() {
     let cancelled = false;
     const fetchBrand = async () => {
       setStep('analyzing');
-      setStatusMessage(locale === 'fr' ? 'Chargement de la marque...' : 'Loading brand...');
+      setStatusMessage(t('status.loadingBrand'));
 
       // Simulate initial progress
       setProgress(5);
@@ -793,7 +793,7 @@ function PlaygroundContent() {
           setTimeout(() => {
             setSelectedBrandId(data.brand.id);
             setStep('bento');
-            showToast(locale === 'fr' ? 'Cette marque existe déjà — la voici !' : 'This brand already exists — here it is!', 'info');
+            showToast(t('toast.brandAlreadyExists'), 'info');
             notify.brandReady(data.brand?.name); // Browser notification
           }, 300);
           return; // Success! Exit the retry loop
@@ -886,7 +886,7 @@ function PlaygroundContent() {
           setTimeout(() => {
             setSelectedBrandId(data.brand.id);
             setStep('bento');
-            showToast(locale === 'fr' ? 'Cette marque existe déjà — la voici !' : 'This brand already exists — here it is!', 'info');
+            showToast(t('toast.brandAlreadyExists'), 'info');
           }, 300);
           return; // Success!
         }
@@ -1175,10 +1175,10 @@ function PlaygroundContent() {
         setSelectedBrandId(data.brandId);
       }
 
-      showToast(locale === 'fr' ? 'Marque sauvegardée' : 'Brand saved', 'success');
+      showToast(t('toast.brandSaved'), 'success');
     } catch (error: any) {
       console.error('Save brand error', error);
-      showToast(error.message || (locale === 'fr' ? 'Erreur pendant la sauvegarde' : 'Error saving'), 'error');
+      showToast(error.message || t('toast.errorSaving'), 'error');
     }
   };
 
@@ -1248,11 +1248,11 @@ function PlaygroundContent() {
         convertGifToPng(file)
           .then((pngDataUrl) => {
             addImagesToState([pngDataUrl], label);
-            showToast(locale === 'fr' ? 'GIF converti en PNG' : 'GIF converted to PNG', 'success');
+            showToast(t('toast.gifConverted'), 'success');
           })
           .catch((err) => {
             console.error('GIF conversion error:', err);
-            showToast(locale === 'fr' ? 'Erreur de conversion GIF' : 'GIF conversion error', 'error');
+            showToast(t('toast.gifConversionError'), 'error');
           });
         return;
       }
@@ -1266,7 +1266,7 @@ function PlaygroundContent() {
       };
       reader.onerror = () => {
         console.error(`Failed to read file: ${file.name}`);
-        showToast(locale === 'fr' ? 'Erreur lors du chargement de l\'image' : 'Error loading image', 'error');
+        showToast(t('toast.errorLoadingImage'), 'error');
       };
       reader.readAsDataURL(file);
     });
@@ -1307,13 +1307,13 @@ function PlaygroundContent() {
                 ]
               };
             });
-            showToast(locale === 'fr' ? 'Logo GIF converti !' : 'GIF logo converted!', 'success');
+            showToast(t('toast.gifLogoConverted'), 'success');
           }
           setIsUploadingLogo(false);
         })
         .catch((err) => {
           console.error('Logo GIF conversion error:', err);
-          showToast(locale === 'fr' ? 'Erreur de conversion' : 'Conversion error', 'error');
+          showToast(t('toast.errorConversion'), 'error');
           setIsUploadingLogo(false);
         });
       event.target.value = '';
@@ -1347,7 +1347,7 @@ function PlaygroundContent() {
       setIsUploadingLogo(false);
     };
     reader.onerror = () => {
-      showToast(locale === 'fr' ? 'Erreur lors du chargement du logo' : 'Error loading logo', 'error');
+      showToast(t('toast.errorLoadingLogo'), 'error');
       setIsUploadingLogo(false);
     };
     reader.readAsDataURL(file);
@@ -1396,7 +1396,7 @@ function PlaygroundContent() {
       const data = await response.json();
       if (data.success && data.brandId) {
         setBrandData((prev: any) => ({ ...prev, id: data.brandId }));
-        showToast(locale === 'fr' ? 'Marque sauvegardée !' : 'Brand saved!', 'success');
+        showToast(t('toast.brandSaved'), 'success');
       }
     } catch (error) {
       console.error('Error saving brand:', error);
@@ -1446,7 +1446,7 @@ function PlaygroundContent() {
       showToast('Source ajoutée', 'success');
     } catch (error: any) {
       console.error('Add source error', error);
-      showToast(error.message || (locale === 'fr' ? 'Erreur pendant l\'ajout de la source' : 'Error adding source'), 'error');
+      showToast(error.message || t('toast.errorAdding'), 'error');
     } finally {
       setIsAddingSource(false);
     }
@@ -1639,7 +1639,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
     } catch (error: any) {
       console.error('Edit error:', error);
       setStatus('error');
-      showToast(error.message || (locale === 'fr' ? 'Erreur pendant la modification' : 'Error editing'), 'error');
+      showToast(error.message || t('toast.errorEditing'), 'error');
     } finally {
       setTimeout(() => {
         setStatus('idle');
@@ -1801,9 +1801,9 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
           console.log('🎬 Creative Director:', promptVariations ? `${promptVariations.length} variations` : 'single prompt');
           console.log('🚫 Negative prompt:', negativePrompt.substring(0, 50) + '...');
 
-          updateAllThisBatch({ progress: 30, statusMessage: locale === 'fr' ? '✨ Création en cours, veuillez patienter' : '✨ Creating your visual, please wait' });
+          updateAllThisBatch({ progress: 30, statusMessage: t('status.creating') });
           setProgress(30);
-          setStatusMessage(locale === 'fr' ? '✨ Création en cours, veuillez patienter' : '✨ Creating your visual, please wait');
+          setStatusMessage(t('status.creating'));
         } else {
           console.warn('Creative Director fallback:', cdData.error);
           finalGenerationPrompt = buildFallbackPrompt(finalPrompt, targetBrand);
@@ -1933,7 +1933,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
         }
       }
 
-      updateAllThisBatch({ progress: 45, statusMessage: locale === 'fr' ? '🚀 Lancement des générations...' : '🚀 Starting generations...' });
+      updateAllThisBatch({ progress: 45, statusMessage: t('status.launching') });
 
       // ==========================================================================================
       // STEP 4: Launch Parallel Requests (Incremental Display)
@@ -1941,7 +1941,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
 
       const generationPromises = jobIds.map(async (jobId, index) => {
         const myPrompt = promptsToRun[index];
-        updateJob(jobId, { status: 'running', progress: 50, statusMessage: locale === 'fr' ? '✨ Génération en cours...' : '✨ Generating...' });
+        updateJob(jobId, { status: 'running', progress: 50, statusMessage: t('status.generating') });
 
         try {
           const response = await fetch('/api/generate', {
@@ -2052,11 +2052,11 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
           updateJob(jobId, {
             status: 'complete',
             progress: 100,
-            statusMessage: locale === 'fr' ? 'Terminé !' : 'Done!'
+            statusMessage: t('common.done')
           });
 
           // Show Toast/Notify
-          showToast(locale === 'fr' ? 'Nouveau visuel prêt !' : 'New visual ready!', 'success');
+          showToast(t('toast.newVisualReady'), 'success');
           notify.visualReady(1);
 
           // Remove job from queue after delay
@@ -2067,7 +2067,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
         } catch (err: any) {
           console.error(`Job ${jobId} failed:`, err);
           updateJob(jobId, { status: 'error', progress: 0, statusMessage: 'Erreur' });
-          showToast(err.message || (locale === 'fr' ? 'Erreur pendant la génération' : 'Error generating'), 'error');
+          showToast(err.message || t('toast.errorGenerating'), 'error');
           setTimeout(() => {
             setGenerationQueue(prev => prev.filter(j => j.id !== jobId));
           }, 5000);
@@ -2088,7 +2088,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
       jobIds.forEach(id => updateJob(id, { status: 'error', progress: 0, statusMessage: 'Erreur critique' }));
 
       setStatus('error');
-      showToast(globalError.message || (locale === 'fr' ? 'Erreur pendant la génération' : 'Error generating'), 'error');
+      showToast(globalError.message || t('toast.errorGenerating'), 'error');
 
       setTimeout(() => {
         setGenerationQueue(prev => {
@@ -2111,7 +2111,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
           <div className="text-center">
             <div className="w-10 h-10 border-2 border-gray-200 border-t-gray-900 rounded-full animate-spin mx-auto mb-4" />
             <p className="text-gray-500 text-sm">
-              {locale === 'fr' ? 'Chargement...' : 'Loading...'}
+              {t('common.loading')}
             </p>
           </div>
         </div>
@@ -2139,8 +2139,8 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
               </div>
 
               <h1 className="text-4xl md:text-5xl font-light text-gray-900 leading-[1.1] mb-4" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>
-                {locale === 'fr' ? "Commençons par" : "Let's start with"}<br />
-                <span className="font-semibold">{locale === 'fr' ? 'votre marque.' : 'your brand.'}</span>
+                {t('playground.urlStep.letsStartWith')}<br />
+                <span className="font-semibold">{t('playground.urlStep.yourBrand')}</span>
               </h1>
 
               <p className="text-gray-400 text-lg max-w-md leading-relaxed">
@@ -2161,7 +2161,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                 {/* Primary URL Input */}
                 <div className="group">
                   <label className="block text-[10px] font-mono uppercase tracking-widest text-gray-400 mb-2">
-                    {locale === 'fr' ? 'Site principal *' : 'Main website *'}
+                    {t('playground.urlStep.mainWebsite')}
                   </label>
                   <div className="relative">
                     <input
@@ -2187,15 +2187,15 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                     <svg className="w-4 h-4 transition-transform group-open:rotate-90" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                       <path d="M9 5l7 7-7 7" />
                     </svg>
-                    <span className="font-mono text-xs uppercase tracking-wider">{locale === 'fr' ? 'Sources additionnelles' : 'Additional sources'}</span>
-                    <span className="text-[10px] text-gray-300">{locale === 'fr' ? '(optionnel)' : '(optional)'}</span>
+                    <span className="font-mono text-xs uppercase tracking-wider">{t('playground.urlStep.additionalSources')}</span>
+                    <span className="text-[10px] text-gray-300">({t('common.optional')})</span>
                   </summary>
 
                   <div className="mt-6 pt-6 border-t border-gray-100 space-y-4 animate-fade-in">
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <label className="block text-[10px] font-mono uppercase tracking-widest text-gray-300 mb-2">
-                          {locale === 'fr' ? 'Réseau social 1' : 'Social network 1'}
+                          {t('playground.urlStep.socialNetwork1')}
                         </label>
                         <input
                           type="text"
@@ -2211,7 +2211,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                       </div>
                       <div>
                         <label className="block text-[10px] font-mono uppercase tracking-widest text-gray-300 mb-2">
-                          {locale === 'fr' ? 'Réseau social 2' : 'Social network 2'}
+                          {t('playground.urlStep.socialNetwork2')}
                         </label>
                         <input
                           type="text"
@@ -2229,7 +2229,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
 
                     <div>
                       <label className="block text-[10px] font-mono uppercase tracking-widest text-gray-300 mb-2">
-                        {locale === 'fr' ? 'Autres liens (presse, notion, drive...)' : 'Other links (press, notion, drive...)'}
+                        {t('playground.urlStep.otherLinks')}
                       </label>
                       <input
                         type="text"
@@ -2245,7 +2245,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                 {/* Action */}
                 <div className="pt-6 flex items-end justify-between">
                   <p className="text-[11px] text-gray-300 max-w-[200px] leading-relaxed">
-                    {locale === 'fr' ? "Vous pourrez enrichir ces sources après l'analyse." : "You can add more sources after analysis."}
+                    {t('playground.urlStep.enrichAfterAnalysis')}
                   </p>
 
                   <button
@@ -2254,7 +2254,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                     className="group bg-gray-900 text-white px-8 py-4 font-medium text-sm disabled:opacity-30 disabled:cursor-not-allowed transition-all hover:bg-blue-600"
                   >
                     <span className="flex items-center gap-3">
-                      {locale === 'fr' ? 'Scanner la marque' : 'Scan brand'}
+                      {t('playground.urlStep.scanBrand')}
                       <svg className="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                         <path d="M5 12h14M12 5l7 7-7 7" />
                       </svg>
@@ -2270,10 +2270,10 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                 <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                   <path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                 </svg>
-                {locale === 'fr' ? 'Données sécurisées' : 'Secure data'}
+                {t('playground.urlStep.secureData')}
               </span>
               <span className="w-1 h-1 bg-gray-200 rounded-full" />
-              <span>~60 {locale === 'fr' ? 'secondes' : 'seconds'}</span>
+              <span>~60 {t('common.seconds')}</span>
               {/* Only show skip if user has existing brands */}
               {userBrands.length > 0 && (
                 <>
@@ -2290,7 +2290,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                     }}
                     className="hover:text-gray-500 transition-colors underline underline-offset-2"
                   >
-                    {locale === 'fr' ? 'Retour à mes marques' : 'Back to my brands'}
+                    {t('playground.urlStep.backToMyBrands')}
                   </button>
                 </>
               )}
@@ -2539,7 +2539,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
                             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                           </svg>
-                          {locale === 'fr' ? 'Chargement...' : 'Loading...'}
+                          {t('common.loading')}
                         </span>
                       ) : (
                         <span className="flex items-center justify-center gap-2">
@@ -2547,8 +2547,8 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                             <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" strokeLinecap="round" strokeLinejoin="round" />
                           </svg>
                           {currentLogo
-                            ? (locale === 'fr' ? 'Uploader le vrai logo' : 'Upload correct logo')
-                            : (locale === 'fr' ? 'Uploader votre logo' : 'Upload your logo')
+                            ? t('playground.logo.uploadCorrectLogo')
+                            : t('playground.logo.uploadYourLogo')
                           }
                         </span>
                       )}
@@ -2566,14 +2566,14 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                             </svg>
-                            {locale === 'fr' ? 'Chargement...' : 'Loading...'}
+                            {t('common.loading')}
                           </span>
                         ) : (
                           <span className="flex items-center justify-center gap-2">
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                               <path d="M5 13l4 4L19 7" strokeLinecap="round" strokeLinejoin="round" />
                             </svg>
-                            {locale === 'fr' ? "C'est le bon" : "That's it"}
+                            {t('playground.logo.thatsIt')}
                           </span>
                         )}
                       </button>
@@ -2586,11 +2586,11 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                       // Clear logo and continue
                       setBrandData((prev: any) => ({ ...prev, logo: null }));
                       setStep('bento');
-                      showToast(locale === 'fr' ? 'Vous pourrez ajouter un logo plus tard' : 'You can add a logo later', 'info');
+                      showToast(t('toast.noLogoYet'), 'info');
                     }}
                     className="w-full mt-3 px-4 py-2 text-xs text-gray-400 hover:text-gray-600 transition-colors"
                   >
-                    {locale === 'fr' ? "Je n'ai pas de logo pour l'instant →" : "I don't have a logo yet →"}
+                    {t('playground.logo.noLogoYet')}
                   </button>
                 </div>
               </div>
@@ -2672,8 +2672,8 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
               </div>
             )}
             <div className="min-w-0">
-              <h1 className="text-lg font-semibold text-gray-900 truncate">{brandData?.name || (locale === 'fr' ? 'Marque' : 'Brand')}</h1>
-              <span className="text-xs text-gray-400">{locale === 'fr' ? 'Créez vos visuels' : 'Create your visuals'}</span>
+              <h1 className="text-lg font-semibold text-gray-900 truncate">{brandData?.name || t('common.brand')}</h1>
+              <span className="text-xs text-gray-400">{t('playground.header.createVisuals')}</span>
             </div>
           </div>
           <div className="flex flex-wrap items-center gap-2">
@@ -2698,7 +2698,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                     key={res.value}
                     onClick={() => {
                       if (isLocked) {
-                        showToast(locale === 'fr' ? '4K réservé aux abonnés Pro' : '4K is for Pro subscribers', 'info');
+                        showToast(t('toast.fourKProOnly'), 'info');
                         return;
                       }
                       setResolution(res.value);
@@ -2741,7 +2741,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                 <path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
                 <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
               </svg>
-              {locale === 'fr' ? 'Identité' : 'Identity'}
+              {t('playground.content.identity')}
             </button>
           </div>
         </div>
@@ -2754,7 +2754,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
             {/* Section header */}
             <div className="flex items-center gap-2 mb-3">
               <span className="w-1.5 h-1.5 bg-blue-500 rounded-full" />
-              <span className="text-[10px] font-mono uppercase tracking-widest text-gray-400">{locale === 'fr' ? 'Idées de contenu' : 'Content ideas'}</span>
+              <span className="text-[10px] font-mono uppercase tracking-widest text-gray-400">{t('playground.content.contentIdeas')}</span>
             </div>
 
             {/* AI-Generated Editorial Hooks - Collapsed with "voir plus" */}
@@ -2828,14 +2828,14 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                           <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                             <path d="M5 15l7-7 7 7" />
                           </svg>
-                          {locale === 'fr' ? 'Moins' : 'Less'}
+                          {t('common.less')}
                         </>
                       ) : (
                         <>
                           <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                             <path d="M19 9l-7 7-7-7" />
                           </svg>
-                          +{validInsights.length - 4} {locale === 'fr' ? 'autres' : 'more'}
+                          +{validInsights.length - 4} {t('common.more')}
                         </>
                       )}
                     </button>
@@ -2887,10 +2887,10 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <label className="text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  {locale === 'fr' ? 'Visuels de la marque' : 'Brand visuals'}
+                  {t('playground.content.brandVisuals')}
                 </label>
                 <span className="text-[10px] text-gray-400">
-                  {uploadedImages.length} {locale === 'fr' ? 'sélectionné(s)' : 'selected'}
+                  {uploadedImages.length} {t('common.selected')}
                 </span>
               </div>
 
@@ -2910,7 +2910,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                     }}
                     className="ml-auto text-[10px] font-medium text-amber-600 hover:text-amber-700 underline"
                   >
-                    {locale === 'fr' ? 'Ajouter' : 'Add'}
+                    {t('common.add')}
                   </button>
                 </div>
               )}
@@ -2926,7 +2926,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                       backgroundSize: '8px 8px',
                       backgroundPosition: '0 0, 0 4px, 4px -4px, -4px 0px'
                     }}
-                    title={locale === 'fr' ? 'Logo (toujours inclus)' : 'Logo (always included)'}
+                    title={t('playground.content.logoAlwaysIncluded')}
                   >
                     <img src={brandData.logo} className="w-full h-full object-contain p-1" alt="Logo" />
                     <div className="absolute bottom-0 left-0 right-0 bg-accent text-white text-[7px] text-center py-0.5 font-bold">
@@ -2959,8 +2959,8 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                         : 'border-gray-200 opacity-50 hover:opacity-80 hover:border-gray-400'
                         }`}
                       title={isSelected
-                        ? (locale === 'fr' ? 'Cliquez pour désélectionner' : 'Click to deselect')
-                        : (locale === 'fr' ? 'Cliquez pour sélectionner' : 'Click to select')
+                        ? t('playground.content.clickToDeselect')
+                        : t('playground.content.clickToSelect')
                       }
                     >
                       <img src={imgUrl} className="w-full h-full object-cover rounded-lg" alt="" />
@@ -3034,7 +3034,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
             {/* STYLE INSPIRATION - Compact inline */}
             <div className="flex items-center gap-3 pt-2 border-t border-gray-100">
               <span className="text-xs text-gray-400">
-                {locale === 'fr' ? 'Style' : 'Style'}
+                {t('playground.content.style')}
               </span>
 
               {/* Selected styles display */}
@@ -3055,7 +3055,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                     onClick={() => setShowStyleGallery(true)}
                     className="text-xs text-gray-500 hover:text-gray-700 transition-colors"
                   >
-                    {locale === 'fr' ? 'Changer' : 'Change'}
+                    {t('common.change')}
                   </button>
                 </div>
               ) : (
@@ -3067,14 +3067,14 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                     <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                       <path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
-                    {locale === 'fr' ? 'Galerie' : 'Gallery'}
+                    {t('sidebar.gallery')}
                   </button>
 
                   <label className="h-8 px-3 text-xs text-gray-500 bg-white border border-gray-200 hover:border-gray-300 rounded-lg flex items-center gap-1.5 cursor-pointer transition-all">
                     <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                       <path d="M12 4v16m8-8H4" />
                     </svg>
-                    {locale === 'fr' ? 'Importer' : 'Upload'}
+                    {t('common.upload')}
                     <input
                       type="file"
                       accept="image/*"
@@ -3090,7 +3090,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                           };
                           reader.onerror = () => {
                             console.error(`Failed to read style ref file: ${file.name}`);
-                            showToast(locale === 'fr' ? 'Erreur lors du chargement de l\'image' : 'Error loading image', 'error');
+                            showToast(t('toast.errorLoadingImage'), 'error');
                           };
                           reader.readAsDataURL(file);
                         }
@@ -3125,12 +3125,12 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                   </svg>
-                  <span>{locale === 'fr' ? 'Générer' : 'Generate'} {activeGenerations.length > 0 && `(${activeGenerations.length})`}</span>
+                  <span>{t('playground.buttons.generate')} {activeGenerations.length > 0 && `(${activeGenerations.length})`}</span>
                 </>
               ) : (
                 <>
                   <span className="text-blue-400 text-lg">✦</span>
-                  <span>{locale === 'fr' ? 'Générer' : 'Generate'}</span>
+                  <span>{t('playground.buttons.generate')}</span>
                   <svg className="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                     <path d="M5 12h14M12 5l7 7-7 7" />
                   </svg>
@@ -3144,7 +3144,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                 {!brief.trim() && <span className="text-xs text-amber-600">⚠ Message requis</span>}
                 {uploadedImages.length === 0 && <span className="text-xs text-amber-600">⚠ Image requise</span>}
                 {lastCreditsRemaining !== null && lastCreditsRemaining === 0 && (
-                  <span className="text-xs text-red-600 font-medium">🚫 {locale === 'fr' ? 'Crédits épuisés' : 'No credits left'}</span>
+                  <span className="text-xs text-red-600 font-medium">🚫 {t('common.creditsLeft')}</span>
                 )}
               </div>
             )}
@@ -3323,14 +3323,14 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
           <div className="mb-8">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
-                <span className="text-sm font-medium text-gray-700">{locale === 'fr' ? 'Vos créations' : 'Your creations'}</span>
+                <span className="text-sm font-medium text-gray-700">{t('recentVisuals.yourCreations')}</span>
                 <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs font-medium">{generatedImages.length}</span>
               </div>
               <button
                 onClick={() => setGeneratedImages([])}
                 className="text-xs text-gray-400 hover:text-gray-600"
               >
-                {locale === 'fr' ? 'Effacer' : 'Clear'}
+                {t('playground.buttons.clear')}
               </button>
             </div>
 
@@ -3379,7 +3379,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                               setLightboxImage(img);
                             }}
                             className="w-11 h-11 bg-white text-gray-900 flex items-center justify-center hover:bg-gray-100 transition-colors shadow-lg"
-                            title={locale === 'fr' ? 'Voir' : 'View'}
+                            title={t('common.view')}
                           >
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                               <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
@@ -3392,7 +3392,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                               setEditPrompt('');
                             }}
                             className="w-11 h-11 bg-white text-gray-900 flex items-center justify-center hover:bg-gray-100 transition-colors shadow-lg"
-                            title={locale === 'fr' ? 'Modifier' : 'Edit'}
+                            title={t('common.edit')}
                           >
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                               <path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -3416,7 +3416,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                               }
                             }}
                             className="w-11 h-11 bg-white text-gray-900 flex items-center justify-center hover:bg-gray-100 transition-colors shadow-lg"
-                            title={locale === 'fr' ? 'Télécharger' : 'Download'}
+                            title={t('common.download')}
                           >
                             <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                               <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
@@ -3436,7 +3436,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
         {generatedImages.length === 0 && status === 'idle' && brief.trim() && uploadedImages.length > 0 && (
           <div className="text-center py-8 border-t border-gray-100">
             <p className="text-sm text-gray-400">
-              ✨ {locale === 'fr' ? 'Cliquez sur' : 'Click'} <span className="font-medium text-gray-600">{locale === 'fr' ? '"Générer"' : '"Generate"'}</span> {locale === 'fr' ? 'pour créer' : 'to create'}
+              ✨ {t('playground.empty.clickGenerateToCreate')} <span className="font-medium text-gray-600">{t('playground.empty.generate')}</span> {t('playground.empty.toCreate')}
             </p>
           </div>
         )}
@@ -3481,40 +3481,46 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
 
       {/* 🎁 Gift Overlay - Celebrate free generation */}
       {showGiftOverlay && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/50 backdrop-blur-sm animate-fade-in">
-          <div className="relative bg-white border-2 border-amber-400 p-8 max-w-sm mx-4 text-center shadow-2xl animate-bounce-in">
-            {/* Decorative corners */}
-            <div className="absolute -top-2 -left-2 w-6 h-6 border-l-2 border-t-2 border-amber-400" />
-            <div className="absolute -bottom-2 -right-2 w-6 h-6 border-r-2 border-b-2 border-amber-400" />
+        <div
+          className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-sm animate-fade-in"
+          onClick={() => setShowGiftOverlay(false)}
+        >
+          <div
+            className="relative bg-white rounded-2xl p-10 max-w-md mx-4 text-center shadow-2xl animate-scale-in"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Close button */}
+            <button
+              onClick={() => setShowGiftOverlay(false)}
+              className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <path d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
 
             {/* Gift emoji */}
-            <div className="text-6xl mb-4 animate-pulse">🎁</div>
+            <div className="text-7xl mb-6 animate-bounce">🎁</div>
 
             {/* Title */}
-            <h3 className="text-2xl font-bold text-gray-900 mb-2">
-              {locale === 'fr' ? 'Bienvenue !' : 'Welcome!'}
+            <h3 className="text-3xl font-semibold text-gray-900 mb-3">
+              {t('welcomeModal.title')}
             </h3>
 
             {/* Message */}
-            <p className="text-gray-600 mb-4">
-              {locale === 'fr'
-                ? 'On vous offre votre premier visuel. C\'est cadeau ✨'
-                : 'We\'re giving you your first visual for free ✨'}
+            <p className="text-lg text-gray-700 mb-2 font-medium">
+              {t('welcomeModal.message')}
+            </p>
+
+            <p className="text-gray-500 mb-6">
+              {t('welcomeModal.subtitle')}
             </p>
 
             {/* Loading indicator */}
-            <div className="flex items-center justify-center gap-2 text-sm text-amber-600">
-              <div className="w-4 h-4 border-2 border-amber-400 border-t-amber-600 rounded-full animate-spin" />
-              <span>{locale === 'fr' ? 'Génération en cours...' : 'Generating...'}</span>
+            <div className="flex items-center justify-center gap-3 text-sm text-blue-600 bg-blue-50 py-3 px-4 rounded-lg">
+              <div className="w-5 h-5 border-2 border-blue-200 border-t-blue-600 rounded-full animate-spin" />
+              <span className="font-medium">{t('welcomeModal.generating')}</span>
             </div>
-
-            {/* Auto-dismiss after generation starts */}
-            <button
-              onClick={() => setShowGiftOverlay(false)}
-              className="absolute top-2 right-2 text-gray-400 hover:text-gray-600 text-xl"
-            >
-              ×
-            </button>
           </div>
         </div>
       )}
@@ -3530,7 +3536,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
             : url;
           console.log('🎨 Style ref selected:', absoluteUrl);
           setStyleRefImages(prev => [{ url: absoluteUrl }, ...prev].slice(0, 3));
-          showToast(locale === 'fr' ? 'Style ajouté' : 'Style added', 'success');
+          showToast(t('toast.styleAdded'), 'success');
         }}
       />
 
@@ -3824,7 +3830,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                         };
                         reader.onerror = () => {
                           console.error(`Failed to read edit image file: ${file.name}`);
-                          showToast(locale === 'fr' ? 'Erreur lors du chargement de l\'image' : 'Error loading image', 'error');
+                          showToast(t('toast.errorLoadingImage'), 'error');
                         };
                         reader.readAsDataURL(file);
                       });
@@ -3918,7 +3924,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                     <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                   </svg>
-                  {locale === 'fr' ? 'Télécharger' : 'Download'}
+                  {t('common.download')}
                 </button>
 
                 {/* Edit/Modify */}
@@ -3933,7 +3939,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                     <path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                   </svg>
-                  {locale === 'fr' ? 'Modifier' : 'Edit'}
+                  {t('common.edit')}
                 </button>
 
                 {/* Re-generate (iterate) */}
@@ -3950,7 +3956,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                     <path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                   </svg>
-                  {locale === 'fr' ? 'Ré-générer' : 'Re-generate'}
+                  {t('playground.buttons.regenerate')}
                 </button>
               </div>
 
@@ -4004,7 +4010,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                   });
                   const data = await res.json();
                   if (data.success) {
-                    showToast(locale === 'fr' ? 'Marque supprimée' : 'Brand deleted', 'success');
+                    showToast(t('toast.brandDeleted'), 'success');
 
                     // Refresh brands list first
                     await refreshBrands();
@@ -4020,17 +4026,17 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                         // Load the first remaining brand
                         const nextBrand = remainingBrands[0];
                         loadBrandById(nextBrand.id, false, true); // silent load
-                        showToast(locale === 'fr' ? `Chargement de ${nextBrand.name}...` : `Loading ${nextBrand.name}...`, 'info');
+                        showToast(t('toast.loadingNextBrand', { name: nextBrand.name }), 'info');
                       } else {
                         // No more brands - go to URL step
                         setStep('url');
                       }
                     }
                   } else {
-                    showToast(data.error || (locale === 'fr' ? 'Erreur' : 'Error'), 'error');
+                    showToast(data.error || t('common.error'), 'error');
                   }
                 } catch (err) {
-                  showToast(locale === 'fr' ? 'Erreur de suppression' : 'Delete error', 'error');
+                  showToast(t('toast.errorDeleting'), 'error');
                 }
               }}
               creditsInfo={creditsInfo}
@@ -4070,12 +4076,12 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
               </svg>
-              <span className="text-sm">{locale === 'fr' ? 'Générer' : 'Generate'} ({activeGenerations.length})</span>
+              <span className="text-sm">{t('playground.buttons.generate')} ({activeGenerations.length})</span>
             </>
           ) : (
             <>
               <span className="text-blue-400">✦</span>
-              <span className="text-sm">{locale === 'fr' ? 'Générer' : 'Generate'}</span>
+              <span className="text-sm">{t('playground.buttons.generate')}</span>
               {brief.trim() && uploadedImages.length > 0 && (
                 <span className="text-[10px] bg-white/20 px-1.5 py-0.5 rounded">1 crédit</span>
               )}
