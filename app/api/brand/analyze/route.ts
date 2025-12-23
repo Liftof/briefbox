@@ -1315,8 +1315,8 @@ export async function POST(request: Request) {
           secondaryKeywords.some(k => lowerLink.includes(k));
       });
 
-      // Fill up with other pages if we don't have enough, up to 15
-      const finalPagesToScrape = [...new Set([...selectedPages, ...targetPages])].slice(0, 15);
+      // Fill up with other pages if we don't have enough, up to 10
+      const finalPagesToScrape = [...new Set([...selectedPages, ...targetPages])].slice(0, 10);
 
       console.log(`🎯 Selected ${finalPagesToScrape.length} high-value pages to scrape:`, finalPagesToScrape);
 
@@ -1714,26 +1714,52 @@ export async function POST(request: Request) {
       console.log("ℹ️ Using fallback brand data from metadata");
     }
 
-    // 3. Extract Colors from Logo (if available) - REAL EXTRACTION
-    let extractedColors: string[] = [];
+    // 🚀 PARALLEL OPTIMIZATION: Run color extraction and industry search in parallel
     const logoUrl = brandData.logo || firecrawlMetadata.ogImage || firecrawlMetadata.icon;
 
-    if (logoUrl && logoUrl.startsWith('http')) {
-      try {
-        console.log('🎨 Extracting REAL colors from logo:', logoUrl);
-        extractedColors = await extractColorsFromImage(logoUrl);
+    const parallelTasks = [];
 
-        if (extractedColors.length > 0) {
-          console.log('✅ Real colors extracted:', extractedColors);
-          // Merge with AI-guessed colors, prioritizing extracted
-          const aiColors = Array.isArray(brandData.colors) ? brandData.colors : [];
-          brandData.colors = mergeColorPalettes(aiColors, extractedColors);
-          console.log('🎨 Final merged palette:', brandData.colors);
-        }
-      } catch (e) {
-        console.error("Color extraction failed:", e);
-        // Keep AI colors if extraction fails
-      }
+    // 3. Extract Colors from Logo (if available) - REAL EXTRACTION
+    let extractedColors: string[] = [];
+    if (logoUrl && logoUrl.startsWith('http')) {
+      console.log('🎨 Extracting REAL colors from logo:', logoUrl);
+      parallelTasks.push(
+        extractColorsFromImage(logoUrl).catch(e => {
+          console.error("Color extraction failed:", e);
+          return [];
+        })
+      );
+    } else {
+      parallelTasks.push(Promise.resolve([]));
+    }
+
+    // 4. Search for REAL industry insights using Parallel Search API
+    if (brandData.industry) {
+      console.log(`🔍 Searching real industry insights for: ${brandData.industry}`);
+      parallelTasks.push(
+        searchIndustryInsights(
+          brandData.industry,
+          brandData.name || 'the company'
+        ).catch(e => {
+          console.error("Industry search failed:", e);
+          return { rawExcerpts: '', sources: [] };
+        })
+      );
+    } else {
+      parallelTasks.push(Promise.resolve({ rawExcerpts: '', sources: [] }));
+    }
+
+    // Wait for both tasks to complete
+    const [colorsResult, industrySearchResult] = await Promise.all(parallelTasks);
+
+    // Process color extraction results
+    extractedColors = colorsResult as string[];
+    if (extractedColors.length > 0) {
+      console.log('✅ Real colors extracted:', extractedColors);
+      // Merge with AI-guessed colors, prioritizing extracted
+      const aiColors = Array.isArray(brandData.colors) ? brandData.colors : [];
+      brandData.colors = mergeColorPalettes(aiColors, extractedColors);
+      console.log('🎨 Final merged palette:', brandData.colors);
     }
 
     // Refine the main logo selection based on AI classification
@@ -1744,21 +1770,13 @@ export async function POST(request: Request) {
       brandData.logo = firecrawlMetadata.ogImage;
     }
 
-    // 4. Search for REAL industry insights using Parallel Search API
-    if (brandData.industry) {
-      console.log(`🔍 Searching real industry insights for: ${brandData.industry}`);
+    // Process industry search results
+    const { rawExcerpts, sources } = industrySearchResult as { rawExcerpts: string; sources: any[] };
+    if (rawExcerpts && rawExcerpts.length > 500) {
+      console.log('📊 Processing industry data from search...');
 
-      try {
-        const { rawExcerpts, sources } = await searchIndustryInsights(
-          brandData.industry,
-          brandData.name || 'the company'
-        );
-
-        if (rawExcerpts && rawExcerpts.length > 500) {
-          console.log('📊 Processing industry data from search...');
-
-          // Use AI to extract structured insights from the search results
-          const insightPrompt = `
+      // Use AI to extract structured insights from the search results
+      const insightPrompt = `
 You are an expert Market Analyst.
 INDUSTRY: ${brandData.industry}
 BRAND: ${brandData.name}
@@ -1782,59 +1800,58 @@ FORMAT: Return ONLY a valid JSON array:
   }
 ]`;
 
-          const insightResponse = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-            method: "POST",
-            headers: {
-              "Authorization": `Bearer ${process.env.OPENROUTER_API_KEY}`,
-              "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-              "model": "openai/gpt-4o-mini",
-              "messages": [
-                { "role": "system", "content": "You extract business insights from research data and format them for social media. Always return valid JSON." },
-                { "role": "user", "content": insightPrompt }
-              ]
-            })
-          });
+      try {
+        const insightResponse = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${process.env.OPENROUTER_API_KEY}`,
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            "model": "openai/gpt-4o-mini",
+            "messages": [
+              { "role": "system", "content": "You extract business insights from research data and format them for social media. Always return valid JSON." },
+              { "role": "user", "content": insightPrompt }
+            ]
+          })
+        });
 
-          if (insightResponse.ok) {
-            const insightData = await insightResponse.json();
-            let insightText = insightData.choices[0]?.message?.content || '';
-            insightText = insightText.replace(/```json\n?/g, '').replace(/```/g, '').trim();
+        if (insightResponse.ok) {
+          const insightData = await insightResponse.json();
+          let insightText = insightData.choices[0]?.message?.content || '';
+          insightText = insightText.replace(/```json\n?/g, '').replace(/```/g, '').trim();
 
-            try {
-              const jsonMatch = insightText.match(/\[[\s\S]*\]/);
-              if (jsonMatch) {
-                const realInsights = JSON.parse(jsonMatch[0]);
+          try {
+            const jsonMatch = insightText.match(/\[[\s\S]*\]/);
+            if (jsonMatch) {
+              const realInsights = JSON.parse(jsonMatch[0]);
 
-                // Merge with AI-generated insights, prioritizing real data
-                if (Array.isArray(realInsights) && realInsights.length > 0) {
-                  console.log(`✅ Extracted ${realInsights.length} real industry insights`);
+              // Merge with AI-generated insights, prioritizing real data
+              if (Array.isArray(realInsights) && realInsights.length > 0) {
+                console.log(`✅ Extracted ${realInsights.length} real industry insights`);
 
-                  // Mark these as real data
-                  const enrichedInsights = realInsights.map((insight: any) => ({
-                    ...insight,
-                    isRealData: true
-                  }));
+                // Mark these as real data
+                const enrichedInsights = realInsights.map((insight: any) => ({
+                  ...insight,
+                  isRealData: true
+                }));
 
-                  // Replace or merge with AI-generated insights
-                  brandData.industryInsights = [
-                    ...enrichedInsights,
-                    ...(brandData.industryInsights || []).slice(0, 2) // Keep max 2 AI-generated as fallback
-                  ].slice(0, 6);
+                // Replace or merge with AI-generated insights
+                brandData.industryInsights = [
+                  ...enrichedInsights,
+                  ...(brandData.industryInsights || []).slice(0, 2) // Keep max 2 AI-generated as fallback
+                ].slice(0, 6);
 
-                  // Also add source URLs for transparency
-                  brandData.industrySources = sources.slice(0, 5);
-                }
+                // Also add source URLs for transparency
+                brandData.industrySources = sources.slice(0, 5);
               }
-            } catch (parseError) {
-              console.warn('Failed to parse industry insights:', parseError);
             }
+          } catch (parseError) {
+            console.warn('Failed to parse industry insights:', parseError);
           }
         }
-      } catch (searchError) {
-        console.warn('Industry search error:', searchError);
-        // Keep AI-generated insights as fallback
+      } catch (e) {
+        console.error("Industry insights extraction failed:", e);
       }
     }
 
@@ -2054,41 +2071,7 @@ FORMAT: Return ONLY a valid JSON array:
           }
         }
 
-        // Transform raw data into smart editorial angles via Claude
-        if (rawInsightsForTransform.length > 0) {
-          console.log(`📝 Sending ${rawInsightsForTransform.length} raw insights to LLM for editorial transformation...`);
-
-          const smartAngles = await transformToEditorialAngles(
-            rawInsightsForTransform,
-            {
-              name: brandData.name || 'the brand',
-              targetAudience: brandData.targetAudience || 'professionals',
-              industry: brandData.industry || 'general'
-            }
-          );
-
-          if (smartAngles.length > 0) {
-            const transformedInsights = smartAngles.map(angle => ({
-              painPoint: angle.painPoint,
-              consequence: angle.consequence || '',
-              solution: '',
-              type: angle.type as 'pain_point' | 'trend' | 'social_proof',
-              isEnriched: true,
-              isTransformed: true // Mark as LLM-transformed
-            }));
-
-            brandData.industryInsights = [
-              ...(brandData.industryInsights || []),
-              ...transformedInsights
-            ].slice(0, 8);
-
-            console.log(`✅ Added ${transformedInsights.length} LLM-transformed editorial angles`);
-          } else {
-            console.log('⚠️ LLM transformation returned no usable angles');
-          }
-        }
-
-        // === NEW: Process COMPETITORS for market positioning ===
+        // === Process COMPETITORS for market positioning ===
         if (searchEnrichment.competitors && searchEnrichment.competitors.length > 0) {
           console.log(`🎯 Found ${searchEnrichment.competitors.length} competitors:`,
             searchEnrichment.competitors.map(c => c.name));
@@ -2157,29 +2140,42 @@ FORMAT: Return ONLY a valid JSON array:
           }
         }
 
-        // Transform Extract results through LLM too
+        // 🚀 PARALLEL OPTIMIZATION: Transform both Search and Extract insights in parallel
+        const transformPromises: Promise<any>[] = [];
+
+        if (rawInsightsForTransform.length > 0) {
+          console.log(`📝 Sending ${rawInsightsForTransform.length} raw insights to LLM for editorial transformation...`);
+          transformPromises.push(transformToEditorialAngles(
+            rawInsightsForTransform,
+            {
+              name: brandData.name || 'the brand',
+              targetAudience: brandData.targetAudience || 'professionals',
+              industry: brandData.industry || 'general'
+            }
+          ));
+        }
+
         if (extractRawInsights.length > 0) {
           console.log(`📝 Sending ${extractRawInsights.length} Extract insights to LLM for transformation...`);
-
-          const smartExtractAngles = await transformToEditorialAngles(
+          transformPromises.push(transformToEditorialAngles(
             extractRawInsights,
             {
               name: brandData.name || 'the brand',
               targetAudience: brandData.targetAudience || 'professionals',
               industry: brandData.industry || 'general'
             }
-          );
+          ));
+        }
 
-          if (smartExtractAngles.length > 0) {
-            // Dedupe against existing insights
-            const existingPains = new Set(
-              (brandData.industryInsights || [])
-                .map((i: any) => i.painPoint?.toLowerCase().slice(0, 30))
-            );
+        // Wait for all transformations to complete
+        if (transformPromises.length > 0) {
+          const transformResults = await Promise.all(transformPromises);
 
-            const newAngles = smartExtractAngles
-              .filter(a => !existingPains.has(a.painPoint.toLowerCase().slice(0, 30)))
-              .map(angle => ({
+          // Process first transformation (Search insights)
+          if (rawInsightsForTransform.length > 0 && transformResults[0]) {
+            const smartAngles = transformResults[0];
+            if (smartAngles.length > 0) {
+              const transformedInsights = smartAngles.map((angle: any) => ({
                 painPoint: angle.painPoint,
                 consequence: angle.consequence || '',
                 solution: '',
@@ -2188,12 +2184,46 @@ FORMAT: Return ONLY a valid JSON array:
                 isTransformed: true
               }));
 
-            if (newAngles.length > 0) {
               brandData.industryInsights = [
                 ...(brandData.industryInsights || []),
-                ...newAngles
-              ].slice(0, 10);
-              console.log(`✅ Added ${newAngles.length} LLM-transformed angles from Extract`);
+                ...transformedInsights
+              ].slice(0, 8);
+
+              console.log(`✅ Added ${transformedInsights.length} LLM-transformed editorial angles`);
+            } else {
+              console.log('⚠️ LLM transformation returned no usable angles');
+            }
+          }
+
+          // Process second transformation (Extract insights) if it exists
+          const extractResultIndex = rawInsightsForTransform.length > 0 ? 1 : 0;
+          if (extractRawInsights.length > 0 && transformResults[extractResultIndex]) {
+            const smartExtractAngles = transformResults[extractResultIndex];
+            if (smartExtractAngles.length > 0) {
+              // Dedupe against existing insights
+              const existingPains = new Set(
+                (brandData.industryInsights || [])
+                  .map((i: any) => i.painPoint?.toLowerCase().slice(0, 30))
+              );
+
+              const newAngles = smartExtractAngles
+                .filter((a: any) => !existingPains.has(a.painPoint.toLowerCase().slice(0, 30)))
+                .map((angle: any) => ({
+                  painPoint: angle.painPoint,
+                  consequence: angle.consequence || '',
+                  solution: '',
+                  type: angle.type as 'pain_point' | 'trend' | 'social_proof',
+                  isEnriched: true,
+                  isTransformed: true
+                }));
+
+              if (newAngles.length > 0) {
+                brandData.industryInsights = [
+                  ...(brandData.industryInsights || []),
+                  ...newAngles
+                ].slice(0, 10);
+                console.log(`✅ Added ${newAngles.length} LLM-transformed angles from Extract`);
+              }
             }
           }
         }
