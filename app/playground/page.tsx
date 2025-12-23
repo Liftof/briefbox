@@ -3116,7 +3116,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
 
             <button
               onClick={() => handleGenerate()}
-              disabled={!brief.trim() || uploadedImages.length === 0}
+              disabled={!brief.trim() || uploadedImages.length === 0 || (lastCreditsRemaining !== null && lastCreditsRemaining === 0)}
               className="w-full group bg-gray-900 text-white py-4 font-medium disabled:opacity-30 disabled:cursor-not-allowed transition-all hover:bg-black flex items-center justify-center gap-3"
             >
               {activeGenerations.length > 0 ? (
@@ -3139,10 +3139,13 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
             </button>
 
             {/* Validation hints */}
-            {(uploadedImages.length === 0 || !brief.trim()) && (
+            {(uploadedImages.length === 0 || !brief.trim() || (lastCreditsRemaining !== null && lastCreditsRemaining === 0)) && (
               <div className="flex justify-center gap-4 mt-3">
                 {!brief.trim() && <span className="text-xs text-amber-600">⚠ Message requis</span>}
                 {uploadedImages.length === 0 && <span className="text-xs text-amber-600">⚠ Image requise</span>}
+                {lastCreditsRemaining !== null && lastCreditsRemaining === 0 && (
+                  <span className="text-xs text-red-600 font-medium">🚫 {locale === 'fr' ? 'Crédits épuisés' : 'No credits left'}</span>
+                )}
               </div>
             )}
           </div>
@@ -3151,6 +3154,17 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
         {/* ═══════════════════════════════════════════════════════════════════════════
             RESULTS SECTION
             ═══════════════════════════════════════════════════════════════════════════ */}
+
+        {/* Upgrade Inline Card - shows at the TOP when credits are low */}
+        {lastCreditsRemaining !== null && lastCreditsRemaining <= 1 && (
+          <div className="mb-6">
+            <UpgradeInline
+              creditsRemaining={lastCreditsRemaining}
+              plan={creditsInfo?.plan || 'free'}
+              locale={locale}
+            />
+          </div>
+        )}
 
         {/* Active Generations Queue - Compact Indicator */}
         {activeGenerations.length > 0 && (
@@ -3415,17 +3429,6 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
                 </div>
               );
             })()}
-          </div>
-        )}
-
-        {/* Upgrade Inline Card - shows when credits are low */}
-        {generatedImages.length > 0 && status === 'idle' && lastCreditsRemaining !== null && (
-          <div className="mb-8">
-            <UpgradeInline
-              creditsRemaining={lastCreditsRemaining}
-              plan={creditsInfo?.plan || 'free'}
-              locale={locale}
-            />
           </div>
         )}
 
