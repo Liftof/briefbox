@@ -388,7 +388,8 @@ export async function POST(request: NextRequest) {
     }, { status: 429 });
   }
 
-  // 2. For FREE users: Check IP-based limit FIRST (catches multi-account abuse)
+  // 2. For FREE users: Check IP-based limit ONLY (catches multi-account abuse)
+  // No per-user rate limiting for free users - credits are the only limit
   if (isFreeUser) {
     const ip = request.headers.get('x-forwarded-for')?.split(',')[0]
       || request.headers.get('x-real-ip')
@@ -396,26 +397,24 @@ export async function POST(request: NextRequest) {
 
     const ipLimit = rateLimitByIP(ip, 'generate');
     if (!ipLimit.success) {
-      const waitTime = Math.ceil((ipLimit.reset - Date.now()) / 1000);
       return NextResponse.json({
         success: false,
-        error: `Trop de comptes gratuits depuis cette adresse IP. Réessayez dans ${Math.ceil(waitTime / 60)} minutes ou passez Pro.`,
-        retryAfter: waitTime,
+        error: `Trop de générations depuis cette adresse IP. Passez Pro pour des générations illimitées.`,
       }, { status: 429 });
     }
   }
 
-  // 3. Check per-user rate limit (stricter for free, generous for paid)
-  const rateLimitResult = rateLimitByUser(userId, 'generate', userPlan as 'free' | 'pro' | 'premium');
-  if (!rateLimitResult.success) {
-    const waitTime = Math.ceil((rateLimitResult.reset - Date.now()) / 1000);
-    return NextResponse.json({
-      success: false,
-      error: isFreeUser
-        ? `Limite atteinte pour les comptes gratuits. Réessayez dans ${Math.ceil(waitTime / 60)} minutes ou passez Pro.`
-        : 'Trop de requêtes. Réessayez dans quelques secondes.',
-      retryAfter: waitTime,
-    }, { status: 429 });
+  // 3. Check per-user rate limit for PAID users only (free users = credits only)
+  if (!isFreeUser) {
+    const rateLimitResult = rateLimitByUser(userId, 'generate', userPlan as 'pro' | 'premium');
+    if (!rateLimitResult.success) {
+      const waitTime = Math.ceil((rateLimitResult.reset - Date.now()) / 1000);
+      return NextResponse.json({
+        success: false,
+        error: 'Trop de requêtes. Réessayez dans quelques secondes.',
+        retryAfter: waitTime,
+      }, { status: 429 });
+    }
   }
 
   // ====== GOOGLE AI IS NOW THE PRIMARY (AND ONLY) GENERATOR ======
