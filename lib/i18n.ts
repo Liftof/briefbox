@@ -80,6 +80,7 @@ const translations: Record<Locale, Record<string, any>> = {
       launching: '🚀 Lancement des générations...',
       generating: '✨ Génération en cours...',
       analyzing: 'Analyse en cours',
+      analysisInProgress: 'Analyse en cours',
       inProgress: 'En cours...',
       welcome: 'Bienvenue !',
       estimatedTime: '~30 secondes',
@@ -89,6 +90,9 @@ const translations: Record<Locale, Record<string, any>> = {
       scraping: 'Scraping',
       ai: 'IA',
       enrichment: 'Enrichissement',
+      creatingVisual: 'Création de votre visuel...',
+      visualsProcessing: '{{count}} visuels en cours...',
+      visualProcessing: 'Création de votre visuel...',
     },
     toast: {
       brandAlreadyExists: 'Cette marque existe déjà — la voici !',
@@ -112,6 +116,11 @@ const translations: Record<Locale, Record<string, any>> = {
       fourKProOnly: '4K réservé aux abonnés Pro',
       noLogoYet: 'Vous pourrez ajouter un logo plus tard',
       loadingNextBrand: 'Chargement de {{name}}...',
+      clickGenerateFirstVisual: '✨ Cliquez sur Générer pour créer votre premier visuel !',
+      describeWhatYouWant: 'Décrivez ce que vous voulez communiquer',
+      addVisualToEnrich: 'Ajoutez un visuel pour enrichir votre création !',
+      creditInfo: '1 crédit = 1 visuel unique créé par l\'IA',
+      editTip: 'Cliquez sur "Modifier" pour corriger une faute, remplacer un logo, ou ajuster un détail.',
     },
     playground: {
       urlStep: {
@@ -127,6 +136,14 @@ const translations: Record<Locale, Record<string, any>> = {
         scanBrand: 'Scanner la marque',
         backToMyBrands: 'Retour à mes marques',
         secureData: 'Données sécurisées',
+        extractionDescription: 'On récupère votre logo, vos couleurs, votre ton — en quelques secondes. Ensuite, créez.',
+      },
+      smartBrief: {
+        happyCustomer: 'Un client satisfait',
+        discover: 'Découvrez {{brandName}}',
+      },
+      logoFix: {
+        prompt: 'Remplace le logo actuel par le logo officiel fourni. Reproduis-le exactement comme dans l\'image de référence, sans le modifier ni le styliser.',
       },
       logo: {
         uploadCorrectLogo: 'Uploader le vrai logo',
@@ -466,6 +483,7 @@ const translations: Record<Locale, Record<string, any>> = {
       launching: '🚀 Starting generations...',
       generating: '✨ Generating...',
       analyzing: 'Analysis in progress',
+      analysisInProgress: 'Analysis in progress',
       inProgress: 'In progress...',
       welcome: 'Welcome!',
       estimatedTime: '~30 seconds',
@@ -475,6 +493,9 @@ const translations: Record<Locale, Record<string, any>> = {
       scraping: 'Scraping',
       ai: 'AI',
       enrichment: 'Enrichment',
+      creatingVisual: 'Creating your visual...',
+      visualsProcessing: '{{count}} visuals processing...',
+      visualProcessing: 'Creating your visual...',
     },
     toast: {
       brandAlreadyExists: 'This brand already exists — here it is!',
@@ -498,6 +519,11 @@ const translations: Record<Locale, Record<string, any>> = {
       fourKProOnly: '4K is for Pro subscribers',
       noLogoYet: 'You can add a logo later',
       loadingNextBrand: 'Loading {{name}}...',
+      clickGenerateFirstVisual: '✨ Click Generate to create your first visual!',
+      describeWhatYouWant: 'Describe what you want to communicate',
+      addVisualToEnrich: 'Add a visual to enrich your creation!',
+      creditInfo: '1 credit = 1 unique AI-generated visual',
+      editTip: 'Click "Edit" to fix a typo, replace a logo, or adjust a detail.',
     },
     playground: {
       urlStep: {
@@ -513,6 +539,14 @@ const translations: Record<Locale, Record<string, any>> = {
         scanBrand: 'Scan brand',
         backToMyBrands: 'Back to my brands',
         secureData: 'Secure data',
+        extractionDescription: 'We extract your logo, colors, and tone — in seconds. Then, create.',
+      },
+      smartBrief: {
+        happyCustomer: 'A happy customer',
+        discover: 'Discover {{brandName}}',
+      },
+      logoFix: {
+        prompt: 'Replace the current logo with the official logo provided. Reproduce it exactly as shown in the reference image, without modifying or stylizing it.',
       },
       logo: {
         uploadCorrectLogo: 'Upload correct logo',
