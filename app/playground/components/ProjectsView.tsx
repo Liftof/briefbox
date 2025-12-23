@@ -459,14 +459,14 @@ export default function ProjectsView({ brandId }: { brandId?: number }) {
                   draggable
                   onDragStart={() => setDraggedGen(gen.id)}
                   onDragEnd={() => setDraggedGen(null)}
-                  className={`relative aspect-square bg-gray-100 border border-gray-200 overflow-hidden group cursor-move hover:border-gray-400 transition-all ${draggedGen === gen.id ? 'opacity-50 scale-95' : ''
+                  onClick={() => setLightboxImage(gen)}
+                  className={`relative aspect-square bg-gray-100 border border-gray-200 overflow-hidden group cursor-pointer hover:border-gray-400 transition-all ${draggedGen === gen.id ? 'opacity-50 scale-95' : ''
                     } ${gen.feedback?.rating === 3 ? 'ring-2 ring-red-400' : ''}`}
                 >
                   <img
                     src={gen.url}
                     alt=""
-                    className="w-full h-full object-cover cursor-pointer"
-                    onClick={() => setLightboxImage(gen)}
+                    className="w-full h-full object-cover"
                   />
 
                   {/* Favorite indicator (if favorited) */}
