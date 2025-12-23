@@ -1,6 +1,7 @@
 'use client';
 
 import { Generation } from '@/lib/useGenerations';
+import { useTranslation } from '@/lib/i18n';
 
 // Aspect ratio to CSS class mapping
 const getAspectClass = (ratio?: string): string => {
@@ -36,12 +37,14 @@ interface RecentVisualsProps {
   locale?: 'fr' | 'en';
 }
 
-export default function RecentVisuals({ 
-  generations, 
-  onViewAll, 
+export default function RecentVisuals({
+  generations,
+  onViewAll,
   onImageClick,
-  locale = 'fr' 
+  locale = 'fr'
 }: RecentVisualsProps) {
+  const { t } = useTranslation();
+
   // Only show if we have generations
   if (!generations || generations.length === 0) return null;
 
