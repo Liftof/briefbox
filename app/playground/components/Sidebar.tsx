@@ -49,23 +49,12 @@ export default function Sidebar({
 
   const isFree = credits?.plan === 'free';
 
-  // Direct labels - no need for translation system, we have locale
-  const labels = {
-    create: locale === 'fr' ? 'Créer' : 'Create',
-    gallery: locale === 'fr' ? 'Galerie' : 'Gallery',
-    calendar: locale === 'fr' ? 'Calendrier' : 'Calendar',
-    publish: locale === 'fr' ? 'Publier' : 'Publish',
-    stats: locale === 'fr' ? 'Stats' : 'Stats',
-    settings: locale === 'fr' ? 'Réglages' : 'Settings',
-    soon: locale === 'fr' ? 'bientôt' : 'soon',
-  };
-
   const menuItems = [
-    { id: 'create', icon: '✦', label: labels.create },
-    { id: 'gallery', icon: '◰', label: labels.gallery },
-    { id: 'calendar', icon: '▤', label: labels.calendar, disabled: true },
-    { id: 'publish', icon: '↗', label: labels.publish, disabled: true },
-    { id: 'stats', icon: '◔', label: labels.stats, disabled: true },
+    { id: 'create', icon: '✦', label: t('sidebar.create') },
+    { id: 'gallery', icon: '◰', label: t('sidebar.gallery') },
+    { id: 'calendar', icon: '▤', label: t('sidebar.calendar'), disabled: true },
+    { id: 'publish', icon: '↗', label: t('sidebar.publish'), disabled: true },
+    { id: 'stats', icon: '◔', label: t('sidebar.stats'), disabled: true },
   ];
 
   return (
@@ -119,7 +108,7 @@ export default function Sidebar({
                     )}
                     {!isCollapsed && isDisabled && (
                       <span className="ml-auto text-[9px] font-mono uppercase tracking-wider text-gray-300 bg-gray-100 px-1.5 py-0.5 rounded">
-                        {labels.soon}
+                        {t('common.soon')}
                       </span>
                     )}
                   </button>
@@ -128,7 +117,7 @@ export default function Sidebar({
                   {isCollapsed && hoveredItem === item.id && (
                     <div className="absolute left-full top-1/2 -translate-y-1/2 ml-2 bg-gray-900 text-white text-xs font-medium px-2.5 py-1.5 rounded-md whitespace-nowrap z-50 shadow-lg">
                       {item.label}
-                      {isDisabled && <span className="text-gray-400 ml-1">({labels.soon})</span>}
+                      {isDisabled && <span className="text-gray-400 ml-1">({t('common.soon')})</span>}
                       <div className="absolute right-full top-1/2 -translate-y-1/2 border-4 border-transparent border-r-gray-900" />
                     </div>
                   )}
@@ -167,7 +156,7 @@ export default function Sidebar({
                       {brandData.name || t('playground.sidebar.myBrand')}
                     </div>
                     <div className="text-[10px] text-gray-400 truncate flex items-center gap-1">
-                      <span>{locale === 'fr' ? 'Gérer' : 'Manage'}</span>
+                      <span>{t('common.manage')}</span>
                       <svg className={`w-3 h-3 transition-transform ${showBrandPicker ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
                       </svg>
@@ -192,7 +181,7 @@ export default function Sidebar({
           ) : (
             <div className={`text-center ${isCollapsed ? '' : 'py-4'}`}>
               <div className="text-gray-400 text-xs">
-                {locale === 'fr' ? 'Aucune marque' : 'No brand'}
+                {t('sidebar.noBrand')}
               </div>
             </div>
           )}
@@ -202,7 +191,7 @@ export default function Sidebar({
             <div className="absolute bottom-full left-3 right-3 mb-2 bg-white border border-gray-200 rounded-lg shadow-lg overflow-hidden z-50 max-h-64 overflow-y-auto">
               <div className="p-2 border-b border-gray-100 bg-gray-50">
                 <span className="text-[10px] font-mono uppercase tracking-wider text-gray-400">
-                  {locale === 'fr' ? 'Vos marques' : 'Your brands'}
+                  {t('sidebar.yourBrands')}
                 </span>
               </div>
               {userBrands.map((brand) => (
@@ -245,7 +234,7 @@ export default function Sidebar({
                   <span className="text-blue-500 text-sm">+</span>
                 </div>
                 <span className="text-sm font-medium">
-                  {locale === 'fr' ? 'Ajouter une marque' : 'Add a brand'}
+                  {t('sidebar.addBrand')}
                 </span>
               </button>
 
@@ -264,7 +253,7 @@ export default function Sidebar({
                     </svg>
                   </div>
                   <span className="text-sm">
-                    {locale === 'fr' ? 'Modifier la marque' : 'Edit brand'}
+                    {t('sidebar.editBrand')}
                   </span>
                 </button>
               )}
@@ -274,7 +263,7 @@ export default function Sidebar({
                 <button
                   onClick={() => {
                     if (isFree) {
-                      alert(locale === 'fr' ? 'Passez à Pro pour actualiser votre marque' : 'Upgrade to Pro to refresh your brand');
+                      alert(t('sidebar.refreshBrandPro'));
                     } else {
                       onRescrape?.();
                       setShowBrandPicker(false);
@@ -290,7 +279,7 @@ export default function Sidebar({
                     </svg>
                   </div>
                   <span className="text-sm flex items-center gap-2">
-                    {locale === 'fr' ? 'Actualiser' : 'Refresh'}
+                    {t('sidebar.refresh')}
                     {isFree && (
                       <span className="text-[9px] bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded font-medium">PRO</span>
                     )}
@@ -310,7 +299,7 @@ export default function Sidebar({
                     </svg>
                   </div>
                   <span className="text-sm">
-                    {locale === 'fr' ? 'Supprimer' : 'Delete'}
+                    {t('common.delete')}
                   </span>
                 </button>
               )}
@@ -328,20 +317,17 @@ export default function Sidebar({
                     </svg>
                   </div>
                   <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                    {locale === 'fr' ? 'Supprimer cette marque ?' : 'Delete this brand?'}
+                    {t('sidebar.deleteBrand')}
                   </h3>
                   <p className="text-sm text-gray-500 mb-6">
-                    {locale === 'fr'
-                      ? `"${brandData?.name}" sera définitivement supprimée. Cette action est irréversible.`
-                      : `"${brandData?.name}" will be permanently deleted. This action cannot be undone.`
-                    }
+                    {t('sidebar.deleteBrandConfirm', { name: brandData?.name || '' })}
                   </p>
                   <div className="flex gap-3">
                     <button
                       onClick={() => setShowDeleteConfirm(false)}
                       className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-colors"
                     >
-                      {locale === 'fr' ? 'Annuler' : 'Cancel'}
+                      {t('common.cancel')}
                     </button>
                     <button
                       onClick={() => {
@@ -353,7 +339,7 @@ export default function Sidebar({
                       }}
                       className="flex-1 px-4 py-2.5 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors"
                     >
-                      {locale === 'fr' ? 'Supprimer' : 'Delete'}
+                      {t('common.delete')}
                     </button>
                   </div>
                 </div>
