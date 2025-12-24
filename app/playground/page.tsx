@@ -794,7 +794,7 @@ function PlaygroundContent() {
             setSelectedBrandId(data.brand.id);
             setStep('bento');
             showToast(t('toast.brandAlreadyExists'), 'info');
-            notify.brandReady(data.brand?.name); // Browser notification
+            notify.brandReady(data.brand?.name, locale); // Browser notification
           }, 300);
           return; // Success! Exit the retry loop
         }
@@ -807,7 +807,7 @@ function PlaygroundContent() {
             showToast('Analyse terminée — uploadez votre logo', 'info');
           }
           // Browser notification with sound
-          notify.brandReady(data.brand?.name);
+          notify.brandReady(data.brand?.name, locale);
         }, 500);
 
         return; // Success! Exit the retry loop
@@ -1634,7 +1634,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
       setStatus('complete');
       setProgress(100);
       showToast('Variante générée !', 'success');
-      notify.visualReady(normalized.length); // Browser notification with sound
+      notify.visualReady(normalized.length, locale); // Browser notification with sound
 
     } catch (error: any) {
       console.error('Edit error:', error);
@@ -2057,7 +2057,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
 
           // Show Toast/Notify
           showToast(t('toast.newVisualReady'), 'success');
-          notify.visualReady(1);
+          notify.visualReady(1, locale);
 
           // Remove job from queue after delay
           setTimeout(() => {

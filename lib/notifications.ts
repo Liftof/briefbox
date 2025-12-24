@@ -121,26 +121,38 @@ export function showBrowserNotification(
 // Convenience methods for common notifications
 export const notify = {
     // Brand scraping completed
-    brandReady: (brandName?: string) => {
-        showBrowserNotification('🎨 Marque analysée !', {
-            body: brandName ? `${brandName} est prête` : 'Cliquez pour voir',
+    brandReady: (brandName?: string, locale: 'fr' | 'en' = 'fr') => {
+        const title = locale === 'fr' ? '🎨 Marque analysée !' : '🎨 Brand analyzed!';
+        const body = brandName
+            ? (locale === 'fr' ? `${brandName} est prête` : `${brandName} is ready`)
+            : (locale === 'fr' ? 'Cliquez pour voir' : 'Click to view');
+
+        showBrowserNotification(title, {
+            body,
             playSound: true,
             soundType: 'brand',
         });
     },
 
     // Visual generation completed
-    visualReady: (count: number = 1) => {
-        showBrowserNotification('✨ Visuel prêt !', {
-            body: count > 1 ? `${count} visuels générés` : 'Votre création est prête',
+    visualReady: (count: number = 1, locale: 'fr' | 'en' = 'fr') => {
+        const title = locale === 'fr' ? '✨ Visuel prêt !' : '✨ Visual ready!';
+        const body = count > 1
+            ? (locale === 'fr' ? `${count} visuels générés` : `${count} visuals generated`)
+            : (locale === 'fr' ? 'Votre création est prête' : 'Your creation is ready');
+
+        showBrowserNotification(title, {
+            body,
             playSound: true,
             soundType: 'visual',
         });
     },
 
     // Error notification
-    error: (message: string) => {
-        showBrowserNotification('⚠️ Erreur', {
+    error: (message: string, locale: 'fr' | 'en' = 'fr') => {
+        const title = locale === 'fr' ? '⚠️ Erreur' : '⚠️ Error';
+
+        showBrowserNotification(title, {
             body: message,
             playSound: true,
             soundType: 'default',
