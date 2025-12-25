@@ -3189,8 +3189,15 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
             )}
 
             <button
-              onClick={() => handleGenerate()}
-              disabled={!brief.trim() || uploadedImages.length === 0 || (lastCreditsRemaining !== null && lastCreditsRemaining === 0)}
+              onClick={() => {
+                // Check if user has credits before generating
+                if (lastCreditsRemaining !== null && lastCreditsRemaining === 0) {
+                  setShowUpgradePopup(true);
+                  return;
+                }
+                handleGenerate();
+              }}
+              disabled={!brief.trim() || uploadedImages.length === 0}
               className="w-full group bg-gray-900 text-white py-4 font-medium disabled:opacity-30 disabled:cursor-not-allowed transition-all hover:bg-black flex items-center justify-center gap-3"
             >
               {activeGenerations.length > 0 ? (
@@ -4139,7 +4146,14 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
       </div>
       <div className="md:hidden fixed bottom-16 left-0 right-0 z-40 px-4 pb-2 bg-gradient-to-t from-[#F9F9F9] via-[#F9F9F9] to-transparent pt-4">
         <button
-          onClick={() => handleGenerate()}
+          onClick={() => {
+            // Check if user has credits before generating
+            if (lastCreditsRemaining !== null && lastCreditsRemaining === 0) {
+              setShowUpgradePopup(true);
+              return;
+            }
+            handleGenerate();
+          }}
           disabled={!brief.trim() || uploadedImages.length === 0}
           className="w-full bg-gray-900 text-white py-3.5 font-medium disabled:opacity-30 disabled:cursor-not-allowed transition-all hover:bg-black flex items-center justify-center gap-2 shadow-lg"
         >
@@ -4162,6 +4176,13 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
           )}
         </button>
       </div>
+
+      {/* Upgrade Popup (shown when user tries to generate with 0 credits) */}
+      <UpgradePopup
+        isOpen={showUpgradePopup}
+        onClose={() => setShowUpgradePopup(false)}
+        creditsRemaining={lastCreditsRemaining ?? 0}
+      />
 
       {/* Credits Toast (subtle notification) */}
       <CreditsToast
