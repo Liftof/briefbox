@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useUser } from '@clerk/nextjs';
 
 // Types
 export interface GenerationFeedback {
@@ -31,10 +32,15 @@ export interface Folder {
   createdAt: string;
 }
 
-// LocalStorage keys for migration & fallback
-const GENERATIONS_KEY = 'palette_generations';
-const FOLDERS_KEY = 'palette_folders';
-const MIGRATED_KEY = 'palette_migrated_to_db';
+// LocalStorage keys for migration & fallback (now namespaced by userId)
+const getGenerationsKey = (userId: string) => `palette_generations_${userId}`;
+const getFoldersKey = (userId: string) => `palette_folders_${userId}`;
+const getMigratedKey = (userId: string) => `palette_migrated_to_db_${userId}`;
+
+// Legacy keys (before userId namespacing)
+const LEGACY_GENERATIONS_KEY = 'palette_generations';
+const LEGACY_FOLDERS_KEY = 'palette_folders';
+const LEGACY_MIGRATED_KEY = 'palette_migrated_to_db';
 
 // Check if we should use API (user is authenticated)
 const useApi = () => {
@@ -44,10 +50,18 @@ const useApi = () => {
 
 // Hook for generations
 export function useGenerations(brandId?: number) {
+  const { user } = useUser();
+  const userId = user?.id;
+
   const [generations, setGenerations] = useState<Generation[]>([]);
   const [folders, setFolders] = useState<Folder[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Get user-specific localStorage keys
+  const GENERATIONS_KEY = userId ? getGenerationsKey(userId) : LEGACY_GENERATIONS_KEY;
+  const FOLDERS_KEY = userId ? getFoldersKey(userId) : LEGACY_FOLDERS_KEY;
+  const MIGRATED_KEY = userId ? getMigratedKey(userId) : LEGACY_MIGRATED_KEY;
 
   // Fetch generations from API
   const fetchGenerations = useCallback(async (specificBrandId?: number) => {
@@ -204,7 +218,38 @@ export function useGenerations(brandId?: number) {
       // Legacy migration logic (omitted or kept simple if you want to preserve old behavior)
       localStorage.setItem(MIGRATED_KEY, 'true');
     }
-  }, []);
+  }, [MIGRATED_KEY]);
+
+  // Migrate from legacy (non-namespaced) localStorage keys to user-specific keys
+  useEffect(() => {
+    if (!userId || typeof window === 'undefined') return;
+
+    const legacyGenerations = localStorage.getItem(LEGACY_GENERATIONS_KEY);
+    const legacyFolders = localStorage.getItem(LEGACY_FOLDERS_KEY);
+
+    // Only migrate if user-specific keys don't exist yet (first time for this user)
+    const userGenerationsExist = localStorage.getItem(GENERATIONS_KEY);
+    const userFoldersExist = localStorage.getItem(FOLDERS_KEY);
+
+    if (legacyGenerations && !userGenerationsExist) {
+      console.log('🔄 Migrating legacy generations to user-specific storage');
+      localStorage.setItem(GENERATIONS_KEY, legacyGenerations);
+    }
+
+    if (legacyFolders && !userFoldersExist) {
+      console.log('🔄 Migrating legacy folders to user-specific storage');
+      localStorage.setItem(FOLDERS_KEY, legacyFolders);
+    }
+
+    // Clear legacy keys to prevent cross-user contamination
+    // (Only clear after first user has migrated their data)
+    if (legacyGenerations || legacyFolders) {
+      console.log('🧹 Clearing legacy localStorage keys');
+      localStorage.removeItem(LEGACY_GENERATIONS_KEY);
+      localStorage.removeItem(LEGACY_FOLDERS_KEY);
+      localStorage.removeItem(LEGACY_MIGRATED_KEY);
+    }
+  }, [userId, GENERATIONS_KEY, FOLDERS_KEY]);
 
   // Initial load
   useEffect(() => {
@@ -383,6 +428,8 @@ export function useGenerations(brandId?: number) {
 }
 
 // Legacy export for backward compatibility with existing playground code
+// NOTE: This function does NOT use localStorage to prevent cross-user contamination
+// Use the useGenerations hook for proper localStorage fallback with user isolation
 export const addGenerations = async (gens: Omit<Generation, 'id' | 'createdAt'>[]) => {
   console.log('📦 addGenerations called with', gens.length, 'generations');
   console.log('   URLs:', gens.map(g => g.url?.slice(0, 50) + '...'));
@@ -399,36 +446,21 @@ export const addGenerations = async (gens: Omit<Generation, 'id' | 'createdAt'>[
     if (!res.ok) {
       const errorText = await res.text();
       console.error('📦 API error response:', res.status, errorText);
-
-      // Fallback to localStorage
-      console.log('📦 Falling back to localStorage...');
-      const existing = JSON.parse(localStorage.getItem(GENERATIONS_KEY) || '[]');
-      const withIds = gens.map((g, i) => ({
-        ...g,
-        id: `gen_${Date.now()}_${i}`,
-        createdAt: new Date().toISOString(),
-      }));
-      localStorage.setItem(GENERATIONS_KEY, JSON.stringify([...withIds, ...existing]));
-      console.log('📦 Saved to localStorage:', withIds.length, 'generations');
-      return withIds;
+      throw new Error(`Failed to save generations: ${res.status} ${errorText}`);
     }
 
     const data = await res.json();
     console.log('✅ Generations saved to DB:', data.generations?.length || 0);
+
+    // Trigger update event so hooks can refresh
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new Event('generations-updated'));
+    }
+
     return data.generations || [];
   } catch (err) {
     console.error('📦 Add generations error:', err);
-    // Fallback to localStorage
-    console.log('📦 Falling back to localStorage due to error...');
-    const existing = JSON.parse(localStorage.getItem(GENERATIONS_KEY) || '[]');
-    const withIds = gens.map((g, i) => ({
-      ...g,
-      id: `gen_${Date.now()}_${i}`,
-      createdAt: new Date().toISOString(),
-    }));
-    localStorage.setItem(GENERATIONS_KEY, JSON.stringify([...withIds, ...existing]));
-    console.log('📦 Saved to localStorage:', withIds.length, 'generations');
-    return withIds;
+    throw err; // Re-throw to let caller handle the error
   }
 };
 
