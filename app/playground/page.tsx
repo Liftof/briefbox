@@ -604,7 +604,14 @@ function PlaygroundContent() {
         console.log('⚠️ Brand belongs to different user, clearing localStorage');
         clearLastUsedBrandId();
         if (timer) clearInterval(timer);
-        setStep('url'); // Redirect to URL screen silently
+
+        // If user has other brands, load the first one instead of showing onboarding
+        if (userBrands && userBrands.length > 0) {
+          console.log('🔄 User has other brands, loading first one');
+          loadBrandById(userBrands[0].id, false, true);
+        } else {
+          setStep('url'); // No brands - show onboarding
+        }
         return;
       }
 
@@ -638,7 +645,18 @@ function PlaygroundContent() {
         clearLastUsedBrandId();
       }
       showToast(error.message || t('toast.errorLoading'), 'error');
-      setStep('url');
+
+      // If user has other brands, try to load the first one instead of showing onboarding
+      if (userBrands && userBrands.length > 0) {
+        const fallbackBrand = userBrands.find(b => b.id !== id); // Try a different brand
+        if (fallbackBrand) {
+          console.log('🔄 Trying fallback brand:', fallbackBrand.name);
+          loadBrandById(fallbackBrand.id, false, true);
+          return;
+        }
+      }
+
+      setStep('url'); // No other brands available - show onboarding
     }
   };
 
