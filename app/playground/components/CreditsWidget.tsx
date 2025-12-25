@@ -14,37 +14,11 @@ export default function CreditsWidget({ isCollapsed = false, creditsOverride }: 
   const { credits: hookCredits, loading } = useCredits();
   const credits = creditsOverride ?? hookCredits; // Use override if provided
   const [isHovered, setIsHovered] = useState(false);
+  const [showUpgradePopup, setShowUpgradePopup] = useState(false);
 
-  const handleUpgrade = async () => {
-    try {
-      const res = await fetch('/api/stripe/checkout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ plan: 'pro' }),
-      });
-      const data = await res.json();
-      if (data.url) {
-        window.location.href = data.url;
-      } else if (data.error) {
-        console.error('Checkout error:', data.error);
-        alert(`Erreur: ${data.error}`);
-      }
-    } catch (err) {
-      console.error('Checkout error:', err);
-      alert('Erreur de connexion. Réessayez.');
-    }
-  };
-
-  const handleManage = async () => {
-    try {
-      const res = await fetch('/api/stripe/portal', { method: 'POST' });
-      const data = await res.json();
-      if (data.url) {
-        window.location.href = data.url;
-      }
-    } catch (err) {
-      console.error('Portal error:', err);
-    }
+  const handleClick = () => {
+    // Always show upgrade popup (even for premium users, they can manage subscription there)
+    setShowUpgradePopup(true);
   };
 
   if (loading) {
@@ -58,19 +32,20 @@ export default function CreditsWidget({ isCollapsed = false, creditsOverride }: 
   const ratio = (credits?.remaining ?? 0) / (credits?.total ?? 3);
 
   return (
-    <div
-      onClick={isFree ? handleUpgrade : handleManage}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-      className={`
-        relative cursor-pointer transition-all duration-200
-        ${isFree 
-          ? 'border-2 border-blue-500 bg-blue-50 hover:bg-blue-100 hover:border-blue-600' 
-          : 'border border-gray-200 bg-white hover:border-gray-900'
-        }
-        ${isCollapsed ? 'p-2' : 'p-3'}
-      `}
-    >
+    <>
+      <div
+        onClick={handleClick}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+        className={`
+          relative cursor-pointer transition-all duration-200
+          ${isFree
+            ? 'border-2 border-blue-500 bg-blue-50 hover:bg-blue-100 hover:border-blue-600'
+            : 'border border-gray-200 bg-white hover:border-gray-900'
+          }
+          ${isCollapsed ? 'p-2' : 'p-3'}
+        `}
+      >
       {/* Collapsed view */}
       {isCollapsed ? (
         <div className={`
@@ -136,7 +111,16 @@ export default function CreditsWidget({ isCollapsed = false, creditsOverride }: 
           )}
         </>
       )}
-    </div>
+      </div>
+
+      {/* Upgrade/Manage Popup */}
+      <UpgradePopup
+        isOpen={showUpgradePopup}
+        onClose={() => setShowUpgradePopup(false)}
+        creditsRemaining={credits?.remaining ?? 0}
+        currentPlan={credits?.plan}
+      />
+    </>
   );
 }
 
@@ -148,9 +132,10 @@ interface UpgradePopupProps {
   isOpen: boolean;
   onClose: () => void;
   creditsRemaining: number;
+  currentPlan?: 'free' | 'pro' | 'premium';
 }
 
-export function UpgradePopup({ isOpen, onClose, creditsRemaining }: UpgradePopupProps) {
+export function UpgradePopup({ isOpen, onClose, creditsRemaining, currentPlan = 'free' }: UpgradePopupProps) {
   const { t, locale } = useTranslation();
   const [isLoading, setIsLoading] = useState(false);
 
@@ -179,7 +164,22 @@ export function UpgradePopup({ isOpen, onClose, creditsRemaining }: UpgradePopup
     }
   };
 
+  const handleManageSubscription = async () => {
+    try {
+      const res = await fetch('/api/stripe/portal', { method: 'POST' });
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      }
+    } catch (err) {
+      console.error('Portal error:', err);
+    }
+  };
+
   const isBlocked = creditsRemaining <= 0;
+  const isFree = currentPlan === 'free';
+  const isPro = currentPlan === 'pro';
+  const isPremium = currentPlan === 'premium';
 
   return (
     <div 
@@ -204,55 +204,85 @@ export function UpgradePopup({ isOpen, onClose, creditsRemaining }: UpgradePopup
         </div>
 
         {/* Plans */}
-        <div className="p-6 grid md:grid-cols-2 gap-4">
-          {/* Pro */}
-          <button
-            onClick={() => handleUpgrade('pro')}
-            disabled={isLoading}
-            className="group text-left p-5 border border-gray-200 hover:border-gray-900 transition-colors disabled:opacity-50"
-          >
-            <div className="flex items-center justify-between mb-3">
-              <span className="font-medium text-gray-900">{t('credits.plans.pro')}</span>
-              <span className="text-sm font-mono text-gray-500">{locale === 'fr' ? '19€' : '$19'}</span>
-            </div>
-            <div className="text-xs text-gray-400 mb-3">
-              {t('credits.plans.proVisuals')}
-            </div>
-            <div className="text-xs text-gray-900 group-hover:translate-x-1 transition-transform">
-              {t('credits.plans.choosePro')}
-            </div>
-          </button>
+        <div className={`p-6 ${isPremium ? '' : 'grid md:grid-cols-2'} gap-4`}>
+          {/* Show Pro only if user is Free */}
+          {isFree && (
+            <button
+              onClick={() => handleUpgrade('pro')}
+              disabled={isLoading}
+              className="group text-left p-5 border border-gray-200 hover:border-gray-900 transition-colors disabled:opacity-50"
+            >
+              <div className="flex items-center justify-between mb-3">
+                <span className="font-medium text-gray-900">{t('credits.plans.pro')}</span>
+                <span className="text-sm font-mono text-gray-500">{locale === 'fr' ? '19€' : '$19'}</span>
+              </div>
+              <div className="text-xs text-gray-400 mb-3">
+                {t('credits.plans.proVisuals')}
+              </div>
+              <div className="text-xs text-gray-900 group-hover:translate-x-1 transition-transform">
+                {t('credits.plans.choosePro')}
+              </div>
+            </button>
+          )}
 
-          {/* Premium */}
-          <button
-            onClick={() => handleUpgrade('premium')}
-            disabled={isLoading}
-            className="group text-left p-5 border border-gray-200 hover:border-gray-900 transition-colors disabled:opacity-50"
-          >
-            <div className="flex items-center justify-between mb-3">
-              <span className="font-medium text-gray-900">{t('credits.plans.premium')}</span>
-              <span className="text-sm font-mono text-gray-500">{locale === 'fr' ? '49€' : '$49'}</span>
+          {/* Show Premium if user is Free or Pro */}
+          {!isPremium && (
+            <button
+              onClick={() => handleUpgrade('premium')}
+              disabled={isLoading}
+              className="group text-left p-5 border border-gray-200 hover:border-gray-900 transition-colors disabled:opacity-50"
+            >
+              <div className="flex items-center justify-between mb-3">
+                <span className="font-medium text-gray-900">{t('credits.plans.premium')}</span>
+                <span className="text-sm font-mono text-gray-500">{locale === 'fr' ? '49€' : '$49'}</span>
+              </div>
+              <div className="text-xs text-gray-400 mb-3">
+                {t('credits.plans.premiumVisuals')}
+              </div>
+              <div className="text-xs text-gray-900 group-hover:translate-x-1 transition-transform">
+                {t('credits.plans.choosePremium')}
+              </div>
+            </button>
+          )}
+
+          {/* If Premium user, show manage subscription button */}
+          {isPremium && (
+            <div className="text-center py-4">
+              <p className="text-sm text-gray-500 mb-4">
+                {locale === 'fr' ? 'Vous êtes déjà sur le plan Premium !' : 'You\'re already on Premium!'}
+              </p>
+              <button
+                onClick={handleManageSubscription}
+                className="text-sm text-gray-900 hover:text-black font-medium transition-colors"
+              >
+                {locale === 'fr' ? 'Gérer mon abonnement →' : 'Manage subscription →'}
+              </button>
             </div>
-            <div className="text-xs text-gray-400 mb-3">
-              {t('credits.plans.premiumVisuals')}
-            </div>
-            <div className="text-xs text-gray-900 group-hover:translate-x-1 transition-transform">
-              {t('credits.plans.choosePremium')}
-            </div>
-          </button>
+          )}
         </div>
 
         {/* Footer */}
-        {!isBlocked && (
-          <div className="px-6 pb-6 text-center">
+        <div className="px-6 pb-6 flex justify-center gap-6">
+          {/* Manage subscription link for Pro/Premium users */}
+          {!isFree && !isPremium && (
+            <button
+              onClick={handleManageSubscription}
+              className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
+            >
+              {locale === 'fr' ? 'Gérer mon abonnement' : 'Manage subscription'}
+            </button>
+          )}
+
+          {/* Maybe later button */}
+          {!isBlocked && (
             <button
               onClick={onClose}
               className="text-xs text-gray-400 hover:text-gray-600 transition-colors"
             >
               {t('credits.popup.maybeLater')}
             </button>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );
