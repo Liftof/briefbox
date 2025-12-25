@@ -131,12 +131,13 @@ export async function POST(request: NextRequest) {
         format: gen.aspectRatio || gen.format || '1:1',
         type: gen.type || 'social_post',
         campaignId: gen.campaignId ? parseInt(gen.campaignId) : null,
+        brandId: null, // Default to null
       };
-      // Only add brandId if it exists in DB (prevents foreign key errors)
+      // Only set brandId if it exists in DB (prevents foreign key errors)
       if (gen.brandId && validBrandIds.has(parseInt(gen.brandId))) {
         item.brandId = parseInt(gen.brandId);
       } else if (gen.brandId) {
-        console.warn(`⚠️ Skipping invalid brandId ${gen.brandId} (brand not found)`);
+        console.warn(`⚠️ Invalid brandId ${gen.brandId} - setting to null (brand not found for user ${userId})`);
       }
       return item;
     });
