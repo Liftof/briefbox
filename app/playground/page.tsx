@@ -20,6 +20,7 @@ import { useBrands, BrandSummary, getLastUsedBrandId, setLastUsedBrandId, clearL
 import { getTagInfo, getTagOptions as getTagOptionsList, EDITABLE_TAGS } from '@/lib/tagStyles';
 import { notify, requestNotificationPermission } from '@/lib/notifications';
 import confetti from 'canvas-confetti';
+import { useUser } from '@clerk/nextjs';
 
 type Step = 'loading' | 'url' | 'analyzing' | 'logo-confirm' | 'bento' | 'playground';
 
@@ -199,6 +200,8 @@ AVOID: Flat backgrounds, distorted logos, cluttered layout, amateur design, 3D r
 
 function PlaygroundContent() {
   const { t, locale, setLocale } = useTranslation();
+  const { user } = useUser();
+  const userId = user?.id;
   const searchParams = useSearchParams();
   const brandId = searchParams.get('brandId');
   const analyzeUrl = searchParams.get('analyzeUrl'); // From Hero input
@@ -599,7 +602,7 @@ function PlaygroundContent() {
     if (brandId || analyzeUrl || hasCheckedBrands) return;
 
     // Check localStorage immediately (no API wait)
-    const lastUsedId = getLastUsedBrandId();
+    const lastUsedId = getLastUsedBrandId(userId);
 
     if (lastUsedId) {
       // User has used a brand before - go directly to playground
@@ -611,7 +614,7 @@ function PlaygroundContent() {
       loadBrandById(lastUsedId, false, true); // Load data in background
     }
     // If no lastUsedId, wait for API to check if user has any brands at all
-  }, [brandId, analyzeUrl, hasCheckedBrands]);
+  }, [brandId, analyzeUrl, hasCheckedBrands, userId]);
 
   // SLOW PATH: Wait for API if no localStorage brand found
   useEffect(() => {
@@ -658,7 +661,7 @@ function PlaygroundContent() {
       // This happens when localStorage has stale data from previous user
       if (response.status === 403) {
         console.log('⚠️ Brand belongs to different user, clearing localStorage');
-        clearLastUsedBrandId();
+        clearLastUsedBrandId(userId);
         if (timer) clearInterval(timer);
 
         // If user has other brands, load the first one instead of showing onboarding
@@ -679,7 +682,7 @@ function PlaygroundContent() {
       setProgress(100);
       hydrateBrand(data.brand);
       setSelectedBrandId(id);
-      setLastUsedBrandId(id);
+      setLastUsedBrandId(id, userId);
 
       // Go to bento or directly to playground
       if (silent) {
@@ -698,7 +701,7 @@ function PlaygroundContent() {
       console.error('Brand load error', error);
       // If loading failed due to forbidden, clear stale localStorage
       if (error.message?.includes('Forbidden')) {
-        clearLastUsedBrandId();
+        clearLastUsedBrandId(userId);
       }
       showToast(error.message || t('toast.errorLoading'), 'error');
 
@@ -751,7 +754,7 @@ function PlaygroundContent() {
         setProgress(100);
         hydrateBrand(data.brand);
         setSelectedBrandId(parseInt(brandId));
-        setLastUsedBrandId(parseInt(brandId));
+        setLastUsedBrandId(parseInt(brandId), userId);
 
         // Small delay to show 100% before switching
         setTimeout(() => {

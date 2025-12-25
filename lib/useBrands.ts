@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useUser } from '@clerk/nextjs';
 
 export interface BrandSummary {
   id: number;
@@ -12,6 +13,14 @@ export interface BrandSummary {
   createdAt: string;
   updatedAt: string | null;
 }
+
+// Get user-specific localStorage key
+const getLastBrandKey = (userId?: string) => {
+  return userId ? `palette_last_brand_id_${userId}` : 'palette_last_brand_id';
+};
+
+// Legacy key (before userId namespacing)
+const LEGACY_LAST_BRAND_KEY = 'palette_last_brand_id';
 
 export function useBrands() {
   const [brands, setBrands] = useState<BrandSummary[]>([]);
@@ -48,21 +57,48 @@ export function useBrands() {
   return { brands, loading, error, refresh };
 }
 
-// Get the last used brand from localStorage
-export function getLastUsedBrandId(): number | null {
+// Get the last used brand from localStorage (namespaced by userId)
+export function getLastUsedBrandId(userId?: string): number | null {
   if (typeof window === 'undefined') return null;
-  const id = localStorage.getItem('palette_last_brand_id');
+
+  const key = getLastBrandKey(userId);
+  let id = localStorage.getItem(key);
+
+  // Migrate from legacy key if user-specific key doesn't exist
+  if (!id && userId) {
+    const legacyId = localStorage.getItem(LEGACY_LAST_BRAND_KEY);
+    if (legacyId) {
+      console.log('🔄 Migrating lastUsedBrandId to user-specific storage');
+      localStorage.setItem(key, legacyId);
+      // Clear legacy key to prevent cross-user contamination
+      localStorage.removeItem(LEGACY_LAST_BRAND_KEY);
+      id = legacyId;
+    }
+  }
+
   return id ? parseInt(id, 10) : null;
 }
 
-// Save the last used brand to localStorage
-export function setLastUsedBrandId(id: number) {
+// Save the last used brand to localStorage (namespaced by userId)
+export function setLastUsedBrandId(id: number, userId?: string) {
   if (typeof window === 'undefined') return;
-  localStorage.setItem('palette_last_brand_id', id.toString());
+  const key = getLastBrandKey(userId);
+  localStorage.setItem(key, id.toString());
+
+  // Clean up legacy key if it exists
+  if (userId && localStorage.getItem(LEGACY_LAST_BRAND_KEY)) {
+    localStorage.removeItem(LEGACY_LAST_BRAND_KEY);
+  }
 }
 
 // Clear the last used brand (when 403 Forbidden or brand deleted)
-export function clearLastUsedBrandId() {
+export function clearLastUsedBrandId(userId?: string) {
   if (typeof window === 'undefined') return;
-  localStorage.removeItem('palette_last_brand_id');
+  const key = getLastBrandKey(userId);
+  localStorage.removeItem(key);
+
+  // Also clear legacy key to be safe
+  if (userId) {
+    localStorage.removeItem(LEGACY_LAST_BRAND_KEY);
+  }
 }
