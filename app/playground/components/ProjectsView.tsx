@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import {
   useGenerations as useGenerationsHook,
+  addGeneration,
   type Generation,
   type Folder,
   type GenerationFeedback,
@@ -70,8 +71,11 @@ export default function ProjectsView({ brandId }: { brandId?: number }) {
   const [draggedGen, setDraggedGen] = useState<string | null>(null);
   const [lightboxImage, setLightboxImage] = useState<Generation | null>(null);
   const [editingImage, setEditingImage] = useState<string | null>(null);
+  const [editingGeneration, setEditingGeneration] = useState<Generation | null>(null);
   const [editPrompt, setEditPrompt] = useState('');
   const [editAdditionalImages, setEditAdditionalImages] = useState<string[]>([]);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editStatus, setEditStatus] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
 
   // Favorites filter
@@ -183,6 +187,121 @@ export default function ProjectsView({ brandId }: { brandId?: number }) {
       window.URL.revokeObjectURL(blobUrl);
     } catch (err) {
       console.error('Download failed:', err);
+    }
+  };
+
+  // Edit image - regenerate with modifications
+  const handleEditImage = async () => {
+    if (!editPrompt.trim() || !editingImage) return;
+
+    setIsEditing(true);
+    setEditStatus('✏️ Modification en cours...');
+
+    try {
+      // Build edit prompt
+      const allImages = [editingImage, ...editAdditionalImages];
+      const aspectRatio = editingGeneration?.aspectRatio || '1:1';
+
+      // Detect if user is asking to replace/fix the logo
+      const isLogoReplacement = editAdditionalImages.length > 0 &&
+        (editPrompt.toLowerCase().includes('logo') ||
+          editPrompt.toLowerCase().includes('remplace') ||
+          editPrompt.toLowerCase().includes('utilise') ||
+          editPrompt.toLowerCase().includes('replace') ||
+          editPrompt.toLowerCase().includes('use this'));
+
+      let finalPrompt: string;
+      if (isLogoReplacement) {
+        finalPrompt = `[IMAGE EDIT - LOGO REPLACEMENT]
+Image 1: The base image. This contains a logo that needs to be REPLACED.
+Image 2: THIS IS THE CORRECT LOGO TO USE. Copy it EXACTLY as shown.
+
+INSTRUCTION: ${editPrompt}
+
+Replace the logo in Image 1 with the EXACT logo from Image 2. Keep everything else unchanged.`;
+      } else {
+        finalPrompt = `[IMAGE EDIT REQUEST]
+Image 1: The base image to modify.
+${editAdditionalImages.length > 0 ? `Images 2-${editAdditionalImages.length + 1}: Visual references.` : ''}
+
+EDIT INSTRUCTION: ${editPrompt}
+
+Apply the edit while preserving what wasn't mentioned.`;
+      }
+
+      setEditStatus('🎨 Génération...');
+
+      const response = await fetch('/api/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          prompt: finalPrompt,
+          negativePrompt: 'blurry, low quality, watermark, distorted',
+          imageUrls: allImages,
+          referenceImages: editAdditionalImages,
+          numImages: 1,
+          aspectRatio,
+          resolution: '2K'
+        })
+      });
+
+      const payload = await response.json();
+
+      if (!response.ok || !payload.success) {
+        throw new Error(payload.error || 'Échec de la modification');
+      }
+
+      setEditStatus('📤 Sauvegarde...');
+
+      // Process and upload result
+      const rawImages = (payload.images || [])
+        .map((img: any) => typeof img === 'string' ? img : img?.url || img?.image)
+        .filter(Boolean);
+
+      if (!rawImages.length) {
+        throw new Error('Aucune image modifiée retournée');
+      }
+
+      // Upload to blob if needed and save to generations
+      for (const imageUrl of rawImages) {
+        let finalUrl = imageUrl;
+
+        // Upload base64 to blob
+        if (imageUrl.startsWith('data:')) {
+          const uploadResponse = await fetch('/api/upload', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ imageData: imageUrl })
+          });
+          const uploadResult = await uploadResponse.json();
+          if (uploadResult.success && uploadResult.url) {
+            finalUrl = uploadResult.url;
+          }
+        }
+
+        // Save to generations
+        await addGeneration({
+          url: finalUrl,
+          prompt: editPrompt,
+          aspectRatio,
+          type: 'edit',
+          brandId: brandId || undefined,
+        });
+      }
+
+      // Reset and refresh
+      setEditingImage(null);
+      setEditingGeneration(null);
+      setEditPrompt('');
+      setEditAdditionalImages([]);
+      refresh();
+
+    } catch (err: any) {
+      console.error('Edit failed:', err);
+      alert(err.message || 'Erreur lors de la modification');
+    } finally {
+      setIsEditing(false);
+      setEditStatus('');
     }
   };
 
@@ -315,22 +434,24 @@ export default function ProjectsView({ brandId }: { brandId?: number }) {
               </div>
 
               <button
-                onClick={() => {
-                  if (!editPrompt.trim() || !editingImage) return;
-                  // TODO: Call edit API
-                  alert('Edition feature coming soon!');
-                  setEditingImage(null);
-                  setEditPrompt('');
-                  setEditAdditionalImages([]);
-                }}
+                onClick={handleEditImage}
                 className="group bg-gray-900 text-white py-4 font-medium text-sm hover:bg-black transition-colors disabled:opacity-30 flex items-center justify-center gap-2"
-                disabled={!editPrompt.trim()}
+                disabled={!editPrompt.trim() || isEditing}
               >
-                <span className="text-blue-400">✏️</span>
-                {t('playground.gallery.applyEdit')}
-                <svg className="w-4 h-4 transition-transform group-hover:translate-x-0.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                  <path d="M5 12h14M12 5l7 7-7 7" />
-                </svg>
+                {isEditing ? (
+                  <>
+                    <span className="animate-spin">⏳</span>
+                    {editStatus || 'Modification...'}
+                  </>
+                ) : (
+                  <>
+                    <span className="text-blue-400">✏️</span>
+                    {t('playground.gallery.applyEdit')}
+                    <svg className="w-4 h-4 transition-transform group-hover:translate-x-0.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                      <path d="M5 12h14M12 5l7 7-7 7" />
+                    </svg>
+                  </>
+                )}
               </button>
             </div>
           </div>
@@ -381,6 +502,7 @@ export default function ProjectsView({ brandId }: { brandId?: number }) {
                 <button
                   onClick={() => {
                     setEditingImage(lightboxImage.url);
+                    setEditingGeneration(lightboxImage);
                     setLightboxImage(null);
                   }}
                   className="w-full flex items-center gap-3 px-4 py-3 bg-blue-600 hover:bg-blue-700 transition-colors text-white rounded-lg font-medium"
