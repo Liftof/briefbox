@@ -168,6 +168,24 @@ export default function ProjectsView({ brandId }: { brandId?: number }) {
     await updateGeneration(genId, { feedback });
   };
 
+  // Download image
+  const handleDownload = async (url: string) => {
+    try {
+      const response = await fetch(url);
+      const blob = await response.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = blobUrl;
+      link.download = `palette-${Date.now()}.png`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(blobUrl);
+    } catch (err) {
+      console.error('Download failed:', err);
+    }
+  };
+
   // Render favorite heart button
   const renderFavoriteButton = (gen: Generation, isCompact = false) => {
     const isFavorite = gen.feedback?.rating === 3;
@@ -340,6 +358,7 @@ export default function ProjectsView({ brandId }: { brandId?: number }) {
             {/* Image preview - takes most of the space */}
             <div className="flex-1 flex items-center justify-center p-4 md:p-8 overflow-hidden">
               <img
+                id="lightbox-image"
                 src={lightboxImage.url}
                 alt="Full view"
                 className="max-w-full max-h-full object-contain rounded-lg shadow-2xl"
@@ -372,17 +391,38 @@ export default function ProjectsView({ brandId }: { brandId?: number }) {
                   <span>{t('playground.gallery.edit')}</span>
                 </button>
 
+                {/* Fullscreen */}
+                <button
+                  onClick={() => {
+                    const img = document.getElementById('lightbox-image');
+                    if (img) {
+                      if (img.requestFullscreen) {
+                        img.requestFullscreen();
+                      } else if ((img as any).webkitRequestFullscreen) {
+                        (img as any).webkitRequestFullscreen();
+                      } else if ((img as any).msRequestFullscreen) {
+                        (img as any).msRequestFullscreen();
+                      }
+                    }
+                  }}
+                  className="w-full flex items-center gap-3 px-4 py-3 bg-white/10 hover:bg-white/20 transition-colors text-white rounded-lg"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                  </svg>
+                  <span>{t('playground.gallery.fullscreen')}</span>
+                </button>
+
                 {/* Download */}
-                <a
-                  href={lightboxImage.url}
-                  download
+                <button
+                  onClick={() => handleDownload(lightboxImage.url)}
                   className="w-full flex items-center gap-3 px-4 py-3 bg-white/10 hover:bg-white/20 transition-colors text-white rounded-lg"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
                     <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                   </svg>
                   <span>{t('playground.gallery.download')}</span>
-                </a>
+                </button>
 
                 {/* Delete */}
                 <button
@@ -400,14 +440,6 @@ export default function ProjectsView({ brandId }: { brandId?: number }) {
                   <span>{t('playground.gallery.delete')}</span>
                 </button>
               </div>
-
-              {/* Metadata */}
-              {lightboxImage.prompt && (
-                <div className="mt-auto pt-4 border-t border-white/10">
-                  <p className="text-gray-400 text-xs mb-1">{t('playground.gallery.promptUsed')}</p>
-                  <p className="text-gray-300 text-sm leading-relaxed">{lightboxImage.prompt}</p>
-                </div>
-              )}
             </div>
           </div>
         </div>
@@ -506,14 +538,15 @@ export default function ProjectsView({ brandId }: { brandId?: number }) {
                         <path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                       </svg>
                     </button>
-                    <a
-                      href={gen.url}
-                      download
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDownload(gen.url);
+                      }}
                       className="w-6 h-6 bg-white/90 flex items-center justify-center text-xs hover:bg-white"
-                      onClick={(e) => e.stopPropagation()}
                     >
                       ↓
-                    </a>
+                    </button>
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
