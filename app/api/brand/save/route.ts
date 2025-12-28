@@ -52,7 +52,10 @@ export async function POST(request: Request) {
       // vocabulary: brand.vocabulary || [],
 
       labeledImages: brand.labeledImages || [],
-      backgrounds: brand.backgrounds || []
+      backgrounds: brand.backgrounds || [],
+
+      // Visual Style (from screenshot analysis) - Added 2025-12-27
+      visualStyle: brand.visualStyle || null
     };
 
     let result;

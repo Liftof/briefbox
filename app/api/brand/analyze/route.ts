@@ -7,7 +7,7 @@ import { db } from '@/db';
 import { brands, users } from '@/db/schema';
 import { eq, and, like } from 'drizzle-orm';
 import { firecrawlScrape, firecrawlMap, firecrawlExtract, firecrawlSearch, firecrawlBatchScrape } from '@/lib/firecrawl';
-import { callGeminiWithFallback, USE_GEMINI_FOR_BRAND_ANALYSIS } from '@/lib/gemini';
+import { callGeminiWithFallback, USE_GEMINI_FOR_BRAND_ANALYSIS, type MultimodalContent } from '@/lib/gemini';
 
 // Content nugget types for editorial extraction
 interface ContentNugget {
@@ -1029,6 +1029,134 @@ function mergeColorPalettes(aiColors: string[], extractedColors: string[]): stri
   return merged.slice(0, 6);
 }
 
+// Helper: Merge all color sources with smart prioritization
+// Priority: screenshot colors > logo colors > AI colors
+// Filters out generic/bad AI guesses like #0000FF, #FF0000, etc.
+function mergeAllColorSources(
+  screenshotColors: string[],
+  logoColors: string[],
+  aiColors: string[]
+): string[] {
+  const normalize = (hex: string) => hex.toUpperCase().replace(/^#/, '');
+
+  // List of generic "AI guess" colors to deprioritize or filter
+  const genericColors = new Set([
+    '0000FF', // Pure blue - common AI guess
+    'FF0000', // Pure red
+    '00FF00', // Pure green
+    'FFFF00', // Pure yellow
+    '00FFFF', // Pure cyan
+    'FF00FF', // Pure magenta
+  ]);
+
+  // Check if a color is "interesting" (not pure black/white/gray)
+  // IMPORTANT: Keep tinted backgrounds like beige (#F8F6F3), cream, warm whites
+  const isInterestingColor = (hex: string): boolean => {
+    const norm = normalize(hex);
+    if (norm.length !== 6) return false;
+
+    const r = parseInt(norm.slice(0, 2), 16);
+    const g = parseInt(norm.slice(2, 4), 16);
+    const b = parseInt(norm.slice(4, 6), 16);
+
+    // Skip pure black
+    if (r < 15 && g < 15 && b < 15) return false;
+
+    // For light colors (potential backgrounds), check if they have a tint
+    // Beige/cream/warm colors have uneven RGB channels
+    const maxChannel = Math.max(r, g, b);
+    const minChannel = Math.min(r, g, b);
+    const channelSpread = maxChannel - minChannel;
+
+    // Skip PURE white (all channels very close and very high)
+    // But KEEP tinted whites like beige (#F8F6F3), cream, warm backgrounds
+    if (r > 240 && g > 240 && b > 240) {
+      // Only skip if truly neutral (channels within 5 of each other)
+      if (channelSpread < 5) return false;
+      // Keep if there's a noticeable tint (warm beige, cool blue-white, etc.)
+      // This preserves colors like #F8F6F3 (spread of 5) or #FFF5E6 (spread of 18)
+    }
+
+    // Skip pure gray (all channels within 15 of each other and mid-range)
+    if (channelSpread < 15 && r > 40 && r < 215) return false;
+
+    return true;
+  };
+
+  // Check if color is significantly different from existing palette
+  const isDifferentEnough = (newColor: string, palette: string[]): boolean => {
+    const newNorm = normalize(newColor);
+    return palette.every(existing => {
+      const extNorm = normalize(existing);
+      const rDiff = Math.abs(parseInt(newNorm.slice(0, 2), 16) - parseInt(extNorm.slice(0, 2), 16));
+      const gDiff = Math.abs(parseInt(newNorm.slice(2, 4), 16) - parseInt(extNorm.slice(2, 4), 16));
+      const bDiff = Math.abs(parseInt(newNorm.slice(4, 6), 16) - parseInt(extNorm.slice(4, 6), 16));
+      return (rDiff + gDiff + bDiff) > 50; // Color distance threshold
+    });
+  };
+
+  const merged: string[] = [];
+
+  // 1. PRIORITY: Screenshot colors (most accurate for overall brand feel)
+  for (const color of screenshotColors) {
+    if (merged.length >= 6) break;
+    if (isInterestingColor(color) && isDifferentEnough(color, merged)) {
+      merged.push(color.startsWith('#') ? color : `#${color}`);
+    }
+  }
+
+  console.log(`   After screenshot colors: ${merged.length} colors`);
+
+  // 2. Add logo colors (core brand identity, but often black/white)
+  for (const color of logoColors) {
+    if (merged.length >= 6) break;
+    if (isInterestingColor(color) && isDifferentEnough(color, merged)) {
+      merged.push(color.startsWith('#') ? color : `#${color}`);
+    }
+  }
+
+  console.log(`   After logo colors: ${merged.length} colors`);
+
+  // 3. Add AI colors ONLY if we don't have enough, and filter generics
+  if (merged.length < 4) {
+    for (const color of aiColors) {
+      if (merged.length >= 6) break;
+      const norm = normalize(color);
+
+      // Skip generic AI guesses
+      if (genericColors.has(norm)) {
+        console.log(`   Skipping generic AI color: #${norm}`);
+        continue;
+      }
+
+      if (isInterestingColor(color) && isDifferentEnough(color, merged)) {
+        merged.push(color.startsWith('#') ? color : `#${color}`);
+      }
+    }
+  }
+
+  console.log(`   Final palette: ${merged.length} colors`);
+
+  // 4. If still no colors, add some safe neutrals + any AI color that's not generic
+  if (merged.length === 0) {
+    // Try to salvage any non-generic AI colors
+    for (const color of aiColors) {
+      const norm = normalize(color);
+      if (!genericColors.has(norm) && color.length >= 4) {
+        merged.push(color.startsWith('#') ? color : `#${color}`);
+        if (merged.length >= 3) break;
+      }
+    }
+
+    // Last resort: add neutral palette
+    if (merged.length === 0) {
+      merged.push('#1A1A2E', '#16213E', '#E8E8E8');
+    }
+  }
+
+  return merged.slice(0, 6);
+}
+
 export async function POST(request: Request) {
   try {
     // ====== AUTHENTICATION ======
@@ -1461,7 +1589,7 @@ export async function POST(request: Request) {
         "brandStory": "A compelling 2-3 sentence summary of the brand's origin, mission, or founding story found in the content.",
         "targetAudience": "Specific description of who this brand targets (e.g. 'Busy HR Managers', 'Eco-conscious students', 'Small Business Owners').",
         "uniqueValueProposition": "The single most important promise or benefit they offer (e.g. 'Saves 10h/week', 'Provides clean water to villages').",
-        "colors": ["#hex1", "#hex2", "#hex3", "#hex4"], 
+        "colors": ["#hex1", "#hex2", "#hex3", "#hex4 - CRITICAL: Extract EXACT hex colors visible in the screenshot. DO NOT guess generic colors like #0000FF (pure blue), #FF0000 (pure red). Look at the actual pixels - brand blues are usually softer like #4A7BF7, #5B8DEF, not pure #0000FF. Include 4-6 distinct colors from backgrounds, buttons, accents, gradients."],
         "fonts": ["Font Name 1", "Font Name 2"],
         "values": ["Value 1", "Value 2", "Value 3"],
         "features": ["Specific Feature 1", "Specific Feature 2", "Specific Feature 3", "Specific Feature 4"],
@@ -1469,11 +1597,20 @@ export async function POST(request: Request) {
         "vocabulary": ["Specific Term 1", "Specific Term 2", "Brand Keyword 1", "Brand Keyword 2"],
         "services": ["Service 1", "Service 2", "Service 3"],
         "keyPoints": ["Unique Selling Point 1", "USP 2", "USP 3"],
-        "aesthetic": ["Adjective 1", "Adjective 2", "Adjective 3"],
+        "aesthetic": ["Adjective 1", "Adjective 2", "Adjective 3 - FROM SCREENSHOT: Describe the visual feel (e.g. 'Minimalist', 'Bold', 'Playful', 'Corporate', 'Organic', 'Tech-forward', 'Luxurious')"],
         "toneVoice": ["Adjective 1", "Adjective 2", "Adjective 3"],
         "logo": "URL to the MAIN brand logo (prioritize clear, high-res, distinct from client logos)",
         "industry": "Specific industry (e.g. 'SaaS Fintech', 'Organic Skincare', 'Industrial Manufacturing')",
-        "visualMotifs": ["Motif 1 (e.g. 'Data charts')", "Motif 2 (e.g. 'Abstract networks')", "Motif 3"],
+        "visualMotifs": ["Motif 1", "Motif 2", "Motif 3 - FROM SCREENSHOT: What visual elements repeat? (e.g. '3D organic shapes', 'Geometric grids', 'Gradient blobs', 'Line illustrations', 'Photo cutouts', 'Glassmorphism cards')"],
+        "visualStyle": {
+          "designSystem": "FROM SCREENSHOT: Overall design approach (e.g. 'Apple-like minimalism', 'Stripe-inspired gradients', 'Figma-style illustrations', 'Notion-like simplicity')",
+          "backgroundStyle": "FROM SCREENSHOT: What's the background like? (e.g. 'Warm off-white/cream', 'Pure white', 'Dark mode', 'Gradient mesh', 'Subtle texture')",
+          "heroElement": "FROM SCREENSHOT: Main visual element in hero (e.g. '3D abstract brain shape', 'Product mockup', 'Illustration', 'Video', 'Photo')",
+          "whitespace": "FROM SCREENSHOT: Amount of whitespace (e.g. 'Generous/airy', 'Moderate', 'Dense/compact')",
+          "corners": "FROM SCREENSHOT: Corner style (e.g. 'Rounded/soft', 'Sharp/angular', 'Mixed')",
+          "shadows": "FROM SCREENSHOT: Shadow usage (e.g. 'Soft drop shadows', 'Hard shadows', 'No shadows', 'Glassmorphism blur')",
+          "gradients": "FROM SCREENSHOT: Gradient usage if any (e.g. 'Blue to purple gradient on 3D shapes', 'Subtle background gradient', 'None')"
+        },
         "suggestedPosts": [
            {
              "templateId": "stat | announcement | event | quote | expert | product | didyouknow",
@@ -1508,9 +1645,10 @@ export async function POST(request: Request) {
            }
         ],
         "backgroundPrompts": [
-           "Smooth gradient from [couleur primaire] to black, subtle grain texture, minimal",
-           "Soft blurred color wash in [couleur primaire], dreamy and ethereal",
-           "Fine geometric grid pattern in [couleur primaire] on dark background, very subtle"
+           "FROM SCREENSHOT & COLORS: Generate 3 background prompts that match the website's actual visual style. Use the REAL extracted colors (not generic). Examples based on screenshot analysis:",
+           "If warm/minimal site: 'Soft cream background (#F8F6F3) with subtle warm gradient, clean and airy'",
+           "If gradient-heavy: 'Smooth gradient from [actual blue like #5B8DEF] to [darker tone], organic flowing shapes'",
+           "If dark mode: 'Deep charcoal (#1A1A2E) with subtle blue glow accents, tech-forward'"
         ]
       }
       
@@ -1669,12 +1807,18 @@ export async function POST(request: Request) {
     // ═══════════════════════════════════════════════════════════════════════════
     // MAIN LLM CALL: Gemini 3 Flash (primary) → Claude Sonnet (fallback)
     // Feature flag USE_GEMINI_FOR_BRAND_ANALYSIS allows easy rollback
+    // NOW WITH VISION: Screenshot is passed for accurate color/style extraction
     // ═══════════════════════════════════════════════════════════════════════════
 
-    const systemPrompt = "You are a Brand Analyst. Extract brand identity from website content. Return ONLY valid JSON matching the requested schema. No markdown, no explanations, just the JSON object.";
-    const userPromptText = typeof userMessageContent === 'string'
-      ? userMessageContent
-      : userMessageContent[0]?.text || '';
+    const systemPrompt = "You are a Brand Analyst with strong visual analysis skills. Extract brand identity from website content AND the screenshot provided. Pay special attention to the EXACT colors visible in the screenshot - extract precise hex codes, not generic values like #0000FF. Return ONLY valid JSON matching the requested schema. No markdown, no explanations, just the JSON object.";
+
+    // Pass full multimodal content (text + screenshot) to LLM
+    const multimodalContent: MultimodalContent[] = userMessageContent as MultimodalContent[];
+    const hasScreenshot = userMessageContent.some((c: any) => c.type === 'image_url');
+
+    if (hasScreenshot) {
+      console.log('📸 Vision mode: Screenshot will be analyzed for accurate brand colors');
+    }
 
     let brandData: any = null;
 
@@ -1683,7 +1827,7 @@ export async function POST(request: Request) {
 
       brandData = await callGeminiWithFallback(
         systemPrompt,
-        userPromptText,
+        multimodalContent,  // Pass full multimodal content, not just text!
         { temperature: 0.2, maxTokens: 8000, fallbackToOpenRouter: true }
       );
 
@@ -1716,16 +1860,31 @@ export async function POST(request: Request) {
 
     // 🚀 PARALLEL OPTIMIZATION: Run color extraction and industry search in parallel
     const logoUrl = brandData.logo || firecrawlMetadata.ogImage || firecrawlMetadata.icon;
+    const screenshotUrl = firecrawlMetadata.screenshot;
 
     const parallelTasks = [];
 
-    // 3. Extract Colors from Logo (if available) - REAL EXTRACTION
-    let extractedColors: string[] = [];
+    // 3a. Extract Colors from Logo (if available) - REAL EXTRACTION
+    // Note: SVGs will be skipped (handled in extractColorsFromImage)
     if (logoUrl && logoUrl.startsWith('http')) {
       console.log('🎨 Extracting REAL colors from logo:', logoUrl);
       parallelTasks.push(
         extractColorsFromImage(logoUrl).catch(e => {
-          console.error("Color extraction failed:", e);
+          console.error("Logo color extraction failed:", e);
+          return [];
+        })
+      );
+    } else {
+      parallelTasks.push(Promise.resolve([]));
+    }
+
+    // 3b. Extract Colors from Screenshot - CRITICAL for accurate brand colors!
+    // This is especially important when logo is SVG or monochrome (black/white)
+    if (screenshotUrl && screenshotUrl.startsWith('http')) {
+      console.log('📸 Extracting colors from website screenshot:', screenshotUrl.slice(0, 80) + '...');
+      parallelTasks.push(
+        extractColorsFromImage(screenshotUrl).catch(e => {
+          console.error("Screenshot color extraction failed:", e);
           return [];
         })
       );
@@ -1749,17 +1908,29 @@ export async function POST(request: Request) {
       parallelTasks.push(Promise.resolve({ rawExcerpts: '', sources: [] }));
     }
 
-    // Wait for both tasks to complete
-    const [colorsResult, industrySearchResult] = await Promise.all(parallelTasks);
+    // Wait for all tasks to complete
+    const [logoColorsResult, screenshotColorsResult, industrySearchResult] = await Promise.all(parallelTasks);
 
-    // Process color extraction results
-    extractedColors = colorsResult as string[];
+    // Process color extraction results - combine logo + screenshot colors
+    const logoColors = (logoColorsResult as string[]) || [];
+    const screenshotColors = (screenshotColorsResult as string[]) || [];
+
+    console.log('🎨 Logo colors extracted:', logoColors.length > 0 ? logoColors : '(none or SVG skipped)');
+    console.log('📸 Screenshot colors extracted:', screenshotColors.length > 0 ? screenshotColors : '(none)');
+
+    // Smart color merging: screenshot colors are most reliable for overall brand feel
+    // Logo colors add the core brand identity (if not black/white)
+    // AI colors fill gaps but are least reliable
+    const aiColors = Array.isArray(brandData.colors) ? brandData.colors : [];
+
+    // Combine all color sources with priority: screenshot > logo > AI
+    let extractedColors = mergeAllColorSources(screenshotColors, logoColors, aiColors);
+
     if (extractedColors.length > 0) {
-      console.log('✅ Real colors extracted:', extractedColors);
-      // Merge with AI-guessed colors, prioritizing extracted
-      const aiColors = Array.isArray(brandData.colors) ? brandData.colors : [];
-      brandData.colors = mergeColorPalettes(aiColors, extractedColors);
+      brandData.colors = extractedColors;
       console.log('🎨 Final merged palette:', brandData.colors);
+    } else {
+      console.log('⚠️ No colors extracted, keeping AI-guessed colors:', aiColors);
     }
 
     // Refine the main logo selection based on AI classification

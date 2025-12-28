@@ -32,6 +32,9 @@ export const users = pgTable('users', {
   // Team (optionnel)
   teamId: integer('team_id'), // Sera une foreign key vers teams
 
+  // Email preferences
+  emailUnsubscribed: boolean('email_unsubscribed').default(false),
+
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').defaultNow(),
 });
@@ -155,6 +158,17 @@ export const brands = pgTable('brands', {
   labeledImages: jsonb('labeled_images').$type<{ url: string, category: string, description: string }[]>(),
   backgrounds: jsonb('backgrounds').$type<string[]>(), // URLs des textures générées
 
+  // Visual Style (extracted from website screenshot) - Added 2025-12-27
+  visualStyle: jsonb('visual_style').$type<{
+    designSystem?: string,      // e.g. "Apple-like minimalism"
+    backgroundStyle?: string,   // e.g. "Warm off-white/cream"
+    heroElement?: string,       // e.g. "3D abstract brain shape"
+    whitespace?: string,        // e.g. "Generous/airy"
+    corners?: string,           // e.g. "Rounded/soft"
+    shadows?: string,           // e.g. "Soft drop shadows"
+    gradients?: string          // e.g. "Blue gradient on 3D shapes"
+  }>(),
+
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').defaultNow(),
 });
@@ -261,4 +275,37 @@ export const batchGenerationQueue = pgTable('batch_generation_queue', {
   error: text('error'),
   createdAt: timestamp('created_at').defaultNow(),
   processedAt: timestamp('processed_at'),
+});
+
+// ============================================
+// EMAIL SYSTEM
+// ============================================
+
+export type EmailType = 'welcome' | 'engagement' | 'conversion';
+export type EmailStatus = 'pending' | 'sent' | 'cancelled' | 'failed';
+
+export const scheduledEmails = pgTable('scheduled_emails', {
+  id: serial('id').primaryKey(),
+  userId: text('user_id').notNull(),
+  userEmail: text('user_email').notNull(),
+  userName: text('user_name'),
+
+  emailType: text('email_type').$type<EmailType>().notNull(),
+  status: text('status').$type<EmailStatus>().default('pending').notNull(),
+
+  scheduledFor: timestamp('scheduled_for').notNull(),
+  sentAt: timestamp('sent_at'),
+
+  metadata: jsonb('metadata').$type<{
+    generationId?: number;
+    generationUrl?: string;
+    brandName?: string;
+    discountCode?: string;
+  }>(),
+
+  error: text('error'),
+  attempts: integer('attempts').default(0).notNull(),
+
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
 });

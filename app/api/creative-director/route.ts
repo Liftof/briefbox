@@ -530,7 +530,25 @@ export async function POST(request: NextRequest) {
     brandKnowledge.push(`VISUAL MOTIFS (artistic direction): ${visualMotifs.join(', ')}`);
     console.log(`🎨 Visual motifs: ${visualMotifs.join(', ')} ${brand.visualMotifs?.length > 0 ? '(from brand)' : '(artistic fallback)'}`);
 
-    const knowledgeContext = brandKnowledge.length > 0 
+    // Add visual style details if available (from screenshot analysis)
+    if (brand.visualStyle) {
+      const vs = brand.visualStyle;
+      const styleDetails = [];
+      if (vs.designSystem) styleDetails.push(`Design: ${vs.designSystem}`);
+      if (vs.backgroundStyle) styleDetails.push(`Background: ${vs.backgroundStyle}`);
+      if (vs.heroElement) styleDetails.push(`Hero element: ${vs.heroElement}`);
+      if (vs.corners) styleDetails.push(`Corners: ${vs.corners}`);
+      if (vs.shadows) styleDetails.push(`Shadows: ${vs.shadows}`);
+      if (vs.gradients) styleDetails.push(`Gradients: ${vs.gradients}`);
+      if (vs.whitespace) styleDetails.push(`Whitespace: ${vs.whitespace}`);
+
+      if (styleDetails.length > 0) {
+        brandKnowledge.push(`VISUAL STYLE (from website): ${styleDetails.join('. ')}`);
+        console.log(`🎨 Visual style: ${styleDetails.slice(0, 3).join(', ')}...`);
+      }
+    }
+
+    const knowledgeContext = brandKnowledge.length > 0
         ? `\n\nBRAND KNOWLEDGE & DATA (Use these facts/quotes if relevant to the brief):\n${brandKnowledge.join('\n')}`
         : '';
 

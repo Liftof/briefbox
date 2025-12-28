@@ -6,6 +6,11 @@
 const GEMINI_API_KEY = process.env.GOOGLE_AI_API_KEY || process.env.GEMINI_API_KEY;
 const GEMINI_MODEL = 'gemini-3-flash-preview';
 
+// Multimodal content types
+export type TextContent = { type: 'text'; text: string };
+export type ImageUrlContent = { type: 'image_url'; image_url: { url: string } };
+export type MultimodalContent = TextContent | ImageUrlContent;
+
 interface GeminiMessage {
     role: 'user' | 'model';
     parts: { text: string }[];
@@ -21,15 +26,104 @@ interface GeminiResponse {
 }
 
 /**
- * Call Gemini 3 Flash Preview API
+ * Convert image URL to base64 for Gemini API
+ */
+async function imageUrlToBase64(imageUrl: string): Promise<{ mimeType: string; data: string } | null> {
+    try {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 15000);
+
+        const response = await fetch(imageUrl, {
+            signal: controller.signal,
+            headers: { 'Accept': 'image/*' }
+        });
+        clearTimeout(timeout);
+
+        if (!response.ok) {
+            console.warn(`⚠️ Failed to fetch image for base64: ${response.status}`);
+            return null;
+        }
+
+        const contentType = response.headers.get('content-type') || 'image/png';
+        const arrayBuffer = await response.arrayBuffer();
+        const base64 = Buffer.from(arrayBuffer).toString('base64');
+
+        // Map content type to Gemini-supported mime types
+        let mimeType = contentType.split(';')[0].trim();
+        if (mimeType === 'image/svg+xml') {
+            console.warn('⚠️ SVG images not supported for vision, skipping');
+            return null;
+        }
+
+        return { mimeType, data: base64 };
+    } catch (error) {
+        console.warn('⚠️ Image to base64 conversion failed:', error);
+        return null;
+    }
+}
+
+/**
+ * Build Gemini parts array from multimodal content
+ */
+async function buildGeminiParts(content: string | MultimodalContent[]): Promise<any[]> {
+    if (typeof content === 'string') {
+        return [{ text: content }];
+    }
+
+    const parts: any[] = [];
+
+    for (const item of content) {
+        if (item.type === 'text') {
+            parts.push({ text: item.text });
+        } else if (item.type === 'image_url') {
+            const imageData = await imageUrlToBase64(item.image_url.url);
+            if (imageData) {
+                parts.push({
+                    inlineData: {
+                        mimeType: imageData.mimeType,
+                        data: imageData.data
+                    }
+                });
+                console.log(`📸 Added image to Gemini request (${imageData.mimeType})`);
+            }
+        }
+    }
+
+    return parts;
+}
+
+/**
+ * Build OpenRouter/Claude message content from multimodal content
+ */
+function buildClaudeContent(content: string | MultimodalContent[]): string | any[] {
+    if (typeof content === 'string') {
+        return content;
+    }
+
+    // Claude/OpenRouter format for multimodal
+    return content.map(item => {
+        if (item.type === 'text') {
+            return { type: 'text', text: item.text };
+        } else if (item.type === 'image_url') {
+            return {
+                type: 'image_url',
+                image_url: { url: item.image_url.url }
+            };
+        }
+        return item;
+    });
+}
+
+/**
+ * Call Gemini 3 Flash Preview API (supports multimodal input)
  * @param systemPrompt - System instruction
- * @param userPrompt - User message
+ * @param userPrompt - User message (string or multimodal content array)
  * @param options - Temperature, maxTokens
  * @returns Parsed response text or null if failed
  */
 export async function callGemini(
     systemPrompt: string,
-    userPrompt: string,
+    userPrompt: string | MultimodalContent[],
     options: {
         temperature?: number;
         maxTokens?: number;
@@ -46,6 +140,14 @@ export async function callGemini(
     try {
         console.log(`🌟 Calling ${model}...`);
 
+        // Build multimodal parts
+        const parts = await buildGeminiParts(userPrompt);
+        const hasImages = parts.some(p => p.inlineData);
+
+        if (hasImages) {
+            console.log(`📸 Multimodal request with ${parts.filter(p => p.inlineData).length} image(s)`);
+        }
+
         const response = await fetch(
             `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GEMINI_API_KEY}`,
             {
@@ -57,7 +159,7 @@ export async function callGemini(
                     contents: [
                         {
                             role: 'user',
-                            parts: [{ text: userPrompt }]
+                            parts
                         }
                     ],
                     systemInstruction: {
@@ -68,12 +170,14 @@ export async function callGemini(
                         maxOutputTokens: maxTokens,
                         responseMimeType: 'application/json', // Force JSON output
                     },
-                    // Enable Google Search grounding for better insights
-                    tools: [
-                        {
-                            googleSearch: {}
-                        }
-                    ]
+                    // Enable Google Search grounding for better insights (only when no images)
+                    ...(hasImages ? {} : {
+                        tools: [
+                            {
+                                googleSearch: {}
+                            }
+                        ]
+                    })
                 })
             }
         );
@@ -103,14 +207,15 @@ export async function callGemini(
 
 /**
  * Call Gemini with structured JSON output and automatic fallback to Claude
- * @param systemPrompt - System instruction  
- * @param userPrompt - User message with expected JSON schema
+ * Supports multimodal input (text + images)
+ * @param systemPrompt - System instruction
+ * @param userPrompt - User message (string or multimodal content array)
  * @param fallbackToOpenRouter - Whether to fallback to Claude via OpenRouter
  * @returns Parsed JSON object or null
  */
 export async function callGeminiWithFallback<T = any>(
     systemPrompt: string,
-    userPrompt: string,
+    userPrompt: string | MultimodalContent[],
     options: {
         temperature?: number;
         maxTokens?: number;
@@ -149,6 +254,9 @@ export async function callGeminiWithFallback<T = any>(
         console.log('🔄 Falling back to Claude 3.5 Sonnet via OpenRouter...');
 
         try {
+            // Build Claude-compatible content (supports multimodal)
+            const claudeContent = buildClaudeContent(userPrompt);
+
             const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
                 method: "POST",
                 headers: {
@@ -161,7 +269,7 @@ export async function callGeminiWithFallback<T = any>(
                     "model": "anthropic/claude-3.5-sonnet",
                     "messages": [
                         { "role": "system", "content": systemPrompt },
-                        { "role": "user", "content": userPrompt }
+                        { "role": "user", "content": claudeContent }
                     ],
                     "max_tokens": options.maxTokens || 8000,
                     "temperature": options.temperature || 0.2
@@ -210,3 +318,4 @@ export default {
     callGeminiWithFallback,
     USE_GEMINI_FOR_BRAND_ANALYSIS
 };
+// Types are exported via named exports above (MultimodalContent, etc.)
