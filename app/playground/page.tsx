@@ -244,21 +244,21 @@ function PlaygroundContent() {
 
   // Fun loading messages that cycle through (locale-aware)
   const LOADING_STAGES = locale === 'fr' ? [
-    { emoji: '🔍', message: 'Exploration du site...', sub: 'On scrape les pages clés' },
-    { emoji: '🎨', message: 'Extraction des couleurs...', sub: 'Palette & identité visuelle' },
-    { emoji: '📸', message: 'Analyse des images...', sub: 'Logo, produits, visuels' },
-    { emoji: '🧠', message: 'L\'IA réfléchit...', sub: 'Analyse intelligente en cours' },
-    { emoji: '🔥', message: 'Enrichissement...', sub: 'Recherche de tendances' },
-    { emoji: '📊', message: 'Compilation des insights...', sub: 'Pain points & concurrents' },
-    { emoji: '✨', message: 'Finalisation...', sub: 'On prépare votre brief' },
+    { emoji: '🔍', message: 'Exploration du site...', sub: 'Accueil, à propos, services...' },
+    { emoji: '🎨', message: 'Extraction des couleurs...', sub: 'Depuis votre site et vos visuels' },
+    { emoji: '📸', message: 'Analyse des images...', sub: 'Logo, produits, équipe...' },
+    { emoji: '🧠', message: 'L\'IA réfléchit...', sub: 'Analyse du style et du ton' },
+    { emoji: '🔥', message: 'Enrichissement...', sub: 'Tendances de votre secteur' },
+    { emoji: '📊', message: 'Compilation des insights...', sub: 'Pain points & positionnement' },
+    { emoji: '✨', message: 'Finalisation...', sub: 'Votre profil de marque est prêt' },
   ] : [
-    { emoji: '🔍', message: 'Exploring website...', sub: 'Scraping key pages' },
-    { emoji: '🎨', message: 'Extracting colors...', sub: 'Palette & visual identity' },
-    { emoji: '📸', message: 'Analyzing images...', sub: 'Logo, products, visuals' },
-    { emoji: '🧠', message: 'AI is thinking...', sub: 'Smart analysis in progress' },
-    { emoji: '🔥', message: 'Enriching data...', sub: 'Searching for trends' },
-    { emoji: '📊', message: 'Compiling insights...', sub: 'Pain points & competitors' },
-    { emoji: '✨', message: 'Finalizing...', sub: 'Preparing your brief' },
+    { emoji: '🔍', message: 'Exploring website...', sub: 'Homepage, about, services...' },
+    { emoji: '🎨', message: 'Extracting colors...', sub: 'From your site and visuals' },
+    { emoji: '📸', message: 'Analyzing images...', sub: 'Logo, products, team...' },
+    { emoji: '🧠', message: 'AI is thinking...', sub: 'Analyzing style and tone' },
+    { emoji: '🔥', message: 'Enriching data...', sub: 'Trends in your industry' },
+    { emoji: '📊', message: 'Compiling insights...', sub: 'Pain points & positioning' },
+    { emoji: '✨', message: 'Finalizing...', sub: 'Your brand profile is ready' },
   ];
 
   // Simulated discoveries that appear during loading (locale-aware)
@@ -286,19 +286,19 @@ function PlaygroundContent() {
 
   // Rotating fun facts (locale-aware)
   const FUN_FACTS = locale === 'fr' ? [
-    "💡 On analyse jusqu'à 10 pages de votre site pour extraire le maximum d'insights.",
-    "🎨 Les couleurs sont extraites directement de votre logo pour une cohérence parfaite.",
-    "🔥 On recherche les tendances de votre industrie en temps réel.",
-    "🧠 Notre IA analyse même les captures d'écran de votre site.",
-    "📊 On identifie vos concurrents pour mieux vous positionner.",
-    "✨ 1 crédit = 1 visuel unique, adapté à votre marque.",
+    "🔍 Analyse de votre page d'accueil, à propos, services...",
+    "🎨 Extraction des couleurs et du style visuel de votre site.",
+    "📝 Identification de votre ton de voix et vocabulaire unique.",
+    "🖼️ Découverte de vos visuels : logo, produits, équipe...",
+    "💡 Analyse des tendances de votre industrie en temps réel.",
+    "✨ Création de votre profil de marque personnalisé.",
   ] : [
-    "💡 We analyze up to 10 pages of your site to extract maximum insights.",
-    "🎨 Colors are extracted directly from your logo for perfect consistency.",
-    "🔥 We search for trends in your industry in real time.",
-    "🧠 Our AI even analyzes screenshots from your site.",
-    "📊 We identify your competitors for better positioning.",
-    "✨ 1 credit = 1 unique visual, tailored to your brand.",
+    "🔍 Analyzing your homepage, about page, services...",
+    "🎨 Extracting colors and visual style from your website.",
+    "📝 Identifying your tone of voice and unique vocabulary.",
+    "🖼️ Discovering your visuals: logo, products, team...",
+    "💡 Analyzing trends in your industry in real time.",
+    "✨ Creating your personalized brand profile.",
   ];
 
   const [currentFact, setCurrentFact] = useState(0);
@@ -834,6 +834,11 @@ function PlaygroundContent() {
       });
     }, 800);
 
+    // Show notification after 10 seconds
+    const notificationTimer = setTimeout(() => {
+      showToast(t('toast.scrapingInProgress'), 'info');
+    }, 10000);
+
     // Retry logic for failed scrapes
     const maxRetries = 2;
     let lastError: any = null;
@@ -861,6 +866,7 @@ function PlaygroundContent() {
         }
 
         clearInterval(timer);
+        clearTimeout(notificationTimer);
         setProgress(100);
         hydrateBrand(data.brand);
         setStatus('idle');
@@ -902,6 +908,7 @@ function PlaygroundContent() {
 
     // All retries failed
     clearInterval(timer);
+    clearTimeout(notificationTimer);
     console.error('All analyze attempts failed:', lastError);
     setStatus('error');
     setStep('url');
@@ -926,6 +933,11 @@ function PlaygroundContent() {
         return prev + increment;
       });
     }, 800);
+
+    // Show notification after 10 seconds
+    const notificationTimer = setTimeout(() => {
+      showToast(t('toast.scrapingInProgress'), 'info');
+    }, 10000);
 
     // Retry logic for failed scrapes
     const maxRetries = 2;
@@ -954,6 +966,7 @@ function PlaygroundContent() {
         }
 
         clearInterval(timer);
+        clearTimeout(notificationTimer);
         setProgress(100);
         hydrateBrand(data.brand);
         setStatus('idle');
@@ -991,6 +1004,7 @@ function PlaygroundContent() {
 
     // All retries failed
     clearInterval(timer);
+    clearTimeout(notificationTimer);
     console.error('All analyze attempts failed:', lastError);
     setStatus('error');
     setStep('url');
@@ -2453,7 +2467,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
               {/* Stage labels */}
               <div className="flex justify-between mt-3">
                 <span className={`text-[9px] font-mono uppercase ${loadingStage >= 0 ? 'text-blue-600' : 'text-gray-300'}`}>
-                  {locale === 'fr' ? 'Scraping' : 'Scraping'}
+                  {locale === 'fr' ? 'Scan' : 'Scan'}
                 </span>
                 <span className={`text-[9px] font-mono uppercase ${loadingStage >= 3 ? 'text-blue-600' : 'text-gray-300'}`}>
                   {locale === 'fr' ? 'IA' : 'AI'}
@@ -2720,7 +2734,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
     }
 
     if (activeTab === 'gallery') {
-      return <ProjectsView brandId={selectedBrandId || undefined} />;;
+      return <ProjectsView key={selectedBrandId || 'no-brand'} brandId={selectedBrandId || undefined} />;
     }
 
     if (activeTab === 'settings') {
