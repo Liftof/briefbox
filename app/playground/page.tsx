@@ -553,16 +553,35 @@ function PlaygroundContent() {
     // This ensures returning users get the same quality images as new users
     const labeledImages = Array.isArray(brand.labeledImages) ? brand.labeledImages : [];
 
-    // Priority order: logo first, then reference, product, app_ui, others
+    // Priority order for DEFAULT SELECTION (what gets pre-selected for generation)
+    // High priority: logo, app_ui, product, person, texture (useful for visuals)
+    // Low priority: reference, other
+    // EXCLUDED from default: icon, client_logo (not useful for generation)
     const logoImg = brand.logo ? [brand.logo] : [];
-    const referenceImgs = labeledImages.filter((img: any) => img.category === 'reference').map((img: any) => img.url);
-    const productImgs = labeledImages.filter((img: any) => img.category === 'product').map((img: any) => img.url);
     const appImgs = labeledImages.filter((img: any) => img.category === 'app_ui').map((img: any) => img.url);
-    const otherImgs = labeledImages.filter((img: any) => !['main_logo', 'reference', 'product', 'app_ui'].includes(img.category)).map((img: any) => img.url);
+    const productImgs = labeledImages.filter((img: any) => img.category === 'product').map((img: any) => img.url);
+    const personImgs = labeledImages.filter((img: any) => img.category === 'person').map((img: any) => img.url);
+    const textureImgs = labeledImages.filter((img: any) => img.category === 'texture').map((img: any) => img.url);
+    const referenceImgs = labeledImages.filter((img: any) => img.category === 'reference').map((img: any) => img.url);
+    // "other" but NOT icons or client logos
+    const otherImgs = labeledImages.filter((img: any) =>
+      !['main_logo', 'reference', 'product', 'app_ui', 'person', 'texture', 'icon', 'client_logo'].includes(img.category)
+    ).map((img: any) => img.url);
+    // Icons and client logos still in library but not pre-selected
+    const iconImgs = labeledImages.filter((img: any) => img.category === 'icon').map((img: any) => img.url);
+    const clientLogoImgs = labeledImages.filter((img: any) => img.category === 'client_logo').map((img: any) => img.url);
 
-    // Combine in priority order with fallback to legacy images array
+    // ALL images for the library (user can select any)
     const fallback = Array.isArray(brand.images) ? brand.images : [];
-    const allImages = [...new Set([...logoImg, ...referenceImgs, ...productImgs, ...appImgs, ...otherImgs, ...fallback])].filter(Boolean);
+    const allImages = [...new Set([
+      ...logoImg, ...appImgs, ...productImgs, ...personImgs, ...textureImgs,
+      ...referenceImgs, ...otherImgs, ...iconImgs, ...clientLogoImgs, ...fallback
+    ])].filter(Boolean);
+
+    // DEFAULT SELECTED: prioritize useful assets (exclude icons, client logos)
+    const priorityImages = [...new Set([
+      ...logoImg, ...appImgs, ...productImgs, ...personImgs, ...textureImgs, ...referenceImgs, ...otherImgs
+    ])].filter(Boolean);
 
     // FIX: Add images array to brandData so BentoGrid Asset Library works
     // The DB stores labeledImages but BentoGrid expects brandData.images
@@ -572,7 +591,7 @@ function PlaygroundContent() {
     };
 
     setBrandData(hydratedBrand);
-    setUploadedImages(allImages.slice(0, 8)); // Same limit as handleValidateBento
+    setUploadedImages(priorityImages.slice(0, 8)); // Pre-select best 8 assets
 
     // New: Use suggestedPosts (template-based) if available
     if (brand.suggestedPosts?.length && !brief) {
@@ -1165,18 +1184,26 @@ function PlaygroundContent() {
     // SYNC images from bento: prioritize logo + relevant categories
     const labeledImages = Array.isArray(brandData.labeledImages) ? brandData.labeledImages : [];
 
-    // Priority order: logo first, then reference, product, app_ui, others
+    // Priority order for DEFAULT SELECTION (useful for visual generation)
+    // High priority: logo, app_ui, product, person, texture
+    // EXCLUDED from default: icon, client_logo (not useful)
     const logoImg = brandData.logo ? [brandData.logo] : [];
-    const referenceImgs = labeledImages.filter((img: any) => img.category === 'reference').map((img: any) => img.url);
-    const productImgs = labeledImages.filter((img: any) => img.category === 'product').map((img: any) => img.url);
     const appImgs = labeledImages.filter((img: any) => img.category === 'app_ui').map((img: any) => img.url);
-    const otherImgs = labeledImages.filter((img: any) => !['main_logo', 'reference', 'product', 'app_ui'].includes(img.category)).map((img: any) => img.url);
+    const productImgs = labeledImages.filter((img: any) => img.category === 'product').map((img: any) => img.url);
+    const personImgs = labeledImages.filter((img: any) => img.category === 'person').map((img: any) => img.url);
+    const textureImgs = labeledImages.filter((img: any) => img.category === 'texture').map((img: any) => img.url);
+    const referenceImgs = labeledImages.filter((img: any) => img.category === 'reference').map((img: any) => img.url);
+    const otherImgs = labeledImages.filter((img: any) =>
+      !['main_logo', 'reference', 'product', 'app_ui', 'person', 'texture', 'icon', 'client_logo'].includes(img.category)
+    ).map((img: any) => img.url);
 
-    // Combine in priority order, ensuring logo is first
-    const allImages = [...new Set([...logoImg, ...referenceImgs, ...productImgs, ...appImgs, ...otherImgs])].filter(Boolean);
+    // Priority images (exclude icons, client logos from default selection)
+    const priorityImages = [...new Set([
+      ...logoImg, ...appImgs, ...productImgs, ...personImgs, ...textureImgs, ...referenceImgs, ...otherImgs
+    ])].filter(Boolean);
 
     // ALWAYS sync with bento data (not conditional)
-    setUploadedImages(allImages.slice(0, 8));
+    setUploadedImages(priorityImages.slice(0, 8));
 
     // Save brand state to DB to persist nuggets & edits
     try {
@@ -1206,7 +1233,7 @@ function PlaygroundContent() {
     console.log('🐦 Early bird check:', { isEarlyBird, hasReceivedFreeGen, freshCredits: freshCredits?.credits?.isEarlyBird, cachedCredits: creditsInfo?.isEarlyBird });
 
     // Only give free generation if: early bird + has images + hasn't already received one
-    if (smartPrompt && allImages.length > 0 && isEarlyBird && !hasReceivedFreeGen) {
+    if (smartPrompt && priorityImages.length > 0 && isEarlyBird && !hasReceivedFreeGen) {
       // Mark as received BEFORE triggering to prevent double triggers
       setHasReceivedFreeGen(true);
 
@@ -1219,9 +1246,9 @@ function PlaygroundContent() {
 
       // Small delay to let UI update and show the gift
       setTimeout(() => {
-        handleGenerate(smartPrompt.brief, false, brandData, allImages.slice(0, 6), undefined, 1); // 1 image only
+        handleGenerate(smartPrompt.brief, false, brandData, priorityImages.slice(0, 6), undefined, 1); // 1 image only
       }, 1500); // Longer delay to let user see the gift message
-    } else if (smartPrompt && allImages.length > 0) {
+    } else if (smartPrompt && priorityImages.length > 0) {
       // Not early bird - just set up the prompt, user triggers manually
       setBrief(smartPrompt.brief);
       setSelectedTemplate(smartPrompt.templateId);
