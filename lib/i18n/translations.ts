@@ -352,6 +352,28 @@ export const translations = {
       download: { fr: 'Télécharger', en: 'Download' },
       edit: { fr: 'Modifier', en: 'Edit' },
       regenerate: { fr: 'Regénérer', en: 'Regenerate' }
+    },
+    gallery: {
+      yourCreation: { fr: 'Votre création', en: 'Your creation' },
+      readyForExport: { fr: 'Prêt pour export', en: 'Ready for export' },
+      edit: { fr: 'Modifier', en: 'Edit' },
+      editMode: { fr: 'Mode édition', en: 'Edit mode' },
+      editModeLabel: { fr: 'ÉDITION', en: 'EDITING' },
+      editThisImage: { fr: 'Modifier cette image', en: 'Edit this image' },
+      editDescription: { fr: 'Décrivez les changements à apporter à cette image.', en: 'Describe the changes to make to this image.' },
+      editPlaceholder: { fr: 'Ex: "Changer le texte en rouge", "Ajouter mon logo en haut à droite"...', en: 'E.g.: "Change the text to red", "Add my logo in the top right"...' },
+      applyEdit: { fr: 'Appliquer les modifications', en: 'Apply changes' },
+      referenceImages: { fr: 'Images de référence', en: 'Reference images' },
+      referenceImagesHint: { fr: 'Ajoutez jusqu\'à 3 images pour guider l\'IA', en: 'Add up to 3 images to guide the AI' },
+      fullscreen: { fr: 'Plein écran', en: 'Fullscreen' },
+      download: { fr: 'Télécharger', en: 'Download' },
+      delete: { fr: 'Supprimer', en: 'Delete' },
+      confirmDelete: { fr: 'Êtes-vous sûr de vouloir supprimer cette création ?', en: 'Are you sure you want to delete this creation?' },
+      logo: { fr: 'Logo', en: 'Logo' },
+      logoBadlyReproduced: { fr: 'Logo mal reproduit ?', en: 'Logo badly reproduced?' },
+      fixLogoAutomatically: { fr: 'Corrigez-le automatiquement', en: 'Fix it automatically' },
+      fix: { fr: 'Corriger', en: 'Fix' },
+      promptUsed: { fr: 'Prompt utilisé', en: 'Prompt used' }
     }
   },
 
@@ -367,7 +389,16 @@ export const translations = {
     close: { fr: 'Fermer', en: 'Close' },
     next: { fr: 'Suivant', en: 'Next' },
     back: { fr: 'Retour', en: 'Back' },
-    or: { fr: 'ou', en: 'or' }
+    or: { fr: 'ou', en: 'or' },
+    credits: { fr: 'crédits', en: 'credits' }
+  },
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // TOAST NOTIFICATIONS
+  // ─────────────────────────────────────────────────────────────────────────
+  toast: {
+    scrapingInProgress: { fr: 'Nous vous notifierons quand l\'analyse sera terminée', en: 'We will notify you when scraping is done' },
+    brandAlreadyExists: { fr: 'Cette marque existe déjà', en: 'This brand already exists' }
   }
 } as const;
 

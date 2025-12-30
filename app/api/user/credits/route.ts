@@ -11,22 +11,28 @@ const PLAN_CREDITS = {
   premium: 150,
 } as const;
 
-// Early bird limit per day
+// Early bird limit per day (first 30 get 2 credits)
 const EARLY_BIRD_LIMIT = 30;
+
+// Capacity limit per day (above this, 0 credits - safeguard against viral traffic)
+const CAPACITY_LIMIT = 400;
+
+// Signup tier status
+type SignupTier = 'early_bird' | 'normal' | 'capacity_reached';
 
 // Helper: Get today's date as YYYY-MM-DD string
 function getTodayDateString(): string {
   return new Date().toISOString().split('T')[0];
 }
 
-// Helper: Check and increment daily signup count, returns if user is early bird
-async function checkAndIncrementDailySignups(): Promise<boolean> {
+// Helper: Check and increment daily signup count, returns signup tier
+async function checkAndIncrementDailySignups(): Promise<{ tier: SignupTier; count: number }> {
   const today = getTodayDateString();
-  
+
   let dailyCount = await db.query.dailySignupCounts.findFirst({
     where: eq(dailySignupCounts.date, today),
   });
-  
+
   if (!dailyCount) {
     const result = await db.insert(dailySignupCounts)
       .values({ date: today, count: 1 })
@@ -35,15 +41,24 @@ async function checkAndIncrementDailySignups(): Promise<boolean> {
         set: { count: sql`${dailySignupCounts.count} + 1` }
       })
       .returning();
-    return result[0].count <= EARLY_BIRD_LIMIT;
+    const count = result[0].count;
+    return { tier: count <= EARLY_BIRD_LIMIT ? 'early_bird' : 'normal', count };
   }
-  
+
   const result = await db.update(dailySignupCounts)
     .set({ count: dailyCount.count + 1 })
     .where(eq(dailySignupCounts.date, today))
     .returning();
-  
-  return result[0].count <= EARLY_BIRD_LIMIT;
+
+  const count = result[0].count;
+
+  if (count <= EARLY_BIRD_LIMIT) {
+    return { tier: 'early_bird', count };
+  } else if (count <= CAPACITY_LIMIT) {
+    return { tier: 'normal', count };
+  } else {
+    return { tier: 'capacity_reached', count };
+  }
 }
 
 // GET - Check current credits
@@ -58,14 +73,24 @@ export async function GET() {
       where: eq(users.clerkId, userId),
     });
 
+    // Track if this is a new signup at capacity
+    let capacityReached = false;
+
     // IMPORTANT: Create user if not exists (ensures early bird is properly set)
     if (!user) {
       const clerkUser = await currentUser();
-      
-      // Check if this user qualifies as early bird (first 30 of the day)
-      const isEarlyBird = await checkAndIncrementDailySignups();
-      const creditsForNewUser = isEarlyBird ? 2 : 1;
-      
+
+      // Check signup tier (early bird / normal / capacity reached)
+      const { tier, count } = await checkAndIncrementDailySignups();
+      const isEarlyBird = tier === 'early_bird';
+      capacityReached = tier === 'capacity_reached';
+
+      // Credits based on tier:
+      // - Early birds (1-30): 2 credits
+      // - Normal (31-400): 1 credit
+      // - Capacity reached (400+): 0 credits
+      const creditsForNewUser = tier === 'early_bird' ? 2 : tier === 'normal' ? 1 : 0;
+
       const result = await db.insert(users).values({
         clerkId: userId,
         email: clerkUser?.emailAddresses?.[0]?.emailAddress || '',
@@ -75,9 +100,9 @@ export async function GET() {
         creditsRemaining: creditsForNewUser,
         isEarlyBird,
       }).returning();
-      
+
       user = result[0];
-      console.log(`📝 [Credits API] New user created: ${userId}, earlyBird: ${isEarlyBird}, credits: ${creditsForNewUser}`);
+      console.log(`📝 [Credits API] New user created: ${userId}, tier: ${tier}, signupCount: ${count}, credits: ${creditsForNewUser}`);
     }
 
     // Check if user is part of a team with shared credits
@@ -107,6 +132,7 @@ export async function GET() {
         resetAt: user.creditsResetAt?.toISOString(),
         isTeamCredits,
         isEarlyBird: user.isEarlyBird ?? false,
+        capacityReached, // True if signup happened during high traffic (400+/day)
       },
     });
 

@@ -1,12 +1,30 @@
 import { NextResponse } from 'next/server';
+import { auth } from '@clerk/nextjs/server';
 import { firecrawlScrape } from '@/lib/firecrawl';
 
 export async function POST(request: Request) {
   try {
+    // Auth check - prevent unauthenticated access to expensive scraping
+    const { userId } = await auth();
+    if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const { url } = await request.json();
 
     if (!url) {
       return NextResponse.json({ error: 'URL is required' }, { status: 400 });
+    }
+
+    // Basic URL validation - block localhost/private IPs
+    try {
+      const parsedUrl = new URL(url);
+      const hostname = parsedUrl.hostname.toLowerCase();
+      if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname.startsWith('192.168.') || hostname.startsWith('10.') || hostname.startsWith('172.')) {
+        return NextResponse.json({ error: 'Invalid URL' }, { status: 400 });
+      }
+    } catch {
+      return NextResponse.json({ error: 'Invalid URL format' }, { status: 400 });
     }
 
     console.log('🌐 Scraping additional source:', url);

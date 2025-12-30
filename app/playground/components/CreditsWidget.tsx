@@ -30,6 +30,59 @@ export default function CreditsWidget({ isCollapsed = false, creditsOverride }: 
   const isFree = credits?.plan === 'free';
   const isLow = credits && credits.remaining <= 1;
   const ratio = (credits?.remaining ?? 0) / (credits?.total ?? 3);
+  const capacityReached = credits?.capacityReached ?? false;
+
+  // Show capacity message for new users who signed up during high traffic
+  if (capacityReached && isFree && credits?.remaining === 0) {
+    return (
+      <>
+        <div
+          onClick={handleClick}
+          className={`
+            relative cursor-pointer transition-all duration-200
+            border-2 border-amber-500 bg-amber-50 hover:bg-amber-100
+            ${isCollapsed ? 'p-2' : 'p-3'}
+          `}
+        >
+          {isCollapsed ? (
+            <div className="w-8 h-8 flex items-center justify-center text-sm font-bold text-amber-600">
+              !
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <svg className="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                <span className="text-xs font-medium text-amber-800">
+                  {locale === 'fr' ? 'Capacité maximale' : 'At capacity'}
+                </span>
+              </div>
+              <p className="text-xs text-amber-700">
+                {locale === 'fr'
+                  ? 'Nous avons beaucoup de demandes ! Passez Pro pour découvrir Palette.'
+                  : 'High demand right now! Go Pro to unlock Palette.'
+                }
+              </p>
+              <div className="flex items-center gap-1.5 text-amber-700 font-medium text-xs">
+                <span>{t('credits.upgrade')}</span>
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <path d="M5 12h14M12 5l7 7-7 7" />
+                </svg>
+              </div>
+            </div>
+          )}
+        </div>
+        <UpgradePopup
+          isOpen={showUpgradePopup}
+          onClose={() => setShowUpgradePopup(false)}
+          creditsRemaining={0}
+          currentPlan="free"
+          capacityReached={true}
+        />
+      </>
+    );
+  }
 
   return (
     <>
@@ -133,9 +186,10 @@ interface UpgradePopupProps {
   onClose: () => void;
   creditsRemaining: number;
   currentPlan?: 'free' | 'pro' | 'premium';
+  capacityReached?: boolean;
 }
 
-export function UpgradePopup({ isOpen, onClose, creditsRemaining, currentPlan = 'free' }: UpgradePopupProps) {
+export function UpgradePopup({ isOpen, onClose, creditsRemaining, currentPlan = 'free', capacityReached = false }: UpgradePopupProps) {
   const { t, locale } = useTranslation();
   const [isLoading, setIsLoading] = useState(false);
 
@@ -192,15 +246,38 @@ export function UpgradePopup({ isOpen, onClose, creditsRemaining, currentPlan = 
       >
         {/* Header */}
         <div className="p-8 text-center border-b border-gray-100">
-          <h2 className="text-xl font-light text-gray-900 mb-2">
-            {isBlocked ? t('credits.popup.exhausted') : t('credits.popup.loving')}
-          </h2>
-          <p className="text-sm text-gray-500">
-            {isBlocked
-              ? t('credits.popup.goPro')
-              : t('credits.popup.creationsLeft', { count: creditsRemaining, plural: creditsRemaining > 1 ? 's' : '' })
-            }
-          </p>
+          {capacityReached ? (
+            <>
+              <div className="flex justify-center mb-3">
+                <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center">
+                  <svg className="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                </div>
+              </div>
+              <h2 className="text-xl font-light text-gray-900 mb-2">
+                {locale === 'fr' ? 'Nous sommes en capacité maximale' : 'We\'re at maximum capacity'}
+              </h2>
+              <p className="text-sm text-gray-500">
+                {locale === 'fr'
+                  ? 'Palette connaît un fort engouement ! Passez Pro pour accéder immédiatement.'
+                  : 'Palette is experiencing high demand! Go Pro for immediate access.'
+                }
+              </p>
+            </>
+          ) : (
+            <>
+              <h2 className="text-xl font-light text-gray-900 mb-2">
+                {isBlocked ? t('credits.popup.exhausted') : t('credits.popup.loving')}
+              </h2>
+              <p className="text-sm text-gray-500">
+                {isBlocked
+                  ? t('credits.popup.goPro')
+                  : t('credits.popup.creationsLeft', { count: creditsRemaining, plural: creditsRemaining > 1 ? 's' : '' })
+                }
+              </p>
+            </>
+          )}
         </div>
 
         {/* Plans */}

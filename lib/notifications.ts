@@ -26,9 +26,16 @@ export async function requestNotificationPermission(): Promise<boolean> {
 }
 
 // Play a joyful notification sound
-function playNotificationSound(type: 'brand' | 'visual' | 'default' = 'default') {
+async function playNotificationSound(type: 'brand' | 'visual' | 'default' = 'default') {
     try {
+        console.log('🔊 Attempting to play notification sound:', type);
         const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+
+        // Resume AudioContext if suspended (required by browsers)
+        if (audioContext.state === 'suspended') {
+            console.log('🔊 AudioContext was suspended, resuming...');
+            await audioContext.resume();
+        }
 
         // Frequencies for a C Major arpeggio
         // C5 = 523.25, E5 = 659.25, G5 = 783.99, C6 = 1046.50
@@ -36,15 +43,17 @@ function playNotificationSound(type: 'brand' | 'visual' | 'default' = 'default')
 
         // Adjust sequence based on type
         let notes = arpeggio;
-        let speed = 0.08;
-        let gainValue = 0.2;
+        let speed = 0.12;
+        let gainValue = 0.3; // Increased volume
 
         if (type === 'brand') {
             notes = [523.25, 783.99, 1046.50]; // Bright discovery
-            speed = 0.12;
+            speed = 0.15; // Slower for clarity
+            gainValue = 0.4; // Louder
         } else if (type === 'visual') {
             notes = [659.25, 783.99, 1046.50, 1318.51]; // Higher achievement
-            speed = 0.07;
+            speed = 0.1;
+            gainValue = 0.4; // Louder
         }
 
         const now = audioContext.currentTime;
@@ -62,13 +71,15 @@ function playNotificationSound(type: 'brand' | 'visual' | 'default' = 'default')
             // Soft envelope
             gainNode.gain.setValueAtTime(0, now + i * speed);
             gainNode.gain.linearRampToValueAtTime(gainValue, now + i * speed + 0.02);
-            gainNode.gain.exponentialRampToValueAtTime(0.001, now + i * speed + 0.3);
+            gainNode.gain.exponentialRampToValueAtTime(0.001, now + i * speed + 0.4);
 
             oscillator.start(now + i * speed);
-            oscillator.stop(now + i * speed + 0.3);
+            oscillator.stop(now + i * speed + 0.4);
         });
+
+        console.log('✅ Sound played successfully');
     } catch (e) {
-        console.log('Sound notification not available');
+        console.error('❌ Sound notification error:', e);
     }
 }
 

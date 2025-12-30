@@ -10,6 +10,7 @@ export interface CreditsInfo {
   resetAt: string | null;
   isTeamCredits: boolean;
   isEarlyBird: boolean; // For first 30 signups/day - get auto-generation
+  capacityReached: boolean; // True if signup happened during high traffic (400+/day)
 }
 
 export function useCredits() {
@@ -31,6 +32,7 @@ export function useCredits() {
             resetAt: null,
             isTeamCredits: false,
             isEarlyBird: false,
+            capacityReached: false,
           });
           return;
         }
@@ -49,6 +51,7 @@ export function useCredits() {
         resetAt: null,
         isTeamCredits: false,
         isEarlyBird: false,
+        capacityReached: false,
       });
     } finally {
       setLoading(false);

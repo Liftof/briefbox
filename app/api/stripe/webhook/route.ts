@@ -3,6 +3,7 @@ import { db } from '@/db';
 import { users, teams } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import Stripe from 'stripe';
+import { cancelScheduledEmail } from '@/lib/email/scheduler';
 
 // Initialize Stripe lazily to avoid build errors when env vars are not set
 let stripeInstance: Stripe | null = null;
@@ -70,6 +71,9 @@ export async function POST(request: NextRequest) {
             updatedAt: new Date(),
           })
           .where(eq(users.clerkId, clerkId));
+
+        // Cancel pending conversion email since user upgraded
+        await cancelScheduledEmail(clerkId, 'conversion');
 
         console.log(`✅ User ${clerkId} upgraded to ${plan}`);
         break;

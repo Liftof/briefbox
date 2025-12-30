@@ -1,28 +1,20 @@
 /**
- * Simple in-memory rate limiter
- * For production, use Upstash Redis: @upstash/ratelimit
+ * Rate limiter with Upstash Redis (production) + in-memory fallback (dev)
+ *
+ * Setup Upstash:
+ * 1. Create account at upstash.com
+ * 2. Create a Redis database
+ * 3. Add to Vercel env vars:
+ *    - UPSTASH_REDIS_REST_URL
+ *    - UPSTASH_REDIS_REST_TOKEN
  */
 
-interface RateLimitEntry {
-  count: number;
-  resetAt: number;
-}
+import { Ratelimit } from '@upstash/ratelimit';
+import { Redis } from '@upstash/redis';
 
-// In-memory store (resets on server restart)
-// For production, use Redis
-const store = new Map<string, RateLimitEntry>();
-
-// Clean up old entries every 5 minutes
-if (typeof setInterval !== 'undefined') {
-  setInterval(() => {
-    const now = Date.now();
-    for (const [key, entry] of store.entries()) {
-      if (entry.resetAt < now) {
-        store.delete(key);
-      }
-    }
-  }, 5 * 60 * 1000);
-}
+// ============================================
+// CONFIGURATION
+// ============================================
 
 export interface RateLimitConfig {
   /** Maximum number of requests */
@@ -37,138 +29,222 @@ export interface RateLimitResult {
   reset: number;
 }
 
-/**
- * Check rate limit for a given identifier
- */
-export function rateLimit(
-  identifier: string,
-  config: RateLimitConfig = { max: 10, windowMs: 60 * 1000 }
-): RateLimitResult {
-  const now = Date.now();
-  const key = identifier;
-  
-  const entry = store.get(key);
-  
-  if (!entry || entry.resetAt < now) {
-    // Create new window
-    store.set(key, {
-      count: 1,
-      resetAt: now + config.windowMs,
-    });
-    return {
-      success: true,
-      remaining: config.max - 1,
-      reset: now + config.windowMs,
-    };
-  }
-  
-  if (entry.count >= config.max) {
-    return {
-      success: false,
-      remaining: 0,
-      reset: entry.resetAt,
-    };
-  }
-  
-  // Increment count
-  entry.count++;
-  store.set(key, entry);
-  
-  return {
-    success: true,
-    remaining: config.max - entry.count,
-    reset: entry.resetAt,
-  };
-}
-
-// Preset configurations - GENEROUS for paid users (they pay, so no worries!)
+// Preset configurations - GENEROUS for paid users
 export const RATE_LIMITS = {
-  // Paid users: 50 per minute (very generous, they're paying!)
   generate: { max: 50, windowMs: 60 * 1000 },
-
-  // Paid users: 20 per minute (generous for brand analysis too)
   analyze: { max: 20, windowMs: 60 * 1000 },
-
-  // API calls: 100 per minute per user
   api: { max: 100, windowMs: 60 * 1000 },
-
-  // Stripe operations: 10 per minute per user
   stripe: { max: 10, windowMs: 60 * 1000 },
 } as const;
 
-// SMART limits for FREE users - Multi-layer protection against abuse
+// Stricter limits for FREE users
 export const FREE_USER_RATE_LIMITS = {
-  // Free users: 2 generations per hour PER USER
-  generate: { max: 2, windowMs: 60 * 60 * 1000 }, // 1 hour window
-
-  // Free users: 1 brand analysis per hour PER USER
-  analyze: { max: 1, windowMs: 60 * 60 * 1000 },
+  generate: { max: 2, windowMs: 60 * 60 * 1000 }, // 2 per hour
+  analyze: { max: 1, windowMs: 60 * 60 * 1000 },  // 1 per hour
 } as const;
 
-// IP-based rate limits for FREE users (prevents multi-account abuse)
+// IP-based limits for FREE users (prevents multi-account abuse)
 export const FREE_USER_IP_LIMITS = {
-  // Max 5 generations per hour from same IP (catches multi-account abuse)
   generate: { max: 5, windowMs: 60 * 60 * 1000 },
-
-  // Max 2 brand analyses per hour from same IP
   analyze: { max: 2, windowMs: 60 * 60 * 1000 },
 } as const;
 
-// Global rate limits (across all users)
-// NOTE: These are safety limits to prevent total server overload
-// In production with Upstash Redis, you can use more sophisticated strategies
+// Global rate limits (safety limits)
 export const GLOBAL_RATE_LIMITS = {
-  // Total generations: 1000 per minute (allows ~100 concurrent users @ 10 each)
-  // Adjust based on your Google AI quota and server capacity
   generate: { max: 1000, windowMs: 60 * 1000 },
-
-  // Total brand analysis: 200 per minute (allows ~40 concurrent users @ 5 each)
-  // This is more expensive (scraping + LLM), so more conservative
   analyze: { max: 200, windowMs: 60 * 1000 },
 } as const;
 
-/**
- * Rate limit by user ID with preset
- * @param userId - User ID
- * @param preset - Rate limit preset
- * @param userPlan - User's plan (free, pro, premium) - uses stricter limits for free users
- */
-export function rateLimitByUser(
-  userId: string,
-  preset: keyof typeof RATE_LIMITS,
-  userPlan?: 'free' | 'pro' | 'premium'
-): RateLimitResult {
-  // Use stricter limits for free users on expensive operations
-  if (userPlan === 'free' && (preset === 'generate' || preset === 'analyze')) {
-    return rateLimit(
-      `${preset}:free:user:${userId}`,
-      FREE_USER_RATE_LIMITS[preset as keyof typeof FREE_USER_RATE_LIMITS]
-    );
+// ============================================
+// UPSTASH REDIS SETUP
+// ============================================
+
+const hasUpstash = !!(process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN);
+
+// Create Redis client only if credentials are available
+const redis = hasUpstash
+  ? new Redis({
+      url: process.env.UPSTASH_REDIS_REST_URL!,
+      token: process.env.UPSTASH_REDIS_REST_TOKEN!,
+    })
+  : null;
+
+// Create rate limiters for each preset using sliding window algorithm
+const createUpstashLimiter = (config: RateLimitConfig) => {
+  if (!redis) return null;
+
+  // Convert windowMs to seconds for Upstash
+  const windowSeconds = Math.ceil(config.windowMs / 1000);
+
+  return new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(config.max, `${windowSeconds} s`),
+    analytics: true, // Optional: track analytics in Upstash dashboard
+    prefix: 'palette_ratelimit',
+  });
+};
+
+// Pre-create limiters for each config
+const upstashLimiters = {
+  // Paid user limits
+  generate: createUpstashLimiter(RATE_LIMITS.generate),
+  analyze: createUpstashLimiter(RATE_LIMITS.analyze),
+  api: createUpstashLimiter(RATE_LIMITS.api),
+  stripe: createUpstashLimiter(RATE_LIMITS.stripe),
+
+  // Free user limits
+  freeGenerate: createUpstashLimiter(FREE_USER_RATE_LIMITS.generate),
+  freeAnalyze: createUpstashLimiter(FREE_USER_RATE_LIMITS.analyze),
+
+  // IP limits
+  ipGenerate: createUpstashLimiter(FREE_USER_IP_LIMITS.generate),
+  ipAnalyze: createUpstashLimiter(FREE_USER_IP_LIMITS.analyze),
+
+  // Global limits
+  globalGenerate: createUpstashLimiter(GLOBAL_RATE_LIMITS.generate),
+  globalAnalyze: createUpstashLimiter(GLOBAL_RATE_LIMITS.analyze),
+};
+
+// ============================================
+// IN-MEMORY FALLBACK (dev only)
+// ============================================
+
+interface RateLimitEntry {
+  count: number;
+  resetAt: number;
+}
+
+const memoryStore = new Map<string, RateLimitEntry>();
+
+// Cleanup old entries every 5 minutes
+if (typeof setInterval !== 'undefined') {
+  setInterval(() => {
+    const now = Date.now();
+    for (const [key, entry] of memoryStore.entries()) {
+      if (entry.resetAt < now) {
+        memoryStore.delete(key);
+      }
+    }
+  }, 5 * 60 * 1000);
+}
+
+function memoryRateLimit(identifier: string, config: RateLimitConfig): RateLimitResult {
+  const now = Date.now();
+  const entry = memoryStore.get(identifier);
+
+  if (!entry || entry.resetAt < now) {
+    memoryStore.set(identifier, { count: 1, resetAt: now + config.windowMs });
+    return { success: true, remaining: config.max - 1, reset: now + config.windowMs };
   }
 
-  // Paid users get generous limits
-  return rateLimit(`${preset}:${userId}`, RATE_LIMITS[preset]);
+  if (entry.count >= config.max) {
+    return { success: false, remaining: 0, reset: entry.resetAt };
+  }
+
+  entry.count++;
+  memoryStore.set(identifier, entry);
+  return { success: true, remaining: config.max - entry.count, reset: entry.resetAt };
+}
+
+// ============================================
+// MAIN RATE LIMIT FUNCTION
+// ============================================
+
+/**
+ * Check rate limit using Upstash Redis (prod) or in-memory (dev)
+ */
+export async function rateLimit(
+  identifier: string,
+  config: RateLimitConfig,
+  limiterKey?: keyof typeof upstashLimiters
+): Promise<RateLimitResult> {
+  // Try Upstash first
+  if (redis && limiterKey && upstashLimiters[limiterKey]) {
+    try {
+      const result = await upstashLimiters[limiterKey]!.limit(identifier);
+      return {
+        success: result.success,
+        remaining: result.remaining,
+        reset: result.reset,
+      };
+    } catch (error) {
+      console.warn('⚠️ Upstash rate limit failed, falling back to memory:', error);
+      // Fall through to memory fallback
+    }
+  }
+
+  // Fallback to in-memory (dev or if Upstash fails)
+  return memoryRateLimit(identifier, config);
 }
 
 /**
- * IP-based rate limit for FREE users (prevents multi-account abuse)
- * Only called for free users on expensive operations
+ * Synchronous rate limit (for backwards compatibility)
+ * Uses in-memory only - prefer async version for production
  */
-export function rateLimitByIP(
+export function rateLimitSync(
+  identifier: string,
+  config: RateLimitConfig = { max: 10, windowMs: 60 * 1000 }
+): RateLimitResult {
+  if (!hasUpstash) {
+    return memoryRateLimit(identifier, config);
+  }
+  // If Upstash is configured, log warning and use memory
+  console.warn('⚠️ rateLimitSync called but Upstash is configured. Use async rateLimit() instead.');
+  return memoryRateLimit(identifier, config);
+}
+
+// ============================================
+// HELPER FUNCTIONS
+// ============================================
+
+/**
+ * Rate limit by user ID
+ */
+export async function rateLimitByUser(
+  userId: string,
+  preset: keyof typeof RATE_LIMITS,
+  userPlan?: 'free' | 'pro' | 'premium'
+): Promise<RateLimitResult> {
+  if (userPlan === 'free' && (preset === 'generate' || preset === 'analyze')) {
+    const limiterKey = preset === 'generate' ? 'freeGenerate' : 'freeAnalyze';
+    return rateLimit(
+      `${preset}:free:user:${userId}`,
+      FREE_USER_RATE_LIMITS[preset],
+      limiterKey
+    );
+  }
+
+  return rateLimit(`${preset}:${userId}`, RATE_LIMITS[preset], preset);
+}
+
+/**
+ * IP-based rate limit for FREE users
+ */
+export async function rateLimitByIP(
   ip: string,
   preset: 'generate' | 'analyze'
-): RateLimitResult {
+): Promise<RateLimitResult> {
+  const limiterKey = preset === 'generate' ? 'ipGenerate' : 'ipAnalyze';
   return rateLimit(
     `${preset}:free:ip:${ip}`,
-    FREE_USER_IP_LIMITS[preset]
+    FREE_USER_IP_LIMITS[preset],
+    limiterKey
   );
 }
 
 /**
- * Global rate limit (across all users) for expensive operations
+ * Global rate limit (across all users)
  */
-export function rateLimitGlobal(
+export async function rateLimitGlobal(
   preset: keyof typeof GLOBAL_RATE_LIMITS
-): RateLimitResult {
-  return rateLimit(`global:${preset}`, GLOBAL_RATE_LIMITS[preset]);
+): Promise<RateLimitResult> {
+  const limiterKey = preset === 'generate' ? 'globalGenerate' : 'globalAnalyze';
+  return rateLimit(`global:${preset}`, GLOBAL_RATE_LIMITS[preset], limiterKey);
+}
+
+/**
+ * Check if Upstash is configured
+ */
+export function isUpstashConfigured(): boolean {
+  return hasUpstash;
 }

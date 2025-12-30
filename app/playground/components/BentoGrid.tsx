@@ -368,7 +368,7 @@ function AddItemInput({ placeholder, onAdd, locale = 'fr' }: { placeholder: stri
   );
 }
 
-export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBackgrounds = false, isSaving = false, onUpdate, onValidate, onAddSource, onBack, isFirstTimeSetup = false }: {
+export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBackgrounds = false, isSaving = false, onUpdate, onValidate, onAddSource, onBack, isFirstTimeSetup = false, userPlan = 'free', onRescrape }: {
   brandData: any,
   backgrounds?: string[],
   isGeneratingBackgrounds?: boolean,
@@ -377,7 +377,9 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
   onValidate: () => void,
   onAddSource?: () => void,
   onBack?: () => void,
-  isFirstTimeSetup?: boolean
+  isFirstTimeSetup?: boolean,
+  userPlan?: 'free' | 'pro' | 'premium',
+  onRescrape?: () => void
 }) {
   const { t, locale } = useTranslation();
   const localizedTags = getTagOptions(locale);
@@ -526,6 +528,40 @@ export default function BentoGrid({ brandData, backgrounds = [], isGeneratingBac
               </div>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Light Scrape Banner - Show upgrade/rescrape CTA */}
+      {localData?.scrapeDepth === 'light' && (
+        <div className="mb-6 p-4 bg-amber-50 border border-amber-200 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <span className="text-amber-600 text-xl">⚡</span>
+            <div>
+              <p className="text-sm font-medium text-amber-900">
+                {locale === 'fr' ? 'Analyse rapide' : 'Quick analysis'}
+              </p>
+              <p className="text-xs text-amber-700">
+                {locale === 'fr'
+                  ? 'Votre marque a été analysée rapidement. Une analyse approfondie capture plus de données.'
+                  : 'Your brand was quickly analyzed. A deep analysis captures more data.'}
+              </p>
+            </div>
+          </div>
+          {userPlan === 'free' ? (
+            <a
+              href="/pricing"
+              className="shrink-0 px-4 py-2 text-sm font-medium bg-amber-600 text-white hover:bg-amber-700 transition-colors"
+            >
+              {locale === 'fr' ? 'Passer Pro' : 'Upgrade to Pro'}
+            </a>
+          ) : onRescrape ? (
+            <button
+              onClick={onRescrape}
+              className="shrink-0 px-4 py-2 text-sm font-medium bg-amber-600 text-white hover:bg-amber-700 transition-colors"
+            >
+              {locale === 'fr' ? 'Analyser en profondeur' : 'Deep analyze'}
+            </button>
+          ) : null}
         </div>
       )}
 

@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { db } from '@/db';
-import { generations, folders, brands } from '@/db/schema';
+import { generations, folders, brands, users } from '@/db/schema';
 import { eq, and, desc, isNull, inArray } from 'drizzle-orm';
+import { scheduleEmail } from '@/lib/email/scheduler';
 
 // GET - Fetch user's generations (with optional folder filter)
 export async function GET(request: NextRequest) {
@@ -143,6 +144,38 @@ export async function POST(request: NextRequest) {
     });
 
     const result = await db.insert(generations).values(toInsert).returning();
+
+    // Check if this is the user's first generation - schedule engagement email
+    const allUserGenerations = await db.query.generations.findMany({
+      where: eq(generations.userId, userId),
+      columns: { id: true },
+      limit: 2,
+    });
+
+    // If user now has exactly the number of generations we just added, these are their first
+    if (allUserGenerations.length === result.length) {
+      // Get user info for email
+      const user = await db.query.users.findFirst({
+        where: eq(users.clerkId, userId),
+        columns: { email: true, name: true },
+      });
+
+      if (user) {
+        const firstGen = result[0];
+        scheduleEmail({
+          userId,
+          userEmail: user.email,
+          userName: user.name || undefined,
+          emailType: 'engagement',
+          delayMinutes: 30,
+          metadata: {
+            generationId: firstGen.id,
+            generationUrl: firstGen.imageUrl,
+            brandName: firstGen.brandName || undefined,
+          },
+        });
+      }
+    }
 
     return NextResponse.json({
       success: true,

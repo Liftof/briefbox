@@ -901,9 +901,19 @@ function PlaygroundContent() {
           return; // Success! Exit the retry loop
         }
 
+        // Show light scrape notice if applicable (daily quota reached)
+        const wasLightScrape = data.wasLightScrape || data.brand?.scrapeDepth === 'light';
+
         setTimeout(() => {
           setStep('logo-confirm');
-          if (data.brand?.logo) {
+          if (wasLightScrape) {
+            // Light scrape: show info message
+            showToast(locale === 'fr'
+              ? 'Analyse rapide effectuée. Passez Pro pour une analyse approfondie.'
+              : 'Quick analysis done. Upgrade to Pro for a deeper analysis.',
+              'info'
+            );
+          } else if (data.brand?.logo) {
             showToast('Logo détecté !', 'success');
           } else {
             showToast('Analyse terminée — uploadez votre logo', 'info');
@@ -1266,6 +1276,49 @@ function PlaygroundContent() {
           : 'Describe what you want to communicate',
         'info'
       );
+    }
+  };
+
+  // Handle rescrape for paid users who had a light scrape
+  const handleRescrape = async () => {
+    if (!brandData?.id) {
+      showToast('Brand ID manquant', 'error');
+      return;
+    }
+
+    try {
+      setStep('analyzing');
+      setStatus('preparing');
+      setStatusMessage(locale === 'fr' ? 'Analyse approfondie en cours...' : 'Deep analyzing...');
+
+      const response = await fetch(`/api/brand/${brandData.id}/rescrape`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Rescrape failed');
+      }
+
+      if (data.alreadyDeep) {
+        showToast(locale === 'fr' ? 'Cette marque est déjà analysée en profondeur' : 'This brand is already deeply analyzed', 'info');
+        setStep('bento');
+        return;
+      }
+
+      // Update brand data with new deep analysis
+      hydrateBrand(data.brand);
+      setStep('bento');
+      showToast(locale === 'fr' ? 'Analyse approfondie terminée !' : 'Deep analysis complete!', 'success');
+
+    } catch (error: any) {
+      console.error('Rescrape error:', error);
+      showToast(error.message || 'Erreur lors de l\'analyse', 'error');
+      setStep('bento');
+    } finally {
+      setStatus('idle');
     }
   };
 
@@ -2743,6 +2796,8 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
           onValidate={handleValidateBento}
           onAddSource={() => setShowSourceManager(true)}
           isFirstTimeSetup={isFirstTime}
+          userPlan={creditsInfo?.plan || 'free'}
+          onRescrape={handleRescrape}
           onBack={() => {
             // Go back to previous step (create if coming from Identité button, url if new analysis)
             if (stepBeforeBento && stepBeforeBento !== 'bento') {

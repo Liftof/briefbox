@@ -169,6 +169,10 @@ export const brands = pgTable('brands', {
     gradients?: string          // e.g. "Blue gradient on 3D shapes"
   }>(),
 
+  // Scrape depth tracking (for cost control)
+  // 'deep' = full 15-page scrape + socials, 'light' = homepage only
+  scrapeDepth: text('scrape_depth').$type<'deep' | 'light'>().default('deep'),
+
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').defaultNow(),
 });
@@ -255,6 +259,14 @@ export const folders = pgTable('folders', {
 
 // Daily signup counter for early bird detection (first 30/day get auto-gen)
 export const dailySignupCounts = pgTable('daily_signup_counts', {
+  id: serial('id').primaryKey(),
+  date: date('date').notNull().unique(),
+  count: integer('count').default(0).notNull(),
+  createdAt: timestamp('created_at').defaultNow(),
+});
+
+// Daily deep scrape counter (first 150/day get full scrape, rest get light)
+export const dailyDeepScrapeCounts = pgTable('daily_deep_scrape_counts', {
   id: serial('id').primaryKey(),
   date: date('date').notNull().unique(),
   count: integer('count').default(0).notNull(),

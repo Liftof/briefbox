@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { auth } from '@clerk/nextjs/server';
 import sharp from 'sharp';
 import { fal } from '@fal-ai/client';
 
@@ -154,6 +155,12 @@ const extractImageFromResult = (result: any) => {
 };
 
 export async function POST(request: NextRequest) {
+  // Auth check - prevent unauthenticated access to expensive FAL image generation
+  const { userId } = await auth();
+  if (!userId) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   if (!process.env.FAL_KEY) {
     console.error('❌ Error: FAL_KEY is missing in environment variables.');
     return NextResponse.json({ success: false, error: 'Server configuration error: Missing API Key (FAL_KEY)' }, { status: 500 });

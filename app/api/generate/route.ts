@@ -379,7 +379,7 @@ export async function POST(request: NextRequest) {
 
   // ====== RATE LIMITING ======
   // 1. Check global rate limit (protects against mass abuse)
-  const globalLimit = rateLimitGlobal('generate');
+  const globalLimit = await rateLimitGlobal('generate');
   if (!globalLimit.success) {
     return NextResponse.json({
       success: false,
@@ -395,7 +395,7 @@ export async function POST(request: NextRequest) {
       || request.headers.get('x-real-ip')
       || 'unknown';
 
-    const ipLimit = rateLimitByIP(ip, 'generate');
+    const ipLimit = await rateLimitByIP(ip, 'generate');
     if (!ipLimit.success) {
       return NextResponse.json({
         success: false,
@@ -406,7 +406,7 @@ export async function POST(request: NextRequest) {
 
   // 3. Check per-user rate limit for PAID users only (free users = credits only)
   if (!isFreeUser) {
-    const rateLimitResult = rateLimitByUser(userId, 'generate', userPlan as 'pro' | 'premium');
+    const rateLimitResult = await rateLimitByUser(userId, 'generate', userPlan as 'pro' | 'premium');
     if (!rateLimitResult.success) {
       const waitTime = Math.ceil((rateLimitResult.reset - Date.now()) / 1000);
       return NextResponse.json({

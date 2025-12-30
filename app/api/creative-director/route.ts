@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { auth } from '@clerk/nextjs/server';
 import {
   TemplateId,
   detectTemplate,
@@ -423,6 +424,12 @@ const ASPECT_RATIO_GUIDANCE: Record<string, { name: string; composition: string 
 
 export async function POST(request: NextRequest) {
   try {
+    // Auth check - prevent unauthenticated access to expensive LLM calls
+    const { userId } = await auth();
+    if (!userId) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const body = await request.json();
     const { brief, brand, templateId: requestedTemplateId, language = 'fr', aspectRatio = '1:1', feedbackPatterns } = body;
 

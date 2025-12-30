@@ -4,10 +4,58 @@ import getColors from 'get-image-colors';
 import sharp from 'sharp';
 import { rateLimitByUser, rateLimitGlobal, rateLimitByIP } from '@/lib/rateLimit';
 import { db } from '@/db';
-import { brands, users } from '@/db/schema';
-import { eq, and, like } from 'drizzle-orm';
+import { brands, users, dailyDeepScrapeCounts } from '@/db/schema';
+import { eq, and, like, sql } from 'drizzle-orm';
 import { firecrawlScrape, firecrawlMap, firecrawlExtract, firecrawlSearch, firecrawlBatchScrape } from '@/lib/firecrawl';
 import { callGeminiWithFallback, USE_GEMINI_FOR_BRAND_ANALYSIS, type MultimodalContent } from '@/lib/gemini';
+
+// ==========================================
+// DEEP SCRAPE DAILY LIMIT (Cost Control)
+// ==========================================
+// First 150 brands/day get full deep scrape (15 pages + socials)
+// After that, switch to light scrape (homepage only)
+const DAILY_DEEP_SCRAPE_LIMIT = 150;
+
+function getTodayDateString(): string {
+  return new Date().toISOString().split('T')[0];
+}
+
+// Check if we can still do a deep scrape today, and increment counter if yes
+// Returns: { canDeepScrape: boolean, currentCount: number }
+async function checkAndIncrementDeepScrapeCount(): Promise<{ canDeepScrape: boolean; currentCount: number }> {
+  const today = getTodayDateString();
+
+  // Try to get today's counter
+  let dailyCount = await db.query.dailyDeepScrapeCounts.findFirst({
+    where: eq(dailyDeepScrapeCounts.date, today),
+  });
+
+  if (!dailyCount) {
+    // First scrape of the day - create counter and allow deep scrape
+    const result = await db.insert(dailyDeepScrapeCounts)
+      .values({ date: today, count: 1 })
+      .onConflictDoUpdate({
+        target: dailyDeepScrapeCounts.date,
+        set: { count: sql`${dailyDeepScrapeCounts.count} + 1` }
+      })
+      .returning();
+    return { canDeepScrape: true, currentCount: result[0].count };
+  }
+
+  // Check if we're under the limit
+  if (dailyCount.count < DAILY_DEEP_SCRAPE_LIMIT) {
+    // Increment and allow deep scrape
+    const result = await db.update(dailyDeepScrapeCounts)
+      .set({ count: dailyCount.count + 1 })
+      .where(eq(dailyDeepScrapeCounts.date, today))
+      .returning();
+    return { canDeepScrape: true, currentCount: result[0].count };
+  }
+
+  // Over the limit - light scrape only
+  console.log(`⚠️ Daily deep scrape limit reached (${dailyCount.count}/${DAILY_DEEP_SCRAPE_LIMIT})`);
+  return { canDeepScrape: false, currentCount: dailyCount.count };
+}
 
 // Content nugget types for editorial extraction
 interface ContentNugget {
@@ -1174,7 +1222,7 @@ export async function POST(request: Request) {
 
     // ====== RATE LIMITING ======
     // 1. Check global rate limit (protects against mass abuse)
-    const globalLimit = rateLimitGlobal('analyze');
+    const globalLimit = await rateLimitGlobal('analyze');
     if (!globalLimit.success) {
       return NextResponse.json({
         error: 'Serveur surchargé. Réessayez dans quelques instants.',
@@ -1189,7 +1237,7 @@ export async function POST(request: Request) {
         || request.headers.get('x-real-ip')
         || 'unknown';
 
-      const ipLimit = rateLimitByIP(ip, 'analyze');
+      const ipLimit = await rateLimitByIP(ip, 'analyze');
       if (!ipLimit.success) {
         return NextResponse.json({
           error: `Trop d'analyses depuis cette adresse IP. Passez Pro pour des analyses illimitées.`,
@@ -1199,7 +1247,7 @@ export async function POST(request: Request) {
 
     // 3. Check per-user rate limit for PAID users only (free users = credits only)
     if (!isFreeUser) {
-      const rateLimitResult = rateLimitByUser(userId, 'analyze', userPlan as 'pro' | 'premium');
+      const rateLimitResult = await rateLimitByUser(userId, 'analyze', userPlan as 'pro' | 'premium');
       if (!rateLimitResult.success) {
         const waitTime = Math.ceil((rateLimitResult.reset - Date.now()) / 1000);
         return NextResponse.json({
@@ -1244,7 +1292,8 @@ export async function POST(request: Request) {
 
     // If brand exists and we're not forcing a re-scrape, return existing brand data immediately
     // This saves API costs and time - no need to re-scrape
-    const forceRescrape = reqBody.forceRescrape === true;
+    // SECURITY: forceRescrape only works for paid users (prevents quota bypass abuse)
+    const forceRescrape = reqBody.forceRescrape === true && !isFreeUser;
 
     if (existingBrand && !forceRescrape) {
       console.log(`♻️ Brand already exists for this URL, returning existing data (id: ${existingBrand.id})`);
@@ -1260,6 +1309,30 @@ export async function POST(request: Request) {
 
     // Store existing brand ID to include in response (for update instead of create)
     let existingBrandId: number | null = existingBrand?.id || null;
+
+    // ==========================================
+    // DEEP vs LIGHT SCRAPE DECISION
+    // ==========================================
+    // Check daily limit for deep scrapes (cost control)
+    // forceRescrape from paid users always gets deep scrape WITHOUT consuming quota
+    let canDeepScrape = false;
+    let currentCount = 0;
+
+    if (forceRescrape) {
+      // Paid user re-scrape: bypass quota entirely (don't increment counter)
+      canDeepScrape = true;
+      console.log('🔓 Force rescrape requested - bypassing daily quota');
+    } else {
+      // Normal scrape: check and consume quota
+      const quotaResult = await checkAndIncrementDeepScrapeCount();
+      canDeepScrape = quotaResult.canDeepScrape;
+      currentCount = quotaResult.currentCount;
+    }
+
+    const useDeepScrape = canDeepScrape;
+    const scrapeDepth: 'deep' | 'light' = useDeepScrape ? 'deep' : 'light';
+
+    console.log(`📊 Scrape mode: ${scrapeDepth.toUpperCase()} (daily count: ${currentCount}/${DAILY_DEEP_SCRAPE_LIMIT})`);
 
     // Gather all URLs to scrape (Website + Socials + Other)
     const urlsToScrape = [url, ...socialLinks, ...otherLinks].filter(
@@ -1420,82 +1493,90 @@ export async function POST(request: Request) {
     contentNuggets = extractContentNuggets(firecrawlMarkdown + '\n' + parallelContent);
     console.log(`📊 Found ${contentNuggets.length} content nuggets from main page`);
 
-    // 🚀 NEW STRATEGY: MAP & SELECT (Holistic Crawling)
-    // Instead of blindly crawling links, we MAP the site to find the high-value pages.
-    try {
-      console.log('🗺️ Mapping site to find Story, About, and Team pages...');
-      let targetPages = await mapWebsite(url);
+    // ==========================================
+    // DEEP CRAWL (only if quota allows)
+    // ==========================================
+    if (useDeepScrape) {
+      // 🚀 DEEP STRATEGY: MAP & SELECT (Holistic Crawling)
+      // Instead of blindly crawling links, we MAP the site to find the high-value pages.
+      try {
+        console.log('🗺️ [DEEP] Mapping site to find Story, About, and Team pages...');
+        let targetPages = await mapWebsite(url);
 
-      // Fallback if map fails or returns nothing (e.g. single page app or blocked)
-      if (targetPages.length === 0) {
-        console.log('⚠️ Map failed, falling back to link discovery');
-        targetPages = discoverInternalPages(url, firecrawlMarkdown);
-      }
-
-      // INTELLIGENT SELECTION: Pick the most valuable pages
-      const priorityKeywords = ['about', 'apropos', 'story', 'histoire', 'mission', 'team', 'equipe', 'valeurs', 'manifesto', 'presse'];
-      const secondaryKeywords = ['blog', 'news', 'actualites', 'services', 'solutions', 'produits', 'case-studies', 'clients'];
-
-      const selectedPages = targetPages.filter(link => {
-        const lowerLink = link.toLowerCase();
-        if (lowerLink === url || lowerLink === url + '/') return false; // Skip home
-        return priorityKeywords.some(k => lowerLink.includes(k)) ||
-          secondaryKeywords.some(k => lowerLink.includes(k));
-      });
-
-      // Fill up with other pages if we don't have enough, up to 10
-      const finalPagesToScrape = [...new Set([...selectedPages, ...targetPages])].slice(0, 10);
-
-      console.log(`🎯 Selected ${finalPagesToScrape.length} high-value pages to scrape:`, finalPagesToScrape);
-
-      // BATCH SCRAPE V2: Use centralized helper with retry and controlled concurrency
-      const batchResults = await firecrawlBatchScrape(finalPagesToScrape, {
-        formats: ['markdown', 'html'],
-        onlyMainContent: false,
-        timeout: 30000,
-        retries: 1, // 1 retry on network/5xx errors
-        concurrency: 5, // Process 5 pages at a time to avoid overwhelming API
-      });
-
-      // Convert Map to array of valid results
-      const validResults: { url: string; content: string; html: string; metadata: any }[] = [];
-      for (const [pageUrl, result] of batchResults) {
-        if (result.success) {
-          validResults.push({
-            url: pageUrl,
-            content: result.markdown,
-            html: result.html || '',
-            metadata: result.metadata,
-          });
+        // Fallback if map fails or returns nothing (e.g. single page app or blocked)
+        if (targetPages.length === 0) {
+          console.log('⚠️ Map failed, falling back to link discovery');
+          targetPages = discoverInternalPages(url, firecrawlMarkdown);
         }
+
+        // INTELLIGENT SELECTION: Pick the most valuable pages
+        const priorityKeywords = ['about', 'apropos', 'story', 'histoire', 'mission', 'team', 'equipe', 'valeurs', 'manifesto', 'presse'];
+        const secondaryKeywords = ['blog', 'news', 'actualites', 'services', 'solutions', 'produits', 'case-studies', 'clients'];
+
+        const selectedPages = targetPages.filter(link => {
+          const lowerLink = link.toLowerCase();
+          if (lowerLink === url || lowerLink === url + '/') return false; // Skip home
+          return priorityKeywords.some(k => lowerLink.includes(k)) ||
+            secondaryKeywords.some(k => lowerLink.includes(k));
+        });
+
+        // Fill up with other pages if we don't have enough, up to 10
+        const finalPagesToScrape = [...new Set([...selectedPages, ...targetPages])].slice(0, 10);
+
+        console.log(`🎯 Selected ${finalPagesToScrape.length} high-value pages to scrape:`, finalPagesToScrape);
+
+        // BATCH SCRAPE V2: Use centralized helper with retry and controlled concurrency
+        const batchResults = await firecrawlBatchScrape(finalPagesToScrape, {
+          formats: ['markdown', 'html'],
+          onlyMainContent: false,
+          timeout: 30000,
+          retries: 1, // 1 retry on network/5xx errors
+          concurrency: 5, // Process 5 pages at a time to avoid overwhelming API
+        });
+
+        // Convert Map to array of valid results
+        const validResults: { url: string; content: string; html: string; metadata: any }[] = [];
+        for (const [pageUrl, result] of batchResults) {
+          if (result.success) {
+            validResults.push({
+              url: pageUrl,
+              content: result.markdown,
+              html: result.html || '',
+              metadata: result.metadata,
+            });
+          }
+        }
+
+        console.log(`✅ Successfully scraped ${validResults.length} deep pages`);
+
+        // PROCESS RESULTS
+        for (const result of validResults) {
+          // Aggregate content for the LLM
+          deepCrawlContent += `\n\n--- PAGE: ${result.url} ---\nTITLE: ${result.metadata.title || 'No Title'}\n${result.content.substring(0, 6000)}`;
+
+          // Extract Images
+          const pageImages = [
+            ...extractImagesFromMarkdown(result.content),
+            ...extractImagesFromMarkdown(result.html),
+            result.metadata?.ogImage,
+            result.metadata?.image,
+          ].filter(isValidImageUrl);
+
+          deepCrawlImages.push(...pageImages);
+
+          // Extract Nuggets
+          const pageNuggets = extractContentNuggets(result.content);
+          contentNuggets = [...contentNuggets, ...pageNuggets];
+
+          console.log(`   📄 ${result.url}: ${pageNuggets.length} nuggets, ${pageImages.length} images`);
+        }
+
+      } catch (e) {
+        console.warn('Deep crawl error:', e);
       }
-
-      console.log(`✅ Successfully scraped ${validResults.length} deep pages`);
-
-      // PROCESS RESULTS
-      for (const result of validResults) {
-        // Aggregate content for the LLM
-        deepCrawlContent += `\n\n--- PAGE: ${result.url} ---\nTITLE: ${result.metadata.title || 'No Title'}\n${result.content.substring(0, 6000)}`;
-
-        // Extract Images
-        const pageImages = [
-          ...extractImagesFromMarkdown(result.content),
-          ...extractImagesFromMarkdown(result.html),
-          result.metadata?.ogImage,
-          result.metadata?.image,
-        ].filter(isValidImageUrl);
-
-        deepCrawlImages.push(...pageImages);
-
-        // Extract Nuggets
-        const pageNuggets = extractContentNuggets(result.content);
-        contentNuggets = [...contentNuggets, ...pageNuggets];
-
-        console.log(`   📄 ${result.url}: ${pageNuggets.length} nuggets, ${pageImages.length} images`);
-      }
-
-    } catch (e) {
-      console.warn('Deep crawl error:', e);
+    } else {
+      // LIGHT MODE: Skip deep crawl, use only homepage data
+      console.log('⚡ [LIGHT] Skipping deep crawl - using homepage data only (daily limit reached)');
     }
 
     // Deduplicate nuggets
@@ -2681,14 +2762,18 @@ FORMAT: Return ONLY a valid JSON array:
         images: uniqueFinalImages,
         labeledImages: labeledImages,
         contentNuggets: mergedContentNuggets, // OVERRIDE with real data
+        scrapeDepth, // 'deep' or 'light' - for UX (show re-scrape option if light)
         _crawlStats: {
           mainPageLength: firecrawlMarkdown.length,
           deepCrawlLength: deepCrawlContent.length,
           pagesScraped: mergedContentNuggets._meta.pagesScraped,
-          nuggetsExtracted: mergedContentNuggets._meta.extractedNuggets
+          nuggetsExtracted: mergedContentNuggets._meta.extractedNuggets,
+          scrapeMode: scrapeDepth,
+          dailyDeepScrapeCount: currentCount,
         }
       },
       isUpdate: !!existingBrandId, // Let frontend know if this is an update
+      wasLightScrape: scrapeDepth === 'light', // Explicit flag for UX to show upgrade/re-scrape CTA
     });
 
   } catch (error: any) {
