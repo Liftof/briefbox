@@ -7,7 +7,7 @@ import { eq, sql, desc, gte } from 'drizzle-orm';
 // Admin emails allowed to access this endpoint
 const ADMIN_EMAILS = [
   process.env.ADMIN_EMAIL,
-  'pierre@ordalie.ai', // Fallback
+  'pierrebaptiste.borges@gmail.com',
 ].filter(Boolean);
 
 export async function GET() {
