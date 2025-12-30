@@ -11,7 +11,6 @@
   "private": true,
   "dependencies": {
     "@clerk/nextjs": "^6.35.4",
-    "@fal-ai/client": "^1.7.2",
     "@google/generative-ai": "^0.24.1",
     "@neondatabase/serverless": "^1.0.2",
     "@react-email/components": "^1.0.2",
