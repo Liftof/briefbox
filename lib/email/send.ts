@@ -3,6 +3,7 @@ import { EmailType } from '@/db/schema';
 import WelcomeEmail from '@/emails/WelcomeEmail';
 import EngagementEmail from '@/emails/EngagementEmail';
 import ConversionEmail from '@/emails/ConversionEmail';
+import { generateUnsubscribeToken } from '@/app/api/unsubscribe/route';
 
 const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://palette.app';
 
@@ -24,7 +25,8 @@ export async function sendEmail(options: SendEmailOptions): Promise<{ success: b
   try {
     const resend = getResend();
 
-    const unsubscribeUrl = `${baseUrl}/api/unsubscribe?email=${encodeURIComponent(to)}`;
+    const token = generateUnsubscribeToken(to);
+    const unsubscribeUrl = `${baseUrl}/api/unsubscribe?email=${encodeURIComponent(to)}&token=${token}`;
     const displayName = userName || 'there';
 
     let subject: string;

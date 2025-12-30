@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { auth } from '@clerk/nextjs/server';
 import { firecrawlAgent } from '@/lib/firecrawl';
 import { db } from '@/db';
 import { brands } from '@/db/schema';
-import { eq } from 'drizzle-orm';
+import { eq, and } from 'drizzle-orm';
 
 export const maxDuration = 300; // 5 minutes timeout for Vercel Pro
 
@@ -86,6 +87,12 @@ async function generateCalendarPlan(agentData: any, month: number, year: number,
 
 export async function POST(req: NextRequest) {
     try {
+        // Auth check
+        const { userId } = await auth();
+        if (!userId) {
+            return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+        }
+
         const body = await req.json();
         const { brandId, month, year, userPlan } = body; // userPlan passed from frontend
 
@@ -93,13 +100,13 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ success: false, error: 'Brand ID required' }, { status: 400 });
         }
 
-        // Fetch brand details from DB
+        // Fetch brand details from DB - verify ownership
         const brand = await db.query.brands.findFirst({
-            where: eq(brands.id, brandId)
+            where: and(eq(brands.id, brandId), eq(brands.userId, userId))
         });
 
         if (!brand) {
-            return NextResponse.json({ success: false, error: 'Brand not found' }, { status: 404 });
+            return NextResponse.json({ success: false, error: 'Brand not found or access denied' }, { status: 404 });
         }
 
         const brandName = brand.name;
