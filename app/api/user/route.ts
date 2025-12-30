@@ -16,7 +16,7 @@ const PLAN_CREDITS = {
 const EARLY_BIRD_LIMIT = 30;
 
 // Capacity limit per day (above this, 0 credits - safeguard against viral traffic)
-const CAPACITY_LIMIT = 400;
+const CAPACITY_LIMIT = 300;
 
 // Signup tier status
 type SignupTier = 'early_bird' | 'normal' | 'capacity_reached';
