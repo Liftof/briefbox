@@ -8,6 +8,7 @@ import { translations } from '@/lib/i18n/translations';
 import Gallery from '@/components/Gallery';
 import I18nComparison from '@/components/I18nComparison';
 import AutopilotSection from '@/components/AutopilotSection';
+import RotatingHeadline from '@/components/RotatingHeadline';
 
 export default async function Home() {
   const headersList = await headers();
@@ -27,13 +28,7 @@ export default async function Home() {
               <div className="w-2 h-2 bg-gray-900 rounded-full" />
               <span className="text-xs font-mono uppercase tracking-[0.2em] text-gray-400">{locale === 'fr' ? 'Comment ça marche' : 'How it works'}</span>
             </div>
-            <h2 className="text-3xl md:text-4xl lg:text-5xl font-light text-gray-900 leading-tight mb-6">
-              {locale === 'fr' ? (
-                <>Plus simple que d'expliquer<br /><span className="font-semibold">à votre stagiaire</span></>
-              ) : (
-                <>Simpler than explaining<br /><span className="font-semibold">to your intern</span></>
-              )}
-            </h2>
+            <RotatingHeadline />
             <p className="text-gray-500 leading-relaxed text-lg">
               {locale === 'fr'
                 ? 'Pas de formation. Pas de tutoriel de 45 minutes.'
