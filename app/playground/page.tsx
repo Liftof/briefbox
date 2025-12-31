@@ -471,7 +471,7 @@ function PlaygroundContent() {
     }
   }, [searchParams, locale, showToast]);
 
-  // Auto-detect and set locale from brand's detected language
+  // Auto-detect and set locale + contentLanguage from brand's detected language
   // Runs when brand changes or detectedLanguage is set
   useEffect(() => {
     if (!brandData) {
@@ -483,19 +483,32 @@ function PlaygroundContent() {
       hasDetectedLanguage: !!brandData?.detectedLanguage,
       detectedLanguage: brandData?.detectedLanguage,
       currentLocale: locale,
+      currentContentLanguage: contentLanguage,
       brandName: brandData?.name,
       brandId: brandData?.id
     });
 
     if (brandData?.detectedLanguage) {
-      const brandLocale = brandData.detectedLanguage === 'en' ? 'en' : 'fr';
-      console.log(`🌐 Brand locale should be: ${brandLocale}, current locale: ${locale}`);
+      const detectedLang = brandData.detectedLanguage;
+      // Map detected language to supported content languages
+      const supportedLangs = ['fr', 'en', 'es', 'de'] as const;
+      const brandContentLang = supportedLangs.includes(detectedLang as any)
+        ? (detectedLang as 'fr' | 'en' | 'es' | 'de')
+        : 'en'; // Default to English for unsupported languages
+      const brandLocale = (detectedLang === 'en' || detectedLang === 'es' || detectedLang === 'de') ? 'en' : 'fr';
 
+      console.log(`🌐 Brand language: ${detectedLang}, content lang: ${brandContentLang}, UI locale: ${brandLocale}`);
+
+      // Update UI locale
       if (brandLocale !== locale) {
-        console.log(`✅ Switching locale from ${locale} to ${brandLocale} for brand #${brandData.id}`);
+        console.log(`✅ Switching UI locale from ${locale} to ${brandLocale}`);
         setLocale(brandLocale);
-      } else {
-        console.log(`✓ Locale already correct (${locale})`);
+      }
+
+      // Update content language to match brand's language
+      if (brandContentLang !== contentLanguage) {
+        console.log(`✅ Switching content language from ${contentLanguage} to ${brandContentLang}`);
+        setContentLanguage(brandContentLang);
       }
     } else {
       console.log('⚠️ No detectedLanguage in brandData - might be an old brand');
