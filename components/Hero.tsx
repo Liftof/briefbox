@@ -18,7 +18,7 @@ export default function Hero() {
   const [carouselIndex, setCarouselIndex] = useState(0);
   const promptInputRef = useRef<HTMLTextAreaElement>(null);
 
-  const carouselData = [
+  const carouselData: { image: string; prompt: string; colors: string[]; position?: string }[] = [
     {
       image: '/hero-illustration.jpg',
       prompt: 'Social media post for @Finary, a centralized wealth management platform',
@@ -30,10 +30,9 @@ export default function Hero() {
       colors: ['bg-black', 'bg-zinc-400', 'bg-white']
     },
     {
-      image: '/hero-blablacar.jpg',
-      prompt: 'Static image for @BlaBlaCar with a powerful marketing tagline',
-      colors: ['bg-[#054752]', 'bg-[#00D0A1]', 'bg-white'],
-      position: 'object-left'
+      image: '/hero-datafast.png',
+      prompt: 'A bold ad for @Datafast, the real-time dataviz platform for SaaS',
+      colors: ['bg-[#1a1a2e]', 'bg-[#6366f1]', 'bg-[#22d3ee]']
     }
   ];
 

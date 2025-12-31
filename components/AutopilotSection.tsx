@@ -182,8 +182,8 @@ export default function AutopilotSection() {
             <div className="relative mx-auto w-72">
               {/* Phone frame */}
               <div className="bg-gray-800 rounded-[3rem] p-3 shadow-2xl border border-gray-700">
-                {/* Screen */}
-                <div className="bg-gray-900 rounded-[2.5rem] overflow-hidden">
+                {/* Screen - fixed height to prevent layout shift */}
+                <div className="bg-gray-900 rounded-[2.5rem] overflow-hidden h-[520px] flex flex-col">
                   {/* Status bar */}
                   <div className="flex items-center justify-between px-8 py-3 text-white text-xs">
                     <span className={`font-medium transition-all duration-300 ${isAnimating ? 'opacity-0 -translate-y-1' : 'opacity-100 translate-y-0'}`}>
@@ -250,7 +250,7 @@ export default function AutopilotSection() {
                   </div>
 
                   {/* Progress dots */}
-                  <div className="flex justify-center gap-1.5 py-3">
+                  <div className="flex justify-center gap-1.5 py-3 mt-auto">
                     {notifications.map((_, idx) => (
                       <div
                         key={idx}
@@ -258,9 +258,6 @@ export default function AutopilotSection() {
                       />
                     ))}
                   </div>
-
-                  {/* Spacer for phone height */}
-                  <div className="h-8" />
                 </div>
               </div>
 
