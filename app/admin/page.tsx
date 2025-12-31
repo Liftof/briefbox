@@ -20,28 +20,11 @@ interface Stats {
   signups: { today: number; last7Days: number; thisMonth: number };
   deepScrapes: { today: number; last7Days: number; total: number };
   costs: {
-    gemini: {
-      today: number;
-      last7Days: number;
-      thisMonth: number;
-      allTime: number;
-      perImage: number;
-    };
-    firecrawl: {
-      today: number;
-      last7Days: number;
-      thisMonth: number;
-      perDeepScrape: number;
-    };
+    gemini: { today: number; last7Days: number; thisMonth: number; allTime: number; perImage: number };
+    firecrawl: { today: number; last7Days: number; thisMonth: number; perDeepScrape: number };
     openrouter: { estimated: number; perAnalysis: number };
     fixed: { vercelPro: number; upstash: number; resend: number; clerk: number };
-    totals: {
-      today: number;
-      last7Days: number;
-      thisMonth: number;
-      allTime: number;
-      projectedMonth: number;
-    };
+    totals: { today: number; last7Days: number; thisMonth: number; allTime: number; projectedMonth: number };
   };
   charts: {
     dailySignups: { date: string; count: number }[];
@@ -51,137 +34,11 @@ interface Stats {
   pricing: Record<string, any>;
 }
 
-function StatCard({ title, value, subtitle, color = 'blue', small = false }: {
-  title: string;
-  value: string | number;
-  subtitle?: string;
-  color?: 'blue' | 'green' | 'purple' | 'orange' | 'red' | 'gray';
-  small?: boolean;
-}) {
-  const colors = {
-    blue: 'bg-blue-500/10 border-blue-500/20 text-blue-400',
-    green: 'bg-green-500/10 border-green-500/20 text-green-400',
-    purple: 'bg-purple-500/10 border-purple-500/20 text-purple-400',
-    orange: 'bg-orange-500/10 border-orange-500/20 text-orange-400',
-    red: 'bg-red-500/10 border-red-500/20 text-red-400',
-    gray: 'bg-white/5 border-white/10 text-white/70',
-  };
-
-  return (
-    <div className={`rounded-xl border p-${small ? '4' : '6'} ${colors[color]}`}>
-      <p className="text-sm opacity-70">{title}</p>
-      <p className={`${small ? 'text-2xl' : 'text-3xl'} font-bold mt-1`}>{value}</p>
-      {subtitle && <p className="text-xs opacity-50 mt-1">{subtitle}</p>}
-    </div>
-  );
-}
-
-function MiniChart({ data, label, maxValue, color = 'blue' }: {
-  data: { date: string; count: number }[];
-  label: string;
-  maxValue?: number;
-  color?: 'blue' | 'green' | 'purple';
-}) {
-  const max = maxValue || Math.max(...data.map(d => d.count), 1);
-  const colors = {
-    blue: 'bg-blue-500/50 hover:bg-blue-500',
-    green: 'bg-green-500/50 hover:bg-green-500',
-    purple: 'bg-purple-500/50 hover:bg-purple-500',
-  };
-
-  return (
-    <div className="bg-white/5 rounded-xl border border-white/10 p-6">
-      <p className="text-sm text-white/70 mb-4">{label}</p>
-      <div className="flex items-end gap-1 h-24">
-        {data.slice(-14).map((d, i) => (
-          <div
-            key={i}
-            className={`flex-1 ${colors[color]} rounded-t transition-colors cursor-pointer group relative`}
-            style={{ height: `${(d.count / max) * 100}%`, minHeight: d.count > 0 ? '4px' : '0' }}
-          >
-            <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 bg-black/90 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 whitespace-nowrap pointer-events-none z-10">
-              {d.date}: {d.count}
-            </div>
-          </div>
-        ))}
-      </div>
-      <div className="flex justify-between text-xs text-white/30 mt-2">
-        <span>{data[data.length - 14]?.date?.slice(5) || ''}</span>
-        <span>{data[data.length - 1]?.date?.slice(5) || ''}</span>
-      </div>
-    </div>
-  );
-}
-
-function ProgressBar({ value, max, label, color = 'blue' }: {
-  value: number;
-  max: number;
-  label: string;
-  color?: 'blue' | 'green' | 'orange' | 'red' | 'purple';
-}) {
-  const percentage = Math.min((value / max) * 100, 100);
-  const colors = {
-    blue: 'bg-blue-500',
-    green: 'bg-green-500',
-    orange: 'bg-orange-500',
-    red: 'bg-red-500',
-    purple: 'bg-purple-500',
-  };
-
-  return (
-    <div className="mb-4">
-      <div className="flex justify-between text-sm mb-1">
-        <span className="text-white/70">{label}</span>
-        <span className="text-white/50">{value} / {max}</span>
-      </div>
-      <div className="h-2 bg-white/10 rounded-full overflow-hidden">
-        <div
-          className={`h-full ${colors[color]} transition-all`}
-          style={{ width: `${percentage}%` }}
-        />
-      </div>
-    </div>
-  );
-}
-
-function CostRow({ label, value, subtext }: { label: string; value: number; subtext?: string }) {
-  return (
-    <div className="flex justify-between items-center py-2">
-      <div>
-        <span className="text-white/70">{label}</span>
-        {subtext && <span className="text-white/30 text-xs ml-2">({subtext})</span>}
-      </div>
-      <span className={`font-mono ${value > 0 ? 'text-green-400' : 'text-white/30'}`}>
-        ${value.toFixed(2)}
-      </span>
-    </div>
-  );
-}
-
-function RefreshButton({ onClick, loading }: { onClick: () => void; loading: boolean }) {
-  return (
-    <button
-      onClick={onClick}
-      disabled={loading}
-      className="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 disabled:opacity-50 rounded-lg transition-colors"
-    >
-      <svg
-        className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`}
-        fill="none"
-        stroke="currentColor"
-        viewBox="0 0 24 24"
-      >
-        <path
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          strokeWidth={2}
-          d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
-        />
-      </svg>
-      {loading ? 'Refreshing...' : 'Refresh'}
-    </button>
-  );
-}
+// Pricing for revenue calculation
+const PRICING = {
+  pro: 19,      // €/month
+  premium: 49,  // €/month
+};
 
 export default function AdminDashboard() {
   const { user, isLoaded } = useUser();
@@ -190,7 +47,6 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
   const fetchStats = useCallback(async (isRefresh = false) => {
     if (isRefresh) setRefreshing(true);
@@ -198,17 +54,16 @@ export default function AdminDashboard() {
       const res = await fetch('/api/admin/stats');
       if (!res.ok) {
         if (res.status === 403) {
-          setError('Access denied. Admin only.');
+          setError('Accès refusé');
           return;
         }
         throw new Error('Failed to fetch stats');
       }
       const data = await res.json();
       setStats(data);
-      setLastUpdated(new Date());
       setError(null);
     } catch (err) {
-      setError('Failed to load dashboard');
+      setError('Erreur de chargement');
       console.error(err);
     } finally {
       setLoading(false);
@@ -221,29 +76,24 @@ export default function AdminDashboard() {
       router.push('/sign-in');
       return;
     }
-    if (user) {
-      fetchStats();
-    }
+    if (user) fetchStats();
   }, [user, isLoaded, router, fetchStats]);
 
   if (!isLoaded || loading) {
     return (
-      <div className="min-h-screen bg-[#0a0a0a] text-white flex items-center justify-center">
-        <div className="animate-pulse text-lg">Loading dashboard...</div>
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-gray-400">Chargement...</div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen bg-[#0a0a0a] text-white flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <p className="text-red-400 text-xl">{error}</p>
-          <button
-            onClick={() => router.push('/')}
-            className="mt-4 text-white/50 hover:text-white underline"
-          >
-            Go back
+          <p className="text-red-500 text-xl">{error}</p>
+          <button onClick={() => router.push('/')} className="mt-4 text-gray-500 hover:text-gray-700 underline">
+            Retour
           </button>
         </div>
       </div>
@@ -252,239 +102,211 @@ export default function AdminDashboard() {
 
   if (!stats) return null;
 
-  const costStatus = stats.costs.totals.thisMonth > 500 ? 'red' :
-                     stats.costs.totals.thisMonth > 200 ? 'orange' : 'green';
+  // Calculate revenue
+  const mrr = (stats.users.byPlan.pro * PRICING.pro) + (stats.users.byPlan.premium * PRICING.premium);
+  const payingCustomers = stats.users.byPlan.pro + stats.users.byPlan.premium;
+  const conversionRate = stats.users.total > 0 ? (payingCustomers / stats.users.total * 100) : 0;
+
+  // Costs
+  const monthlyCosts = stats.costs.totals.thisMonth;
+  const projectedCosts = stats.costs.totals.projectedMonth;
+
+  // Profit
+  const profit = mrr - projectedCosts;
+  const isProfit = profit >= 0;
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-white p-4 md:p-8">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen bg-gray-50 p-6 md:p-10">
+      <div className="max-w-5xl mx-auto">
+
         {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+        <div className="flex items-center justify-between mb-10">
           <div>
-            <h1 className="text-3xl font-bold">Admin Dashboard</h1>
-            <p className="text-white/50 mt-1">Palette Analytics</p>
+            <h1 className="text-2xl font-semibold text-gray-900">Dashboard</h1>
+            <p className="text-gray-500 text-sm mt-1">Vue d'ensemble Palette</p>
           </div>
-          <div className="flex items-center gap-4">
-            <RefreshButton onClick={() => fetchStats(true)} loading={refreshing} />
-            <div className="text-right text-sm">
-              <p className="text-white/50">Last updated</p>
-              <p className="text-white/70">{lastUpdated?.toLocaleString('fr-FR')}</p>
+          <button
+            onClick={() => fetchStats(true)}
+            disabled={refreshing}
+            className="text-sm text-gray-500 hover:text-gray-700 disabled:opacity-50 flex items-center gap-2"
+          >
+            <svg className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            Actualiser
+          </button>
+        </div>
+
+        {/* Main Metrics - The 4 questions */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
+
+          {/* 1. Users */}
+          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+            <div className="flex items-center justify-between mb-4">
+              <span className="text-gray-500 text-sm font-medium">Utilisateurs</span>
+              <span className="text-xs text-gray-400">+{stats.signups.last7Days} cette semaine</span>
+            </div>
+            <div className="text-4xl font-semibold text-gray-900 mb-4">{stats.users.total}</div>
+            <div className="flex gap-4 text-sm">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-gray-300"></div>
+                <span className="text-gray-600">{stats.users.byPlan.free} gratuits</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-blue-500"></div>
+                <span className="text-gray-600">{payingCustomers} payants</span>
+              </div>
+            </div>
+          </div>
+
+          {/* 2. Revenue */}
+          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+            <div className="flex items-center justify-between mb-4">
+              <span className="text-gray-500 text-sm font-medium">Revenus mensuels</span>
+              <span className="text-xs text-gray-400">{conversionRate.toFixed(1)}% conversion</span>
+            </div>
+            <div className="text-4xl font-semibold text-gray-900 mb-4">€{mrr}</div>
+            <div className="flex gap-4 text-sm">
+              <div className="text-gray-600">{stats.users.byPlan.pro} Pro × €{PRICING.pro}</div>
+              <div className="text-gray-600">{stats.users.byPlan.premium} Premium × €{PRICING.premium}</div>
+            </div>
+          </div>
+
+          {/* 3. Costs */}
+          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+            <div className="flex items-center justify-between mb-4">
+              <span className="text-gray-500 text-sm font-medium">Coûts mensuels</span>
+              <span className="text-xs text-gray-400">projeté fin de mois</span>
+            </div>
+            <div className="text-4xl font-semibold text-gray-900 mb-4">${projectedCosts.toFixed(0)}</div>
+            <div className="space-y-1 text-sm text-gray-600">
+              <div className="flex justify-between">
+                <span>Gemini (images)</span>
+                <span className="font-mono">${stats.costs.gemini.thisMonth.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Firecrawl + OpenRouter</span>
+                <span className="font-mono">${(stats.costs.firecrawl.thisMonth + stats.costs.openrouter.estimated).toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Infra (Vercel, etc)</span>
+                <span className="font-mono">${stats.costs.fixed.vercelPro.toFixed(2)}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* 4. Profit/Loss */}
+          <div className={`rounded-2xl p-6 shadow-sm border ${isProfit ? 'bg-green-50 border-green-100' : 'bg-red-50 border-red-100'}`}>
+            <div className="flex items-center justify-between mb-4">
+              <span className={`text-sm font-medium ${isProfit ? 'text-green-700' : 'text-red-700'}`}>
+                {isProfit ? 'Bénéfice' : 'Perte'} estimé
+              </span>
+              <span className={`text-xs ${isProfit ? 'text-green-600' : 'text-red-600'}`}>
+                MRR - Coûts
+              </span>
+            </div>
+            <div className={`text-4xl font-semibold ${isProfit ? 'text-green-700' : 'text-red-700'}`}>
+              {isProfit ? '+' : ''}€{profit.toFixed(0)}
+            </div>
+            <div className={`mt-4 text-sm ${isProfit ? 'text-green-600' : 'text-red-600'}`}>
+              {isProfit
+                ? `Marge: ${mrr > 0 ? ((profit / mrr) * 100).toFixed(0) : 0}%`
+                : `Il te faut ${Math.ceil(Math.abs(profit) / PRICING.pro)} abonnés Pro de plus`
+              }
             </div>
           </div>
         </div>
 
-        {/* Main Stats - 5 columns */}
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-8">
-          <StatCard
-            title="Total Users"
-            value={stats.users.total}
-            subtitle={`+${stats.signups.last7Days} (7d)`}
-            color="blue"
-          />
-          <StatCard
-            title="Total Brands"
-            value={stats.brands.total}
-            color="purple"
-          />
-          <StatCard
-            title="Generations"
-            value={stats.generations.thisMonth}
-            subtitle={`${stats.generations.total} total`}
-            color="green"
-          />
-          <StatCard
-            title="Today"
-            value={stats.generations.today}
-            subtitle={`${stats.signups.today} signups`}
-            color="gray"
-          />
-          <StatCard
-            title="Cost (Month)"
-            value={`$${stats.costs.totals.thisMonth.toFixed(0)}`}
-            subtitle={`~$${stats.costs.totals.projectedMonth.toFixed(0)} projected`}
-            color={costStatus}
-          />
-        </div>
-
-        {/* Second Row - Users, Limits, Quick Costs */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-          {/* Users by Plan */}
-          <div className="bg-white/5 rounded-xl border border-white/10 p-6">
-            <p className="text-sm text-white/70 mb-4">Users by Plan</p>
-            <div className="space-y-3">
-              <div className="flex justify-between items-center">
-                <span className="text-white/70">Free</span>
-                <span className="text-2xl font-bold text-blue-400">{stats.users.byPlan.free}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-white/70">Pro</span>
-                <span className="text-2xl font-bold text-green-400">{stats.users.byPlan.pro}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-white/70">Premium</span>
-                <span className="text-2xl font-bold text-purple-400">{stats.users.byPlan.premium}</span>
-              </div>
+        {/* Activity Today */}
+        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 mb-10">
+          <h2 className="text-gray-500 text-sm font-medium mb-4">Aujourd'hui</h2>
+          <div className="grid grid-cols-3 gap-6">
+            <div>
+              <div className="text-3xl font-semibold text-gray-900">{stats.signups.today}</div>
+              <div className="text-sm text-gray-500">inscriptions</div>
             </div>
-          </div>
-
-          {/* Today's Limits */}
-          <div className="bg-white/5 rounded-xl border border-white/10 p-6">
-            <p className="text-sm text-white/70 mb-4">Today vs Limits</p>
-            <ProgressBar
-              value={stats.signups.today}
-              max={stats.limits.capacityLimit}
-              label="Signups"
-              color={stats.signups.today > 250 ? 'orange' : 'blue'}
-            />
-            <ProgressBar
-              value={stats.deepScrapes.today}
-              max={stats.limits.deepScrapeLimit}
-              label="Deep Scrapes"
-              color={stats.deepScrapes.today > 120 ? 'orange' : 'green'}
-            />
-            <ProgressBar
-              value={stats.generations.today}
-              max={330}
-              label="Generations"
-              color={stats.generations.today > 300 ? 'orange' : 'purple'}
-            />
-          </div>
-
-          {/* Cost Summary */}
-          <div className="bg-white/5 rounded-xl border border-white/10 p-6 md:col-span-2">
-            <p className="text-sm text-white/70 mb-4">Cost Summary</p>
-            <div className="grid grid-cols-3 gap-4 text-center">
-              <div>
-                <p className="text-xs text-white/50">Today</p>
-                <p className="text-2xl font-bold text-green-400">${stats.costs.totals.today.toFixed(2)}</p>
-              </div>
-              <div>
-                <p className="text-xs text-white/50">Last 7 Days</p>
-                <p className="text-2xl font-bold text-blue-400">${stats.costs.totals.last7Days.toFixed(2)}</p>
-              </div>
-              <div>
-                <p className="text-xs text-white/50">This Month</p>
-                <p className={`text-2xl font-bold ${costStatus === 'red' ? 'text-red-400' : costStatus === 'orange' ? 'text-orange-400' : 'text-green-400'}`}>
-                  ${stats.costs.totals.thisMonth.toFixed(2)}
-                </p>
-              </div>
+            <div>
+              <div className="text-3xl font-semibold text-gray-900">{stats.generations.today}</div>
+              <div className="text-sm text-gray-500">images générées</div>
             </div>
-          </div>
-        </div>
-
-        {/* Detailed Cost Breakdown */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-          {/* Variable Costs */}
-          <div className="bg-white/5 rounded-xl border border-white/10 p-6">
-            <p className="text-sm text-white/70 mb-4">Variable Costs (This Month)</p>
-            <div className="divide-y divide-white/5">
-              <CostRow
-                label="Gemini (Images)"
-                value={stats.costs.gemini.thisMonth}
-                subtext={`${stats.generations.thisMonth} × $${stats.costs.gemini.perImage}`}
-              />
-              <CostRow
-                label="Firecrawl (Scrapes)"
-                value={stats.costs.firecrawl.thisMonth}
-                subtext={`${stats.deepScrapes.total} deep scrapes`}
-              />
-              <CostRow
-                label="OpenRouter (LLM)"
-                value={stats.costs.openrouter.estimated}
-                subtext="estimated"
-              />
-              <CostRow
-                label="Resend (Emails)"
-                value={stats.costs.fixed.resend}
-                subtext={stats.costs.fixed.resend > 0 ? 'over 3K free' : 'free tier'}
-              />
-              <CostRow
-                label="Clerk (Auth)"
-                value={stats.costs.fixed.clerk}
-                subtext={stats.costs.fixed.clerk > 0 ? 'over 10K MAU' : 'free tier'}
-              />
-            </div>
-          </div>
-
-          {/* Fixed Costs & Totals */}
-          <div className="bg-white/5 rounded-xl border border-white/10 p-6">
-            <p className="text-sm text-white/70 mb-4">Fixed Costs & Totals</p>
-            <div className="divide-y divide-white/5">
-              <CostRow
-                label="Vercel Pro"
-                value={stats.costs.fixed.vercelPro}
-                subtext="monthly"
-              />
-              <CostRow
-                label="Upstash Redis"
-                value={stats.costs.fixed.upstash}
-                subtext="free tier"
-              />
-              <div className="py-3 border-t border-white/10 mt-2">
-                <div className="flex justify-between items-center">
-                  <span className="text-white font-medium">Total This Month</span>
-                  <span className="text-2xl font-bold text-white">
-                    ${stats.costs.totals.thisMonth.toFixed(2)}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center mt-2">
-                  <span className="text-white/50">Projected (full month)</span>
-                  <span className="text-lg font-mono text-white/70">
-                    ${stats.costs.totals.projectedMonth.toFixed(2)}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center mt-2">
-                  <span className="text-white/50">All Time (Gemini only)</span>
-                  <span className="text-lg font-mono text-white/50">
-                    ${stats.costs.totals.allTime.toFixed(2)}
-                  </span>
-                </div>
-              </div>
+            <div>
+              <div className="text-3xl font-semibold text-gray-900">${stats.costs.totals.today.toFixed(2)}</div>
+              <div className="text-sm text-gray-500">dépensés</div>
             </div>
           </div>
         </div>
 
         {/* Charts */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-          <MiniChart
-            data={stats.charts.dailySignups}
-            label="Daily Signups (14 days)"
-            maxValue={stats.limits.capacityLimit}
-            color="blue"
-          />
-          <MiniChart
-            data={stats.charts.dailyGenerations}
-            label="Daily Generations (14 days)"
-            color="green"
-          />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
+          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+            <h2 className="text-gray-500 text-sm font-medium mb-4">Inscriptions (14j)</h2>
+            <div className="flex items-end gap-1 h-20">
+              {stats.charts.dailySignups.slice(-14).map((d, i) => {
+                const max = Math.max(...stats.charts.dailySignups.slice(-14).map(x => x.count), 1);
+                return (
+                  <div
+                    key={i}
+                    className="flex-1 bg-blue-100 hover:bg-blue-200 rounded-t transition-colors"
+                    style={{ height: `${(d.count / max) * 100}%`, minHeight: d.count > 0 ? '4px' : '0' }}
+                    title={`${d.date}: ${d.count}`}
+                  />
+                );
+              })}
+            </div>
+          </div>
+          <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+            <h2 className="text-gray-500 text-sm font-medium mb-4">Générations (14j)</h2>
+            <div className="flex items-end gap-1 h-20">
+              {stats.charts.dailyGenerations.slice(-14).map((d, i) => {
+                const max = Math.max(...stats.charts.dailyGenerations.slice(-14).map(x => x.count), 1);
+                return (
+                  <div
+                    key={i}
+                    className="flex-1 bg-green-100 hover:bg-green-200 rounded-t transition-colors"
+                    style={{ height: `${(d.count / max) * 100}%`, minHeight: d.count > 0 ? '4px' : '0' }}
+                    title={`${d.date}: ${d.count}`}
+                  />
+                );
+              })}
+            </div>
+          </div>
         </div>
 
-        {/* Pricing Reference */}
-        <div className="bg-white/5 rounded-xl border border-white/10 p-6 mb-8">
-          <p className="text-sm text-white/70 mb-4">Pricing Reference</p>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+        {/* Limits Status */}
+        <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+          <h2 className="text-gray-500 text-sm font-medium mb-4">Limites quotidiennes</h2>
+          <div className="space-y-3">
             <div>
-              <p className="text-white/50">Gemini per image</p>
-              <p className="text-white font-mono">${stats.pricing.gemini.perImage}</p>
+              <div className="flex justify-between text-sm mb-1">
+                <span className="text-gray-600">Inscriptions</span>
+                <span className="text-gray-400">{stats.signups.today} / {stats.limits.capacityLimit}</span>
+              </div>
+              <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-blue-500 rounded-full transition-all"
+                  style={{ width: `${Math.min((stats.signups.today / stats.limits.capacityLimit) * 100, 100)}%` }}
+                />
+              </div>
             </div>
             <div>
-              <p className="text-white/50">Firecrawl per deep scrape</p>
-              <p className="text-white font-mono">${stats.pricing.firecrawl.perDeepScrape}</p>
-            </div>
-            <div>
-              <p className="text-white/50">Max signups/day</p>
-              <p className="text-white font-mono">{stats.limits.capacityLimit}</p>
-            </div>
-            <div>
-              <p className="text-white/50">Max deep scrapes/day</p>
-              <p className="text-white font-mono">{stats.limits.deepScrapeLimit}</p>
+              <div className="flex justify-between text-sm mb-1">
+                <span className="text-gray-600">Deep scrapes</span>
+                <span className="text-gray-400">{stats.deepScrapes.today} / {stats.limits.deepScrapeLimit}</span>
+              </div>
+              <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-green-500 rounded-full transition-all"
+                  style={{ width: `${Math.min((stats.deepScrapes.today / stats.limits.deepScrapeLimit) * 100, 100)}%` }}
+                />
+              </div>
             </div>
           </div>
         </div>
 
         {/* Footer */}
-        <div className="text-center text-white/30 text-sm">
-          <p>Max daily: {stats.limits.capacityLimit} signups × 1.1 credits = ~{Math.round(stats.limits.capacityLimit * 1.1)} images = ~${(stats.limits.capacityLimit * 1.1 * stats.pricing.gemini.perImage).toFixed(0)}/day max</p>
+        <div className="mt-8 text-center text-gray-400 text-xs">
+          Coût max/jour: ~${(stats.limits.capacityLimit * 1.1 * stats.costs.gemini.perImage).toFixed(0)} •
+          Coût max/mois: ~${(stats.limits.capacityLimit * 1.1 * stats.costs.gemini.perImage * 30).toFixed(0)}
         </div>
       </div>
     </div>
