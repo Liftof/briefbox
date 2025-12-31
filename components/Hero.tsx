@@ -282,15 +282,12 @@ export default function Hero() {
               </div>
               <div className="relative group">
                 <div className="text-2xl font-semibold text-gray-900 mb-1 flex items-center gap-1">
-                  <span className="text-amber-500">7h</span>
-                  <svg className="w-4 h-4 text-amber-400" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
-                  </svg>
+                  <span className="text-amber-500">24/7</span>
                 </div>
                 <div className="text-xs font-mono uppercase tracking-wider text-gray-400">{locale === 'fr' ? 'Autopilote' : 'Autopilot'}</div>
                 {/* Tooltip */}
                 <div className="absolute bottom-full left-0 mb-2 w-48 bg-gray-900 text-white text-xs p-2 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                  {locale === 'fr' ? 'Un visuel frais chaque matin, automatiquement' : 'Fresh visual every morning, automatically'}
+                  {locale === 'fr' ? 'Palette travaille pour vous, même quand vous dormez' : 'Palette works for you, even while you sleep'}
                 </div>
               </div>
               <div>

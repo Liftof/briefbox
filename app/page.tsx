@@ -19,7 +19,159 @@ export default async function Home() {
       <Navigation />
       <Hero />
 
-      {/* Problem Section */}
+      {/* How it Works - First section: accessible & simple */}
+      <section id="fonctionnement" className="py-24 md:py-32 bg-white relative">
+        <div className="max-w-6xl mx-auto px-6">
+          <div className="max-w-3xl mb-16">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-2 h-2 bg-gray-900 rounded-full" />
+              <span className="text-xs font-mono uppercase tracking-[0.2em] text-gray-400">{locale === 'fr' ? 'Comment ça marche' : 'How it works'}</span>
+            </div>
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-light text-gray-900 leading-tight mb-6">
+              {locale === 'fr' ? (
+                <>Plus simple que d'expliquer<br /><span className="font-semibold">à votre stagiaire</span></>
+              ) : (
+                <>Simpler than explaining<br /><span className="font-semibold">to your intern</span></>
+              )}
+            </h2>
+            <p className="text-gray-500 leading-relaxed text-lg">
+              {locale === 'fr'
+                ? 'Pas de formation. Pas de tutoriel de 45 minutes. Si vous savez écrire un SMS, vous savez utiliser Palette.'
+                : 'No training. No 45-minute tutorial. If you can write a text, you can use Palette.'
+              }
+            </p>
+          </div>
+
+          <div className="grid gap-8 md:grid-cols-3 md:gap-12">
+            <div className="relative">
+              <div className="text-8xl font-light text-red-100 absolute -top-4 -left-2">1</div>
+              <div className="relative z-10 pt-12">
+                <div className="w-10 h-10 bg-red-500 rounded-xl flex items-center justify-center mb-4">
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <circle cx="12" cy="12" r="10" />
+                    <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+                  </svg>
+                </div>
+                <h3 className="text-xl font-medium text-gray-900 mb-3">{locale === 'fr' ? 'Collez votre site web' : 'Paste your website'}</h3>
+                <p className="text-gray-500 leading-relaxed">
+                  {locale === 'fr'
+                    ? 'Palette scanne votre marque : logo, couleurs, typos, ton. Une seule fois, pour toujours.'
+                    : 'Palette scans your brand: logo, colors, fonts, tone. Once, forever.'
+                  }
+                </p>
+              </div>
+            </div>
+
+            <div className="relative">
+              <div className="text-8xl font-light text-blue-100 absolute -top-4 -left-2">2</div>
+              <div className="relative z-10 pt-12">
+                <div className="w-10 h-10 bg-blue-500 rounded-xl flex items-center justify-center mb-4">
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                  </svg>
+                </div>
+                <h3 className="text-xl font-medium text-gray-900 mb-3">{locale === 'fr' ? 'Choisissez une idée' : 'Pick an idea'}</h3>
+                <p className="text-gray-500 leading-relaxed">
+                  {locale === 'fr'
+                    ? "Palette vous propose des idées de contenu basées sur les tendances de votre marché. Choisissez-en une ou décrivez la vôtre, et c'est parti."
+                    : 'Palette suggests content ideas based on your market trends. Pick one or describe your own, and off you go.'
+                  }
+                </p>
+              </div>
+            </div>
+
+            <div className="relative">
+              <div className="text-8xl font-light text-amber-100 absolute -top-4 -left-2">3</div>
+              <div className="relative z-10 pt-12">
+                <div className="w-10 h-10 bg-amber-400 rounded-xl flex items-center justify-center mb-4">
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                    <path d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+                <h3 className="text-xl font-medium text-gray-900 mb-3">{locale === 'fr' ? 'Publiez ou ajustez' : 'Publish or adjust'}</h3>
+                <p className="text-gray-500 leading-relaxed">
+                  {locale === 'fr'
+                    ? 'Visuels générés en 60 secondes. Un detail à changer ? Un clic. Pas satisfait ? Régénérez. Gratuit.'
+                    : 'Visuals generated in 60 seconds. Need a change? One click. Not happy? Regenerate. Free.'
+                  }
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Proof Section - Gallery */}
+      <section className="py-24 md:py-32 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-b from-gray-50 to-white" />
+        <div className="absolute top-20 right-20 w-64 h-64 bg-red-200/20 rounded-full blur-3xl" />
+        <div className="absolute bottom-20 left-20 w-64 h-64 bg-blue-200/20 rounded-full blur-3xl" />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-amber-200/15 rounded-full blur-3xl" />
+
+        <div className="max-w-6xl mx-auto px-6 relative z-10">
+          <div className="max-w-3xl mb-16">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-2 h-2 bg-amber-400 rounded-full" />
+              <span className="text-xs font-mono uppercase tracking-[0.2em] text-gray-400">{locale === 'fr' ? 'Exemples' : 'Examples'}</span>
+            </div>
+            <h2 className="text-3xl md:text-4xl lg:text-5xl font-light text-gray-900 leading-tight mb-6">
+              {locale === 'fr' ? (
+                <>Ce que nos utilisateurs<br /><span className="font-semibold">créent avec Palette</span></>
+              ) : (
+                <>What our users<br /><span className="font-semibold">create with Palette</span></>
+              )}
+            </h2>
+            <p className="text-gray-500 text-lg leading-relaxed">
+              {locale === 'fr' ? 'De vrais visuels, générés en quelques clics.' : 'Real visuals, generated in a few clicks.'}
+            </p>
+          </div>
+
+          <Gallery />
+
+          <div className="text-center mt-12">
+            <Link href="/playground" className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-gray-900 transition-colors group">
+              {locale === 'fr' ? 'Créer votre premier visuel' : 'Create your first visual'}
+              <span className="group-hover:translate-x-1 transition-transform">→</span>
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Autopilot Section */}
+      <AutopilotSection />
+
+      {/* International Section */}
+      <section className="py-24 md:py-32 bg-white relative overflow-hidden border-t border-gray-50">
+        <div className="max-w-6xl mx-auto px-6 relative z-10">
+          <div className="grid md:grid-cols-2 gap-16 items-center">
+            <div>
+              <div className="flex items-center gap-3 mb-6">
+                <div className="w-2 h-2 bg-blue-500 rounded-full" />
+                <span className="text-xs font-mono uppercase tracking-[0.2em] text-gray-400">
+                  {locale === 'fr' ? 'International' : 'International'}
+                </span>
+              </div>
+              <h2 className="text-3xl md:text-4xl lg:text-5xl font-light text-gray-900 leading-tight mb-6">
+                {locale === 'fr' ? (
+                  <>Une marque,<br /><span className="font-semibold text-gray-900">toutes les langues.</span></>
+                ) : (
+                  <>One brand,<br /><span className="font-semibold text-gray-900">all languages.</span></>
+                )}
+              </h2>
+              <p className="text-gray-500 text-lg leading-relaxed mb-8">
+                {locale === 'fr'
+                  ? "Traduction parfaite de vos contenus en 20 secondes. Palette adapte vos visuels pour tous vos marchés internationaux en gardant une cohérence absolue."
+                  : "Perfect content translation in 20 seconds. Palette adapts your visuals for all international markets while maintaining absolute brand consistency."
+                }
+              </p>
+            </div>
+
+            <I18nComparison locale={locale} />
+          </div>
+        </div>
+      </section>
+
+      {/* Problem Section - For users who've tried agencies */}
       <section className="py-24 md:py-32 relative">
         <div className="absolute inset-0 opacity-[0.02]" style={{
           backgroundImage: `linear-gradient(#000 1px, transparent 1px), linear-gradient(90deg, #000 1px, transparent 1px)`,
@@ -30,19 +182,19 @@ export default async function Home() {
           <div className="max-w-3xl mb-16">
             <div className="flex items-center gap-3 mb-6">
               <div className="w-2 h-2 bg-red-500 rounded-full" />
-              <span className="text-xs font-mono uppercase tracking-[0.2em] text-gray-400">{locale === 'fr' ? 'Le problème' : 'The problem'}</span>
+              <span className="text-xs font-mono uppercase tracking-[0.2em] text-gray-400">{locale === 'fr' ? 'Vous avez déjà essayé' : 'You\'ve tried before'}</span>
             </div>
             <h2 className="text-3xl md:text-4xl lg:text-5xl font-light text-gray-900 leading-tight mb-6">
               {locale === 'fr' ? (
-                <>Lundi 9h. Votre boss veut<br /><span className="font-semibold">une campagne pour vendredi.</span></>
+                <>Les agences, Canva...<br /><span className="font-semibold">On connaît la suite.</span></>
               ) : (
-                <>Monday 9am. Your boss wants<br /><span className="font-semibold">a campaign by Friday.</span></>
+                <>Agencies, Canva...<br /><span className="font-semibold">We know how it goes.</span></>
               )}
             </h2>
             <p className="text-gray-500 leading-relaxed text-lg">
               {locale === 'fr'
-                ? <>Vous connaissez la suite : brief à l'agence, devis dans 48h, premiers retours dans 2 semaines, résultat qui ressemble à tout sauf à votre marque. Ou alors <img src="/canva-logo.png" alt="Canva" className="inline-block h-5 align-baseline mx-1" />, et ce rendu "template gratuit" que tout le monde reconnaît.</>
-                : <>You know how it goes: brief the agency, quote in 48h, first feedback in 2 weeks, result that looks nothing like your brand. Or <img src="/canva-logo.png" alt="Canva" className="inline-block h-5 align-baseline mx-1" />, and that "free template" look everyone recognizes.</>
+                ? <>Briefs interminables, devis à rallonge, ou templates que tout le monde reconnaît. Palette change la donne.</>
+                : <>Endless briefs, overpriced quotes, or templates everyone recognizes. Palette changes the game.</>
               }
             </p>
           </div>
@@ -120,158 +272,6 @@ export default async function Home() {
                 </div>
               </div>
             </div>
-          </div>
-        </div>
-      </section>
-
-      {/* How it Works */}
-      <section id="fonctionnement" className="py-24 md:py-32 bg-white relative">
-        <div className="max-w-6xl mx-auto px-6">
-          <div className="max-w-3xl mb-16">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-2 h-2 bg-gray-900 rounded-full" />
-              <span className="text-xs font-mono uppercase tracking-[0.2em] text-gray-400">{locale === 'fr' ? 'Comment ça marche' : 'How it works'}</span>
-            </div>
-            <h2 className="text-3xl md:text-4xl lg:text-5xl font-light text-gray-900 leading-tight mb-6">
-              {locale === 'fr' ? (
-                <>Plus simple que d'expliquer<br /><span className="font-semibold">à votre stagiaire</span></>
-              ) : (
-                <>Simpler than explaining<br /><span className="font-semibold">to your intern</span></>
-              )}
-            </h2>
-            <p className="text-gray-500 leading-relaxed text-lg">
-              {locale === 'fr'
-                ? 'Pas de formation. Pas de tutoriel de 45 minutes. Si vous savez écrire un SMS, vous savez utiliser Palette.'
-                : 'No training. No 45-minute tutorial. If you can write a text, you can use Palette.'
-              }
-            </p>
-          </div>
-
-          <div className="grid gap-8 md:grid-cols-3 md:gap-12">
-            <div className="relative">
-              <div className="text-8xl font-light text-red-100 absolute -top-4 -left-2">1</div>
-              <div className="relative z-10 pt-12">
-                <div className="w-10 h-10 bg-red-500 rounded-xl flex items-center justify-center mb-4">
-                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                    <circle cx="12" cy="12" r="10" />
-                    <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
-                  </svg>
-                </div>
-                <h3 className="text-xl font-medium text-gray-900 mb-3">{locale === 'fr' ? 'Collez votre site web' : 'Paste your website'}</h3>
-                <p className="text-gray-500 leading-relaxed">
-                  {locale === 'fr'
-                    ? 'Palette scanne votre marque : logo, couleurs, typos, ton. Une seule fois, pour toujours.'
-                    : 'Palette scans your brand: logo, colors, fonts, tone. Once, forever.'
-                  }
-                </p>
-              </div>
-            </div>
-
-            <div className="relative">
-              <div className="text-8xl font-light text-blue-100 absolute -top-4 -left-2">2</div>
-              <div className="relative z-10 pt-12">
-                <div className="w-10 h-10 bg-blue-500 rounded-xl flex items-center justify-center mb-4">
-                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                    <path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                  </svg>
-                </div>
-                <h3 className="text-xl font-medium text-gray-900 mb-3">{locale === 'fr' ? 'Dites ce que vous voulez' : 'Say what you want'}</h3>
-                <p className="text-gray-500 leading-relaxed">
-                  {locale === 'fr'
-                    ? '"Une story pour le Black Friday". "Un carousel LinkedIn sur notre levée de fonds". En français, comme vous parleriez à un humain.'
-                    : '"A Black Friday story". "A LinkedIn carousel about our fundraise". In plain English, like you\'d talk to a human.'
-                  }
-                </p>
-              </div>
-            </div>
-
-            <div className="relative">
-              <div className="text-8xl font-light text-amber-100 absolute -top-4 -left-2">3</div>
-              <div className="relative z-10 pt-12">
-                <div className="w-10 h-10 bg-amber-400 rounded-xl flex items-center justify-center mb-4">
-                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                    <path d="M5 13l4 4L19 7" />
-                  </svg>
-                </div>
-                <h3 className="text-xl font-medium text-gray-900 mb-3">{locale === 'fr' ? 'Publiez ou ajustez' : 'Publish or adjust'}</h3>
-                <p className="text-gray-500 leading-relaxed">
-                  {locale === 'fr'
-                    ? 'Visuels générés en 60 secondes. Un detail à changer ? Un clic. Pas satisfait ? Régénérez. Gratuit.'
-                    : 'Visuals generated in 60 seconds. Need a change? One click. Not happy? Regenerate. Free.'
-                  }
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Autopilot Section */}
-      <AutopilotSection />
-
-      {/* Proof Section - Gallery */}
-      <section className="py-24 md:py-32 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-gray-50 to-white" />
-        <div className="absolute top-20 right-20 w-64 h-64 bg-red-200/20 rounded-full blur-3xl" />
-        <div className="absolute bottom-20 left-20 w-64 h-64 bg-blue-200/20 rounded-full blur-3xl" />
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-amber-200/15 rounded-full blur-3xl" />
-
-        <div className="max-w-6xl mx-auto px-6 relative z-10">
-          <div className="max-w-3xl mb-16">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-2 h-2 bg-amber-400 rounded-full" />
-              <span className="text-xs font-mono uppercase tracking-[0.2em] text-gray-400">{locale === 'fr' ? 'Exemples' : 'Examples'}</span>
-            </div>
-            <h2 className="text-3xl md:text-4xl lg:text-5xl font-light text-gray-900 leading-tight mb-6">
-              {locale === 'fr' ? (
-                <>Ce que nos utilisateurs<br /><span className="font-semibold">créent avec Palette</span></>
-              ) : (
-                <>What our users<br /><span className="font-semibold">create with Palette</span></>
-              )}
-            </h2>
-            <p className="text-gray-500 text-lg leading-relaxed">
-              {locale === 'fr' ? 'De vrais visuels, générés en quelques clics.' : 'Real visuals, generated in a few clicks.'}
-            </p>
-          </div>
-
-          <Gallery />
-
-          <div className="text-center mt-12">
-            <Link href="/playground" className="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-gray-900 transition-colors group">
-              {locale === 'fr' ? 'Créer votre premier visuel' : 'Create your first visual'}
-              <span className="group-hover:translate-x-1 transition-transform">→</span>
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* International Section */}
-      <section className="py-24 md:py-32 bg-white relative overflow-hidden border-t border-gray-50">
-        <div className="max-w-6xl mx-auto px-6 relative z-10">
-          <div className="grid md:grid-cols-2 gap-16 items-center">
-            <div>
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-2 h-2 bg-blue-500 rounded-full" />
-                <span className="text-xs font-mono uppercase tracking-[0.2em] text-gray-400">
-                  {locale === 'fr' ? 'International' : 'International'}
-                </span>
-              </div>
-              <h2 className="text-3xl md:text-4xl lg:text-5xl font-light text-gray-900 leading-tight mb-6">
-                {locale === 'fr' ? (
-                  <>Une marque,<br /><span className="font-semibold text-gray-900">toutes les langues.</span></>
-                ) : (
-                  <>One brand,<br /><span className="font-semibold text-gray-900">all languages.</span></>
-                )}
-              </h2>
-              <p className="text-gray-500 text-lg leading-relaxed mb-8">
-                {locale === 'fr'
-                  ? "Traduction parfaite de vos contenus en 20 secondes. Palette adapte vos visuels pour tous vos marchés internationaux en gardant une cohérence absolue."
-                  : "Perfect content translation in 20 seconds. Palette adapts your visuals for all international markets while maintaining absolute brand consistency."
-                }
-              </p>
-            </div>
-
-            <I18nComparison locale={locale} />
           </div>
         </div>
       </section>
