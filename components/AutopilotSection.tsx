@@ -3,27 +3,81 @@
 import { useState, useEffect } from 'react';
 import { useTranslation } from '@/lib/i18n';
 
+// Geometric SVG previews for each notification
+const GeometricPreview1 = () => (
+  <svg viewBox="0 0 40 40" className="w-full h-full">
+    <rect x="5" y="5" width="14" height="14" fill="#3B82F6" rx="2" />
+    <circle cx="30" cy="12" r="7" fill="#F59E0B" />
+    <polygon points="12,35 5,25 19,25" fill="#EF4444" />
+    <rect x="22" y="22" width="13" height="13" fill="#8B5CF6" rx="2" />
+  </svg>
+);
+
+const GeometricPreview2 = () => (
+  <svg viewBox="0 0 40 40" className="w-full h-full">
+    <circle cx="12" cy="12" r="8" fill="#10B981" />
+    <rect x="22" y="5" width="13" height="13" fill="#F59E0B" rx="2" />
+    <polygon points="30,35 22,22 38,22" fill="#3B82F6" />
+    <circle cx="10" cy="30" r="6" fill="#EC4899" />
+  </svg>
+);
+
+const GeometricPreview3 = () => (
+  <svg viewBox="0 0 40 40" className="w-full h-full">
+    <polygon points="20,5 35,18 28,35 12,35 5,18" fill="#6366F1" />
+    <circle cx="20" cy="20" r="6" fill="#F59E0B" />
+  </svg>
+);
+
+const GeometricPreview4 = () => (
+  <svg viewBox="0 0 40 40" className="w-full h-full">
+    <rect x="3" y="12" width="16" height="16" fill="#EF4444" rx="3" transform="rotate(-10 11 20)" />
+    <circle cx="28" cy="14" r="9" fill="#3B82F6" />
+    <polygon points="32,35 24,24 38,26" fill="#10B981" />
+  </svg>
+);
+
+const GeometricPreview5 = () => (
+  <svg viewBox="0 0 40 40" className="w-full h-full">
+    <rect x="8" y="8" width="24" height="24" fill="#8B5CF6" rx="4" />
+    <circle cx="20" cy="16" r="5" fill="#F59E0B" />
+    <polygon points="20,35 12,24 28,24" fill="white" />
+  </svg>
+);
+
+const PREVIEWS = [GeometricPreview1, GeometricPreview2, GeometricPreview3, GeometricPreview4, GeometricPreview5];
+
 export default function AutopilotSection() {
   const { locale } = useTranslation();
-  const [currentTime, setCurrentTime] = useState('07:00');
+  const [currentIndex, setCurrentIndex] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
 
-  // Simulate the "morning notification" effect
-  useEffect(() => {
-    const times = ['07:00', '07:01', '07:02'];
-    let index = 0;
+  const notifications = locale === 'fr' ? [
+    { time: '07:00', text: 'Votre visuel du jour est prêt ! Trend: productivité sans burnout', tag: 'Lundi' },
+    { time: '07:00', text: 'Nouveau contenu généré ! Sujet: astuces remote work', tag: 'Mardi' },
+    { time: '07:01', text: 'Visuel prêt à publier ! Thème: leadership moderne', tag: 'Mercredi' },
+    { time: '07:00', text: 'Contenu du jour : les erreurs à éviter en startup', tag: 'Jeudi' },
+    { time: '07:02', text: 'Votre post est prêt ! Tendance: bien-être au travail', tag: 'Vendredi' },
+  ] : [
+    { time: '07:00', text: 'Your daily visual is ready! Trend: productivity without burnout', tag: 'Monday' },
+    { time: '07:00', text: 'New content generated! Topic: remote work tips', tag: 'Tuesday' },
+    { time: '07:01', text: 'Visual ready to publish! Theme: modern leadership', tag: 'Wednesday' },
+    { time: '07:00', text: 'Today\'s content: startup mistakes to avoid', tag: 'Thursday' },
+    { time: '07:02', text: 'Your post is ready! Trend: workplace wellness', tag: 'Friday' },
+  ];
 
+  // Cycle through notifications
+  useEffect(() => {
     const interval = setInterval(() => {
       setIsAnimating(true);
       setTimeout(() => {
-        index = (index + 1) % times.length;
-        setCurrentTime(times[index]);
+        setCurrentIndex((prev) => (prev + 1) % notifications.length);
         setIsAnimating(false);
-      }, 300);
-    }, 3000);
+      }, 400);
+    }, 3500);
 
     return () => clearInterval(interval);
-  }, []);
+  }, [notifications.length]);
 
   const contentIdeas = locale === 'fr' ? [
     { icon: '🔥', text: 'Tendance détectée : "productivité sans hustle culture"', tag: 'Trend' },
@@ -34,6 +88,8 @@ export default function AutopilotSection() {
     { icon: '💡', text: 'Audience pain point: "too many useless meetings"', tag: 'Insight' },
     { icon: '📊', text: 'Competitor X launched a similar feature', tag: 'Intel' },
   ];
+
+  const CurrentPreview = PREVIEWS[currentIndex];
 
   return (
     <section className="py-24 md:py-32 relative overflow-hidden bg-gray-900">
@@ -130,8 +186,8 @@ export default function AutopilotSection() {
                 <div className="bg-gray-900 rounded-[2.5rem] overflow-hidden">
                   {/* Status bar */}
                   <div className="flex items-center justify-between px-8 py-3 text-white text-xs">
-                    <span className={`font-medium transition-opacity duration-300 ${isAnimating ? 'opacity-0' : 'opacity-100'}`}>
-                      {currentTime}
+                    <span className={`font-medium transition-all duration-300 ${isAnimating ? 'opacity-0 -translate-y-1' : 'opacity-100 translate-y-0'}`}>
+                      {notifications[currentIndex].time}
                     </span>
                     <div className="flex items-center gap-1">
                       <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
@@ -141,45 +197,41 @@ export default function AutopilotSection() {
                     </div>
                   </div>
 
-                  {/* Notification */}
+                  {/* Notification with cycling content */}
                   <div className="px-4 py-2">
-                    <div className={`bg-white/10 backdrop-blur-xl rounded-2xl p-4 border border-white/10 transition-all duration-500 ${isAnimating ? 'scale-95 opacity-50' : 'scale-100 opacity-100'}`}>
+                    <div className={`bg-white/10 backdrop-blur-xl rounded-2xl p-4 border border-white/10 transition-all duration-500 ${isAnimating ? 'scale-95 opacity-0 translate-y-2' : 'scale-100 opacity-100 translate-y-0'}`}>
                       <div className="flex items-start gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-red-500 via-blue-500 to-amber-400 flex items-center justify-center">
+                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-red-500 via-blue-500 to-amber-400 flex items-center justify-center flex-shrink-0">
                           <span className="text-white text-lg font-bold">P</span>
                         </div>
-                        <div className="flex-1">
+                        <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between">
                             <span className="text-white font-semibold text-sm">Palette</span>
-                            <span className="text-gray-400 text-xs">{locale === 'fr' ? 'maintenant' : 'now'}</span>
+                            <span className="text-amber-400 text-[10px] font-mono">{notifications[currentIndex].tag}</span>
                           </div>
-                          <p className="text-gray-300 text-sm mt-1">
-                            {locale === 'fr'
-                              ? "Votre visuel du jour est prêt ! Trend: productivité sans burnout"
-                              : "Your daily visual is ready! Trend: productivity without burnout"
-                            }
+                          <p className="text-gray-300 text-xs mt-1 leading-relaxed">
+                            {notifications[currentIndex].text}
                           </p>
                         </div>
                       </div>
                     </div>
                   </div>
 
-                  {/* Preview of generated visual */}
+                  {/* Preview of generated visual with geometric SVG */}
                   <div className="px-4 py-2">
-                    <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-3 border border-gray-700">
-                      <div className="aspect-square rounded-xl bg-gradient-to-br from-blue-600/20 to-purple-600/20 flex items-center justify-center relative overflow-hidden">
-                        <div className="absolute inset-0 bg-[url('/hero-illustration.jpg')] bg-cover bg-center opacity-40" />
-                        <div className="relative z-10 text-center p-4">
-                          <div className="text-white/80 text-xs font-mono uppercase tracking-wider mb-2">
-                            {locale === 'fr' ? 'Généré pour vous' : 'Generated for you'}
-                          </div>
-                          <div className="text-white font-semibold">
-                            {locale === 'fr' ? 'Post LinkedIn' : 'LinkedIn Post'}
-                          </div>
+                    <div className={`bg-gradient-to-br from-gray-800 to-gray-900 rounded-2xl p-3 border border-gray-700 transition-all duration-500 ${isAnimating ? 'opacity-50 scale-98' : 'opacity-100 scale-100'}`}>
+                      <div className="aspect-[4/3] rounded-xl bg-gradient-to-br from-gray-700/50 to-gray-800/50 flex items-center justify-center relative overflow-hidden">
+                        {/* Geometric SVG preview */}
+                        <div className="w-24 h-24 transition-all duration-500">
+                          <CurrentPreview />
+                        </div>
+                        {/* Day indicator */}
+                        <div className="absolute top-2 left-2 bg-black/30 backdrop-blur-sm rounded px-2 py-0.5">
+                          <span className="text-[10px] font-mono text-white/70">{notifications[currentIndex].tag}</span>
                         </div>
                         {/* Checkmark badge */}
-                        <div className="absolute top-3 right-3 w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
-                          <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24">
+                        <div className="absolute top-2 right-2 w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
+                          <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" strokeWidth="3" viewBox="0 0 24 24">
                             <path d="M5 13l4 4L19 7" />
                           </svg>
                         </div>
@@ -187,18 +239,28 @@ export default function AutopilotSection() {
 
                       {/* Action buttons */}
                       <div className="flex gap-2 mt-3">
-                        <button className="flex-1 bg-white text-gray-900 py-2 rounded-lg text-sm font-medium">
+                        <button className="flex-1 bg-white text-gray-900 py-2 rounded-lg text-xs font-medium">
                           {locale === 'fr' ? 'Publier' : 'Publish'}
                         </button>
-                        <button className="flex-1 bg-gray-700 text-white py-2 rounded-lg text-sm font-medium">
+                        <button className="flex-1 bg-gray-700 text-white py-2 rounded-lg text-xs font-medium">
                           {locale === 'fr' ? 'Modifier' : 'Edit'}
                         </button>
                       </div>
                     </div>
                   </div>
 
+                  {/* Progress dots */}
+                  <div className="flex justify-center gap-1.5 py-3">
+                    {notifications.map((_, idx) => (
+                      <div
+                        key={idx}
+                        className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${idx === currentIndex ? 'bg-amber-400 w-3' : 'bg-gray-600'}`}
+                      />
+                    ))}
+                  </div>
+
                   {/* Spacer for phone height */}
-                  <div className="h-32" />
+                  <div className="h-8" />
                 </div>
               </div>
 

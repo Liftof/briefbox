@@ -36,8 +36,8 @@ export default async function Home() {
             </h2>
             <p className="text-gray-500 leading-relaxed text-lg">
               {locale === 'fr'
-                ? 'Pas de formation. Pas de tutoriel de 45 minutes. Si vous savez écrire un SMS, vous savez utiliser Palette.'
-                : 'No training. No 45-minute tutorial. If you can write a text, you can use Palette.'
+                ? 'Pas de formation. Pas de tutoriel de 45 minutes.'
+                : 'No training. No 45-minute tutorial.'
               }
             </p>
           </div>
