@@ -139,7 +139,7 @@ export default function AutopilotSection() {
               <div className="flex items-center gap-4">
                 <div className="w-10 h-10 rounded-full bg-gray-800 border border-gray-700 flex items-center justify-center text-amber-400 text-sm font-semibold">1</div>
                 <div>
-                  <div className="text-white font-medium">{locale === 'fr' ? 'IA scanne votre marché' : 'AI scans your market'}</div>
+                  <div className="text-white font-medium">{locale === 'fr' ? '50 bots scannent votre marché' : '50 bots scan your market daily'}</div>
                   <div className="text-gray-500 text-sm">{locale === 'fr' ? 'Tendances, pain points, actualités' : 'Trends, pain points, news'}</div>
                 </div>
               </div>

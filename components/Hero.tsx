@@ -18,20 +18,29 @@ export default function Hero() {
   const [carouselIndex, setCarouselIndex] = useState(0);
   const promptInputRef = useRef<HTMLTextAreaElement>(null);
 
-  const carouselData: { image: string; prompt: string; colors: string[]; position?: string }[] = [
+  const carouselData: { image: string; prompt: { fr: string; en: string }; colors: string[]; position?: string }[] = [
     {
       image: '/hero-illustration.jpg',
-      prompt: 'Social media post for @Finary, a centralized wealth management platform',
+      prompt: {
+        fr: 'Post réseaux sociaux pour @Finary, plateforme de gestion de patrimoine',
+        en: 'Social media post for @Finary, a centralized wealth management platform'
+      },
       colors: ['bg-gray-900', 'bg-[#D4AF37]', 'bg-gray-200']
     },
     {
       image: '/hero-traderepublic.jpg',
-      prompt: 'An ad for @TradeRepublic featuring a model and KPIs',
+      prompt: {
+        fr: 'Une pub pour @TradeRepublic avec un modèle et des KPIs',
+        en: 'An ad for @TradeRepublic featuring a model and KPIs'
+      },
       colors: ['bg-black', 'bg-zinc-400', 'bg-white']
     },
     {
       image: '/hero-datafast.png',
-      prompt: 'A bold ad for @Datafast, the real-time dataviz platform for SaaS',
+      prompt: {
+        fr: 'Une pub percutante pour @Datafast, plateforme de dataviz pour SaaS',
+        en: 'A bold ad for @Datafast, the real-time dataviz platform for SaaS'
+      },
       colors: ['bg-[#1a1a2e]', 'bg-[#6366f1]', 'bg-[#22d3ee]']
     }
   ];
@@ -372,7 +381,7 @@ export default function Hero() {
                       />
                     ) : (
                       <p className="text-sm text-gray-600 leading-relaxed italic">
-                        "{carouselData[carouselIndex].prompt}"
+                        "{carouselData[carouselIndex].prompt[locale] || carouselData[carouselIndex].prompt.en}"
                       </p>
                     )}
                   </div>
