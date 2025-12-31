@@ -7,6 +7,7 @@ import { getServerLocale } from '@/lib/i18n-server';
 import { translations } from '@/lib/i18n/translations';
 import Gallery from '@/components/Gallery';
 import I18nComparison from '@/components/I18nComparison';
+import AutopilotSection from '@/components/AutopilotSection';
 
 export default async function Home() {
   const headersList = await headers();
@@ -205,6 +206,9 @@ export default async function Home() {
         </div>
       </section>
 
+      {/* Autopilot Section */}
+      <AutopilotSection />
+
       {/* Proof Section - Gallery */}
       <section className="py-24 md:py-32 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-gray-50 to-white" />
@@ -387,11 +391,17 @@ export default async function Home() {
               <div className="text-4xl font-light text-white mb-2">{locale === 'fr' ? '19€' : '$19'}<span className="text-lg text-gray-500">/{locale === 'fr' ? 'mois' : 'mo'}</span></div>
               <p className="text-sm text-gray-400 mb-8">{locale === 'fr' ? 'Pour ceux qui publient chaque semaine' : 'For those who publish weekly'}</p>
               <div className="text-xs font-mono text-gray-500 mb-6">{locale === 'fr' ? '50 crédits/mois' : '50 credits/mo'}</div>
-              <ul className="space-y-3 mb-8">
-                <li className="flex items-center gap-3 text-sm text-gray-300">
+              {/* Autopilot highlight */}
+              <div className="bg-gradient-to-r from-amber-500/20 to-orange-500/10 border border-amber-500/30 rounded-lg p-3 mb-6">
+                <div className="flex items-center gap-2 mb-1">
                   <span className="text-amber-400">★</span>
-                  <span className="text-white font-medium">{locale === 'fr' ? '1 visuel auto chaque matin' : '1 auto visual every morning'}</span>
-                </li>
+                  <span className="text-white font-semibold text-sm">{locale === 'fr' ? 'Mode Autopilote inclus' : 'Autopilot Mode included'}</span>
+                </div>
+                <p className="text-xs text-gray-400 pl-5">
+                  {locale === 'fr' ? '1 visuel frais chaque matin, basé sur les tendances de votre marché' : '1 fresh visual every morning, based on your market trends'}
+                </p>
+              </div>
+              <ul className="space-y-3 mb-8">
                 <li className="flex items-center gap-3 text-sm text-gray-300">
                   <span className="text-blue-400">✓</span>
                   {locale === 'fr' ? '50 générations/mois' : '50 generations/mo'}
@@ -426,11 +436,17 @@ export default async function Home() {
               <div className="text-4xl font-light text-gray-900 mb-2">{locale === 'fr' ? '49€' : '$49'}<span className="text-lg text-gray-400">/{locale === 'fr' ? 'mois' : 'mo'}</span></div>
               <p className="text-sm text-gray-500 mb-8">{locale === 'fr' ? 'Pour les équipes qui produisent' : 'For teams that produce'}</p>
               <div className="text-xs font-mono text-gray-400 mb-6">{locale === 'fr' ? '150 crédits/mois' : '150 credits/mo'}</div>
-              <ul className="space-y-3 mb-8">
-                <li className="flex items-center gap-3 text-sm text-gray-600">
+              {/* Autopilot highlight */}
+              <div className="bg-gradient-to-r from-amber-100 to-orange-50 border border-amber-200 rounded-lg p-3 mb-6">
+                <div className="flex items-center gap-2 mb-1">
                   <span className="text-amber-500">★</span>
-                  <span className="font-medium text-gray-900">{locale === 'fr' ? '1 visuel auto chaque matin' : '1 auto visual every morning'}</span>
-                </li>
+                  <span className="text-gray-900 font-semibold text-sm">{locale === 'fr' ? 'Mode Autopilote inclus' : 'Autopilot Mode included'}</span>
+                </div>
+                <p className="text-xs text-gray-500 pl-5">
+                  {locale === 'fr' ? '1 visuel frais chaque matin, basé sur les tendances de votre marché' : '1 fresh visual every morning, based on your market trends'}
+                </p>
+              </div>
+              <ul className="space-y-3 mb-8">
                 <li className="flex items-center gap-3 text-sm text-gray-600">
                   <span className="text-blue-500">✓</span>
                   {locale === 'fr' ? '150 générations/mois' : '150 generations/mo'}
