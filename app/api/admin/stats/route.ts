@@ -2,13 +2,20 @@ import { NextResponse } from 'next/server';
 import { auth } from '@clerk/nextjs/server';
 import { db } from '@/db';
 import { users, brands, generations, dailySignupCounts, dailyDeepScrapeCounts } from '@/db/schema';
-import { eq, sql, desc, gte, and } from 'drizzle-orm';
+import { eq, sql, desc, gte, and, notInArray, asc } from 'drizzle-orm';
 
 // Admin emails allowed to access this endpoint
 const ADMIN_EMAILS = [
   process.env.ADMIN_EMAIL,
   'pierrebaptiste.borges@gmail.com',
 ].filter(Boolean);
+
+// Test accounts to exclude from stats
+const TEST_EMAILS = [
+  'pierrebaptiste.borges@gmail.com',
+  'pb.borges@odace.media',
+  'pb@odace.com',
+];
 
 // Cost constants (updated pricing)
 const COSTS = {
@@ -80,18 +87,33 @@ export async function GET() {
       allDeepScrapes,
       dailySignupsData,
       dailyGenerationsData,
+      // New queries
+      userList,
+      earlyBirdCount,
+      deepScrapesBrands,
+      lightScrapesBrands,
+      signupsTodayCount,
     ] = await Promise.all([
-      // Total users
-      db.select({ count: sql<number>`count(*)` }).from(users),
+      // Total users (excluding test accounts)
+      db.select({ count: sql<number>`count(*)` })
+        .from(users)
+        .where(notInArray(users.email, TEST_EMAILS)),
 
-      // Users by plan
+      // Users by plan (excluding test accounts)
       db.select({
         plan: users.plan,
         count: sql<number>`count(*)`,
-      }).from(users).groupBy(users.plan),
+      })
+        .from(users)
+        .where(notInArray(users.email, TEST_EMAILS))
+        .groupBy(users.plan),
 
-      // Total brands
-      db.select({ count: sql<number>`count(*)` }).from(brands),
+      // Total brands (excluding test accounts)
+      db.select({ count: sql<number>`count(*)` })
+        .from(brands)
+        .where(notInArray(brands.userId,
+          db.select({ clerkId: users.clerkId }).from(users).where(sql`${users.email} IN (${TEST_EMAILS.map(e => `'${e}'`).join(',')})`)
+        )),
 
       // Total generations (all time)
       db.select({ count: sql<number>`count(*)` }).from(generations),
@@ -146,6 +168,43 @@ export async function GET() {
         .where(gte(generations.createdAt, thirtyDaysAgo))
         .groupBy(sql`DATE(${generations.createdAt})`)
         .orderBy(desc(sql`DATE(${generations.createdAt})`)),
+
+      // User list (excluding test accounts, ordered by signup date desc)
+      db.select({
+        email: users.email,
+        name: users.name,
+        plan: users.plan,
+        isEarlyBird: users.isEarlyBird,
+        createdAt: users.createdAt,
+      })
+        .from(users)
+        .where(notInArray(users.email, TEST_EMAILS))
+        .orderBy(desc(users.createdAt))
+        .limit(100),
+
+      // Early bird count (excluding test accounts)
+      db.select({ count: sql<number>`count(*)` })
+        .from(users)
+        .where(and(
+          eq(users.isEarlyBird, true),
+          notInArray(users.email, TEST_EMAILS)
+        )),
+
+      // Deep scrapes count from brands
+      db.select({ count: sql<number>`count(*)` })
+        .from(brands)
+        .where(eq(brands.scrapeDepth, 'deep')),
+
+      // Light scrapes count from brands
+      db.select({ count: sql<number>`count(*)` })
+        .from(brands)
+        .where(eq(brands.scrapeDepth, 'light')),
+
+      // Today's signup count from daily counter
+      db.select()
+        .from(dailySignupCounts)
+        .where(eq(dailySignupCounts.date, today))
+        .limit(1),
     ]);
 
     // Extract counts
@@ -261,7 +320,31 @@ export async function GET() {
         capacityLimit: 300,
         deepScrapeLimit: 150,
         earlyBirdLimit: 30,
+        // Current usage
+        signupsTodayFromCounter: signupsTodayCount[0]?.count || 0,
+        deepScrapesTodayFromCounter: deepScrapesToday,
+        earlyBirdsTotal: Number(earlyBirdCount[0]?.count || 0),
+        // Scrape breakdown
+        deepScrapesAllTime: Number(deepScrapesBrands[0]?.count || 0),
+        lightScrapesAllTime: Number(lightScrapesBrands[0]?.count || 0),
+        // Time until reset (midnight UTC)
+        resetIn: (() => {
+          const nowUTC = new Date();
+          const midnightUTC = new Date(Date.UTC(nowUTC.getUTCFullYear(), nowUTC.getUTCMonth(), nowUTC.getUTCDate() + 1, 0, 0, 0));
+          const msUntilReset = midnightUTC.getTime() - nowUTC.getTime();
+          const hours = Math.floor(msUntilReset / (1000 * 60 * 60));
+          const minutes = Math.floor((msUntilReset % (1000 * 60 * 60)) / (1000 * 60));
+          return { hours, minutes, ms: msUntilReset };
+        })(),
       },
+      // User list (last 100)
+      userList: userList.map(u => ({
+        email: u.email,
+        name: u.name,
+        plan: u.plan,
+        isEarlyBird: u.isEarlyBird,
+        createdAt: u.createdAt?.toISOString(),
+      })),
       pricing: COSTS,
     };
 

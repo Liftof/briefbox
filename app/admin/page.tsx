@@ -30,7 +30,24 @@ interface Stats {
     dailySignups: { date: string; count: number }[];
     dailyGenerations: { date: string; count: number }[];
   };
-  limits: { capacityLimit: number; deepScrapeLimit: number; earlyBirdLimit: number };
+  limits: {
+    capacityLimit: number;
+    deepScrapeLimit: number;
+    earlyBirdLimit: number;
+    signupsTodayFromCounter: number;
+    deepScrapesTodayFromCounter: number;
+    earlyBirdsTotal: number;
+    deepScrapesAllTime: number;
+    lightScrapesAllTime: number;
+    resetIn: { hours: number; minutes: number; ms: number };
+  };
+  userList: {
+    email: string;
+    name: string | null;
+    plan: string;
+    isEarlyBird: boolean | null;
+    createdAt: string | null;
+  }[];
   pricing: Record<string, any>;
 }
 
@@ -241,76 +258,170 @@ export default function AdminDashboard() {
         {/* Charts */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
           <div className="bg-white border border-stroke rounded-epopian p-8 shadow-sm">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-2 h-2 bg-accent rounded-full"></div>
-              <span className="text-secondary/60 text-sm font-medium">Inscriptions (14j)</span>
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <div className="w-2 h-2 bg-accent rounded-full"></div>
+                <span className="text-secondary/60 text-sm font-medium">Inscriptions (14j)</span>
+              </div>
+              <span className="text-xs text-secondary/40 font-mono">
+                Total: {stats.charts.dailySignups.slice(-14).reduce((sum, d) => sum + d.count, 0)}
+              </span>
             </div>
             <div className="flex items-end gap-1 h-24">
               {stats.charts.dailySignups.slice(-14).map((d, i) => {
                 const max = Math.max(...stats.charts.dailySignups.slice(-14).map(x => x.count), 1);
                 return (
-                  <div
-                    key={i}
-                    className="flex-1 bg-accent/20 hover:bg-accent/40 rounded-t transition-colors cursor-pointer"
-                    style={{ height: `${(d.count / max) * 100}%`, minHeight: d.count > 0 ? '4px' : '0' }}
-                    title={`${d.date}: ${d.count}`}
-                  />
+                  <div key={i} className="flex-1 flex flex-col items-center">
+                    <span className="text-[10px] text-secondary/40 mb-1">{d.count || ''}</span>
+                    <div
+                      className="w-full bg-accent/20 hover:bg-accent/40 rounded-t transition-colors cursor-pointer"
+                      style={{ height: `${(d.count / max) * 100}%`, minHeight: d.count > 0 ? '4px' : '2px' }}
+                      title={`${d.date}: ${d.count}`}
+                    />
+                  </div>
                 );
               })}
             </div>
+            <div className="flex justify-between mt-2 text-[10px] text-secondary/30">
+              <span>{stats.charts.dailySignups.slice(-14)[0]?.date.slice(5) || ''}</span>
+              <span>{stats.charts.dailySignups.slice(-14).slice(-1)[0]?.date.slice(5) || ''}</span>
+            </div>
           </div>
           <div className="bg-white border border-stroke rounded-epopian p-8 shadow-sm">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-              <span className="text-secondary/60 text-sm font-medium">Générations (14j)</span>
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                <span className="text-secondary/60 text-sm font-medium">Générations (14j)</span>
+              </div>
+              <span className="text-xs text-secondary/40 font-mono">
+                Total: {stats.charts.dailyGenerations.slice(-14).reduce((sum, d) => sum + d.count, 0)}
+              </span>
             </div>
             <div className="flex items-end gap-1 h-24">
               {stats.charts.dailyGenerations.slice(-14).map((d, i) => {
                 const max = Math.max(...stats.charts.dailyGenerations.slice(-14).map(x => x.count), 1);
                 return (
-                  <div
-                    key={i}
-                    className="flex-1 bg-green-100 hover:bg-green-200 rounded-t transition-colors cursor-pointer"
-                    style={{ height: `${(d.count / max) * 100}%`, minHeight: d.count > 0 ? '4px' : '0' }}
-                    title={`${d.date}: ${d.count}`}
-                  />
+                  <div key={i} className="flex-1 flex flex-col items-center">
+                    <span className="text-[10px] text-secondary/40 mb-1">{d.count || ''}</span>
+                    <div
+                      className="w-full bg-green-100 hover:bg-green-200 rounded-t transition-colors cursor-pointer"
+                      style={{ height: `${(d.count / max) * 100}%`, minHeight: d.count > 0 ? '4px' : '2px' }}
+                      title={`${d.date}: ${d.count}`}
+                    />
+                  </div>
                 );
               })}
+            </div>
+            <div className="flex justify-between mt-2 text-[10px] text-secondary/30">
+              <span>{stats.charts.dailyGenerations.slice(-14)[0]?.date.slice(5) || ''}</span>
+              <span>{stats.charts.dailyGenerations.slice(-14).slice(-1)[0]?.date.slice(5) || ''}</span>
             </div>
           </div>
         </div>
 
         {/* Limits Status */}
-        <div className="bg-white border border-stroke rounded-epopian p-8 shadow-sm">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="w-2 h-2 bg-secondary/30 rounded-full"></div>
-            <span className="text-secondary/60 text-sm font-medium">Limites quotidiennes</span>
+        <div className="bg-white border border-stroke rounded-epopian p-8 shadow-sm mb-10">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <div className="w-2 h-2 bg-secondary/30 rounded-full"></div>
+              <span className="text-secondary/60 text-sm font-medium">Limites quotidiennes</span>
+            </div>
+            <span className="text-xs text-secondary/40 bg-page px-3 py-1 rounded-full font-mono">
+              Reset dans {stats.limits.resetIn.hours}h {stats.limits.resetIn.minutes}m
+            </span>
           </div>
           <div className="space-y-4">
+            {/* Signups */}
             <div>
               <div className="flex justify-between text-sm mb-2">
                 <span className="text-secondary/60">Inscriptions</span>
-                <span className="text-secondary/40 font-mono">{stats.signups.today} / {stats.limits.capacityLimit}</span>
+                <span className="text-secondary/40 font-mono">{stats.limits.signupsTodayFromCounter} / {stats.limits.capacityLimit}</span>
               </div>
               <div className="h-2 bg-page rounded-full overflow-hidden">
                 <div
                   className="h-full bg-accent rounded-full transition-all"
-                  style={{ width: `${Math.min((stats.signups.today / stats.limits.capacityLimit) * 100, 100)}%` }}
+                  style={{ width: `${Math.min((stats.limits.signupsTodayFromCounter / stats.limits.capacityLimit) * 100, 100)}%` }}
                 />
               </div>
             </div>
+            {/* Early Birds */}
             <div>
               <div className="flex justify-between text-sm mb-2">
-                <span className="text-secondary/60">Deep scrapes</span>
-                <span className="text-secondary/40 font-mono">{stats.deepScrapes.today} / {stats.limits.deepScrapeLimit}</span>
+                <span className="text-secondary/60">Early Birds (2 crédits)</span>
+                <span className="text-secondary/40 font-mono">{stats.limits.earlyBirdsTotal} total</span>
+              </div>
+              <div className="text-xs text-secondary/40">Les 30 premiers inscrits/jour reçoivent 2 crédits au lieu de 1</div>
+            </div>
+            {/* Deep Scrapes */}
+            <div>
+              <div className="flex justify-between text-sm mb-2">
+                <span className="text-secondary/60">Deep Scrapes (aujourd&apos;hui)</span>
+                <span className="text-secondary/40 font-mono">{stats.limits.deepScrapesTodayFromCounter} / {stats.limits.deepScrapeLimit}</span>
               </div>
               <div className="h-2 bg-page rounded-full overflow-hidden">
                 <div
                   className="h-full bg-green-500 rounded-full transition-all"
-                  style={{ width: `${Math.min((stats.deepScrapes.today / stats.limits.deepScrapeLimit) * 100, 100)}%` }}
+                  style={{ width: `${Math.min((stats.limits.deepScrapesTodayFromCounter / stats.limits.deepScrapeLimit) * 100, 100)}%` }}
                 />
               </div>
             </div>
+            {/* Scrape Breakdown */}
+            <div className="pt-2 border-t border-stroke">
+              <div className="flex justify-between text-sm">
+                <span className="text-secondary/60">Scrapes totaux</span>
+                <div className="flex gap-4 text-secondary/40 font-mono text-xs">
+                  <span>{stats.limits.deepScrapesAllTime} deep</span>
+                  <span>{stats.limits.lightScrapesAllTime} light</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* User List */}
+        <div className="bg-white border border-stroke rounded-epopian p-8 shadow-sm">
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center gap-3">
+              <div className="w-2 h-2 bg-accent rounded-full"></div>
+              <span className="text-secondary/60 text-sm font-medium">Utilisateurs récents</span>
+            </div>
+            <span className="text-xs text-secondary/40">{stats.userList.length} affichés</span>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-left text-secondary/40 border-b border-stroke">
+                  <th className="pb-3 font-medium">Email</th>
+                  <th className="pb-3 font-medium">Nom</th>
+                  <th className="pb-3 font-medium">Plan</th>
+                  <th className="pb-3 font-medium">Early Bird</th>
+                  <th className="pb-3 font-medium">Inscrit le</th>
+                </tr>
+              </thead>
+              <tbody>
+                {stats.userList.map((u, i) => (
+                  <tr key={i} className="border-b border-stroke/50 hover:bg-page/50">
+                    <td className="py-3 text-secondary font-mono text-xs">{u.email}</td>
+                    <td className="py-3 text-secondary/60">{u.name || '-'}</td>
+                    <td className="py-3">
+                      <span className={`text-xs px-2 py-0.5 rounded-full ${
+                        u.plan === 'premium' ? 'bg-purple-100 text-purple-700' :
+                        u.plan === 'pro' ? 'bg-accent/10 text-accent' :
+                        'bg-page text-secondary/50'
+                      }`}>
+                        {u.plan}
+                      </span>
+                    </td>
+                    <td className="py-3">
+                      {u.isEarlyBird && <span className="text-xs text-green-600">Oui</span>}
+                    </td>
+                    <td className="py-3 text-secondary/40 text-xs">
+                      {u.createdAt ? new Date(u.createdAt).toLocaleDateString('fr-FR') : '-'}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
 
