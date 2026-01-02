@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+html { background: #ffffff; }
+body {
+  width: 720pt; height: 405pt; margin: 0; padding: 0;
+  background: #0f172a;
+  font-family: Arial, sans-serif;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+.logo-container {
+  display: flex;
+  align-items: center;
+  gap: 12pt;
+  margin-bottom: 30pt;
+}
+.logo-dots {
+  display: flex;
+  gap: 4pt;
+}
+.dot {
+  width: 16pt;
+  height: 16pt;
+  border-radius: 50%;
+}
+.dot-red { background: #EF4444; }
+.dot-blue { background: #3B82F6; }
+.dot-amber { background: #F59E0B; }
+h1 {
+  color: #ffffff;
+  font-size: 56pt;
+  font-weight: 700;
+  margin: 0;
+  letter-spacing: -1pt;
+}
+.tagline {
+  color: #94a3b8;
+  font-size: 20pt;
+  margin-top: 20pt;
+  font-weight: 300;
+}
+.highlight {
+  color: #F59E0B;
+  font-weight: 600;
+}
+.bottom-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 6pt;
+  display: flex;
+}
+.bar-red { background: #EF4444; flex: 1; }
+.bar-blue { background: #3B82F6; flex: 1; }
+.bar-amber { background: #F59E0B; flex: 1; }
+</style>
+</head>
+<body>
+<div class="logo-container">
+  <div class="logo-dots">
+    <div class="dot dot-red"></div>
+    <div class="dot dot-blue"></div>
+    <div class="dot dot-amber"></div>
+  </div>
+  <h1>Palette</h1>
+</div>
+<p class="tagline">Des visuels <span class="highlight">100% votre marque</span>, en 60 secondes.</p>
+<div class="bottom-bar">
+  <div class="bar-red"></div>
+  <div class="bar-blue"></div>
+  <div class="bar-amber"></div>
+</div>
+</body>
+</html>

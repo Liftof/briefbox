@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+html { background: #ffffff; }
+body {
+  width: 720pt; height: 405pt; margin: 0; padding: 0;
+  background: #f8fafc;
+  font-family: Arial, sans-serif;
+  display: flex;
+}
+.left-bar {
+  width: 8pt;
+  background: #3B82F6;
+}
+.content {
+  flex: 1;
+  padding: 40pt 50pt;
+}
+.section-label {
+  color: #3B82F6;
+  font-size: 11pt;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 2pt;
+  margin-bottom: 15pt;
+}
+h1 {
+  color: #0f172a;
+  font-size: 32pt;
+  font-weight: 700;
+  margin: 0 0 35pt 0;
+}
+.steps {
+  display: flex;
+  gap: 25pt;
+}
+.step {
+  flex: 1;
+  background: #ffffff;
+  border-radius: 12pt;
+  padding: 25pt;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+}
+.step-number {
+  width: 32pt;
+  height: 32pt;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 15pt;
+}
+.step-1 .step-number { background: #EF4444; }
+.step-2 .step-number { background: #3B82F6; }
+.step-3 .step-number { background: #F59E0B; }
+.step-num {
+  color: #ffffff;
+  font-size: 14pt;
+  font-weight: 700;
+  margin: 0;
+}
+.step-title {
+  color: #0f172a;
+  font-size: 15pt;
+  font-weight: 600;
+  margin: 0 0 8pt 0;
+}
+.step-desc {
+  color: #64748b;
+  font-size: 12pt;
+  margin: 0;
+  line-height: 1.5;
+}
+</style>
+</head>
+<body>
+<div class="left-bar"></div>
+<div class="content">
+  <p class="section-label">La solution</p>
+  <h1>3 etapes. 60 secondes. C'est tout.</h1>
+  <div class="steps">
+    <div class="step step-1">
+      <div class="step-number"><p class="step-num">1</p></div>
+      <p class="step-title">Collez votre site</p>
+      <p class="step-desc">Palette scanne votre marque : logo, couleurs, typos, ton. Une seule fois.</p>
+    </div>
+    <div class="step step-2">
+      <div class="step-number"><p class="step-num">2</p></div>
+      <p class="step-title">Choisissez une idee</p>
+      <p class="step-desc">L'IA vous propose des idees de contenu basees sur les tendances de votre marche.</p>
+    </div>
+    <div class="step step-3">
+      <div class="step-number"><p class="step-num">3</p></div>
+      <p class="step-title">Publiez</p>
+      <p class="step-desc">Visuels generes en 60 secondes. Un detail a changer ? Un clic. Pas satisfait ? Regenerez.</p>
+    </div>
+  </div>
+</div>
+</body>
+</html>

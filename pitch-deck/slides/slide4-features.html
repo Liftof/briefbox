@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+html { background: #ffffff; }
+body {
+  width: 720pt; height: 405pt; margin: 0; padding: 0;
+  background: #0f172a;
+  font-family: Arial, sans-serif;
+  display: flex;
+  flex-direction: column;
+}
+.content {
+  flex: 1;
+  padding: 25pt 50pt 15pt 50pt;
+}
+.section-label {
+  color: #F59E0B;
+  font-size: 11pt;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 2pt;
+  margin-bottom: 10pt;
+}
+h1 {
+  color: #ffffff;
+  font-size: 28pt;
+  font-weight: 700;
+  margin: 0 0 25pt 0;
+}
+.features {
+  display: flex;
+  gap: 30pt;
+}
+.feature {
+  flex: 1;
+}
+.feature-icon {
+  width: 48pt;
+  height: 48pt;
+  border-radius: 12pt;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 15pt;
+}
+.feature-1 .feature-icon { background: linear-gradient(135deg, #F59E0B, #EA580C); background: #F59E0B; }
+.feature-2 .feature-icon { background: #3B82F6; }
+.feature-3 .feature-icon { background: #10B981; }
+.icon-text {
+  color: #ffffff;
+  font-size: 20pt;
+  margin: 0;
+}
+.feature-title {
+  color: #ffffff;
+  font-size: 16pt;
+  font-weight: 600;
+  margin: 0 0 8pt 0;
+}
+.feature-desc {
+  color: #94a3b8;
+  font-size: 12pt;
+  margin: 0;
+  line-height: 1.5;
+}
+.bottom-stats {
+  display: flex;
+  border-top: 1px solid #1e293b;
+  padding: 15pt 50pt 25pt 50pt;
+  gap: 60pt;
+}
+.stat {
+  text-align: center;
+}
+.stat-value {
+  color: #F59E0B;
+  font-size: 24pt;
+  font-weight: 700;
+  margin: 0 0 3pt 0;
+}
+.stat-label {
+  color: #64748b;
+  font-size: 10pt;
+  text-transform: uppercase;
+  letter-spacing: 1pt;
+  margin: 0;
+}
+</style>
+</head>
+<body>
+<div class="content">
+  <p class="section-label">Fonctionnalites</p>
+  <h1>Ce qui nous rend uniques</h1>
+  <div class="features">
+    <div class="feature feature-1">
+      <div class="feature-icon"><p class="icon-text">24/7</p></div>
+      <p class="feature-title">Mode Autopilote</p>
+      <p class="feature-desc">50 bots scannent votre marche. Chaque matin, un visuel pret a publier vous attend.</p>
+    </div>
+    <div class="feature feature-2">
+      <div class="feature-icon"><p class="icon-text">i18n</p></div>
+      <p class="feature-title">Multi-langues</p>
+      <p class="feature-desc">Traduisez vos visuels en 20 secondes. FR, EN, ES, DE. Meme style, autre langue.</p>
+    </div>
+    <div class="feature feature-3">
+      <div class="feature-icon"><p class="icon-text">4K</p></div>
+      <p class="feature-title">Haute resolution</p>
+      <p class="feature-desc">Export 4K pour tous vos supports. Print, digital, social media. Qualite pro garantie.</p>
+    </div>
+  </div>
+</div>
+<div class="bottom-stats">
+  <div class="stat">
+    <p class="stat-value">60s</p>
+    <p class="stat-label">Par visuel</p>
+  </div>
+  <div class="stat">
+    <p class="stat-value">30</p>
+    <p class="stat-label">Visuels/mois autopilote</p>
+  </div>
+  <div class="stat">
+    <p class="stat-value">0</p>
+    <p class="stat-label">Effort de votre part</p>
+  </div>
+</div>
+</body>
+</html>

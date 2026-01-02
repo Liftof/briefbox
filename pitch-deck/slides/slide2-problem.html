@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style>
+html { background: #ffffff; }
+body {
+  width: 720pt; height: 405pt; margin: 0; padding: 0;
+  background: #ffffff;
+  font-family: Arial, sans-serif;
+  display: flex;
+}
+.left-bar {
+  width: 8pt;
+  background: #EF4444;
+}
+.content {
+  flex: 1;
+  padding: 40pt 50pt;
+  display: flex;
+  flex-direction: column;
+}
+.section-label {
+  color: #EF4444;
+  font-size: 11pt;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 2pt;
+  margin-bottom: 15pt;
+}
+h1 {
+  color: #0f172a;
+  font-size: 36pt;
+  font-weight: 700;
+  margin: 0 0 30pt 0;
+  line-height: 1.2;
+}
+.problems {
+  display: flex;
+  flex-direction: column;
+  gap: 20pt;
+}
+.problem-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 15pt;
+}
+.problem-icon {
+  width: 36pt;
+  height: 36pt;
+  background: #fef2f2;
+  border-radius: 8pt;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.x-mark {
+  color: #EF4444;
+  font-size: 18pt;
+  font-weight: 700;
+}
+.problem-text {
+  flex: 1;
+}
+.problem-title {
+  color: #0f172a;
+  font-size: 16pt;
+  font-weight: 600;
+  margin: 0 0 4pt 0;
+}
+.problem-desc {
+  color: #64748b;
+  font-size: 13pt;
+  margin: 0;
+  line-height: 1.4;
+}
+</style>
+</head>
+<body>
+<div class="left-bar"></div>
+<div class="content">
+  <p class="section-label">Le probleme</p>
+  <h1>Creer des visuels de marque,<br/>c'est un cauchemar.</h1>
+  <div class="problems">
+    <div class="problem-item">
+      <div class="problem-icon"><p class="x-mark">X</p></div>
+      <div class="problem-text">
+        <p class="problem-title">2-3 semaines avec une agence</p>
+        <p class="problem-desc">Brief, devis, allers-retours, validations... Votre Black Friday est passe.</p>
+      </div>
+    </div>
+    <div class="problem-item">
+      <div class="problem-icon"><p class="x-mark">X</p></div>
+      <div class="problem-text">
+        <p class="problem-title">2000-5000 EUR par campagne</p>
+        <p class="problem-desc">Pour des "jours/homme" et des reunions de cadrage.</p>
+      </div>
+    </div>
+    <div class="problem-item">
+      <div class="problem-icon"><p class="x-mark">X</p></div>
+      <div class="problem-text">
+        <p class="problem-title">Canva = templates generiques</p>
+        <p class="problem-desc">Tout le monde reconnait que c'est du Canva. Pas tres pro.</p>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>
