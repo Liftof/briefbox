@@ -554,8 +554,8 @@ export default async function Home() {
       {/* Footer */}
       <footer className="py-16 bg-[#FAFAFA] border-t border-gray-200">
         <div className="max-w-6xl mx-auto px-6">
-          <div className="grid grid-cols-2 gap-8 md:grid-cols-4 md:gap-12 mb-12">
-            <div>
+          <div className="grid grid-cols-2 gap-8 md:grid-cols-6 md:gap-8 mb-12">
+            <div className="col-span-2 md:col-span-2">
               <div className="mb-4">
                 <img src="/logo.png" alt="Palette" className="h-8 object-contain" />
               </div>
@@ -569,12 +569,24 @@ export default async function Home() {
                 <a href="#fonctionnement" className="block hover:text-gray-900 transition-colors">{translations.landing.footer.links.howItWorks[locale]}</a>
                 <a href="#tarifs" className="block hover:text-gray-900 transition-colors">{translations.landing.footer.links.pricing[locale]}</a>
                 <a href="/playground" className="block hover:text-gray-900 transition-colors">{translations.landing.footer.links.playground[locale]}</a>
+                <a href="#faq" className="block hover:text-gray-900 transition-colors">{translations.landing.footer.links.faq[locale]}</a>
               </div>
             </div>
             <div>
-              <div className="text-[10px] font-mono uppercase tracking-widest text-gray-400 mb-4">{translations.landing.footer.resources[locale]}</div>
+              <div className="text-[10px] font-mono uppercase tracking-widest text-gray-400 mb-4">{translations.landing.footer.alternatives[locale]}</div>
               <div className="space-y-2 text-sm text-gray-500">
-                <a href="#faq" className="block hover:text-gray-900 transition-colors">{translations.landing.footer.links.faq[locale]}</a>
+                <Link href="/vs/canva" className="block hover:text-gray-900 transition-colors">{translations.landing.footer.links.vsCanva[locale]}</Link>
+                <Link href="/vs/agence" className="block hover:text-gray-900 transition-colors">{translations.landing.footer.links.vsAgency[locale]}</Link>
+              </div>
+            </div>
+            <div>
+              <div className="text-[10px] font-mono uppercase tracking-widest text-gray-400 mb-4">{translations.landing.footer.forYou[locale]}</div>
+              <div className="space-y-2 text-sm text-gray-500">
+                <Link href="/pour/solopreneurs" className="block hover:text-gray-900 transition-colors">{translations.landing.footer.links.forSolopreneurs[locale]}</Link>
+                <Link href="/pour/marketers" className="block hover:text-gray-900 transition-colors">{translations.landing.footer.links.forMarketers[locale]}</Link>
+                <Link href="/pour/founders" className="block hover:text-gray-900 transition-colors">{translations.landing.footer.links.forFounders[locale]}</Link>
+                <Link href="/pour/equipes-produit" className="block hover:text-gray-900 transition-colors">{translations.landing.footer.links.forProductTeams[locale]}</Link>
+                <Link href="/pour/community-managers" className="block hover:text-gray-900 transition-colors">{translations.landing.footer.links.forCMs[locale]}</Link>
               </div>
             </div>
             <div>

@@ -183,13 +183,22 @@ export const translations = {
       product: { fr: 'Produit', en: 'Product' },
       resources: { fr: 'Ressources', en: 'Resources' },
       legal: { fr: 'Légal', en: 'Legal' },
+      alternatives: { fr: 'Alternatives', en: 'Alternatives' },
+      forYou: { fr: 'Pour vous', en: 'For you' },
       links: {
         howItWorks: { fr: 'Comment ça marche', en: 'How it works' },
         pricing: { fr: 'Tarifs', en: 'Pricing' },
         playground: { fr: 'Playground', en: 'Playground' },
         faq: { fr: 'FAQ', en: 'FAQ' },
         privacy: { fr: 'Confidentialité', en: 'Privacy' },
-        terms: { fr: 'CGU', en: 'Terms' }
+        terms: { fr: 'CGU', en: 'Terms' },
+        vsCanva: { fr: 'Palette vs Canva', en: 'Palette vs Canva' },
+        vsAgency: { fr: 'Palette vs Agence', en: 'Palette vs Agency' },
+        forSolopreneurs: { fr: 'Solopreneurs', en: 'Solopreneurs' },
+        forMarketers: { fr: 'Marketers', en: 'Marketers' },
+        forFounders: { fr: 'Founders', en: 'Founders' },
+        forProductTeams: { fr: 'Équipes Produit', en: 'Product Teams' },
+        forCMs: { fr: 'Community Managers', en: 'Community Managers' }
       },
       copyright: { fr: 'Tous droits réservés.', en: 'All rights reserved.' },
       systemsOperational: { fr: 'Tous les systèmes opérationnels', en: 'All systems operational' }

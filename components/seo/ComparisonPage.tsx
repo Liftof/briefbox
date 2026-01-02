@@ -80,8 +80,8 @@ export default function ComparisonPage({ data }: ComparisonPageProps) {
           <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-12 text-center">
             {l === 'fr' ? 'Comparaison détaillée' : 'Detailed comparison'}
           </h2>
-          <div className="overflow-x-auto">
-            <table className="w-full">
+          <div className="overflow-x-auto -mx-6 px-6">
+            <table className="w-full min-w-[600px]">
               <thead>
                 <tr className="border-b-2 border-gray-200">
                   <th className="text-left py-4 px-4 font-medium text-gray-500">
