@@ -25,12 +25,7 @@ export default function TargetPage({ data }: TargetPageProps) {
       <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-100">
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
-            <div className="flex gap-1">
-              <div className="w-2 h-2 rounded-full bg-red-500" />
-              <div className="w-2 h-2 rounded-full bg-blue-500" />
-              <div className="w-2 h-2 rounded-full bg-amber-500" />
-            </div>
-            <span className="font-semibold text-gray-900">Palette</span>
+            <img src="/logo.png" alt="Palette" className="h-8 object-contain" />
           </Link>
           <Link
             href="/playground"
@@ -209,6 +204,31 @@ export default function TargetPage({ data }: TargetPageProps) {
         </div>
       </section>
 
+      {/* Examples Gallery */}
+      <section className="py-16 px-6">
+        <div className="max-w-6xl mx-auto">
+          <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-4 text-center">
+            {l === 'fr' ? 'Créés avec Palette' : 'Created with Palette'}
+          </h2>
+          <p className="text-gray-500 text-center mb-12 max-w-2xl mx-auto">
+            {l === 'fr'
+              ? 'Des visuels uniques, générés en 60 secondes, 100% fidèles à chaque marque.'
+              : 'Unique visuals, generated in 60 seconds, 100% true to each brand.'}
+          </p>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {[10, 2, 15, 3, 11, 4, 12, 16].map((id) => (
+              <div key={id} className="aspect-[4/5] rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-shadow">
+                <img
+                  src={`/gallery/gal-${id}.png`}
+                  alt={`Visual ${id}`}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* CTA Section */}
       <section className="py-20 px-6 bg-gradient-to-br from-gray-900 to-gray-800">
         <div className="max-w-3xl mx-auto text-center">
@@ -233,14 +253,9 @@ export default function TargetPage({ data }: TargetPageProps) {
       {/* Footer */}
       <footer className="py-8 px-6 border-t border-gray-100">
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <div className="flex gap-1">
-              <div className="w-2 h-2 rounded-full bg-red-500" />
-              <div className="w-2 h-2 rounded-full bg-blue-500" />
-              <div className="w-2 h-2 rounded-full bg-amber-500" />
-            </div>
-            <span className="font-semibold text-gray-900">Palette</span>
-          </div>
+          <Link href="/" className="flex items-center gap-2">
+            <img src="/logo.png" alt="Palette" className="h-6 object-contain" />
+          </Link>
           <div className="flex items-center gap-6 text-sm text-gray-500">
             <Link href="/" className="hover:text-gray-900">
               {l === 'fr' ? 'Accueil' : 'Home'}
