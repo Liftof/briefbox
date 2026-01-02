@@ -68,9 +68,11 @@ export default function Sidebar({
         <div className={`flex items-center h-16 border-b border-gray-100 ${isCollapsed ? 'justify-center px-2' : 'px-4'}`}>
           <Link href="/" className="flex items-center gap-2 group">
             <img
-              src="/logo-icon.png"
+              src="/logo-icon.webp"
               alt="Palette"
               className="w-8 h-8 object-contain flex-shrink-0"
+              width="32"
+              height="32"
             />
             {!isCollapsed && (
               <span className="font-semibold text-gray-900 tracking-tight">Palette</span>

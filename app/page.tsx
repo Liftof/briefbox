@@ -557,7 +557,7 @@ export default async function Home() {
           <div className="grid grid-cols-2 gap-8 md:grid-cols-6 md:gap-8 mb-12">
             <div className="col-span-2 md:col-span-2">
               <div className="mb-4">
-                <img src="/logo.png" alt="Palette" className="h-8 object-contain" />
+                <img src="/logo.webp" alt="Palette" className="h-8 object-contain" width="66" height="32" />
               </div>
               <p className="text-xs text-gray-400 leading-relaxed">
                 {translations.landing.footer.tagline[locale]}

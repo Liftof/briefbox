@@ -4,19 +4,19 @@ import { useRef, useState, useEffect } from 'react';
 
 // Images with their aspect ratios: 'square' (1:1), 'portrait' (4:5), 'landscape' (3:2)
 const IMAGES: { id: number; ext: string; ratio: 'square' | 'portrait' | 'landscape' }[] = [
-    { id: 10, ext: 'png', ratio: 'portrait' },
-    { id: 2, ext: 'png', ratio: 'portrait' },
-    { id: 15, ext: 'png', ratio: 'square' },
-    { id: 3, ext: 'png', ratio: 'portrait' },
-    { id: 11, ext: 'png', ratio: 'portrait' },
-    { id: 4, ext: 'png', ratio: 'square' },
-    { id: 12, ext: 'png', ratio: 'portrait' },
-    { id: 16, ext: 'png', ratio: 'square' },
-    { id: 6, ext: 'png', ratio: 'portrait' },
-    { id: 13, ext: 'png', ratio: 'portrait' },
-    { id: 8, ext: 'png', ratio: 'landscape' },
-    { id: 14, ext: 'png', ratio: 'portrait' },
-    { id: 9, ext: 'jpg', ratio: 'portrait' },
+    { id: 10, ext: 'webp', ratio: 'portrait' },
+    { id: 2, ext: 'webp', ratio: 'portrait' },
+    { id: 15, ext: 'webp', ratio: 'square' },
+    { id: 3, ext: 'webp', ratio: 'portrait' },
+    { id: 11, ext: 'webp', ratio: 'portrait' },
+    { id: 4, ext: 'webp', ratio: 'square' },
+    { id: 12, ext: 'webp', ratio: 'portrait' },
+    { id: 16, ext: 'webp', ratio: 'square' },
+    { id: 6, ext: 'webp', ratio: 'portrait' },
+    { id: 13, ext: 'webp', ratio: 'portrait' },
+    { id: 8, ext: 'webp', ratio: 'landscape' },
+    { id: 14, ext: 'webp', ratio: 'portrait' },
+    { id: 9, ext: 'webp', ratio: 'portrait' },
 ];
 
 const ASPECT_CLASSES = {

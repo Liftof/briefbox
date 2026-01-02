@@ -20,7 +20,7 @@ export default function Hero() {
 
   const carouselData: { image: string; prompt: { fr: string; en: string }; colors: string[]; position?: string }[] = [
     {
-      image: '/hero-illustration.jpg',
+      image: '/hero-illustration.webp',
       prompt: {
         fr: 'Post réseaux sociaux pour @Finary, plateforme de gestion de patrimoine',
         en: 'Social media post for @Finary, a centralized wealth management platform'
@@ -28,7 +28,7 @@ export default function Hero() {
       colors: ['bg-gray-900', 'bg-[#D4AF37]', 'bg-gray-200']
     },
     {
-      image: '/hero-traderepublic.jpg',
+      image: '/hero-traderepublic.webp',
       prompt: {
         fr: 'Une pub pour @TradeRepublic avec un modèle et des KPIs',
         en: 'An ad for @TradeRepublic featuring a model and KPIs'
@@ -36,7 +36,7 @@ export default function Hero() {
       colors: ['bg-black', 'bg-zinc-400', 'bg-white']
     },
     {
-      image: '/hero-datafast.png',
+      image: '/hero-datafast.webp',
       prompt: {
         fr: 'Une pub percutante pour @Datafast, plateforme de dataviz pour SaaS',
         en: 'A bold ad for @Datafast, the real-time dataviz platform for SaaS'

@@ -24,7 +24,7 @@ export default function ComparisonPage({ data }: ComparisonPageProps) {
       <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-100">
         <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
-            <img src="/logo.png" alt="Palette" className="h-8 object-contain" />
+            <img src="/logo.webp" alt="Palette" className="h-8 object-contain" width="66" height="32" />
           </Link>
           <Link
             href="/playground"
@@ -193,7 +193,7 @@ export default function ComparisonPage({ data }: ComparisonPageProps) {
             {[10, 2, 15, 3, 11, 4, 12, 16].map((id) => (
               <div key={id} className="aspect-[4/5] rounded-xl overflow-hidden shadow-md hover:shadow-lg transition-shadow">
                 <img
-                  src={`/gallery/gal-${id}.png`}
+                  src={`/gallery/gal-${id}.webp`}
                   alt={`Visual ${id}`}
                   className="w-full h-full object-cover"
                 />
@@ -228,7 +228,7 @@ export default function ComparisonPage({ data }: ComparisonPageProps) {
       <footer className="py-8 px-6 border-t border-gray-100">
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
           <Link href="/" className="flex items-center gap-2">
-            <img src="/logo.png" alt="Palette" className="h-6 object-contain" />
+            <img src="/logo.webp" alt="Palette" className="h-6 object-contain" width="50" height="24" />
           </Link>
           <div className="flex items-center gap-6 text-sm text-gray-500">
             <Link href="/" className="hover:text-gray-900">

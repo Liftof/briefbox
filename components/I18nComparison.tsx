@@ -48,7 +48,7 @@ export default function I18nComparison({ locale }: I18nComparisonProps) {
             <div className="relative aspect-[4/5] rounded-2xl overflow-hidden bg-gray-50 border border-gray-100">
                 <div className={`absolute inset-0 transition-opacity duration-500 ${activeSide === 'fr' ? 'opacity-100 z-10' : 'opacity-0 z-0'}`}>
                     <img
-                        src="/gallery/i18n-fr.jpg"
+                        src="/gallery/i18n-fr.webp"
                         alt="French version"
                         className="w-full h-full object-cover"
                     />
@@ -59,7 +59,7 @@ export default function I18nComparison({ locale }: I18nComparisonProps) {
 
                 <div className={`absolute inset-0 transition-opacity duration-500 ${activeSide === 'en' ? 'opacity-100 z-10' : 'opacity-0 z-0'}`}>
                     <img
-                        src="/gallery/i18n-en.jpg"
+                        src="/gallery/i18n-en.webp"
                         alt="English version"
                         className="w-full h-full object-cover"
                     />

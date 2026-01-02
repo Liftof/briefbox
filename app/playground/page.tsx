@@ -2319,7 +2319,7 @@ Apply the edit instruction to Image 1 while preserving what wasn't mentioned. Fo
             {/* Header with Logo */}
             <div className="mb-16">
               <div className="mb-8">
-                <img src="/logo-icon.png" alt="Palette" className="w-14 h-14 object-contain" />
+                <img src="/logo-icon.webp" alt="Palette" className="w-14 h-14 object-contain" width="56" height="56" />
               </div>
 
               <h1 className="text-4xl md:text-5xl font-light text-gray-900 leading-[1.1] mb-4" style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}>

@@ -90,7 +90,7 @@ export default function MobileNav({
       {/* Mobile header */}
       <header className="md:hidden fixed top-0 left-0 right-0 bg-white border-b border-gray-200 z-50 h-14 flex items-center justify-between px-4 safe-area-top">
         <div className="flex items-center gap-2">
-          <img src="/logo-icon.png" alt="Palette" className="w-7 h-7 object-contain" />
+          <img src="/logo-icon.webp" alt="Palette" className="w-7 h-7 object-contain" width="28" height="28" />
           <span className="font-semibold text-gray-900">Palette</span>
         </div>
         

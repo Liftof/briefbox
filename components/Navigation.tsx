@@ -29,7 +29,7 @@ export default function Navigation() {
             }`}>
             {/* Logo */}
             <Link href="/" className="group">
-              <img src="/logo.png" alt="Palette" className="h-10 object-contain" />
+              <img src="/logo.webp" alt="Palette" className="h-10 object-contain" width="82" height="40" />
             </Link>
 
             {/* Desktop menu */}
