@@ -11,11 +11,55 @@ const lexend = Lexend({
 });
 
 export const metadata: Metadata = {
-  title: "Palette — Vos visuels de marque en 60 secondes",
-  description: "Votre marque est importée depuis votre site web. Décrivez ce que vous voulez. Des visuels pros, cohérents, 100% à votre image — sans graphiste, sans agence.",
+  title: "Palette — Brand visuals in 60 seconds",
+  description: "Import your brand from your website. Describe what you want. Professional visuals, 100% on-brand — no designer, no agency, no waiting.",
+  keywords: ["brand visuals", "AI design", "marketing visuals", "social media graphics", "brand identity", "visual content", "AI graphics generator"],
+  authors: [{ name: "Palette" }],
+  creator: "Palette",
+  publisher: "Palette",
+  metadataBase: new URL("https://thepalette.app"),
+  alternates: {
+    canonical: "/",
+  },
   icons: {
-    icon: "/logo-icon.png",
-    apple: "/logo-icon.png",
+    icon: "/logo-icon.webp",
+    apple: "/logo-icon.webp",
+  },
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    alternateLocale: "fr_FR",
+    url: "https://thepalette.app",
+    siteName: "Palette",
+    title: "Palette — Brand visuals in 60 seconds",
+    description: "Import your brand from your website. Describe what you want. Professional visuals, 100% on-brand — no designer, no agency.",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 2146,
+        height: 1260,
+        alt: "Palette - Brand visuals in 60 seconds",
+        type: "image/png",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Palette — Brand visuals in 60 seconds",
+    description: "Import your brand from your website. Describe what you want. Professional visuals, 100% on-brand — no designer, no agency.",
+    images: ["/og-image.png"],
+    creator: "@usepalette",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
   },
 };
 

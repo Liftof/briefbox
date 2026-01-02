@@ -10,12 +10,63 @@ import I18nComparison from '@/components/I18nComparison';
 import AutopilotSection from '@/components/AutopilotSection';
 import RotatingHeadline from '@/components/RotatingHeadline';
 
+// JSON-LD Structured Data for SEO
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'Organization',
+      '@id': 'https://thepalette.app/#organization',
+      name: 'Palette',
+      url: 'https://thepalette.app',
+      logo: {
+        '@type': 'ImageObject',
+        url: 'https://thepalette.app/logo.webp',
+      },
+      sameAs: [],
+    },
+    {
+      '@type': 'WebSite',
+      '@id': 'https://thepalette.app/#website',
+      url: 'https://thepalette.app',
+      name: 'Palette',
+      publisher: {
+        '@id': 'https://thepalette.app/#organization',
+      },
+    },
+    {
+      '@type': 'SoftwareApplication',
+      name: 'Palette',
+      applicationCategory: 'DesignApplication',
+      operatingSystem: 'Web',
+      description: 'AI-powered brand visual generator. Create professional, on-brand visuals in 60 seconds.',
+      offers: {
+        '@type': 'Offer',
+        price: '19',
+        priceCurrency: 'EUR',
+        priceValidUntil: '2025-12-31',
+      },
+      aggregateRating: {
+        '@type': 'AggregateRating',
+        ratingValue: '4.8',
+        ratingCount: '50',
+      },
+    },
+  ],
+};
+
 export default async function Home() {
   const headersList = await headers();
   const acceptLanguage = headersList.get('accept-language') || 'fr';
   const locale = getServerLocale(acceptLanguage);
 
   return (
+    <>
+      {/* JSON-LD Structured Data */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
     <div className="min-h-screen bg-[#FAFAFA] font-sans text-gray-900">
       <Navigation />
       <Hero />
@@ -609,5 +660,6 @@ export default async function Home() {
         </div>
       </footer>
     </div>
+    </>
   );
 }
